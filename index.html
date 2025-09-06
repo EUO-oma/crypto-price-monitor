@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>암호화폐 선물 가격 모니터</title>
+    <title>Crypto Price</title>
     <style>
         * {
             margin: 0;
@@ -216,7 +216,13 @@
 
         function updateLastUpdate() {
             const now = new Date();
-            const timeString = now.toLocaleString('ko-KR');
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            const dateString = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+            const timeString = `${dateString} ${displayHours}:${minutes}:${seconds} ${ampm}`;
             document.getElementById('last-update').textContent = `最終更新: ${timeString}`;
         }
 
