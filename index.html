@@ -128,29 +128,25 @@
                 <div class="price-card">
                     <div class="symbol">BTCUSDT</div>
                     <div class="price" id="binance-btc">로딩중...</div>
-                    <div class="timestamp" id="binance-btc-time"></div>
                 </div>
                 <div class="price-card">
                     <div class="symbol">ETHUSDT</div>
                     <div class="price" id="binance-eth">로딩중...</div>
-                    <div class="timestamp" id="binance-eth-time"></div>
                 </div>
                 <div class="price-card">
                     <div class="symbol">XRPUSDT</div>
                     <div class="price" id="binance-xrp">로딩중...</div>
-                    <div class="timestamp" id="binance-xrp-time"></div>
                 </div>
                 <div class="price-card">
                     <div class="symbol">SOLUSDT</div>
                     <div class="price" id="binance-sol">로딩중...</div>
-                    <div class="timestamp" id="binance-sol-time"></div>
                 </div>
             </div>
         </div>
 
         <div class="status">
-            <span id="status-message">연결 중...</span>
-            <span id="last-update">마지막 업데이트: -</span>
+            <span id="status-message">接続中...</span>
+            <span id="last-update">最終更新: -</span>
         </div>
     </div>
 
@@ -161,22 +157,17 @@
         let binanceSolWs = null;
 
         function formatPrice(price) {
-            return parseFloat(price).toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+            const num = parseFloat(price);
+            const parts = num.toFixed(2).split('.');
+            const integerPart = parseInt(parts[0]).toLocaleString('en-US');
+            return `<span>${integerPart}</span><span style="color: #666; font-size: 0.8em;">.${parts[1]}</span>`;
         }
 
-        function updateTimestamp(elementId) {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('ko-KR');
-            document.getElementById(elementId).textContent = timeString;
-        }
 
         function updateLastUpdate() {
             const now = new Date();
             const timeString = now.toLocaleString('ko-KR');
-            document.getElementById('last-update').textContent = `마지막 업데이트: ${timeString}`;
+            document.getElementById('last-update').textContent = `最終更新: ${timeString}`;
         }
 
         // Binance WebSocket
@@ -187,7 +178,7 @@
                 const ws = new WebSocket(`wss://fstream.binance.com/ws/${symbol}@ticker`);
                 
                 ws.onopen = function() {
-                    document.getElementById('status-message').textContent = '연결됨';
+                    document.getElementById('status-message').textContent = '接続済み';
                     document.getElementById('status-message').className = 'connected';
                 };
 
@@ -196,21 +187,17 @@
                     if (data.c) {
                         const price = data.c;
                         if (symbol === 'btcusdt') {
-                            document.getElementById('binance-btc').textContent = `$${formatPrice(price)}`;
+                            document.getElementById('binance-btc').innerHTML = formatPrice(price);
                             document.getElementById('binance-btc').classList.remove('loading');
-                            updateTimestamp('binance-btc-time');
                         } else if (symbol === 'ethusdt') {
-                            document.getElementById('binance-eth').textContent = `$${formatPrice(price)}`;
+                            document.getElementById('binance-eth').innerHTML = formatPrice(price);
                             document.getElementById('binance-eth').classList.remove('loading');
-                            updateTimestamp('binance-eth-time');
                         } else if (symbol === 'xrpusdt') {
-                            document.getElementById('binance-xrp').textContent = `$${formatPrice(price)}`;
+                            document.getElementById('binance-xrp').innerHTML = formatPrice(price);
                             document.getElementById('binance-xrp').classList.remove('loading');
-                            updateTimestamp('binance-xrp-time');
                         } else if (symbol === 'solusdt') {
-                            document.getElementById('binance-sol').textContent = `$${formatPrice(price)}`;
+                            document.getElementById('binance-sol').innerHTML = formatPrice(price);
                             document.getElementById('binance-sol').classList.remove('loading');
-                            updateTimestamp('binance-sol-time');
                         }
                         updateLastUpdate();
                     }
@@ -218,7 +205,7 @@
 
                 ws.onerror = function(error) {
                     console.error('Binance WebSocket error:', error);
-                    document.getElementById('status-message').textContent = '연결 오류';
+                    document.getElementById('status-message').textContent = '接続エラー';
                     document.getElementById('status-message').className = 'error';
                 };
 
