@@ -1,0 +1,23 @@
+{
+  "name": "crypto-price-monitor",
+  "version": "1.0.0",
+  "description": "Real-time cryptocurrency futures price monitor for Binance",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 8080",
+    "dev": "npx http-server -p 8080 -o"
+  },
+  "keywords": [
+    "cryptocurrency",
+    "bitcoin",
+    "ethereum",
+    "binance",
+    "realtime",
+    "websocket"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
