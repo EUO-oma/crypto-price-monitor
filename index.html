@@ -818,14 +818,7 @@
                                 maximumFractionDigits: 2
                             })}`;
                             
-                            // 가격 색상 변경
-                            if (change > 0) {
-                                customPriceElement.style.color = '#4caf50';
-                            } else if (change < 0) {
-                                customPriceElement.style.color = '#f44336';
-                            } else {
-                                customPriceElement.style.color = '#fff';
-                            }
+                            // 가격 색상은 브랜드 컬러 유지 (변경하지 않음)
                             
                             // 변화량 표시
                             if (customChangeElement) {
