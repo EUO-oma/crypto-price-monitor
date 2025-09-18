@@ -960,7 +960,13 @@
             console.log('Loading links from Supabase...');
             console.log('Supabase URL:', typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'NOT DEFINED');
             console.log('Supabase client:', typeof supabase !== 'undefined' ? 'Initialized' : 'NOT INITIALIZED');
-            
+
+            // Check if Supabase is initialized
+            if (typeof supabase === 'undefined') {
+                console.error('Supabase is not initialized. Make sure supabase-config.js is loaded.');
+                return;
+            }
+
             try {
                 const { data: links, error } = await supabase
                     .from('links')
@@ -2191,8 +2197,12 @@
         window.addEventListener('DOMContentLoaded', () => {
             // 저장된 아바타 맵핑 복원
             loadSavedAvatarMappings();
-            
-            loadLinksFromSupabase();
+
+            // Wait for Supabase to initialize before loading links
+            setTimeout(() => {
+                console.log('Attempting to load links from Supabase...');
+                loadLinksFromSupabase();
+            }, 1000);
             loadBTCHistory(); // BTC 가격 기록 로드
             loadETHHistory(); // ETH 가격 기록 로드
             loadSOLHistory(); // SOL 가격 기록 로드
