@@ -640,21 +640,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script>
-        // Supabase가 로드된 후 즉시 초기화
-        window.addEventListener('load', function() {
-            if (window.supabase && !window.supabaseClient) {
-                window.supabaseClient = window.supabase.createClient(
-                    'https://ddfnxbkiewolgweivomv.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
-                );
-                console.log('Supabase client created in admin page');
-            }
-        });
-    </script>
     <script src="supabase-config.js"></script>
     <script src="auth-helper.js"></script>
     <script>
+        // supabase는 supabase-config.js에서 전역 변수로 선언됨
         let editingId = null;
         let customCategories = [];
         let guideOpen = false;
@@ -1155,25 +1144,31 @@
         window.addEventListener('DOMContentLoaded', async () => {
             console.log('DOMContentLoaded event fired');
 
-            // Supabase 초기화 확인
-            if (!window.supabase) {
-                console.error('Supabase library not loaded');
-                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ Supabase 라이브러리 로드 실패</span>';
+            // Supabase 초기화 확인 및 재시도
+            if (!supabase) {
+                // initSupabase 함수가 있으면 호출
+                if (typeof initSupabase === 'function') {
+                    initSupabase();
+                }
+
+                // 그래도 없으면 직접 초기화
+                if (!supabase && window.supabase) {
+                    supabase = window.supabase.createClient(
+                        'https://ddfnxbkiewolgweivomv.supabase.co',
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
+                    );
+                    console.log('Supabase client initialized in DOMContentLoaded');
+                }
+            }
+
+            // 여전히 없으면 에러
+            if (!supabase) {
+                console.error('Failed to initialize Supabase client');
+                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ Supabase 초기화 실패</span>';
                 return;
             }
 
-            // Supabase client 사용
-            if (window.supabaseClient) {
-                supabase = window.supabaseClient;
-                console.log('Using supabaseClient from window');
-            } else if (typeof supabase === 'undefined' && window.supabase) {
-                // supabase-config.js에서 초기화되지 않았으면 여기서 초기화
-                supabase = window.supabase.createClient(
-                    'https://ddfnxbkiewolgweivomv.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
-                );
-                console.log('Supabase client initialized in DOMContentLoaded');
-            }
+            console.log('Supabase client ready:', supabase);
 
             // 인증 확인
             const hasAccess = await checkAdminAccess();
