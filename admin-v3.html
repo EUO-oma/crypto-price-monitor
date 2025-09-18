@@ -268,6 +268,93 @@
             </div>
         </div>
 
+        <div class="add-form" style="margin-bottom: 20px; background: #1a1a1a;">
+            <h3 style="width: 100%; margin-bottom: 15px;">🎨 링크 카드 스타일 설정</h3>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <!-- GPT Links 스타일 -->
+                <div style="border: 1px solid #333; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #4fc3f7; margin-bottom: 10px;">🤖 GPT Links</h4>
+                    <label style="display: block; margin-bottom: 8px;">
+                        글자 크기:
+                        <input type="range" id="gpt-font-size" min="10" max="20" value="16" style="width: 100px; margin-left: 10px;">
+                        <span id="gpt-font-size-display">16px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        배경색:
+                        <input type="color" id="gpt-bg-color" value="#1a1a1a" style="margin-left: 10px;">
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        글자색:
+                        <input type="color" id="gpt-text-color" value="#ffffff" style="margin-left: 10px;">
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        테두리색:
+                        <input type="color" id="gpt-border-color" value="#333333" style="margin-left: 10px;">
+                    </label>
+                </div>
+
+                <!-- YouTube Live 스타일 -->
+                <div style="border: 1px solid #333; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #ff6b6b; margin-bottom: 10px;">📺 YouTube Live</h4>
+                    <label style="display: block; margin-bottom: 8px;">
+                        글자 크기:
+                        <input type="range" id="youtube-font-size" min="10" max="20" value="17" style="width: 100px; margin-left: 10px;">
+                        <span id="youtube-font-size-display">17px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        배경색:
+                        <input type="color" id="youtube-bg-color" value="#1a1a1a" style="margin-left: 10px;">
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        글자색:
+                        <input type="color" id="youtube-text-color" value="#ffffff" style="margin-left: 10px;">
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        테두리색:
+                        <input type="color" id="youtube-border-color" value="#333333" style="margin-left: 10px;">
+                    </label>
+                </div>
+
+                <!-- Favorite Sites 스타일 -->
+                <div style="border: 1px solid #333; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #ffd93d; margin-bottom: 10px;">⭐ Favorite Sites</h4>
+                    <label style="display: block; margin-bottom: 8px;">
+                        글자 크기:
+                        <input type="range" id="favorite-font-size" min="10" max="20" value="16" style="width: 100px; margin-left: 10px;">
+                        <span id="favorite-font-size-display">16px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        배경색:
+                        <input type="color" id="favorite-bg-color" value="#1a1a1a" style="margin-left: 10px;">
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        글자색:
+                        <input type="color" id="favorite-text-color" value="#ffffff" style="margin-left: 10px;">
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        테두리색:
+                        <input type="color" id="favorite-border-color" value="#333333" style="margin-left: 10px;">
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button onclick="saveStyles()" style="background: #4caf50;">💾 스타일 저장</button>
+                <button onclick="resetStyles()" style="background: #ff9800;">🔄 기본값으로 초기화</button>
+                <button onclick="previewStyles()" style="background: #2196f3;">👁️ 미리보기</button>
+            </div>
+
+            <div id="style-preview" style="margin-top: 20px; display: none;">
+                <h4 style="margin-bottom: 10px;">미리보기:</h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div id="gpt-preview" style="padding: 10px; border-radius: 10px; text-align: center;">GPT Sample</div>
+                    <div id="youtube-preview" style="padding: 10px; border-radius: 10px; text-align: center;">YouTube Sample</div>
+                    <div id="favorite-preview" style="padding: 10px; border-radius: 10px; text-align: center;">Favorite Sample</div>
+                </div>
+            </div>
+        </div>
+
         <div class="add-form">
             <h3 style="width: 100%; margin-bottom: 10px;">➕ 새 링크 추가</h3>
             <input type="text" id="link-name" placeholder="이름 (예: 사또)">
@@ -379,6 +466,90 @@
             showStatus(`카테고리 '${categoryName}' (${categoryId})가 추가되었습니다.`, 'success');
         }
 
+        // 스타일 관련 함수들
+        function loadSavedStyles() {
+            const savedStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
+
+            // 기본값 설정
+            const defaultStyles = {
+                gpt: { fontSize: 16, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' },
+                youtube: { fontSize: 17, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' },
+                favorite: { fontSize: 16, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' }
+            };
+
+            // 저장된 스타일 또는 기본값 적용
+            ['gpt', 'youtube', 'favorite'].forEach(category => {
+                const styles = savedStyles[category] || defaultStyles[category];
+
+                document.getElementById(`${category}-font-size`).value = styles.fontSize;
+                document.getElementById(`${category}-font-size-display`).textContent = `${styles.fontSize}px`;
+                document.getElementById(`${category}-bg-color`).value = styles.bgColor;
+                document.getElementById(`${category}-text-color`).value = styles.textColor;
+                document.getElementById(`${category}-border-color`).value = styles.borderColor;
+            });
+        }
+
+        function initStyleControls() {
+            // 폰트 사이즈 슬라이더 이벤트
+            ['gpt', 'youtube', 'favorite'].forEach(category => {
+                const slider = document.getElementById(`${category}-font-size`);
+                const display = document.getElementById(`${category}-font-size-display`);
+
+                slider.addEventListener('input', (e) => {
+                    display.textContent = `${e.target.value}px`;
+                    previewStyles();
+                });
+
+                // 컬러 피커 이벤트
+                ['bg-color', 'text-color', 'border-color'].forEach(type => {
+                    document.getElementById(`${category}-${type}`).addEventListener('change', previewStyles);
+                });
+            });
+        }
+
+        function saveStyles() {
+            const styles = {};
+
+            ['gpt', 'youtube', 'favorite'].forEach(category => {
+                styles[category] = {
+                    fontSize: parseInt(document.getElementById(`${category}-font-size`).value),
+                    bgColor: document.getElementById(`${category}-bg-color`).value,
+                    textColor: document.getElementById(`${category}-text-color`).value,
+                    borderColor: document.getElementById(`${category}-border-color`).value
+                };
+            });
+
+            localStorage.setItem('linkCardStyles', JSON.stringify(styles));
+            showStatus('스타일이 저장되었습니다. 메인 페이지를 새로고침하면 적용됩니다.', 'success');
+        }
+
+        function resetStyles() {
+            if (confirm('정말로 모든 스타일을 기본값으로 초기화하시겠습니까?')) {
+                localStorage.removeItem('linkCardStyles');
+                loadSavedStyles();
+                previewStyles();
+                showStatus('스타일이 초기화되었습니다.', 'success');
+            }
+        }
+
+        function previewStyles() {
+            const previewDiv = document.getElementById('style-preview');
+            previewDiv.style.display = 'block';
+
+            ['gpt', 'youtube', 'favorite'].forEach(category => {
+                const preview = document.getElementById(`${category}-preview`);
+                const fontSize = document.getElementById(`${category}-font-size`).value;
+                const bgColor = document.getElementById(`${category}-bg-color`).value;
+                const textColor = document.getElementById(`${category}-text-color`).value;
+                const borderColor = document.getElementById(`${category}-border-color`).value;
+
+                preview.style.fontSize = `${fontSize}px`;
+                preview.style.backgroundColor = bgColor;
+                preview.style.color = textColor;
+                preview.style.border = `1px solid ${borderColor}`;
+            });
+        }
+
         // 페이지 로드시 인증 확인 후 링크 목록 불러오기
         window.addEventListener('DOMContentLoaded', async () => {
             // 인증 확인
@@ -389,6 +560,8 @@
             
             loadCustomCategories(); // 커스텀 카테고리 로드
             updateCategoryDropdown(); // 카테고리 드롭다운 업데이트
+            loadSavedStyles(); // 저장된 스타일 로드
+            initStyleControls(); // 스타일 컨트롤 초기화
             await checkConnection();
             await loadLinks();
         });

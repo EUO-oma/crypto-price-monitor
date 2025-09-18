@@ -955,6 +955,17 @@
             return match ? match[1] : null;
         }
 
+        // 저장된 카드 스타일 가져오기
+        function getCardStyles(category) {
+            const savedStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
+            const defaultStyles = {
+                gpt: { fontSize: 16, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' },
+                youtube: { fontSize: 17, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' },
+                favorite: { fontSize: 16, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' }
+            };
+            return savedStyles[category] || defaultStyles[category] || defaultStyles.gpt;
+        }
+
         // Supabase에서 링크 데이터 로드
         async function loadLinksFromSupabase() {
             console.log('Loading links from Supabase...');
@@ -1005,19 +1016,20 @@
                 const gptContainer = document.getElementById('gpt-links');
                 if (gptContainer) {
                     if (gptLinks.length > 0) {
+                        const gptStyles = getCardStyles('gpt');
                         gptContainer.innerHTML = gptLinks.map(link => `
                             <a href="${link.url}" target="_blank" style="
-                                background: #1a1a1a;
-                                color: white;
+                                background: ${gptStyles.bgColor};
+                                color: ${gptStyles.textColor};
                                 padding: 15px;
                                 border-radius: 10px;
                                 text-align: center;
-                                border: 1px solid #333;
+                                border: 1px solid ${gptStyles.borderColor};
                                 text-decoration: none;
                                 transition: transform 0.3s ease;
                                 display: block;
                             ">
-                                <div style="font-size: 1em;">${link.name}</div>
+                                <div style="font-size: ${gptStyles.fontSize}px;">${link.name}</div>
                             </a>
                         `).join('');
                     } else {
@@ -1029,20 +1041,21 @@
                 const youtubeContainer = document.getElementById('youtube-links');
                 if (youtubeContainer) {
                     if (youtubeLinks.length > 0) {
+                        const youtubeStyles = getCardStyles('youtube');
                         youtubeContainer.innerHTML = youtubeLinks.map(link => `
                         <a href="${link.url}" target="_blank" style="
-                            background: #1a1a1a;
-                            color: white;
+                            background: ${youtubeStyles.bgColor};
+                            color: ${youtubeStyles.textColor};
                             padding: 15px;
                             border-radius: 10px;
                             text-align: center;
-                            border: 1px solid #333;
+                            border: 1px solid ${youtubeStyles.borderColor};
                             text-decoration: none;
                             transition: transform 0.3s ease;
                             display: block;
                             position: relative;
                         ">
-                            <div style="font-size: 1.1em; font-weight: bold;">${link.name}</div>
+                            <div style="font-size: ${youtubeStyles.fontSize}px; font-weight: bold;">${link.name}</div>
                             <span class="live-indicator" data-channel-url="${link.url}" style="
                                 position: absolute;
                                 top: 5px;
@@ -1067,19 +1080,20 @@
                 const favoriteContainer = document.getElementById('favorite-links');
                 if (favoriteContainer) {
                     if (favoriteLinks.length > 0) {
+                        const favoriteStyles = getCardStyles('favorite');
                         favoriteContainer.innerHTML = favoriteLinks.map(link => `
                         <a href="${link.url}" target="_blank" style="
-                            background: #1a1a1a;
-                            color: white;
+                            background: ${favoriteStyles.bgColor};
+                            color: ${favoriteStyles.textColor};
                             padding: 15px;
                             border-radius: 10px;
                             text-align: center;
-                            border: 1px solid #333;
+                            border: 1px solid ${favoriteStyles.borderColor};
                             text-decoration: none;
                             transition: transform 0.3s ease;
                             display: block;
                         ">
-                            <div style="font-size: 1em;">${link.name}</div>
+                            <div style="font-size: ${favoriteStyles.fontSize}px;">${link.name}</div>
                         </a>
                         `).join('');
                     } else {
