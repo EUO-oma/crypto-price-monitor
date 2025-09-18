@@ -2245,13 +2245,40 @@
             return avatar;
         }
         
+        // 아바타 맵핑 저장
+        function saveAvatarMappings() {
+            try {
+                const mappingData = {
+                    userMap: {},
+                    usedIndices: Array.from(usedAvatarIndices)
+                };
+                
+                // userAvatarMap에서 아바타 인덱스만 저장
+                for (const [userId, avatar] of Object.entries(userAvatarMap)) {
+                    const index = coinAvatars.findIndex(a => a.id === avatar.id);
+                    if (index !== -1) {
+                        mappingData.userMap[userId] = index;
+                    }
+                }
+                
+                localStorage.setItem('chatAvatarMappings', JSON.stringify(mappingData));
+            } catch (e) {
+                console.error('아바타 맵핑 저장 실패:', e);
+            }
+        }
+        
         function loadSavedAvatarMappings() {
             try {
-                const savedMappings = JSON.parse(localStorage.getItem('userCoinAvatars') || '{}');
-                for (const [userId, avatarIndex] of Object.entries(savedMappings)) {
-                    if (avatarIndex < coinAvatars.length) {
-                        userAvatarMap[userId] = coinAvatars[avatarIndex];
-                        usedAvatarIndices.add(avatarIndex);
+                const saved = localStorage.getItem('chatAvatarMappings');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    
+                    // 사용자별 아바타 복원
+                    for (const [userId, avatarIndex] of Object.entries(data.userMap)) {
+                        if (avatarIndex < coinAvatars.length) {
+                            userAvatarMap[userId] = coinAvatars[avatarIndex];
+                            usedAvatarIndices.add(avatarIndex);
+                        }
                     }
                 }
                 console.log('코인 아바타 맵핑 복원:', Object.keys(userAvatarMap).length, '명');
@@ -2260,84 +2287,168 @@
             }
         }
         
-        // 메시지 요소 생성
+        // 메시지 요소 생성 (카카오톡 스타일)
         function createMessageElement(message) {
             const time = new Date(message.created_at).toLocaleTimeString('ko-KR', { 
                 hour: '2-digit', 
                 minute: '2-digit' 
             });
             
+            // 현재 브라우저의 fingerprint와 비교
             const currentBrowserId = getBrowserFingerprint();
             const isMyMessage = message.browser_id === currentBrowserId || 
                                message.browser_id === localStorage.getItem('chat_browser_id');
             
+            // 브라우저 ID 저장 (일관성 유지)
             if (isMyMessage && message.browser_id) {
                 localStorage.setItem('chat_browser_id', message.browser_id);
             }
             
-            const userId = message.browser_id || 'anonymous';
-            const avatar = getCoinAvatar(userId);
-            
+            // 디바이스 정보 표시
             let deviceInfo = '';
-            if (message.device_type || message.browser_name) {
+            if (message.device_info || message.location) {
                 const parts = [];
-                if (message.device_type) {
-                    const deviceEmoji = message.device_type === 'mobile' ? '📱' : '💻';
-                    parts.push(`${deviceEmoji} ${message.device_type}`);
+                if (message.device_info) {
+                    parts.push(message.device_info);
                 }
-                if (message.browser_name) parts.push(message.browser_name);
-                deviceInfo = ` • ${parts.join(' • ')}`;
+                if (message.location && message.location !== 'Unknown') {
+                    parts.push(message.location);
+                }
+                if (parts.length > 0) {
+                    deviceInfo = parts.join(' · ');
+                }
             }
             
-            return `
-            <div data-message-id="${message.id}" style="
-                display: flex;
-                gap: 10px;
-                margin-bottom: 15px;
-                ${isMyMessage ? 'flex-direction: row-reverse;' : ''}
-            ">
-                <div style="
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                    background: ${avatar.color}20;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    flex-shrink: 0;
-                    border: 2px solid ${avatar.color};
-                ">
-                    <img src="${avatar.image}" 
-                         alt="${avatar.name}" 
-                         style="width: 24px; height: 24px; object-fit: contain;"
-                         onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\"font-size: 20px;\\">${avatar.id.toUpperCase().slice(0,1)}</div>';">
-                </div>
-                <div style="
-                    max-width: 70%;
-                    ${isMyMessage ? 'text-align: right;' : ''}
-                ">
-                    <div style="
-                        font-size: 0.75em;
-                        color: #666;
-                        margin-bottom: 4px;
+            // 사용자의 코인 아바타 가져오기 (browser_id 기반)
+            const userIdentifier = message.browser_id || message.ip_hash || `user_${message.id}`;
+            const coinAvatar = getCoinAvatar(userIdentifier);
+            
+            if (isMyMessage) {
+                // 내 메시지 (좌측 정렬로 변경) - 전체 너비 사용
+                return `
+                    <div data-message-id="${message.id}" style="
+                        display: flex;
+                        margin-bottom: 10px;
+                        width: 100%;
                     ">
-                        ${time}${deviceInfo}
+                        <div style="
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            margin-right: 8px;
+                            background: ${coinAvatar.color || '#fff'};
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            overflow: hidden;
+                            position: relative;
+                            flex-shrink: 0;
+                        ">
+                            <img src="${coinAvatar.image}"
+                                style="
+                                    width: 100%;
+                                    height: 100%;
+                                    object-fit: contain;
+                                    padding: 4px;
+                                "
+                                alt="${coinAvatar.name}"
+                                onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIGZpbGw9IiNmN2EwMGMiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7CpzwvdGV4dD48L3N2Zz4='">
+                        </div>
+                        <div style="
+                            flex-grow: 1;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            min-width: 0;
+                            width: calc(100% - 44px);
+                        ">
+                            <div class="message-bubble" style="
+                                background: #1a1a1a;
+                                color: #ffffff;
+                                padding: 8px 12px;
+                                border-radius: 15px;
+                                border-top-left-radius: 4px;
+                                font-size: 14px;
+                                line-height: 1.4;
+                                word-wrap: break-word;
+                                border: 1px solid #444;
+                                flex-grow: 1;
+                                min-width: 0;
+                            ">
+                                ${escapeHtml(message.message)}
+                            </div>
+                            <span class="message-time" style="color: #666; font-size: 11px; flex-shrink: 0; width: 45px;">
+                                ${time}
+                            </span>
+                        </div>
                     </div>
-                    <div style="
-                        background: ${isMyMessage ? '#4facfe20' : '#ffffff10'};
-                        padding: 10px 15px;
-                        border-radius: ${isMyMessage ? '15px 15px 5px 15px' : '15px 15px 15px 5px'};
-                        display: inline-block;
-                        word-wrap: break-word;
-                        max-width: 100%;
-                        text-align: left;
-                        border: 1px solid ${isMyMessage ? '#4facfe40' : '#333'};
+                `;
+            } else {
+                // 다른 사람 메시지 (왼쪽 정렬)
+                return `
+                    <div data-message-id="${message.id}" style="
+                        display: flex;
+                        margin-bottom: 10px;
+                        width: 100%;
                     ">
-                        ${message.message || message.text || ''}
+                        <div style="
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            margin-right: 8px;
+                            background: ${coinAvatar.color || '#fff'};
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            overflow: hidden;
+                            position: relative;
+                            flex-shrink: 0;
+                        ">
+                            <img src="${coinAvatar.image}"
+                                style="
+                                    width: 100%;
+                                    height: 100%;
+                                    object-fit: contain;
+                                    padding: 4px;
+                                "
+                                alt="${coinAvatar.name}"
+                                onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIGZpbGw9IiNmN2EwMGMiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1saXplPSI0MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7CpzwvdGV4dD48L3N2Zz4='">
+                        </div>
+                        <div style="
+                            flex-grow: 1;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 2px;
+                            min-width: 0;
+                            width: calc(100% - 44px);
+                        ">
+                            ${deviceInfo ? `<div style="color: #888; font-size: 11px; margin-left: 5px;">${deviceInfo}</div>` : ''}
+                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                                <div class="message-bubble" style="
+                                    background: #000;
+                                    color: #ffffff;
+                                    padding: 8px 12px;
+                                    border-radius: 15px;
+                                    border-top-left-radius: 4px;
+                                    font-size: 14px;
+                                    line-height: 1.4;
+                                    word-wrap: break-word;
+                                    border: 1px solid #333;
+                                    flex-grow: 1;
+                                    min-width: 0;
+                                ">
+                                    ${escapeHtml(message.message)}
+                                </div>
+                                <span class="message-time" style="color: #666; font-size: 11px; flex-shrink: 0; width: 45px;">
+                                    ${time}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>`;
+                `;
+            }
         }
+        
         
         // 채팅 메시지 로드
         async function loadChatMessages() {
