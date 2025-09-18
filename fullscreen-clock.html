@@ -1005,9 +1005,31 @@
     </div>
 
     <script>
+        // Menu and panel elements
+        const menuToggle = document.getElementById('menuToggle');
+        const effectsPanel = document.getElementById('effectsPanel');
+        let menuOpen = false;
+
         let currentTimezone = 'Asia/Seoul';
         const urlParams = new URLSearchParams(window.location.search);
         const tzParam = urlParams.get('tz');
+
+        // Menu toggle functionality
+        menuToggle.addEventListener('click', () => {
+            menuOpen = !menuOpen;
+            if (menuOpen) {
+                effectsPanel.classList.add('show');
+                menuToggle.classList.add('active');
+            } else {
+                effectsPanel.classList.remove('show');
+                menuToggle.classList.remove('active');
+            }
+        });
+
+        // Update menu icon function
+        function updateMenuIcon(icon) {
+            menuToggle.textContent = icon;
+        }
 
         // Set initial timezone from URL parameter
         if (tzParam) {

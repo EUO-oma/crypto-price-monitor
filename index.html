@@ -657,14 +657,12 @@
                 const dubaiTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Dubai"}));
                 const sydTime = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Sydney"}));
                 
-                // Format times
+                // Format times (24-hour format)
                 const formatTime = (date) => {
-                    const h = date.getHours();
+                    const h = date.getHours().toString().padStart(2, '0');
                     const m = date.getMinutes().toString().padStart(2, '0');
                     const s = date.getSeconds().toString().padStart(2, '0');
-                    const ap = h >= 12 ? 'PM' : 'AM';
-                    const displayH = h % 12 || 12;
-                    return {hours: displayH, minutes: m, seconds: s, ampm: ap};
+                    return {hours: h, minutes: m, seconds: s};
                 };
                 
                 const kor = formatTime(korTime);
@@ -724,7 +722,6 @@
                                 </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${kor.hours}:${kor.minutes}<span style="font-size: 0.6em; color: #666;">:${kor.seconds}</span>
-                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${kor.ampm}</span>
                                 </div>
                             </div>
                             
@@ -747,7 +744,6 @@
                                 </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${eu.hours}:${eu.minutes}<span style="font-size: 0.6em; color: #666;">:${eu.seconds}</span>
-                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${eu.ampm}</span>
                                 </div>
                             </div>
                             
@@ -770,7 +766,6 @@
                                 </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${us.hours}:${us.minutes}<span style="font-size: 0.6em; color: #666;">:${us.seconds}</span>
-                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${us.ampm}</span>
                                 </div>
                             </div>
 
@@ -793,7 +788,6 @@
                                 </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${jp.hours}:${jp.minutes}<span style="font-size: 0.6em; color: #666;">:${jp.seconds}</span>
-                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${jp.ampm}</span>
                                 </div>
                             </div>
 
@@ -816,7 +810,6 @@
                                 </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${dubai.hours}:${dubai.minutes}<span style="font-size: 0.6em; color: #666;">:${dubai.seconds}</span>
-                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${dubai.ampm}</span>
                                 </div>
                             </div>
 
@@ -839,7 +832,6 @@
                                 </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${syd.hours}:${syd.minutes}<span style="font-size: 0.6em; color: #666;">:${syd.seconds}</span>
-                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${syd.ampm}</span>
                                 </div>
                             </div>
                         </div>
