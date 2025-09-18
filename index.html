@@ -227,43 +227,10 @@
             box-sizing: border-box;
         ">
             <div style="text-align: center;">
-                <!-- 사이트 로고/제목 -->
-                <div style="margin-bottom: 15px;">
-                    <span style="
-                        background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #dda0dd);
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-                        background-clip: text;
-                        font-size: clamp(1.5em, 4vw, 2.5em);
-                        font-weight: 900;
-                        font-family: 'Courier New', monospace;
-                        letter-spacing: 2px;
-                        text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-                        display: inline-block;
-                        animation: glow 3s ease-in-out infinite;
-                    ">EUO.NETLIFY.APP</span>
-                </div>
-                <style>
-                    @keyframes glow {
-                        0%, 100% { filter: brightness(1) contrast(1); }
-                        50% { filter: brightness(1.2) contrast(1.1); }
-                    }
-                </style>
                 
                 <!-- 실시간 시계 표시 영역 -->
                 <div id="header-update-time" style="margin: 15px 0;"></div>
                 
-                <!-- 외부 링크 (날씨 정보) -->
-                <div style="margin-top: 10px;">
-                    <a href="https://www.weather.go.kr/w/weather/warning/status.do" target="_blank" style="
-                        color: #888; 
-                        text-decoration: none; 
-                        font-size: 0.85em;
-                        transition: color 0.3s;
-                    " onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#888'">
-                        🌦️ 날씨누리 특보현황
-                    </a>
-                </div>
             </div>
         </div>
         <!-- ============================================ -->
@@ -547,18 +514,19 @@
             const seconds = now.getSeconds().toString().padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             const displayHours = hours % 12 || 12;
-            const dateString = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+            // 일본어 월 이름과 숫자 날짜 형식
+            const japaneseMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            const dateString = `${japaneseMonths[now.getMonth()]} ${now.getDate()}日`;
             
             // Header update time with multiple timezones
             const headerTimeElement = document.getElementById('header-update-time');
             if (headerTimeElement) {
-                // Calculate different timezones
+                // Calculate different timezones (East to West order)
                 const korTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+                const sydTime = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Sydney"}));
+                const dubaiTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Dubai"}));
                 const euTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/London"}));
                 const usTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-                const jpTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
-                const dubaiTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Dubai"}));
-                const sydTime = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Sydney"}));
                 
                 // Format times (24-hour format)
                 const formatTime = (date) => {
@@ -569,11 +537,10 @@
                 };
                 
                 const kor = formatTime(korTime);
+                const syd = formatTime(sydTime);
+                const dubai = formatTime(dubaiTime);
                 const eu = formatTime(euTime);
                 const us = formatTime(usTime);
-                const jp = formatTime(jpTime);
-                const dubai = formatTime(dubaiTime);
-                const syd = formatTime(sydTime);
                 
                 // US Market hours (9:30 AM - 4:00 PM ET)
                 const marketHour = usTime.getHours();
@@ -606,6 +573,7 @@
                         ">${dateString}</div>
                         
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin: 0 auto 10px;">
+                            <!-- KOR: UTC+9 -->
                             <div style="
                                 background: #0a0a0a;
                                 color: white;
@@ -628,6 +596,53 @@
                                 </div>
                             </div>
                             
+                            <!-- SYD: UTC+10/+11 -->
+                            <div style="
+                                background: #0a0a0a;
+                                color: white;
+                                padding: 15px 10px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid #333;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            " onclick="window.open('fullscreen-clock.html?tz=Australia/Sydney', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                                    <img src="https://flagcdn.com/24x18/au.png" alt="Australia" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">SYD</span>
+                                </div>
+                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
+                                    ${syd.hours}:${syd.minutes}<span style="font-size: 0.6em; color: #666;">:${syd.seconds}</span>
+                                </div>
+                            </div>
+
+                            <!-- DXB: UTC+4 -->
+                            <div style="
+                                background: #0a0a0a;
+                                color: white;
+                                padding: 15px 10px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid #333;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Dubai', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                                    <img src="https://flagcdn.com/24x18/ae.png" alt="UAE" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">DXB</span>
+                                </div>
+                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
+                                    ${dubai.hours}:${dubai.minutes}<span style="font-size: 0.6em; color: #666;">:${dubai.seconds}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- LON: UTC+0/+1 -->
                             <div style="
                                 background: #0a0a0a;
                                 color: white;
@@ -650,6 +665,7 @@
                                 </div>
                             </div>
                             
+                            <!-- NYC: UTC-5/-4 -->
                             <div style="
                                 background: #0a0a0a;
                                 color: white;
@@ -669,72 +685,6 @@
                                 </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${us.hours}:${us.minutes}<span style="font-size: 0.6em; color: #666;">:${us.seconds}</span>
-                                </div>
-                            </div>
-
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Tokyo', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/jp.png" alt="Japan" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">TYO</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${jp.hours}:${jp.minutes}<span style="font-size: 0.6em; color: #666;">:${jp.seconds}</span>
-                                </div>
-                            </div>
-
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Dubai', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/ae.png" alt="UAE" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">DXB</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${dubai.hours}:${dubai.minutes}<span style="font-size: 0.6em; color: #666;">:${dubai.seconds}</span>
-                                </div>
-                            </div>
-
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Australia/Sydney', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/au.png" alt="Australia" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">SYD</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${syd.hours}:${syd.minutes}<span style="font-size: 0.6em; color: #666;">:${syd.seconds}</span>
                                 </div>
                             </div>
                         </div>
@@ -889,54 +839,26 @@
 
         // 저장된 카드 스타일 가져오기 (안전한 버전 - NaN 방지)
         function getCardStyles(category) {
-            try {
-                const savedStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
-                const defaultStyles = {
-                    gpt: {
-                        fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
-                        borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
-                        shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
-                    },
-                    youtube: {
-                        fontSize: 17, fontWeight: '600', bgColor: '#1a1a1a', textColor: '#ffffff',
-                        borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
-                        shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102,
-                        showLiveIndicator: true
-                    },
-                    favorite: {
-                        fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
-                        borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
-                        shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
-                    }
-                };
-                
-                // 기본값과 저장된 스타일 병합
-                const mergedStyle = { ...defaultStyles[category], ...(savedStyles[category] || {}) };
-                
-                // NaN 값 체크 및 수정
-                const safeStyle = {};
-                Object.keys(mergedStyle).forEach(key => {
-                    const value = mergedStyle[key];
-                    if (typeof value === 'number' && isNaN(value)) {
-                        safeStyle[key] = defaultStyles[category][key]; // 기본값으로 대체
-                    } else if (value === undefined || value === null || value === '') {
-                        safeStyle[key] = defaultStyles[category][key] || ''; // 기본값으로 대체
-                    } else {
-                        safeStyle[key] = value;
-                    }
-                });
-                
-                return safeStyle;
-            } catch (error) {
-                console.error('스타일 파싱 오류:', error);
-                // 오류 발생시 기본 스타일 반환
-                const defaultStyles = {
-                    gpt: { fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10, shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102 },
-                    youtube: { fontSize: 17, fontWeight: '600', bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10, shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102, showLiveIndicator: true },
-                    favorite: { fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10, shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102 }
-                };
-                return defaultStyles[category] || defaultStyles.gpt;
-            }
+            // 항상 기본 스타일만 사용 (localStorage 무시)
+            const defaultStyles = {
+                gpt: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15,
+                    hoverBg: '#2a2a2a'
+                },
+                youtube: {
+                    fontSize: 17, fontWeight: '600', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15,
+                    hoverBg: '#2a2a2a'
+                },
+                favorite: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15,
+                    hoverBg: '#2a2a2a'
+                }
+            };
+            
+            return defaultStyles[category] || defaultStyles.gpt;
         }
 
         // HTML 이스케이프 함수 (XSS 방지)
@@ -1948,64 +1870,100 @@
             }
         }
         
-        // 페이지 로드시 링크 데이터 가져오기
-        window.addEventListener('DOMContentLoaded', () => {
-
-            // 모듈화된 링크 로딩 사용
-            async function loadLinksUsingModule() {
-                console.log('LinksModule을 사용하여 링크 로딩 시작...');
-
-                // 디버그 모드 활성화
-                LinksModule.setDebug(true);
-
-                // 모듈 초기화 및 링크 로드
-                const result = await LinksModule.loadAndRender();
-
-                if (result.success) {
-                    console.log(`✅ 모듈 링크 로딩 성공: ${result.total}개 링크`);
-                } else {
-                    console.error(`❌ 모듈 링크 로딩 실패: ${result.error}`);
-
-                    // 실패시 기존 방식으로 폴백
-                    console.log('기존 방식으로 폴백...');
-                    loadLinksFromSupabase();
-                }
+        // 순차적 페이지 로딩 시스템
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 === 순차적 페이지 로딩 시작 ===');
+            
+            try {
+                // 1단계: Supabase 데이터 우선 로드
+                console.log('📊 1단계: Supabase 데이터 로딩...');
+                await loadSupabaseDataFirst();
+                
+                // 2단계: 시계 시작
+                console.log('🕐 2단계: 시계 시스템 시작...');
+                startClockSystem();
+                
+                // 3단계: 코인 데이터 로드
+                console.log('💰 3단계: 코인 데이터 로딩...');
+                startCryptoSystem();
+                
+                // 4단계: 가격 기록 로드
+                console.log('📈 4단계: 가격 기록 로딩...');
+                loadHistoryData();
+                
+                console.log('✅ === 모든 시스템 로딩 완료 ===');
+                
+            } catch (error) {
+                console.error('❌ 페이지 로딩 중 오류:', error);
+                // 오류 발생시 기존 방식으로 폴백
+                fallbackLoading();
             }
-
-            // 모듈이 로드될 때까지 대기
-            function waitForLinksModule() {
-                if (window.LinksModule) {
-                    console.log('✅ LinksModule 준비됨');
-                    loadLinksUsingModule();
-                } else {
-                    console.log('⏳ LinksModule 대기 중...');
-                    setTimeout(waitForLinksModule, 200);
-                }
-            }
-
-            // 직접 링크 로드 함수 호출 (LinksModule 대신)
-            console.log('🚀 링크 로딩 시작 (직접 호출)');
-            setTimeout(() => {
-                loadLinksFromSupabase();
-            }, 1000);
+        });
+        
+        // 1단계: Supabase 데이터 우선 로드
+        async function loadSupabaseDataFirst() {
+            console.log('🗄️ Supabase 데이터 우선 로딩 시작...');
+            
+            // Section 3 링크 데이터 로드
+            await loadLinksFromSupabase();
+            
+            // 실시간 구독 설정
+            setupRealtimeSubscription();
+            
+            console.log('✅ Supabase 데이터 로딩 완료');
+        }
+        
+        // 2단계: 시계 시스템 시작
+        function startClockSystem() {
+            console.log('🕐 시계 시스템 시작...');
+            
+            // 시계 업데이트 시작
+            updateLastUpdate();
+            
+            // 1초마다 시계 업데이트
+            setInterval(updateLastUpdate, 1000);
+            
+            console.log('✅ 시계 시스템 시작 완료');
+        }
+        
+        // 3단계: 코인 데이터 시스템 시작
+        function startCryptoSystem() {
+            console.log('💰 코인 데이터 시스템 시작...');
+            
+            // Binance WebSocket 연결
+            connectBinance();
+            
+            console.log('✅ 코인 데이터 시스템 시작 완료');
+        }
+        
+        // 4단계: 가격 기록 데이터 로드
+        function loadHistoryData() {
+            console.log('📈 가격 기록 데이터 로딩...');
+            
             loadBTCHistory(); // BTC 가격 기록 로드
             loadETHHistory(); // ETH 가격 기록 로드
             loadSOLHistory(); // SOL 가격 기록 로드
-
+            
+            // 나스닥 데이터 로드
+            fetchNasdaqData();
+            
+            // 정기 업데이트 설정
+            setInterval(fetchNasdaqData, 60000); // 1분마다 나스닥 업데이트
+            
             // 현재 가격 데이터가 있으면 바로 저장
             setTimeout(() => {
                 savePriceHistory();
             }, 5000); // 5초 후 첫 저장
             
-            // 나스닥 데이터 로드
-            fetchNasdaqData();
-            // 1분마다 나스닥 업데이트 (실제 API 사용 시)
-            setInterval(fetchNasdaqData, 60000);
-            
-            
-            // Supabase 실시간 구독은 클라이언트가 초기화된 후에 설정
+            console.log('✅ 가격 기록 데이터 로딩 완료');
+        }
+        
+        // 실시간 구독 설정
+        function setupRealtimeSubscription() {
             setTimeout(() => {
                 if (window.supabaseClient) {
+                    console.log('🔄 Supabase 실시간 구독 설정 중...');
+                    
                     // 실시간 업데이트 구독 (선택사항)
                     const subscription = window.supabaseClient
                         .channel('links-channel')
@@ -2030,12 +1988,118 @@
                         )
                         .subscribe();
                     
-                    console.log('✓ Supabase 실시간 구독 설정 완료');
+                    console.log('✅ Supabase 실시간 구독 설정 완료');
                 } else {
                     console.log('⚠️ Supabase 실시간 구독 건너뜀 (클라이언트 없음)');
                 }
             }, 2000);
+        }
+        
+        // 폴백 로딩 (오류시 기존 방식)
+        function fallbackLoading() {
+            console.log('🔄 폴백 로딩 시작...');
+            
+            // 기존 방식으로 모든 것을 동시에 로드
+            setTimeout(() => {
+                loadLinksFromSupabase();
+            }, 1000);
+            
+            loadBTCHistory();
+            loadETHHistory();
+            loadSOLHistory();
+            fetchNasdaqData();
+            
+            connectBinance();
+            
+            setInterval(fetchNasdaqData, 60000);
+            
+            setTimeout(() => {
+                savePriceHistory();
+            }, 5000);
+            
+            setupRealtimeSubscription();
+        }
+        
+        // TradingView 테스트 페이지로부터 가격 데이터 수신
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'TRADINGVIEW_PRICE_UPDATE') {
+                console.log('📈 TradingView에서 가격 데이터 수신:', event.data.data);
+                
+                // 받은 가격 데이터로 메인 페이지 업데이트
+                updateMainPagePrices(event.data.data);
+                
+                // 알림 표시
+                showPriceUpdateNotification();
+            }
         });
+        
+        // 메인 페이지 가격 업데이트
+        function updateMainPagePrices(tradingViewData) {
+            Object.keys(tradingViewData).forEach(symbol => {
+                const data = tradingViewData[symbol];
+                const price = data.price;
+                
+                // 심볼에 따라 해당 요소 업데이트
+                if (symbol === 'BTCUSDT') {
+                    const btcElement = document.getElementById('binance-btc');
+                    if (btcElement) {
+                        btcElement.innerHTML = formatPrice(price);
+                        btcElement.style.color = data.change >= 0 ? '#4caf50' : '#f44336';
+                    }
+                } else if (symbol === 'ETHUSDT') {
+                    const ethElement = document.getElementById('binance-eth');
+                    if (ethElement) {
+                        ethElement.innerHTML = formatPrice(price);
+                        ethElement.style.color = data.change >= 0 ? '#4caf50' : '#f44336';
+                    }
+                } else if (symbol === 'SOLUSDT') {
+                    const solElement = document.getElementById('binance-sol');
+                    if (solElement) {
+                        solElement.innerHTML = formatPrice(price);
+                        solElement.style.color = data.change >= 0 ? '#4caf50' : '#f44336';
+                    }
+                } else if (symbol === 'XRPUSDT') {
+                    const xrpElement = document.getElementById('binance-xrp');
+                    if (xrpElement) {
+                        xrpElement.innerHTML = formatPrice(price);
+                        xrpElement.style.color = data.change >= 0 ? '#4caf50' : '#f44336';
+                    }
+                }
+            });
+        }
+        
+        // 가격 업데이트 알림 표시
+        function showPriceUpdateNotification() {
+            // 임시 알림 표시
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4facfe;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                font-weight: bold;
+                z-index: 10000;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            `;
+            notification.textContent = '📈 TradingView 가격 데이터 업데이트됨!';
+            
+            document.body.appendChild(notification);
+            
+            // 3초 후 제거
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
         
         // 5분마다 YouTube 라이브 상태 재확인
         setInterval(() => {
@@ -2164,7 +2228,7 @@
         <a href="simple-test.html" style="text-decoration: none; color: #60a5fa; font-weight: bold;" title="단계별 테스트">🔍 Test</a>
         <a href="gpt-links-only.html" style="text-decoration: none; color: #4ade80; font-weight: bold;" title="GPT 링크만">🤖 GPT</a>
         <a href="debug-section3.html" style="text-decoration: none; color: #a855f7; font-weight: bold;" title="섹션3 디버그">🐛 Debug</a>
-        <a href="realtime-tick-chart.html" style="text-decoration: none; color: #ff6b6b; font-weight: bold;" title="실시간 틱 차트">📊 Tick</a>
+        <a href="tradingview-test.html" style="text-decoration: none; color: #ff6b6b; font-weight: bold;" title="TradingView 가격 연동 테스트">📈 TradingView</a>
         <a href="fix-localstorage.html" style="text-decoration: none; color: #fbbf24; font-weight: bold;" title="스타일 수정">🔧 Fix</a>
         <a href="admin-v3.html" style="text-decoration: none; color: #f87171; font-weight: bold;" title="관리자">⚙️ Admin</a>
     </div>
