@@ -584,7 +584,7 @@
             
             const parts = num.toFixed(2).split('.');
             const integerPart = parseInt(parts[0]).toLocaleString('en-US');
-            return `<span style="color: #000;">${integerPart}</span><span style="color: #666; font-size: 0.7em;">.${parts[1]}</span>`;
+            return `${integerPart}<span style="color: #666; font-size: 0.7em;">.${parts[1]}</span>`;
         }
 
 
@@ -2177,6 +2177,7 @@
                         word-wrap: break-word;
                         max-width: 100%;
                         text-align: left;
+                        color: #ffffff;
                         border: 1px solid ${isMyMessage ? '#4facfe40' : '#333'};
                     ">
                         ${message.message || message.text || ''}
