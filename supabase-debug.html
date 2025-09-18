@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Supabase Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .log { margin: 5px 0; padding: 10px; background: #2a2a2a; border-radius: 5px; }
+        button { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase 디버그 페이지</h1>
+    <div id="logs"></div>
+    
+    <div style="margin-top: 20px;">
+        <button onclick="testSupabaseLibrary()">1. 라이브러리 체크</button>
+        <button onclick="testCreateClient()">2. 클라이언트 생성</button>
+        <button onclick="testConnection()">3. 연결 테스트</button>
+        <button onclick="testGptLinks()">4. GPT 링크 조회</button>
+    </div>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        const logs = document.getElementById('logs');
+        
+        // Supabase 설정
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        let supabaseClient = null;
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+
+        // 1. 라이브러리 체크
+        function testSupabaseLibrary() {
+            log('=== 라이브러리 체크 시작 ===', 'info');
+            
+            // window.supabase 체크
+            if (typeof window.supabase !== 'undefined') {
+                log('✅ window.supabase 존재', 'success');
+                log(`타입: ${typeof window.supabase}`, 'info');
+                
+                // createClient 함수 체크
+                if (typeof window.supabase.createClient === 'function') {
+                    log('✅ createClient 함수 존재', 'success');
+                } else {
+                    log('❌ createClient 함수 없음', 'error');
+                }
+            } else {
+                log('❌ window.supabase 없음', 'error');
+                
+                // 다른 가능한 위치 체크
+                if (typeof supabase !== 'undefined') {
+                    log('⚠️ 전역 supabase 발견 (window. 없이)', 'info');
+                }
+            }
+            
+            // 스크립트 태그 체크
+            const scripts = Array.from(document.scripts);
+            const supabaseScript = scripts.find(s => s.src.includes('supabase'));
+            if (supabaseScript) {
+                log(`✅ Supabase 스크립트 로드됨: ${supabaseScript.src}`, 'success');
+            } else {
+                log('❌ Supabase 스크립트 태그 없음', 'error');
+            }
+        }
+
+        // 2. 클라이언트 생성 테스트
+        function testCreateClient() {
+            log('=== 클라이언트 생성 시작 ===', 'info');
+            
+            try {
+                if (window.supabase && window.supabase.createClient) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    log('✅ 클라이언트 생성 성공', 'success');
+                    log(`클라이언트 타입: ${typeof supabaseClient}`, 'info');
+                    
+                    // 클라이언트 메서드 체크
+                    if (supabaseClient.from) {
+                        log('✅ client.from() 메서드 존재', 'success');
+                    }
+                    if (supabaseClient.auth) {
+                        log('✅ client.auth 객체 존재', 'success');
+                    }
+                } else {
+                    log('❌ createClient 함수 접근 불가', 'error');
+                }
+            } catch (error) {
+                log(`❌ 클라이언트 생성 오류: ${error.message}`, 'error');
+            }
+        }
+
+        // 3. 연결 테스트
+        async function testConnection() {
+            log('=== 연결 테스트 시작 ===', 'info');
+            
+            if (!supabaseClient) {
+                log('❌ 클라이언트가 없습니다. 먼저 클라이언트를 생성하세요.', 'error');
+                return;
+            }
+            
+            try {
+                // 간단한 쿼리로 연결 테스트
+                const { data, error } = await supabaseClient
+                    .from('links')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    log(`❌ 연결 실패: ${error.message}`, 'error');
+                } else {
+                    log('✅ Supabase 연결 성공!', 'success');
+                    log(`응답: ${JSON.stringify(data)}`, 'info');
+                }
+            } catch (error) {
+                log(`❌ 예외 발생: ${error.message}`, 'error');
+            }
+        }
+
+        // 4. GPT 링크 조회
+        async function testGptLinks() {
+            log('=== GPT 링크 조회 시작 ===', 'info');
+            
+            if (!supabaseClient) {
+                log('❌ 클라이언트가 없습니다. 먼저 클라이언트를 생성하세요.', 'error');
+                return;
+            }
+            
+            try {
+                const { data: gptLinks, error } = await supabaseClient
+                    .from('links')
+                    .select('*')
+                    .eq('category', 'gpt')
+                    .order('position', { ascending: true });
+                
+                if (error) {
+                    log(`❌ 조회 실패: ${error.message}`, 'error');
+                } else {
+                    log(`✅ GPT 링크 조회 성공! ${gptLinks.length}개 발견`, 'success');
+                    
+                    if (gptLinks.length > 0) {
+                        gptLinks.forEach((link, index) => {
+                            log(`${index + 1}. ${link.name} - ${link.url}`, 'info');
+                        });
+                    } else {
+                        log('⚠️ GPT 카테고리 링크가 없습니다', 'info');
+                    }
+                }
+            } catch (error) {
+                log(`❌ 예외 발생: ${error.message}`, 'error');
+            }
+        }
+
+        // 페이지 로드 시 자동 체크
+        window.addEventListener('DOMContentLoaded', function() {
+            log('📄 페이지 로드 완료', 'info');
+            setTimeout(() => {
+                testSupabaseLibrary();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

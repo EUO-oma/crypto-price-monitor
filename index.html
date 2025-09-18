@@ -600,14 +600,22 @@
                 headerTimeElement.innerHTML = `
                     <div style="text-align: center;">
                         <div style="
-                            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #dda0dd);
-                            -webkit-background-clip: text;
-                            -webkit-text-fill-color: transparent;
-                            background-clip: text;
                             font-size: 1.2em;
                             font-weight: bold;
                             margin-bottom: 15px;
-                        ">${dateString}</div>
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 20px;
+                        ">
+                            <span style="
+                                background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #dda0dd);
+                                -webkit-background-clip: text;
+                                -webkit-text-fill-color: transparent;
+                                background-clip: text;
+                            ">${dateString}</span>
+                            ${marketStatus}
+                        </div>
                         
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin: 0 auto 10px;">
                             <!-- KOR: UTC+9 -->
@@ -724,10 +732,6 @@
                                     ${us.hours}:${us.minutes}<span style="font-size: 0.6em; color: #666;">:${us.seconds}</span>
                                 </div>
                             </div>
-                        </div>
-
-                        <div style="font-size: 0.85em; margin-top: 10px;">
-                            ${marketStatus}
                         </div>
                     </div>
                 `;
