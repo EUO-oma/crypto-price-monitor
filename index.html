@@ -1087,11 +1087,17 @@
                     }
                 }
                 
-                // Fun YouTube 링크 렌더링
-                const funYoutubeContainer = document.getElementById('fun-youtube-links');
-                if (funYoutubeContainer) {
+                // Fun YouTube 링크 렌더링 (list/grid view)
+                const funYoutubeListContainer = document.getElementById('fun-youtube-links-list');
+                const funYoutubeGridContainer = document.getElementById('fun-youtube-links-grid');
+
+                if (funYoutubeListContainer && funYoutubeGridContainer) {
                     if (funYoutubeLinks.length > 0) {
-                        funYoutubeContainer.innerHTML = funYoutubeLinks.map(link => `
+                        // Check view mode and render accordingly
+                        if (window.funYoutubeViewMode === 'grid') {
+                            funYoutubeListContainer.style.display = 'none';
+                            funYoutubeGridContainer.style.display = 'grid';
+                            funYoutubeGridContainer.innerHTML = funYoutubeLinks.map(link => `
                         <a href="${link.url}" target="_blank" style="
                             background: #1a1a1a;
                             color: white;
@@ -1106,8 +1112,29 @@
                             <div style="font-size: 1em;">${link.name}</div>
                         </a>
                         `).join('');
+                        } else {
+                            // List view (default)
+                            funYoutubeListContainer.style.display = 'flex';
+                            funYoutubeGridContainer.style.display = 'none';
+                            funYoutubeListContainer.innerHTML = funYoutubeLinks.map(link => `
+                        <a href="${link.url}" target="_blank" style="
+                            background: #1a1a1a;
+                            color: white;
+                            padding: 15px;
+                            border-radius: 10px;
+                            text-align: center;
+                            border: 1px solid #333;
+                            text-decoration: none;
+                            transition: transform 0.3s ease;
+                            display: block;
+                        ">
+                            <div style="font-size: 1em;">${link.name}</div>
+                        </a>
+                        `).join('');
+                        }
                     } else {
-                        funYoutubeContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                        funYoutubeListContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                        funYoutubeGridContainer.innerHTML = '';
                     }
                 }
                 
