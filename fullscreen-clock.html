@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>World Clock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        .clock-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+        }
+
+        .timezone-label {
+            font-size: 2rem;
+            color: #666;
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .clock-display {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .time {
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: 100;
+            color: #fff;
+            letter-spacing: -5px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .seconds {
+            font-size: clamp(2rem, 8vw, 6rem);
+            color: #666;
+            margin-left: 20px;
+            font-weight: 100;
+        }
+
+        .ampm {
+            font-size: clamp(1.5rem, 5vw, 3rem);
+            color: #888;
+            margin-left: 20px;
+            font-weight: 300;
+        }
+
+        .date {
+            font-size: clamp(1rem, 3vw, 1.8rem);
+            color: #666;
+            margin-top: 30px;
+            letter-spacing: 3px;
+            animation: fadeIn 1.2s ease-in;
+        }
+
+        .market-status {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            font-size: 1.2rem;
+            color: #888;
+            animation: fadeIn 1.5s ease-in;
+        }
+
+        .navigation {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            animation: fadeIn 2s ease-in;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-dot:hover {
+            background: #666;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            color: #666;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            animation: fadeIn 1.5s ease-in;
+        }
+
+        .back-button:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .colon {
+            animation: pulse 2s infinite;
+        }
+
+        /* Custom cursor */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            transition: all 0.1s ease;
+            opacity: 0.5;
+            z-index: 10000;
+        }
+
+        @media (max-width: 768px) {
+            .back-button {
+                top: 20px;
+                left: 20px;
+            }
+
+            .market-status {
+                top: 20px;
+                right: 20px;
+                font-size: 1rem;
+            }
+
+            .navigation {
+                bottom: 20px;
+            }
+
+            body {
+                cursor: auto;
+            }
+
+            .cursor {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor"></div>
+
+    <div class="clock-container">
+        <a href="index.html" class="back-button" title="Back to Home">
+            ←
+        </a>
+
+        <div class="market-status" id="market-status"></div>
+
+        <div class="timezone-label" id="timezone-label">Seoul</div>
+
+        <div class="clock-display">
+            <div class="time">
+                <span id="hours">00</span><span class="colon">:</span><span id="minutes">00</span>
+            </div>
+            <div class="seconds" id="seconds">00</div>
+            <div class="ampm" id="ampm">AM</div>
+        </div>
+
+        <div class="date" id="date">Loading...</div>
+
+        <div class="navigation">
+            <div class="nav-dot active" data-tz="Asia/Seoul" data-label="Seoul"></div>
+            <div class="nav-dot" data-tz="Europe/London" data-label="London"></div>
+            <div class="nav-dot" data-tz="America/New_York" data-label="New York"></div>
+            <div class="nav-dot" data-tz="Asia/Tokyo" data-label="Tokyo"></div>
+            <div class="nav-dot" data-tz="Asia/Singapore" data-label="Singapore"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentTimezone = 'Asia/Seoul';
+        const urlParams = new URLSearchParams(window.location.search);
+        const tzParam = urlParams.get('tz');
+
+        // Set initial timezone from URL parameter
+        if (tzParam) {
+            currentTimezone = tzParam;
+            // Update active navigation dot
+            document.querySelectorAll('.nav-dot').forEach(dot => {
+                if (dot.dataset.tz === tzParam) {
+                    dot.classList.add('active');
+                    document.getElementById('timezone-label').textContent = dot.dataset.label;
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const time = new Date(now.toLocaleString("en-US", {timeZone: currentTimezone}));
+
+            let hours = time.getHours();
+            const minutes = time.getMinutes();
+            const seconds = time.getSeconds();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            hours = hours % 12 || 12;
+
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            document.getElementById('ampm').textContent = ampm;
+
+            // Update date
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+            const day = days[time.getDay()];
+            const date = time.getDate();
+            const month = months[time.getMonth()];
+            const year = time.getFullYear();
+
+            document.getElementById('date').textContent = `${day}, ${month} ${date}, ${year}`;
+
+            // Update market status for New York timezone
+            if (currentTimezone === 'America/New_York') {
+                updateMarketStatus(time);
+            } else {
+                document.getElementById('market-status').textContent = '';
+            }
+        }
+
+        function updateMarketStatus(nyTime) {
+            const hour = nyTime.getHours();
+            const minute = nyTime.getMinutes();
+            const day = nyTime.getDay();
+
+            let status = '';
+
+            // Check if weekend
+            if (day === 0 || day === 6) {
+                status = '🔴 Market Closed (Weekend)';
+            } else if ((hour === 9 && minute >= 30) || (hour > 9 && hour < 16)) {
+                status = '🟢 Market Open';
+            } else if (hour < 9 || (hour === 9 && minute < 30)) {
+                const openTime = new Date(nyTime);
+                openTime.setHours(9, 30, 0);
+                const diff = Math.floor((openTime - nyTime) / 60000);
+                if (diff > 0) {
+                    status = `⏰ Opens in ${Math.floor(diff/60)}h ${diff%60}m`;
+                }
+            } else {
+                status = '🔴 Market Closed';
+            }
+
+            document.getElementById('market-status').textContent = status;
+        }
+
+        // Navigation dots click handler
+        document.querySelectorAll('.nav-dot').forEach(dot => {
+            dot.addEventListener('click', function() {
+                currentTimezone = this.dataset.tz;
+                document.getElementById('timezone-label').textContent = this.dataset.label;
+
+                // Update active state
+                document.querySelectorAll('.nav-dot').forEach(d => d.classList.remove('active'));
+                this.classList.add('active');
+
+                // Update URL without reloading
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('tz', currentTimezone);
+                window.history.pushState({}, '', newUrl);
+
+                updateClock();
+            });
+        });
+
+        // Custom cursor (desktop only)
+        if (window.innerWidth > 768) {
+            const cursor = document.querySelector('.cursor');
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX - 10 + 'px';
+                cursor.style.top = e.clientY - 10 + 'px';
+            });
+
+            document.addEventListener('mousedown', () => {
+                cursor.style.transform = 'scale(0.8)';
+            });
+
+            document.addEventListener('mouseup', () => {
+                cursor.style.transform = 'scale(1)';
+            });
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.location.href = 'index.html';
+            }
+
+            const dots = Array.from(document.querySelectorAll('.nav-dot'));
+            const currentIndex = dots.findIndex(dot => dot.classList.contains('active'));
+
+            if (e.key === 'ArrowRight' && currentIndex < dots.length - 1) {
+                dots[currentIndex + 1].click();
+            } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                dots[currentIndex - 1].click();
+            }
+        });
+
+        // Update clock every second
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Fullscreen toggle on double click
+        document.addEventListener('dblclick', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
