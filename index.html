@@ -656,10 +656,10 @@
                                 background-clip: text;
                             ">${dateString}</span>
                             ${marketStatus}
-                            <span id="clock-toggle-icon" style="color: #666; font-size: 0.8em;">▼</span>
                         </div>
                         
-                        <div id="clock-section" style="display: none; overflow: hidden; transition: all 0.3s ease;">
+                        <!-- Clock section removed - moved to bottom -->
+                        <div id="clock-section" style="display: none;">
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin: 0 auto 10px;">
                             <!-- KOR: UTC+9 -->
                             <div style="
@@ -2365,7 +2365,76 @@
 
         // 전역 스코프에 노출
         window.refreshPriceHistory = refreshPriceHistory;
+        
+        // World clock update function for bottom clock
+        function updateWorldClock() {
+            const clockContainer = document.getElementById('clock-container');
+            if (!clockContainer) return;
+            
+            const timezones = [
+                { name: 'KOR', tz: 'Asia/Seoul', flag: 'kr' },
+                { name: 'SYD', tz: 'Australia/Sydney', flag: 'au' },
+                { name: 'DXB', tz: 'Asia/Dubai', flag: 'ae' },
+                { name: 'LON', tz: 'Europe/London', flag: 'gb' },
+                { name: 'NYC', tz: 'America/New_York', flag: 'us' }
+            ];
+
+            clockContainer.innerHTML = timezones.map(zone => {
+                const now = new Date();
+                const time = new Date(now.toLocaleString("en-US", { timeZone: zone.tz }));
+                const hours = time.getHours().toString().padStart(2, '0');
+                const minutes = time.getMinutes().toString().padStart(2, '0');
+                const seconds = time.getSeconds().toString().padStart(2, '0');
+                
+                return `
+                    <div style="
+                        background: #1a1a1a;
+                        border: 1px solid #333;
+                        border-radius: 10px;
+                        padding: 15px;
+                        text-align: center;
+                        transition: all 0.3s ease;
+                        cursor: pointer;
+                    " onclick="window.open('fullscreen-clock.html?tz=${zone.tz}', '_blank')"
+                       onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'"
+                       onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
+                            <img src="https://flagcdn.com/24x18/${zone.flag}.png" 
+                                 alt="${zone.name}"
+                                 style="width: 24px; height: 18px; border-radius: 2px;">
+                            <span style="color: #888; font-size: 0.9em; font-weight: bold;">${zone.name}</span>
+                        </div>
+                        <div style="font-size: 1.2em; font-weight: bold; color: #fff;">
+                            ${hours}:${minutes}<span style="font-size: 0.7em; color: #666;">:${seconds}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Update world clock every second
+        setInterval(updateWorldClock, 1000);
+        updateWorldClock(); // Initial call
     </script>
+    
+    <!-- World Clock Section at Bottom -->
+    <div id="world-clock-bottom" style="
+        background: #0a0a0a;
+        border-top: 1px solid #333;
+        padding: 20px;
+        margin-top: 40px;
+    ">
+        <h2 style="text-align: center; color: #aaa; margin-bottom: 20px;">🌍 World Clock</h2>
+        <div id="clock-container" style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        ">
+            <!-- Clocks will be inserted here by JavaScript -->
+        </div>
+    </div>
     
     <!-- 관리자 설정 버튼 -->
     <a href="login.html" class="settings-btn" title="관리자 설정">
