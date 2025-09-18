@@ -218,6 +218,108 @@
             }
             
         }
+        
+        /* 채팅 스크롤바 스타일 (웹킷 브라우저) */
+        #chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #chat-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            margin: 5px;
+        }
+        
+        #chat-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #444 0%, #222 100%);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        #chat-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #555 0%, #333 100%);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        #chat-container::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(180deg, #666 0%, #444 100%);
+        }
+        
+        /* Firefox 스크롤바 */
+        #chat-container {
+            scrollbar-width: thin;
+            scrollbar-color: #444 rgba(0, 0, 0, 0.4);
+        }
+        
+        /* 채팅 컨테이너 호버 시 스크롤바 더 선명하게 */
+        #chat-container:hover::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #555 0%, #333 100%);
+            box-shadow: 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 채팅 메시지 반응형 스타일 */
+        .message-content-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        
+        .my-message-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        
+        .message-time {
+            margin-bottom: 5px;
+            white-space: nowrap;
+        }
+        
+        /* 모바일 스타일 (화면 너비 768px 이하) */
+        @media (max-width: 768px) {
+            /* 채팅 섹션 모바일 최적화 */
+            .chat-section {
+                padding: 10px !important;
+                margin-top: 15px !important;
+                border-radius: 0 !important;
+            }
+            
+            #chat-container {
+                border-radius: 10px !important;
+                height: 350px !important;
+                padding: 10px !important;
+            }
+            
+            /* 모바일에서 스크롤바 숨기기 */
+            #chat-container::-webkit-scrollbar {
+                width: 4px;
+                opacity: 0.5;
+            }
+            
+            #chat-container::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.2);
+            }
+            
+            .message-content-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+            
+            .my-message-wrapper {
+                flex-direction: column-reverse;
+                align-items: flex-end;
+                gap: 2px;
+            }
+            
+            .message-time {
+                margin-bottom: 2px;
+                margin-left: 5px;
+                font-size: 10px !important;
+                opacity: 0.8;
+            }
+        }
     </style>
 </head>
 <body>
@@ -549,8 +651,8 @@
             <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
                 💬 Anonymous Chat
             </h2>
-            <div id="chat-container" style="background: linear-gradient(to bottom, #1a1a1a, #0f0f0f); border-radius: 15px; padding: 10px; height: 400px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #333; scroll-behavior: smooth; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);">
-                <div id="chat-messages" style="display: flex; flex-direction: column; width: 100%;">
+            <div id="chat-container" style="background: linear-gradient(to bottom, #1a1a1a, #0f0f0f); border-radius: 15px; padding: 15px; height: 400px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #333; scroll-behavior: smooth; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);">
+                <div id="chat-messages" style="display: flex; flex-direction: column;">
                     <!-- 메시지들이 여기에 표시됩니다 -->
                 </div>
             </div>
@@ -570,25 +672,29 @@
                     id="chat-send" 
                     onclick="sendMessage()" 
                     style="
-                        padding: 10px 20px;
-                        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-                        color: white;
-                        border: none;
-                        border-radius: 20px;
-                        cursor: pointer;
-                        font-weight: bold;
-                        transition: all 0.3s;
-                        white-space: nowrap;
-                        box-shadow: 0 2px 10px rgba(79, 172, 254, 0.3);
+                        width: 40px; 
+                        height: 40px; 
+                        background: #000; 
+                        border: 1px solid #333; 
+                        border-radius: 50%; 
+                        cursor: pointer; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center;
+                        transition: all 0.2s;
+                        -webkit-appearance: none; 
+                        touch-action: manipulation;
+                        padding: 0;
                     "
-                    onmouseover="this.style.transform='scale(1.05)'"
-                    onmouseout="this.style.transform='scale(1)'"
-                    >전송</button>
+                    onmouseover="this.style.transform='scale(1.1)'; this.style.background='#222'" 
+                    onmouseout="this.style.transform='scale(1)'; this.style.background='#000'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 2px;">
+                        <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="#fff"/>
+                    </svg>
+                </button>
             </div>
-            
-            <!-- 접속자 카운터 -->
-            <div style="text-align: center; margin-top: 15px; color: #666; font-size: 0.85em;">
-                <span id="active-users">접속자 수 계산 중...</span>
+            <div style="margin-top: 10px; font-size: 12px; color: #666; text-align: center;">
+                익명 채팅 • 메시지는 7일 후 자동 삭제됩니다 • 최대 100개 메시지 유지
             </div>
         </div>
     </div>
