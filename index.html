@@ -1013,31 +1013,34 @@
         // Supabase에서 링크 데이터 로드
         async function loadLinksFromSupabase() {
             console.log('Loading links from Supabase...');
-            console.log('Supabase URL:', typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'NOT DEFINED');
-            console.log('Supabase client:', (typeof supabase !== 'undefined' && supabase !== null) ? 'Initialized' : 'NOT INITIALIZED (null or undefined)');
+            
+            // Supabase 라이브러리가 로드될 때까지 대기
+            let attempts = 0;
+            while (!window.supabase && attempts < 20) {
+                console.log(`Waiting for Supabase library... attempt ${attempts + 1}/20`);
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+            }
+            
+            if (!window.supabase) {
+                console.error('Supabase library failed to load after 4 seconds');
+                return;
+            }
 
-            // Check if Supabase is initialized (null check added)
-            if (typeof supabase === 'undefined' || supabase === null) {
-                console.error('Supabase is not initialized or null. Make sure supabase-config.js is loaded.');
-                console.error('Supabase value:', supabase);
-                console.error('Attempting to initialize directly...');
-
-                // Try to initialize directly
-                if (window.supabase && window.supabase.createClient) {
-                    try {
-                        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
-                        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
-                        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                        console.log('✓ Supabase initialized directly in loadLinksFromSupabase');
-                    } catch (error) {
-                        console.error('Failed to initialize Supabase directly:', error);
-                        return;
-                    }
-                } else {
-                    console.error('Supabase library not available');
+            // Supabase 클라이언트 초기화
+            if (!window.supabaseClient) {
+                try {
+                    const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('✓ Supabase client initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize Supabase:', error);
                     return;
                 }
             }
+            
+            const supabase = window.supabaseClient;
 
             try {
                 const { data: links, error } = await supabase
@@ -2198,8 +2201,11 @@
                 }
             }
 
-            // Start loading after 1 second
-            setTimeout(waitForLinksModule, 1000);
+            // 직접 링크 로드 함수 호출 (LinksModule 대신)
+            console.log('🚀 링크 로딩 시작 (직접 호출)');
+            setTimeout(() => {
+                loadLinksFromSupabase();
+            }, 1000);
             loadBTCHistory(); // BTC 가격 기록 로드
             loadETHHistory(); // ETH 가격 기록 로드
             loadSOLHistory(); // SOL 가격 기록 로드

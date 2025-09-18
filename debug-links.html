@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Links Debug</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .section {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        pre {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase Links Debug Tool</h1>
+    
+    <div class="section">
+        <h2>1. Supabase 초기화 상태</h2>
+        <div id="init-status"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. 연결 테스트</h2>
+        <button onclick="testConnection()">연결 테스트</button>
+        <div id="connection-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Links 테이블 조회</h2>
+        <button onclick="fetchLinks()">Links 조회</button>
+        <button onclick="fetchLinksWithDetails()">상세 조회</button>
+        <div id="links-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. 테이블 구조 확인</h2>
+        <button onclick="checkTableStructure()">테이블 정보</button>
+        <div id="structure-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>5. 샘플 데이터 추가</h2>
+        <button onclick="addSampleLink()">샘플 링크 추가</button>
+        <div id="add-result"></div>
+    </div>
+
+    <script>
+        // Supabase 설정
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        let supabase;
+        
+        // 초기화 체크
+        function checkInitialization() {
+            const status = document.getElementById('init-status');
+            
+            try {
+                // Supabase 클라이언트 생성
+                if (window.supabase && window.supabase.createClient) {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    status.innerHTML = `
+                        <p class="success">✅ Supabase 라이브러리 로드됨</p>
+                        <p class="success">✅ 클라이언트 생성됨</p>
+                        <p class="info">URL: ${SUPABASE_URL}</p>
+                        <p class="info">Key: ${SUPABASE_ANON_KEY.substring(0, 20)}...</p>
+                    `;
+                } else {
+                    status.innerHTML = '<p class="error">❌ Supabase 라이브러리 로드 실패</p>';
+                }
+            } catch (error) {
+                status.innerHTML = `<p class="error">❌ 초기화 오류: ${error.message}</p>`;
+            }
+        }
+        
+        // 연결 테스트
+        async function testConnection() {
+            const result = document.getElementById('connection-result');
+            result.innerHTML = '<p class="info">🔄 연결 테스트 중...</p>';
+            
+            try {
+                // 간단한 쿼리로 연결 테스트
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                result.innerHTML = `<p class="success">✅ 연결 성공!</p>`;
+            } catch (error) {
+                result.innerHTML = `
+                    <p class="error">❌ 연결 실패</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+        
+        // Links 조회
+        async function fetchLinks() {
+            const result = document.getElementById('links-result');
+            result.innerHTML = '<p class="info">🔄 링크 조회 중...</p>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) throw error;
+                
+                result.innerHTML = `
+                    <p class="success">✅ ${data.length}개의 링크를 찾았습니다.</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <p class="error">❌ 조회 실패</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+        
+        // 상세 조회
+        async function fetchLinksWithDetails() {
+            const result = document.getElementById('links-result');
+            result.innerHTML = '<p class="info">🔄 상세 조회 중...</p>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('category', { ascending: true })
+                    .order('position', { ascending: true });
+                
+                if (error) throw error;
+                
+                // 카테고리별로 그룹화
+                const grouped = {};
+                data.forEach(link => {
+                    if (!grouped[link.category]) {
+                        grouped[link.category] = [];
+                    }
+                    grouped[link.category].push(link);
+                });
+                
+                let html = `<p class="success">✅ 총 ${data.length}개의 링크</p>`;
+                
+                // 카테고리별 테이블
+                for (const [category, links] of Object.entries(grouped)) {
+                    html += `<h3>${category} (${links.length}개)</h3>`;
+                    html += `<table>
+                        <tr>
+                            <th>ID</th>
+                            <th>이름</th>
+                            <th>URL</th>
+                            <th>Position</th>
+                            <th>생성일</th>
+                        </tr>`;
+                    
+                    links.forEach(link => {
+                        html += `<tr>
+                            <td>${link.id}</td>
+                            <td>${link.name}</td>
+                            <td><a href="${link.url}" target="_blank">${link.url.substring(0, 30)}...</a></td>
+                            <td>${link.position}</td>
+                            <td>${new Date(link.created_at).toLocaleString('ko-KR')}</td>
+                        </tr>`;
+                    });
+                    
+                    html += '</table>';
+                }
+                
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = `
+                    <p class="error">❌ 조회 실패</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+        
+        // 테이블 구조 확인
+        async function checkTableStructure() {
+            const result = document.getElementById('structure-result');
+            result.innerHTML = '<p class="info">🔄 테이블 구조 확인 중...</p>';
+            
+            try {
+                // 빈 쿼리로 구조 확인
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                if (data.length > 0) {
+                    const columns = Object.keys(data[0]);
+                    result.innerHTML = `
+                        <p class="success">✅ 테이블 구조</p>
+                        <p>컬럼: ${columns.join(', ')}</p>
+                        <pre>${JSON.stringify(data[0], null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = '<p class="info">테이블이 비어있습니다.</p>';
+                }
+                
+                // RLS 정책 확인
+                const { data: rls, error: rlsError } = await supabase
+                    .from('links')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (!rlsError) {
+                    result.innerHTML += '<p class="success">✅ RLS 정책: 읽기 허용됨</p>';
+                } else {
+                    result.innerHTML += '<p class="error">❌ RLS 정책 문제 가능성</p>';
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <p class="error">❌ 구조 확인 실패</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+        
+        // 샘플 링크 추가
+        async function addSampleLink() {
+            const result = document.getElementById('add-result');
+            result.innerHTML = '<p class="info">🔄 샘플 링크 추가 중...</p>';
+            
+            try {
+                const sampleLink = {
+                    name: 'Test Link ' + new Date().toISOString(),
+                    url: 'https://example.com',
+                    category: 'favorite',
+                    position: 999
+                };
+                
+                const { data, error } = await supabase
+                    .from('links')
+                    .insert([sampleLink])
+                    .select();
+                
+                if (error) throw error;
+                
+                result.innerHTML = `
+                    <p class="success">✅ 링크 추가 성공</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <p class="error">❌ 추가 실패 (권한 문제일 수 있음)</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+        
+        // 페이지 로드시 초기화
+        window.addEventListener('load', () => {
+            checkInitialization();
+        });
+    </script>
+</body>
+</html>
