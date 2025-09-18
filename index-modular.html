@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>CRYPTO × LIVE 💹 - Modular Version</title>
+    <style>
+        /* 기존 스타일 복사 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 파트별 섹션 */
+        .part-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #0a0a0a;
+            border-radius: 20px;
+            border: 1px solid #1a1a1a;
+        }
+
+        .part-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4facfe;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        /* 가격 카드 스타일 */
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .price-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .symbol {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        .price {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .change {
+            font-size: 1rem;
+        }
+
+        .change.positive { color: #4caf50; }
+        .change.negative { color: #f44336; }
+
+        /* 채팅 스타일 */
+        .chat-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .chat-box {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 20px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #0a0a0a;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .chat-send {
+            padding: 10px 20px;
+            background: #4facfe;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* 링크 스타일 */
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .link-card {
+            display: block;
+            padding: 15px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .link-card:hover {
+            transform: translateY(-2px);
+            border-color: #4facfe;
+        }
+
+        /* 상태 표시 */
+        .status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .status.connected { background: #2e7d32; }
+        .status.disconnected { background: #c62828; }
+        .status.loading { background: #ff6f00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 40px;">CRYPTO × LIVE 💹 - Modular</h1>
+        
+        <!-- 파트 1: 코인 가격 (독립적) -->
+        <div class="part-section" id="part1-crypto">
+            <h2 class="part-title">파트 1: 실시간 암호화폐 가격</h2>
+            <div class="status" id="crypto-status">연결 중...</div>
+            <div class="price-grid" id="crypto-prices">
+                <!-- 가격 카드들이 여기에 동적으로 생성됨 -->
+            </div>
+        </div>
+        
+        <!-- 파트 2: Supabase 데이터 (채팅 + 링크) -->
+        <div class="part-section" id="part2-supabase">
+            <h2 class="part-title">파트 2: Supabase 데이터</h2>
+            <div class="status" id="supabase-status">초기화 중...</div>
+            
+            <!-- 채팅 섹션 -->
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 15px;">💬 실시간 채팅</h3>
+                <div class="chat-container">
+                    <div class="chat-box">
+                        <div class="chat-messages" id="chat-messages">
+                            <!-- 채팅 메시지들이 여기에 표시됨 -->
+                        </div>
+                        <div class="chat-input-container">
+                            <input type="text" class="chat-input" id="chat-input" placeholder="메시지를 입력하세요...">
+                            <button class="chat-send" onclick="Part2.sendMessage()">전송</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 링크 섹션 -->
+            <div>
+                <h3 style="margin-bottom: 15px;">🔗 링크 목록</h3>
+                <div class="links-grid" id="links-container">
+                    <!-- 링크들이 여기에 표시됨 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 파트 1: 암호화폐 가격 모듈 -->
+    <script>
+        const Part1 = {
+            // WebSocket 연결들
+            connections: {
+                btc: null,
+                eth: null,
+                sol: null,
+                xrp: null,
+                avax: null
+            },
+            
+            // 현재 가격 저장
+            prices: {},
+            
+            // 초기화
+            init() {
+                console.log('Part1: 암호화폐 가격 모듈 초기화');
+                this.createPriceCards();
+                this.connectAllWebSockets();
+                this.updateStatus('connected', '✅ Binance WebSocket 연결됨');
+            },
+            
+            // 가격 카드 생성
+            createPriceCards() {
+                const coins = ['BTC', 'ETH', 'SOL', 'XRP', 'AVAX'];
+                const container = document.getElementById('crypto-prices');
+                
+                coins.forEach(coin => {
+                    const card = document.createElement('div');
+                    card.className = 'price-card';
+                    card.id = `price-${coin.toLowerCase()}`;
+                    card.innerHTML = `
+                        <div class="symbol">${coin}/USDT</div>
+                        <div class="price" id="${coin.toLowerCase()}-price">-</div>
+                        <div class="change" id="${coin.toLowerCase()}-change">-</div>
+                    `;
+                    container.appendChild(card);
+                });
+            },
+            
+            // WebSocket 연결
+            connectWebSocket(symbol) {
+                const ws = new WebSocket(`wss://fstream.binance.com/ws/${symbol.toLowerCase()}usdt@ticker`);
+                
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    this.updatePrice(symbol, data);
+                };
+                
+                ws.onerror = (error) => {
+                    console.error(`Part1: ${symbol} WebSocket 에러:`, error);
+                    this.updateStatus('disconnected', `❌ ${symbol} 연결 오류`);
+                };
+                
+                ws.onclose = () => {
+                    console.log(`Part1: ${symbol} WebSocket 연결 종료`);
+                    setTimeout(() => this.connectWebSocket(symbol), 5000);
+                };
+                
+                return ws;
+            },
+            
+            // 모든 WebSocket 연결
+            connectAllWebSockets() {
+                ['BTC', 'ETH', 'SOL', 'XRP', 'AVAX'].forEach(coin => {
+                    this.connections[coin.toLowerCase()] = this.connectWebSocket(coin);
+                });
+            },
+            
+            // 가격 업데이트
+            updatePrice(symbol, data) {
+                const price = parseFloat(data.c);
+                const change = parseFloat(data.P);
+                
+                this.prices[symbol] = price;
+                
+                // UI 업데이트
+                const priceEl = document.getElementById(`${symbol.toLowerCase()}-price`);
+                const changeEl = document.getElementById(`${symbol.toLowerCase()}-change`);
+                
+                if (priceEl) {
+                    priceEl.textContent = `$${price.toFixed(2)}`;
+                }
+                
+                if (changeEl) {
+                    changeEl.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                    changeEl.className = `change ${change >= 0 ? 'positive' : 'negative'}`;
+                }
+            },
+            
+            // 상태 업데이트
+            updateStatus(type, message) {
+                const statusEl = document.getElementById('crypto-status');
+                if (statusEl) {
+                    statusEl.className = `status ${type}`;
+                    statusEl.textContent = message;
+                }
+            }
+        };
+    </script>
+    
+    <!-- Supabase 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- 파트 2: Supabase 모듈 -->
+    <script>
+        const Part2 = {
+            // Supabase 클라이언트
+            supabase: null,
+            
+            // Supabase 설정
+            config: {
+                url: 'https://ddfnxbkiewolgweivomv.supabase.co',
+                key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
+            },
+            
+            // 초기화
+            async init() {
+                console.log('Part2: Supabase 모듈 초기화 시작');
+                
+                try {
+                    // Supabase 클라이언트 생성
+                    this.supabase = window.supabase.createClient(this.config.url, this.config.key);
+                    console.log('Part2: Supabase 클라이언트 생성 완료');
+                    
+                    this.updateStatus('connected', '✅ Supabase 연결됨');
+                    
+                    // 데이터 로드
+                    await this.loadChatMessages();
+                    await this.loadLinks();
+                    
+                    // 실시간 구독 설정
+                    this.subscribeToUpdates();
+                    
+                } catch (error) {
+                    console.error('Part2: 초기화 실패:', error);
+                    this.updateStatus('disconnected', '❌ Supabase 연결 실패');
+                }
+            },
+            
+            // 채팅 메시지 로드
+            async loadChatMessages() {
+                console.log('Part2: 채팅 메시지 로드 중...');
+                
+                try {
+                    const { data, error } = await this.supabase
+                        .from('messages')
+                        .select('*')
+                        .order('created_at', { ascending: true })
+                        .limit(50);
+                    
+                    if (error) throw error;
+                    
+                    console.log(`Part2: ${data.length}개 메시지 로드 완료`);
+                    this.displayMessages(data);
+                    
+                } catch (error) {
+                    console.error('Part2: 채팅 로드 실패:', error);
+                }
+            },
+            
+            // 링크 로드
+            async loadLinks() {
+                console.log('Part2: 링크 로드 중...');
+                
+                try {
+                    const { data, error } = await this.supabase
+                        .from('links')
+                        .select('*')
+                        .order('position', { ascending: true });
+                    
+                    if (error) throw error;
+                    
+                    console.log(`Part2: ${data.length}개 링크 로드 완료`);
+                    this.displayLinks(data);
+                    
+                } catch (error) {
+                    console.error('Part2: 링크 로드 실패:', error);
+                }
+            },
+            
+            // 메시지 표시
+            displayMessages(messages) {
+                const container = document.getElementById('chat-messages');
+                if (!container) return;
+                
+                container.innerHTML = messages.map(msg => `
+                    <div style="margin-bottom: 10px; padding: 8px; background: #1a1a1a; border-radius: 5px;">
+                        <div style="font-size: 0.9rem; color: #666; margin-bottom: 4px;">
+                            ${new Date(msg.created_at).toLocaleTimeString('ko-KR')}
+                        </div>
+                        <div>${msg.message || msg.content || msg.text}</div>
+                    </div>
+                `).join('');
+                
+                // 스크롤을 맨 아래로
+                container.scrollTop = container.scrollHeight;
+            },
+            
+            // 링크 표시
+            displayLinks(links) {
+                const container = document.getElementById('links-container');
+                if (!container) return;
+                
+                // 카테고리별로 그룹화
+                const grouped = {};
+                links.forEach(link => {
+                    if (!grouped[link.category]) {
+                        grouped[link.category] = [];
+                    }
+                    grouped[link.category].push(link);
+                });
+                
+                let html = '';
+                for (const [category, categoryLinks] of Object.entries(grouped)) {
+                    html += `<div style="grid-column: 1/-1; margin-top: 20px;">
+                        <h4 style="color: #4facfe; margin-bottom: 10px;">${category.toUpperCase()}</h4>
+                    </div>`;
+                    
+                    categoryLinks.forEach(link => {
+                        html += `<a href="${link.url}" target="_blank" class="link-card">${link.name}</a>`;
+                    });
+                }
+                
+                container.innerHTML = html;
+            },
+            
+            // 메시지 전송
+            async sendMessage() {
+                const input = document.getElementById('chat-input');
+                const message = input.value.trim();
+                
+                if (!message) return;
+                
+                try {
+                    const { error } = await this.supabase
+                        .from('messages')
+                        .insert([{ 
+                            message: message,
+                            created_at: new Date().toISOString()
+                        }]);
+                    
+                    if (error) throw error;
+                    
+                    input.value = '';
+                    console.log('Part2: 메시지 전송 완료');
+                    
+                } catch (error) {
+                    console.error('Part2: 메시지 전송 실패:', error);
+                }
+            },
+            
+            // 실시간 업데이트 구독
+            subscribeToUpdates() {
+                // 채팅 업데이트 구독
+                this.supabase
+                    .channel('part2-messages')
+                    .on('postgres_changes', 
+                        { event: '*', schema: 'public', table: 'messages' }, 
+                        () => {
+                            console.log('Part2: 채팅 업데이트 감지');
+                            this.loadChatMessages();
+                        }
+                    )
+                    .subscribe();
+                
+                // 링크 업데이트 구독
+                this.supabase
+                    .channel('part2-links')
+                    .on('postgres_changes', 
+                        { event: '*', schema: 'public', table: 'links' }, 
+                        () => {
+                            console.log('Part2: 링크 업데이트 감지');
+                            this.loadLinks();
+                        }
+                    )
+                    .subscribe();
+            },
+            
+            // 상태 업데이트
+            updateStatus(type, message) {
+                const statusEl = document.getElementById('supabase-status');
+                if (statusEl) {
+                    statusEl.className = `status ${type}`;
+                    statusEl.textContent = message;
+                }
+            }
+        };
+    </script>
+    
+    <!-- 초기화 -->
+    <script>
+        // 페이지 로드시 각 파트 독립적으로 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('=== 모듈 초기화 시작 ===');
+            
+            // 파트 1 초기화 (즉시 실행)
+            Part1.init();
+            
+            // 파트 2 초기화 (1초 후 실행 - Supabase 라이브러리 로드 대기)
+            setTimeout(() => {
+                Part2.init();
+            }, 1000);
+        });
+        
+        // 엔터키로 채팅 전송
+        window.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.target.id === 'chat-input') {
+                Part2.sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
