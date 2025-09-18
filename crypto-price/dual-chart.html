@@ -27,11 +27,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
+            width: 100%;
         }
 
         .title {
@@ -59,12 +55,11 @@
 
         .charts-container {
             width: 100%;
-            height: calc(100vh - 60px);  /* 푸터 높이 제외한 전체 높이 */
+            flex: 1;
             display: flex;
             flex-direction: column;
             padding: 0;
             margin: 0;
-            padding-bottom: 60px;  /* 푸터 공간 확보 */
         }
 
         .chart-wrapper {
@@ -116,8 +111,7 @@
             }
             
             .charts-container {
-                height: calc(100vh - 50px);  /* 모바일 푸터 높이 조정 */
-                padding-bottom: 50px;  /* 모바일 푸터 공간 확보 */
+                flex: 1;
             }
             
             .chart-wrapper {
