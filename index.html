@@ -328,6 +328,19 @@
         <!-- GPT Links, YouTube Live, Favorite Sites 등 -->
         <!-- ============================================ -->
         
+        <!-- 3-0. GPT 링크 테스트 영역 (제목 위) -->
+        <div style="margin-top: 20px; padding: 15px; background: #0a0a0a; border-radius: 10px; border: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: #4facfe; margin: 0;">🔍 GPT Links 테스트 영역</h3>
+                <button onclick="testGptLinksAbove()" style="background: #4facfe; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                    테스트 실행
+                </button>
+            </div>
+            <div id="gpt-test-area" style="min-height: 50px; background: #1a1a1a; border-radius: 8px; padding: 15px; border: 1px solid #333;">
+                <div style="color: #666; text-align: center;">테스트 버튼을 클릭하세요</div>
+            </div>
+        </div>
+        
         <!-- 3-1. GPT 링크 서브섹션 -->
         <div class="gpt-section" style="margin-top: 20px; padding-bottom: 20px;">
             <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
@@ -1916,6 +1929,12 @@
             // 실시간 구독 설정
             setupRealtimeSubscription();
             
+            // 자동으로 GPT 링크 테스트 실행
+            setTimeout(() => {
+                console.log('🔍 자동 GPT 링크 테스트 실행...');
+                testGptLinksAbove();
+            }, 2000);
+            
             console.log('✅ Supabase 데이터 로딩 완료');
         }
         
@@ -1999,6 +2018,92 @@
                     console.log('⚠️ Supabase 실시간 구독 건너뜀 (클라이언트 없음)');
                 }
             }, 2000);
+        }
+        
+        // GPT 링크 테스트 함수 (제목 위 영역)
+        async function testGptLinksAbove() {
+            const testArea = document.getElementById('gpt-test-area');
+            if (!testArea) {
+                console.error('❌ gpt-test-area 요소를 찾을 수 없습니다');
+                return;
+            }
+            
+            testArea.innerHTML = '<div style="color: #4facfe;">🔍 GPT 링크 테스트 중...</div>';
+            
+            // 상세 디버깅 정보
+            console.log('🔍 === GPT 링크 테스트 시작 ===');
+            console.log('Supabase 라이브러리:', typeof window.supabase);
+            console.log('Supabase 클라이언트:', typeof window.supabaseClient);
+            console.log('테스트 영역 요소:', testArea);
+            
+            try {
+                // Supabase 클라이언트 확인
+                if (!window.supabaseClient) {
+                    const errorMsg = '❌ Supabase 클라이언트가 없습니다';
+                    testArea.innerHTML = `<div style="color: #f44336;">${errorMsg}</div>`;
+                    console.error(errorMsg);
+                    
+                    // 수동으로 초기화 시도
+                    try {
+                        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                        
+                        if (window.supabase) {
+                            window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                            testArea.innerHTML += '<div style="color: #fbbf24;">⚠️ 수동 초기화 시도 중...</div>';
+                            console.log('✅ 수동으로 Supabase 클라이언트 생성');
+                        } else {
+                            testArea.innerHTML += '<div style="color: #f44336;">❌ Supabase 라이브러리 자체가 없습니다</div>';
+                            return;
+                        }
+                    } catch (initError) {
+                        console.error('수동 초기화 실패:', initError);
+                        testArea.innerHTML += `<div style="color: #f44336;">❌ 수동 초기화 실패: ${initError.message}</div>`;
+                        return;
+                    }
+                }
+                
+                // 간단한 GPT 링크 조회
+                const { data: gptLinks, error } = await window.supabaseClient
+                    .from('links')
+                    .select('*')
+                    .eq('category', 'gpt')
+                    .order('position', { ascending: true });
+                
+                if (error) {
+                    testArea.innerHTML = `<div style="color: #f44336;">❌ 오류: ${error.message}</div>`;
+                    return;
+                }
+                
+                console.log('🔍 테스트 영역 GPT 링크:', gptLinks);
+                
+                if (!gptLinks || gptLinks.length === 0) {
+                    testArea.innerHTML = '<div style="color: #fbbf24;">⚠️ GPT 링크가 없습니다</div>';
+                    return;
+                }
+                
+                // 성공적으로 가져온 경우 간단히 표시
+                let html = `<div style="color: #4caf50; margin-bottom: 10px;">✅ GPT 링크 ${gptLinks.length}개 발견!</div>`;
+                
+                gptLinks.forEach((link, index) => {
+                    html += `
+                        <div style="background: #2a2a2a; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #444;">
+                            <a href="${link.url || '#'}" target="_blank" style="color: #4facfe; text-decoration: none; font-weight: bold;">
+                                ${index + 1}. ${link.name || '이름 없음'}
+                            </a>
+                            <div style="color: #888; font-size: 11px; margin-top: 5px;">
+                                ID: ${link.id}, Position: ${link.position}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                testArea.innerHTML = html;
+                
+            } catch (error) {
+                testArea.innerHTML = `<div style="color: #f44336;">❌ 예외 발생: ${error.message}</div>`;
+                console.error('GPT 링크 테스트 오류:', error);
+            }
         }
         
         // 폴백 로딩 (오류시 기존 방식)
