@@ -275,240 +275,31 @@
             </div>
         </div>
 
-        <!-- 디자인 설정 토글 버튼 -->
-        <div style="background: #1a1a1a; padding: 15px; margin-bottom: 20px; border-radius: 10px; cursor: pointer;" onclick="toggleDesignSettings()">
+        <!-- 디자인 설정 페이지 이동 버튼 -->
+        <div style="background: #1a1a1a; padding: 20px; margin-bottom: 20px; border-radius: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0;">🎨 디자인 설정 <span id="design-arrow" style="font-size: 0.8em;">▼</span></h3>
-                <span style="font-size: 0.9em; opacity: 0.7;">클릭하여 펼치기/접기</span>
+                <div>
+                    <h3 style="margin: 0; margin-bottom: 5px;">🎨 디자인 설정</h3>
+                    <p style="margin: 0; font-size: 0.9em; color: #888;">링크 카드의 스타일을 세부적으로 설정할 수 있습니다</p>
+                </div>
+                <button onclick="location.href='design-settings.html'"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                               color: white;
+                               border: none;
+                               padding: 12px 24px;
+                               border-radius: 8px;
+                               cursor: pointer;
+                               font-size: 1em;
+                               font-weight: 600;
+                               transition: all 0.3s;
+                               box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.5)'"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
+                    디자인 설정 페이지로 이동 →
+                </button>
             </div>
         </div>
 
-        <!-- 디자인 설정 컨텐츠 -->
-        <div id="design-settings-content" class="add-form" style="display: none; margin-bottom: 20px; background: #1a1a1a;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0;">🎨 링크 카드 스타일 설정</h3>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="saveStyles()" style="background: #4caf50; padding: 8px 15px; font-size: 0.9em;">💾 스타일 저장</button>
-                    <button onclick="resetStyles()" style="background: #ff9800; padding: 8px 15px; font-size: 0.9em;">🔄 기본값으로 초기화</button>
-                    <button onclick="previewStyles()" style="background: #2196f3; padding: 8px 15px; font-size: 0.9em;">👁️ 미리보기</button>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                <!-- GPT Links 스타일 -->
-                <div style="border: 1px solid #333; padding: 15px; border-radius: 8px;">
-                    <h4 style="color: #4fc3f7; margin-bottom: 10px;">🤖 GPT Links</h4>
-                    <label style="display: block; margin-bottom: 8px;">
-                        글자 크기:
-                        <input type="range" id="gpt-font-size" min="10" max="24" value="16" style="width: 100px; margin-left: 10px;">
-                        <span id="gpt-font-size-display">16px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        글자 굵기:
-                        <select id="gpt-font-weight" style="width: 100px; margin-left: 10px; background: #333; border: 1px solid #444; color: #fff;">
-                            <option value="300">Light</option>
-                            <option value="400">Normal</option>
-                            <option value="500" selected>Medium</option>
-                            <option value="600">SemiBold</option>
-                            <option value="700">Bold</option>
-                        </select>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        배경색:
-                        <input type="color" id="gpt-bg-color" value="#1a1a1a" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        글자색:
-                        <input type="color" id="gpt-text-color" value="#ffffff" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        테두리색:
-                        <input type="color" id="gpt-border-color" value="#333333" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        테두리 두께:
-                        <input type="range" id="gpt-border-width" min="0" max="5" value="1" style="width: 100px; margin-left: 10px;">
-                        <span id="gpt-border-width-display">1px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        모서리 둥글기:
-                        <input type="range" id="gpt-border-radius" min="0" max="20" value="10" style="width: 100px; margin-left: 10px;">
-                        <span id="gpt-border-radius-display">10px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        안쪽 여백:
-                        <input type="range" id="gpt-padding" min="5" max="30" value="15" style="width: 100px; margin-left: 10px;">
-                        <span id="gpt-padding-display">15px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        카드 간격:
-                        <input type="range" id="gpt-gap" min="5" max="30" value="10" style="width: 100px; margin-left: 10px;">
-                        <span id="gpt-gap-display">10px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        <input type="checkbox" id="gpt-shadow" checked> 그림자 효과
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        <input type="checkbox" id="gpt-hover-effect" checked> 호버 효과
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        호버 배경색:
-                        <input type="color" id="gpt-hover-bg" value="#2a2a2a" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        호버 스케일:
-                        <input type="range" id="gpt-hover-scale" min="100" max="110" value="102" style="width: 100px; margin-left: 10px;">
-                        <span id="gpt-hover-scale-display">102%</span>
-                    </label>
-                </div>
-
-                <!-- YouTube Live 스타일 -->
-                <div style="border: 1px solid #333; padding: 15px; border-radius: 8px;">
-                    <h4 style="color: #ff6b6b; margin-bottom: 10px;">📺 YouTube Live</h4>
-                    <label style="display: block; margin-bottom: 8px;">
-                        글자 크기:
-                        <input type="range" id="youtube-font-size" min="10" max="24" value="17" style="width: 100px; margin-left: 10px;">
-                        <span id="youtube-font-size-display">17px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        글자 굵기:
-                        <select id="youtube-font-weight" style="width: 100px; margin-left: 10px; background: #333; border: 1px solid #444; color: #fff;">
-                            <option value="300">Light</option>
-                            <option value="400">Normal</option>
-                            <option value="500">Medium</option>
-                            <option value="600" selected>SemiBold</option>
-                            <option value="700">Bold</option>
-                        </select>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        배경색:
-                        <input type="color" id="youtube-bg-color" value="#1a1a1a" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        글자색:
-                        <input type="color" id="youtube-text-color" value="#ffffff" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        테두리색:
-                        <input type="color" id="youtube-border-color" value="#333333" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        테두리 두께:
-                        <input type="range" id="youtube-border-width" min="0" max="5" value="1" style="width: 100px; margin-left: 10px;">
-                        <span id="youtube-border-width-display">1px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        모서리 둥글기:
-                        <input type="range" id="youtube-border-radius" min="0" max="20" value="10" style="width: 100px; margin-left: 10px;">
-                        <span id="youtube-border-radius-display">10px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        안쪽 여백:
-                        <input type="range" id="youtube-padding" min="5" max="30" value="15" style="width: 100px; margin-left: 10px;">
-                        <span id="youtube-padding-display">15px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        카드 간격:
-                        <input type="range" id="youtube-gap" min="5" max="30" value="10" style="width: 100px; margin-left: 10px;">
-                        <span id="youtube-gap-display">10px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        <input type="checkbox" id="youtube-shadow" checked> 그림자 효과
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        <input type="checkbox" id="youtube-hover-effect" checked> 호버 효과
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        호버 배경색:
-                        <input type="color" id="youtube-hover-bg" value="#2a2a2a" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        호버 스케일:
-                        <input type="range" id="youtube-hover-scale" min="100" max="110" value="102" style="width: 100px; margin-left: 10px;">
-                        <span id="youtube-hover-scale-display">102%</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        <input type="checkbox" id="youtube-show-live-indicator" checked> 라이브 인디케이터 표시
-                    </label>
-                </div>
-
-                <!-- Favorite Sites 스타일 -->
-                <div style="border: 1px solid #333; padding: 15px; border-radius: 8px;">
-                    <h4 style="color: #ffd93d; margin-bottom: 10px;">⭐ Favorite Sites</h4>
-                    <label style="display: block; margin-bottom: 8px;">
-                        글자 크기:
-                        <input type="range" id="favorite-font-size" min="10" max="24" value="16" style="width: 100px; margin-left: 10px;">
-                        <span id="favorite-font-size-display">16px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        글자 굵기:
-                        <select id="favorite-font-weight" style="width: 100px; margin-left: 10px; background: #333; border: 1px solid #444; color: #fff;">
-                            <option value="300">Light</option>
-                            <option value="400">Normal</option>
-                            <option value="500" selected>Medium</option>
-                            <option value="600">SemiBold</option>
-                            <option value="700">Bold</option>
-                        </select>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        배경색:
-                        <input type="color" id="favorite-bg-color" value="#1a1a1a" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        글자색:
-                        <input type="color" id="favorite-text-color" value="#ffffff" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        테두리색:
-                        <input type="color" id="favorite-border-color" value="#333333" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        테두리 두께:
-                        <input type="range" id="favorite-border-width" min="0" max="5" value="1" style="width: 100px; margin-left: 10px;">
-                        <span id="favorite-border-width-display">1px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        모서리 둥글기:
-                        <input type="range" id="favorite-border-radius" min="0" max="20" value="10" style="width: 100px; margin-left: 10px;">
-                        <span id="favorite-border-radius-display">10px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        안쪽 여백:
-                        <input type="range" id="favorite-padding" min="5" max="30" value="15" style="width: 100px; margin-left: 10px;">
-                        <span id="favorite-padding-display">15px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        카드 간격:
-                        <input type="range" id="favorite-gap" min="5" max="30" value="10" style="width: 100px; margin-left: 10px;">
-                        <span id="favorite-gap-display">10px</span>
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        <input type="checkbox" id="favorite-shadow" checked> 그림자 효과
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        <input type="checkbox" id="favorite-hover-effect" checked> 호버 효과
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        호버 배경색:
-                        <input type="color" id="favorite-hover-bg" value="#2a2a2a" style="margin-left: 10px;">
-                    </label>
-                    <label style="display: block; margin-bottom: 8px;">
-                        호버 스케일:
-                        <input type="range" id="favorite-hover-scale" min="100" max="110" value="102" style="width: 100px; margin-left: 10px;">
-                        <span id="favorite-hover-scale-display">102%</span>
-                    </label>
-                </div>
-            </div>
-
-            <div id="style-preview" style="margin-top: 20px; display: none;">
-                <h4 style="margin-bottom: 10px;">미리보기:</h4>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                    <div id="gpt-preview" style="padding: 10px; border-radius: 10px; text-align: center;">GPT Sample</div>
-                    <div id="youtube-preview" style="padding: 10px; border-radius: 10px; text-align: center;">YouTube Sample</div>
-                    <div id="favorite-preview" style="padding: 10px; border-radius: 10px; text-align: center;">Favorite Sample</div>
-                </div>
-            </div>
-        </div>
 
         <!-- Fun YouTube 표시 설정 토글 버튼 -->
         <div style="background: #1a1a1a; padding: 15px; margin-bottom: 20px; border-radius: 10px; cursor: pointer;" onclick="toggleFunYoutubeSettings()">
@@ -803,7 +594,6 @@
         let editingId = null;
         let customCategories = [];
         let guideOpen = false;
-        let designSettingsOpen = false;
         let funYoutubeSettingsOpen = false;
 
         // 기능 안내 토글
@@ -823,25 +613,6 @@
 
             // 상태 저장
             localStorage.setItem('adminGuideOpen', guideOpen);
-        }
-
-        // 디자인 설정 토글
-        function toggleDesignSettings() {
-            const settingsContent = document.getElementById('design-settings-content');
-            const settingsArrow = document.getElementById('design-arrow');
-
-            designSettingsOpen = !designSettingsOpen;
-
-            if (designSettingsOpen) {
-                settingsContent.style.display = 'block';
-                settingsArrow.textContent = '▲';
-            } else {
-                settingsContent.style.display = 'none';
-                settingsArrow.textContent = '▼';
-            }
-
-            // 상태 저장
-            localStorage.setItem('adminDesignSettingsOpen', designSettingsOpen);
         }
 
         // Fun YouTube 설정 토글
@@ -869,15 +640,6 @@
             if (savedState === 'true') {
                 guideOpen = false; // toggleGuide가 반대로 토글하므로
                 toggleGuide();
-            }
-        }
-
-        // 페이지 로드시 디자인 설정 상태 복원
-        function restoreDesignSettingsState() {
-            const savedState = localStorage.getItem('adminDesignSettingsOpen');
-            if (savedState === 'true') {
-                designSettingsOpen = false; // toggle이 반대로 토글하므로
-                toggleDesignSettings();
             }
         }
 
@@ -1346,12 +1108,12 @@
             }
 
             restoreGuideState(); // 가이드 상태 복원
-            restoreDesignSettingsState(); // 디자인 설정 상태 복원
+            // restoreDesignSettingsState(); // 디자인 설정 페이지로 이동됨
             restoreFunYoutubeSettingsState(); // Fun YouTube 설정 상태 복원
             loadCustomCategories(); // 커스텀 카테고리 로드
             updateCategoryDropdown(); // 카테고리 드롭다운 업데이트
-            loadSavedStyles(); // 저장된 스타일 로드
-            initStyleControls(); // 스타일 컨트롤 초기화
+            // loadSavedStyles(); // 디자인 설정 페이지로 이동됨
+            // initStyleControls(); // 디자인 설정 페이지로 이동됨
             loadFunYoutubeSettings(); // Fun YouTube 설정 로드
 
             await checkConnection();
