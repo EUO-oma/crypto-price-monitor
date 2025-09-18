@@ -240,15 +240,22 @@
     <div class="container">
         <h1>🔗 링크 관리 시스템 v3</h1>
         
-        <div class="info">
-            💡 기능 안내:
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>✏️ <strong>수정</strong>: 링크 이름과 URL 직접 수정</li>
-                <li>🔄 <strong>드래그 앤 드롭</strong>: ≡ 아이콘으로 순서 변경</li>
-                <li>⬆️⬇️ <strong>버튼 이동</strong>: 위/아래 이동</li>
-                <li>➕ <strong>추가</strong>: 새 링크 추가</li>
-                <li>🗑️ <strong>삭제</strong>: 링크 제거</li>
-            </ul>
+        <div class="info" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleGuide()">
+                <span>💡 기능 안내 <span id="guide-arrow" style="font-size: 0.8em;">▼</span></span>
+                <span style="font-size: 0.9em; opacity: 0.7;">클릭하여 펼치기/접기</span>
+            </div>
+            <div id="guide-content" style="display: none; margin-top: 15px;">
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>✏️ <strong>수정</strong>: 링크 이름과 URL 직접 수정</li>
+                    <li>🔄 <strong>드래그 앤 드롭</strong>: ≡ 아이콘으로 순서 변경</li>
+                    <li>⬆️⬇️ <strong>버튼 이동</strong>: 위/아래 이동</li>
+                    <li>➕ <strong>추가</strong>: 새 링크 추가</li>
+                    <li>🗑️ <strong>삭제</strong>: 링크 제거</li>
+                    <li>🎨 <strong>스타일 설정</strong>: 각 섹션별 글자 크기, 색상, 효과 등 커스터마이징</li>
+                    <li>🏷️ <strong>카테고리 관리</strong>: 새로운 카테고리 추가 및 관리</li>
+                </ul>
+            </div>
         </div>
 
         <div class="config-section">
@@ -269,7 +276,14 @@
         </div>
 
         <div class="add-form" style="margin-bottom: 20px; background: #1a1a1a;">
-            <h3 style="width: 100%; margin-bottom: 15px;">🎨 링크 카드 스타일 설정</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">🎨 링크 카드 스타일 설정</h3>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="saveStyles()" style="background: #4caf50; padding: 8px 15px; font-size: 0.9em;">💾 스타일 저장</button>
+                    <button onclick="resetStyles()" style="background: #ff9800; padding: 8px 15px; font-size: 0.9em;">🔄 기본값으로 초기화</button>
+                    <button onclick="previewStyles()" style="background: #2196f3; padding: 8px 15px; font-size: 0.9em;">👁️ 미리보기</button>
+                </div>
+            </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                 <!-- GPT Links 스타일 -->
@@ -277,8 +291,18 @@
                     <h4 style="color: #4fc3f7; margin-bottom: 10px;">🤖 GPT Links</h4>
                     <label style="display: block; margin-bottom: 8px;">
                         글자 크기:
-                        <input type="range" id="gpt-font-size" min="10" max="20" value="16" style="width: 100px; margin-left: 10px;">
+                        <input type="range" id="gpt-font-size" min="10" max="24" value="16" style="width: 100px; margin-left: 10px;">
                         <span id="gpt-font-size-display">16px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        글자 굵기:
+                        <select id="gpt-font-weight" style="width: 100px; margin-left: 10px; background: #333; border: 1px solid #444; color: #fff;">
+                            <option value="300">Light</option>
+                            <option value="400">Normal</option>
+                            <option value="500" selected>Medium</option>
+                            <option value="600">SemiBold</option>
+                            <option value="700">Bold</option>
+                        </select>
                     </label>
                     <label style="display: block; margin-bottom: 8px;">
                         배경색:
@@ -292,6 +316,41 @@
                         테두리색:
                         <input type="color" id="gpt-border-color" value="#333333" style="margin-left: 10px;">
                     </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        테두리 두께:
+                        <input type="range" id="gpt-border-width" min="0" max="5" value="1" style="width: 100px; margin-left: 10px;">
+                        <span id="gpt-border-width-display">1px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        모서리 둥글기:
+                        <input type="range" id="gpt-border-radius" min="0" max="20" value="10" style="width: 100px; margin-left: 10px;">
+                        <span id="gpt-border-radius-display">10px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        안쪽 여백:
+                        <input type="range" id="gpt-padding" min="5" max="30" value="15" style="width: 100px; margin-left: 10px;">
+                        <span id="gpt-padding-display">15px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        카드 간격:
+                        <input type="range" id="gpt-gap" min="5" max="30" value="10" style="width: 100px; margin-left: 10px;">
+                        <span id="gpt-gap-display">10px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="gpt-shadow" checked> 그림자 효과
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="gpt-hover-effect" checked> 호버 효과
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        호버 배경색:
+                        <input type="color" id="gpt-hover-bg" value="#2a2a2a" style="margin-left: 10px;">
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        호버 스케일:
+                        <input type="range" id="gpt-hover-scale" min="100" max="110" value="102" style="width: 100px; margin-left: 10px;">
+                        <span id="gpt-hover-scale-display">102%</span>
+                    </label>
                 </div>
 
                 <!-- YouTube Live 스타일 -->
@@ -299,8 +358,18 @@
                     <h4 style="color: #ff6b6b; margin-bottom: 10px;">📺 YouTube Live</h4>
                     <label style="display: block; margin-bottom: 8px;">
                         글자 크기:
-                        <input type="range" id="youtube-font-size" min="10" max="20" value="17" style="width: 100px; margin-left: 10px;">
+                        <input type="range" id="youtube-font-size" min="10" max="24" value="17" style="width: 100px; margin-left: 10px;">
                         <span id="youtube-font-size-display">17px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        글자 굵기:
+                        <select id="youtube-font-weight" style="width: 100px; margin-left: 10px; background: #333; border: 1px solid #444; color: #fff;">
+                            <option value="300">Light</option>
+                            <option value="400">Normal</option>
+                            <option value="500">Medium</option>
+                            <option value="600" selected>SemiBold</option>
+                            <option value="700">Bold</option>
+                        </select>
                     </label>
                     <label style="display: block; margin-bottom: 8px;">
                         배경색:
@@ -314,6 +383,44 @@
                         테두리색:
                         <input type="color" id="youtube-border-color" value="#333333" style="margin-left: 10px;">
                     </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        테두리 두께:
+                        <input type="range" id="youtube-border-width" min="0" max="5" value="1" style="width: 100px; margin-left: 10px;">
+                        <span id="youtube-border-width-display">1px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        모서리 둥글기:
+                        <input type="range" id="youtube-border-radius" min="0" max="20" value="10" style="width: 100px; margin-left: 10px;">
+                        <span id="youtube-border-radius-display">10px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        안쪽 여백:
+                        <input type="range" id="youtube-padding" min="5" max="30" value="15" style="width: 100px; margin-left: 10px;">
+                        <span id="youtube-padding-display">15px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        카드 간격:
+                        <input type="range" id="youtube-gap" min="5" max="30" value="10" style="width: 100px; margin-left: 10px;">
+                        <span id="youtube-gap-display">10px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="youtube-shadow" checked> 그림자 효과
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="youtube-hover-effect" checked> 호버 효과
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        호버 배경색:
+                        <input type="color" id="youtube-hover-bg" value="#2a2a2a" style="margin-left: 10px;">
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        호버 스케일:
+                        <input type="range" id="youtube-hover-scale" min="100" max="110" value="102" style="width: 100px; margin-left: 10px;">
+                        <span id="youtube-hover-scale-display">102%</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="youtube-show-live-indicator" checked> 라이브 인디케이터 표시
+                    </label>
                 </div>
 
                 <!-- Favorite Sites 스타일 -->
@@ -321,8 +428,18 @@
                     <h4 style="color: #ffd93d; margin-bottom: 10px;">⭐ Favorite Sites</h4>
                     <label style="display: block; margin-bottom: 8px;">
                         글자 크기:
-                        <input type="range" id="favorite-font-size" min="10" max="20" value="16" style="width: 100px; margin-left: 10px;">
+                        <input type="range" id="favorite-font-size" min="10" max="24" value="16" style="width: 100px; margin-left: 10px;">
                         <span id="favorite-font-size-display">16px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        글자 굵기:
+                        <select id="favorite-font-weight" style="width: 100px; margin-left: 10px; background: #333; border: 1px solid #444; color: #fff;">
+                            <option value="300">Light</option>
+                            <option value="400">Normal</option>
+                            <option value="500" selected>Medium</option>
+                            <option value="600">SemiBold</option>
+                            <option value="700">Bold</option>
+                        </select>
                     </label>
                     <label style="display: block; margin-bottom: 8px;">
                         배경색:
@@ -336,13 +453,42 @@
                         테두리색:
                         <input type="color" id="favorite-border-color" value="#333333" style="margin-left: 10px;">
                     </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        테두리 두께:
+                        <input type="range" id="favorite-border-width" min="0" max="5" value="1" style="width: 100px; margin-left: 10px;">
+                        <span id="favorite-border-width-display">1px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        모서리 둥글기:
+                        <input type="range" id="favorite-border-radius" min="0" max="20" value="10" style="width: 100px; margin-left: 10px;">
+                        <span id="favorite-border-radius-display">10px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        안쪽 여백:
+                        <input type="range" id="favorite-padding" min="5" max="30" value="15" style="width: 100px; margin-left: 10px;">
+                        <span id="favorite-padding-display">15px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        카드 간격:
+                        <input type="range" id="favorite-gap" min="5" max="30" value="10" style="width: 100px; margin-left: 10px;">
+                        <span id="favorite-gap-display">10px</span>
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="favorite-shadow" checked> 그림자 효과
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="favorite-hover-effect" checked> 호버 효과
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        호버 배경색:
+                        <input type="color" id="favorite-hover-bg" value="#2a2a2a" style="margin-left: 10px;">
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        호버 스케일:
+                        <input type="range" id="favorite-hover-scale" min="100" max="110" value="102" style="width: 100px; margin-left: 10px;">
+                        <span id="favorite-hover-scale-display">102%</span>
+                    </label>
                 </div>
-            </div>
-
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button onclick="saveStyles()" style="background: #4caf50;">💾 스타일 저장</button>
-                <button onclick="resetStyles()" style="background: #ff9800;">🔄 기본값으로 초기화</button>
-                <button onclick="previewStyles()" style="background: #2196f3;">👁️ 미리보기</button>
             </div>
 
             <div id="style-preview" style="margin-top: 20px; display: none;">
@@ -482,6 +628,35 @@
     <script>
         let editingId = null;
         let customCategories = [];
+        let guideOpen = false;
+
+        // 기능 안내 토글
+        function toggleGuide() {
+            const guideContent = document.getElementById('guide-content');
+            const guideArrow = document.getElementById('guide-arrow');
+
+            guideOpen = !guideOpen;
+
+            if (guideOpen) {
+                guideContent.style.display = 'block';
+                guideArrow.textContent = '▲';
+            } else {
+                guideContent.style.display = 'none';
+                guideArrow.textContent = '▼';
+            }
+
+            // 상태 저장
+            localStorage.setItem('adminGuideOpen', guideOpen);
+        }
+
+        // 페이지 로드시 가이드 상태 복원
+        function restoreGuideState() {
+            const savedState = localStorage.getItem('adminGuideOpen');
+            if (savedState === 'true') {
+                guideOpen = false; // toggleGuide가 반대로 토글하므로
+                toggleGuide();
+            }
+        }
 
         // localStorage에서 커스텀 카테고리 불러오기
         function loadCustomCategories() {
@@ -564,39 +739,150 @@
 
             // 기본값 설정
             const defaultStyles = {
-                gpt: { fontSize: 16, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' },
-                youtube: { fontSize: 17, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' },
-                favorite: { fontSize: 16, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' }
+                gpt: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                },
+                youtube: {
+                    fontSize: 17, fontWeight: '600', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102,
+                    showLiveIndicator: true
+                },
+                favorite: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                }
             };
 
             // 저장된 스타일 또는 기본값 적용
             ['gpt', 'youtube', 'favorite'].forEach(category => {
-                const styles = savedStyles[category] || defaultStyles[category];
+                const styles = { ...defaultStyles[category], ...(savedStyles[category] || {}) };
 
+                // 기본 스타일
                 document.getElementById(`${category}-font-size`).value = styles.fontSize;
                 document.getElementById(`${category}-font-size-display`).textContent = `${styles.fontSize}px`;
+                document.getElementById(`${category}-font-weight`).value = styles.fontWeight;
                 document.getElementById(`${category}-bg-color`).value = styles.bgColor;
                 document.getElementById(`${category}-text-color`).value = styles.textColor;
                 document.getElementById(`${category}-border-color`).value = styles.borderColor;
+
+                // 확장 스타일
+                document.getElementById(`${category}-border-width`).value = styles.borderWidth;
+                document.getElementById(`${category}-border-width-display`).textContent = `${styles.borderWidth}px`;
+                document.getElementById(`${category}-border-radius`).value = styles.borderRadius;
+                document.getElementById(`${category}-border-radius-display`).textContent = `${styles.borderRadius}px`;
+                document.getElementById(`${category}-padding`).value = styles.padding;
+                document.getElementById(`${category}-padding-display`).textContent = `${styles.padding}px`;
+                document.getElementById(`${category}-gap`).value = styles.gap;
+                document.getElementById(`${category}-gap-display`).textContent = `${styles.gap}px`;
+
+                // 효과 설정
+                document.getElementById(`${category}-shadow`).checked = styles.shadow;
+                document.getElementById(`${category}-hover-effect`).checked = styles.hoverEffect;
+                document.getElementById(`${category}-hover-bg`).value = styles.hoverBg;
+                document.getElementById(`${category}-hover-scale`).value = styles.hoverScale;
+                document.getElementById(`${category}-hover-scale-display`).textContent = `${styles.hoverScale}%`;
             });
+
+            // YouTube Live 전용 설정
+            const youtubeStyles = savedStyles.youtube || defaultStyles.youtube;
+            document.getElementById('youtube-show-live-indicator').checked = youtubeStyles.showLiveIndicator;
         }
 
         function initStyleControls() {
-            // 폰트 사이즈 슬라이더 이벤트
+            // 각 카테고리별 컨트롤 초기화
             ['gpt', 'youtube', 'favorite'].forEach(category => {
-                const slider = document.getElementById(`${category}-font-size`);
-                const display = document.getElementById(`${category}-font-size-display`);
+                // 폰트 사이즈 슬라이더
+                const fontSlider = document.getElementById(`${category}-font-size`);
+                const fontDisplay = document.getElementById(`${category}-font-size-display`);
+                if (fontSlider) {
+                    fontSlider.addEventListener('input', (e) => {
+                        fontDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
 
-                slider.addEventListener('input', (e) => {
-                    display.textContent = `${e.target.value}px`;
-                    previewStyles();
+                // 테두리 두께 슬라이더
+                const borderSlider = document.getElementById(`${category}-border-width`);
+                const borderDisplay = document.getElementById(`${category}-border-width-display`);
+                if (borderSlider) {
+                    borderSlider.addEventListener('input', (e) => {
+                        borderDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
+
+                // 모서리 둥글기 슬라이더
+                const radiusSlider = document.getElementById(`${category}-border-radius`);
+                const radiusDisplay = document.getElementById(`${category}-border-radius-display`);
+                if (radiusSlider) {
+                    radiusSlider.addEventListener('input', (e) => {
+                        radiusDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
+
+                // 패딩 슬라이더
+                const paddingSlider = document.getElementById(`${category}-padding`);
+                const paddingDisplay = document.getElementById(`${category}-padding-display`);
+                if (paddingSlider) {
+                    paddingSlider.addEventListener('input', (e) => {
+                        paddingDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
+
+                // 간격 슬라이더
+                const gapSlider = document.getElementById(`${category}-gap`);
+                const gapDisplay = document.getElementById(`${category}-gap-display`);
+                if (gapSlider) {
+                    gapSlider.addEventListener('input', (e) => {
+                        gapDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
+
+                // 호버 스케일 슬라이더
+                const scaleSlider = document.getElementById(`${category}-hover-scale`);
+                const scaleDisplay = document.getElementById(`${category}-hover-scale-display`);
+                if (scaleSlider) {
+                    scaleSlider.addEventListener('input', (e) => {
+                        scaleDisplay.textContent = `${e.target.value}%`;
+                        previewStyles();
+                    });
+                }
+
+                // 색상 선택기 이벤트
+                ['bg-color', 'text-color', 'border-color', 'hover-bg'].forEach(type => {
+                    const colorInput = document.getElementById(`${category}-${type}`);
+                    if (colorInput) {
+                        colorInput.addEventListener('change', () => previewStyles());
+                    }
                 });
 
-                // 컬러 피커 이벤트
-                ['bg-color', 'text-color', 'border-color'].forEach(type => {
-                    document.getElementById(`${category}-${type}`).addEventListener('change', previewStyles);
+                // 체크박스 이벤트
+                ['shadow', 'hover-effect'].forEach(type => {
+                    const checkbox = document.getElementById(`${category}-${type}`);
+                    if (checkbox) {
+                        checkbox.addEventListener('change', () => previewStyles());
+                    }
                 });
+
+                // 셀렉트 박스 이벤트 (font-weight)
+                const fontWeight = document.getElementById(`${category}-font-weight`);
+                if (fontWeight) {
+                    fontWeight.addEventListener('change', () => previewStyles());
+                }
             });
+
+            // YouTube Live 전용 - 라이브 인디케이터
+            const liveIndicator = document.getElementById('youtube-show-live-indicator');
+            if (liveIndicator) {
+                liveIndicator.addEventListener('change', () => previewStyles());
+            }
         }
 
         function saveStyles() {
@@ -605,11 +891,23 @@
             ['gpt', 'youtube', 'favorite'].forEach(category => {
                 styles[category] = {
                     fontSize: parseInt(document.getElementById(`${category}-font-size`).value),
+                    fontWeight: document.getElementById(`${category}-font-weight`).value,
                     bgColor: document.getElementById(`${category}-bg-color`).value,
                     textColor: document.getElementById(`${category}-text-color`).value,
-                    borderColor: document.getElementById(`${category}-border-color`).value
+                    borderColor: document.getElementById(`${category}-border-color`).value,
+                    borderWidth: parseInt(document.getElementById(`${category}-border-width`).value),
+                    borderRadius: parseInt(document.getElementById(`${category}-border-radius`).value),
+                    padding: parseInt(document.getElementById(`${category}-padding`).value),
+                    gap: parseInt(document.getElementById(`${category}-gap`).value),
+                    shadow: document.getElementById(`${category}-shadow`).checked,
+                    hoverEffect: document.getElementById(`${category}-hover-effect`).checked,
+                    hoverBg: document.getElementById(`${category}-hover-bg`).value,
+                    hoverScale: parseInt(document.getElementById(`${category}-hover-scale`).value)
                 };
             });
+
+            // YouTube Live 전용 설정
+            styles.youtube.showLiveIndicator = document.getElementById('youtube-show-live-indicator').checked;
 
             localStorage.setItem('linkCardStyles', JSON.stringify(styles));
             showStatus('스타일이 저장되었습니다. 메인 페이지를 새로고침하면 적용됩니다.', 'success');
@@ -717,14 +1015,46 @@
             ['gpt', 'youtube', 'favorite'].forEach(category => {
                 const preview = document.getElementById(`${category}-preview`);
                 const fontSize = document.getElementById(`${category}-font-size`).value;
+                const fontWeight = document.getElementById(`${category}-font-weight`).value;
                 const bgColor = document.getElementById(`${category}-bg-color`).value;
                 const textColor = document.getElementById(`${category}-text-color`).value;
                 const borderColor = document.getElementById(`${category}-border-color`).value;
+                const borderWidth = document.getElementById(`${category}-border-width`).value;
+                const borderRadius = document.getElementById(`${category}-border-radius`).value;
+                const padding = document.getElementById(`${category}-padding`).value;
+                const shadow = document.getElementById(`${category}-shadow`).checked;
+                const hoverEffect = document.getElementById(`${category}-hover-effect`).checked;
+                const hoverBg = document.getElementById(`${category}-hover-bg`).value;
+                const hoverScale = document.getElementById(`${category}-hover-scale`).value;
 
                 preview.style.fontSize = `${fontSize}px`;
+                preview.style.fontWeight = fontWeight;
                 preview.style.backgroundColor = bgColor;
                 preview.style.color = textColor;
-                preview.style.border = `1px solid ${borderColor}`;
+                preview.style.border = `${borderWidth}px solid ${borderColor}`;
+                preview.style.borderRadius = `${borderRadius}px`;
+                preview.style.padding = `${padding}px`;
+                preview.style.boxShadow = shadow ? '0 2px 8px rgba(0,0,0,0.2)' : 'none';
+                preview.style.transition = hoverEffect ? 'all 0.3s ease' : 'none';
+                preview.style.cursor = 'pointer';
+
+                // 호버 효과 적용
+                if (hoverEffect) {
+                    preview.onmouseover = function() {
+                        this.style.backgroundColor = hoverBg;
+                        this.style.transform = `scale(${hoverScale / 100})`;
+                        if (shadow) {
+                            this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+                        }
+                    };
+                    preview.onmouseout = function() {
+                        this.style.backgroundColor = bgColor;
+                        this.style.transform = 'scale(1)';
+                        if (shadow) {
+                            this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+                        }
+                    };
+                }
             });
         }
 
@@ -735,7 +1065,8 @@
             if (!hasAccess) {
                 return; // 인증 실패시 login.html로 자동 리다이렉트됨
             }
-            
+
+            restoreGuideState(); // 가이드 상태 복원
             loadCustomCategories(); // 커스텀 카테고리 로드
             updateCategoryDropdown(); // 카테고리 드롭다운 업데이트
             loadSavedStyles(); // 저장된 스타일 로드
@@ -1062,6 +1393,20 @@
         }
 
         // 실시간 업데이트 구독
+        function subscribeToLinks(callback) {
+            // Supabase Realtime 구독
+            const subscription = supabase
+                .channel('links-changes')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'links' },
+                    callback
+                )
+                .subscribe();
+
+            return subscription;
+        }
+
+        // 실시간 업데이트 활성화
         subscribeToLinks(async (payload) => {
             console.log('데이터 변경 감지:', payload);
             if (!editingId) {  // 수정 중이 아닐 때만 자동 새로고침

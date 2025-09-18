@@ -989,11 +989,24 @@
         function getCardStyles(category) {
             const savedStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
             const defaultStyles = {
-                gpt: { fontSize: 16, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' },
-                youtube: { fontSize: 17, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' },
-                favorite: { fontSize: 16, bgColor: '#1a1a1a', textColor: '#ffffff', borderColor: '#333333' }
+                gpt: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                },
+                youtube: {
+                    fontSize: 17, fontWeight: '600', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102,
+                    showLiveIndicator: true
+                },
+                favorite: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                }
             };
-            return savedStyles[category] || defaultStyles[category] || defaultStyles.gpt;
+            return { ...defaultStyles[category], ...(savedStyles[category] || {}) };
         }
 
         // Supabase에서 링크 데이터 로드
