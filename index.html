@@ -986,89 +986,138 @@
                 // GPT 링크 렌더링
                 const gptContainer = document.getElementById('gpt-links');
                 if (gptContainer) {
+                    gptContainer.innerHTML = ''; // 기존 내용 제거
+                    
                     if (gptLinks.length > 0) {
                         const gptStyles = getCardStyles('gpt');
-                        gptContainer.innerHTML = gptLinks.map(link => `
-                            <a href="${escapeHtml(link.url)}" target="_blank" style="
-                                background: ${gptStyles.bgColor};
-                                color: ${gptStyles.textColor};
-                                padding: 15px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid ${gptStyles.borderColor};
-                                text-decoration: none;
-                                transition: transform 0.3s ease;
-                                display: block;
-                            ">
-                                <div style="font-size: ${gptStyles.fontSize}px;">${escapeHtml(link.name)}</div>
-                            </a>
-                        `).join('');
+                        
+                        gptLinks.forEach(link => {
+                            const linkElement = document.createElement('a');
+                            linkElement.href = link.url || '#';
+                            linkElement.target = '_blank';
+                            
+                            // 스타일 적용 (안전하게)
+                            linkElement.style.background = gptStyles.bgColor || '#1a1a1a';
+                            linkElement.style.color = gptStyles.textColor || '#ffffff';
+                            linkElement.style.padding = '15px';
+                            linkElement.style.borderRadius = '10px';
+                            linkElement.style.textAlign = 'center';
+                            linkElement.style.border = `1px solid ${gptStyles.borderColor || '#333333'}`;
+                            linkElement.style.textDecoration = 'none';
+                            linkElement.style.transition = 'transform 0.3s ease';
+                            linkElement.style.display = 'block';
+                            
+                            const textDiv = document.createElement('div');
+                            textDiv.style.fontSize = `${gptStyles.fontSize || 16}px`;
+                            textDiv.textContent = link.name || '이름 없음';
+                            
+                            linkElement.appendChild(textDiv);
+                            gptContainer.appendChild(linkElement);
+                        });
                     } else {
-                        gptContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.style.color = '#666';
+                        emptyMessage.style.textAlign = 'center';
+                        emptyMessage.textContent = '링크가 없습니다. 관리자 페이지에서 추가하세요.';
+                        gptContainer.appendChild(emptyMessage);
                     }
                 }
                 
                 // YouTube 링크 렌더링 (original card style)
                 const youtubeContainer = document.getElementById('youtube-links');
                 if (youtubeContainer) {
+                    youtubeContainer.innerHTML = ''; // 기존 내용 제거
+                    
                     if (youtubeLinks.length > 0) {
                         const youtubeStyles = getCardStyles('youtube');
-                        youtubeContainer.innerHTML = youtubeLinks.map(link => `
-                        <a href="${link.url}" target="_blank" style="
-                            background: ${youtubeStyles.bgColor};
-                            color: ${youtubeStyles.textColor};
-                            padding: 15px;
-                            border-radius: 10px;
-                            text-align: center;
-                            border: 1px solid ${youtubeStyles.borderColor};
-                            text-decoration: none;
-                            transition: transform 0.3s ease;
-                            display: block;
-                            position: relative;
-                        ">
-                            <div style="font-size: ${youtubeStyles.fontSize}px; font-weight: bold;">${escapeHtml(link.name)}</div>
-                            <span class="live-indicator" data-channel-url="${escapeHtml(link.url)}" style="
-                                position: absolute;
-                                top: 5px;
-                                right: 5px;
-                                width: 10px;
-                                height: 10px;
-                                border-radius: 50%;
-                                background: #666;
-                                animation: none;
-                            "></span>
-                        </a>
-                        `).join('');
+                        
+                        youtubeLinks.forEach(link => {
+                            const linkElement = document.createElement('a');
+                            linkElement.href = link.url || '#';
+                            linkElement.target = '_blank';
+                            
+                            // 스타일 적용 (안전하게)
+                            linkElement.style.background = youtubeStyles.bgColor || '#1a1a1a';
+                            linkElement.style.color = youtubeStyles.textColor || '#ffffff';
+                            linkElement.style.padding = '15px';
+                            linkElement.style.borderRadius = '10px';
+                            linkElement.style.textAlign = 'center';
+                            linkElement.style.border = `1px solid ${youtubeStyles.borderColor || '#333333'}`;
+                            linkElement.style.textDecoration = 'none';
+                            linkElement.style.transition = 'transform 0.3s ease';
+                            linkElement.style.display = 'block';
+                            linkElement.style.position = 'relative';
+                            
+                            const textDiv = document.createElement('div');
+                            textDiv.style.fontSize = `${youtubeStyles.fontSize || 17}px`;
+                            textDiv.style.fontWeight = 'bold';
+                            textDiv.textContent = link.name || '이름 없음';
+                            
+                            const liveIndicator = document.createElement('span');
+                            liveIndicator.className = 'live-indicator';
+                            liveIndicator.setAttribute('data-channel-url', link.url || '');
+                            liveIndicator.style.position = 'absolute';
+                            liveIndicator.style.top = '5px';
+                            liveIndicator.style.right = '5px';
+                            liveIndicator.style.width = '10px';
+                            liveIndicator.style.height = '10px';
+                            liveIndicator.style.borderRadius = '50%';
+                            liveIndicator.style.background = '#666';
+                            liveIndicator.style.animation = 'none';
+                            
+                            linkElement.appendChild(textDiv);
+                            linkElement.appendChild(liveIndicator);
+                            youtubeContainer.appendChild(linkElement);
+                        });
 
                         // YouTube 라이브 상태 체크
                         checkYouTubeLiveStatus();
                     } else {
-                        youtubeContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.style.color = '#666';
+                        emptyMessage.style.textAlign = 'center';
+                        emptyMessage.textContent = '링크가 없습니다. 관리자 페이지에서 추가하세요.';
+                        youtubeContainer.appendChild(emptyMessage);
                     }
                 }
                 
                 // Favorite 링크 렌더링
                 const favoriteContainer = document.getElementById('favorite-links');
                 if (favoriteContainer) {
+                    favoriteContainer.innerHTML = ''; // 기존 내용 제거
+                    
                     if (favoriteLinks.length > 0) {
                         const favoriteStyles = getCardStyles('favorite');
-                        favoriteContainer.innerHTML = favoriteLinks.map(link => `
-                        <a href="${link.url}" target="_blank" style="
-                            background: ${favoriteStyles.bgColor};
-                            color: ${favoriteStyles.textColor};
-                            padding: 15px;
-                            border-radius: 10px;
-                            text-align: center;
-                            border: 1px solid ${favoriteStyles.borderColor};
-                            text-decoration: none;
-                            transition: transform 0.3s ease;
-                            display: block;
-                        ">
-                            <div style="font-size: ${favoriteStyles.fontSize}px;">${escapeHtml(link.name)}</div>
-                        </a>
-                        `).join('');
+                        
+                        favoriteLinks.forEach(link => {
+                            const linkElement = document.createElement('a');
+                            linkElement.href = link.url || '#';
+                            linkElement.target = '_blank';
+                            
+                            // 스타일 적용 (안전하게)
+                            linkElement.style.background = favoriteStyles.bgColor || '#1a1a1a';
+                            linkElement.style.color = favoriteStyles.textColor || '#ffffff';
+                            linkElement.style.padding = '15px';
+                            linkElement.style.borderRadius = '10px';
+                            linkElement.style.textAlign = 'center';
+                            linkElement.style.border = `1px solid ${favoriteStyles.borderColor || '#333333'}`;
+                            linkElement.style.textDecoration = 'none';
+                            linkElement.style.transition = 'transform 0.3s ease';
+                            linkElement.style.display = 'block';
+                            
+                            const textDiv = document.createElement('div');
+                            textDiv.style.fontSize = `${favoriteStyles.fontSize || 16}px`;
+                            textDiv.textContent = link.name || '이름 없음';
+                            
+                            linkElement.appendChild(textDiv);
+                            favoriteContainer.appendChild(linkElement);
+                        });
                     } else {
-                        favoriteContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.style.color = '#666';
+                        emptyMessage.style.textAlign = 'center';
+                        emptyMessage.textContent = '링크가 없습니다. 관리자 페이지에서 추가하세요.';
+                        favoriteContainer.appendChild(emptyMessage);
                     }
                 }
                 
@@ -1134,20 +1183,54 @@
                                         overflow: hidden;
                                         cursor: pointer;
                                     `;
-                                    gridItem.innerHTML = `
-                                        ${funSettings.showThumbnails ? `
-                                        <div style="width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; position: relative;">
-                                            <img src="${videoInfo.thumbnail}" style="width: 100%; height: 100%; object-fit: cover;"
-                                                onerror="this.src='https://via.placeholder.com/320x180?text=No+Thumbnail'">
-                                        </div>
-                                        ` : ''}
-                                        <div style="padding: 12px;">
-                                            <div style="font-size: ${funSettings.fontSize}px; font-weight: 600; margin-bottom: 4px;
-                                                    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-                                                    overflow: hidden; line-height: 1.3;">${videoInfo.title}</div>
-                                            ${funSettings.showAuthor ? `<div style="font-size: ${funSettings.fontSize - 2}px; color: #999; margin-top: 4px;">${videoInfo.author}</div>` : ''}
-                                        </div>
-                                    `;
+                                    // 썸네일 렌더링
+                                    if (funSettings.showThumbnails && videoInfo.thumbnail) {
+                                        const thumbnailContainer = document.createElement('div');
+                                        thumbnailContainer.style.width = '100%';
+                                        thumbnailContainer.style.aspectRatio = '16/9';
+                                        thumbnailContainer.style.background = '#000';
+                                        thumbnailContainer.style.overflow = 'hidden';
+                                        thumbnailContainer.style.position = 'relative';
+                                        
+                                        const thumbnail = document.createElement('img');
+                                        thumbnail.src = videoInfo.thumbnail || '';
+                                        thumbnail.style.width = '100%';
+                                        thumbnail.style.height = '100%';
+                                        thumbnail.style.objectFit = 'cover';
+                                        thumbnail.onerror = function() {
+                                            this.src = 'https://via.placeholder.com/320x180?text=No+Thumbnail';
+                                        };
+                                        
+                                        thumbnailContainer.appendChild(thumbnail);
+                                        gridItem.appendChild(thumbnailContainer);
+                                    }
+                                    
+                                    // 텍스트 콘텐츠 렌더링
+                                    const contentDiv = document.createElement('div');
+                                    contentDiv.style.padding = '12px';
+                                    
+                                    const titleDiv = document.createElement('div');
+                                    titleDiv.style.fontSize = `${funSettings.fontSize || 16}px`;
+                                    titleDiv.style.fontWeight = '600';
+                                    titleDiv.style.marginBottom = '4px';
+                                    titleDiv.style.display = '-webkit-box';
+                                    titleDiv.style.webkitLineClamp = '2';
+                                    titleDiv.style.webkitBoxOrient = 'vertical';
+                                    titleDiv.style.overflow = 'hidden';
+                                    titleDiv.style.lineHeight = '1.3';
+                                    titleDiv.textContent = videoInfo.title || '제목 없음';
+                                    contentDiv.appendChild(titleDiv);
+                                    
+                                    if (funSettings.showAuthor && videoInfo.author) {
+                                        const authorDiv = document.createElement('div');
+                                        authorDiv.style.fontSize = `${(funSettings.fontSize || 16) - 2}px`;
+                                        authorDiv.style.color = '#999';
+                                        authorDiv.style.marginTop = '4px';
+                                        authorDiv.textContent = videoInfo.author;
+                                        contentDiv.appendChild(authorDiv);
+                                    }
+                                    
+                                    gridItem.appendChild(contentDiv);
                                     gridItem.onmouseover = function() {
                                         this.style.background = funSettings.hoverBgColor;
                                         if (funSettings.hoverScale) {
@@ -1189,19 +1272,53 @@
                                         cursor: pointer;
                                         margin-bottom: 1px;
                                     `;
-                                    listItem.innerHTML = `
-                                        ${funSettings.showThumbnails ? `
-                                        <div style="width: 160px; height: 90px; flex-shrink: 0; background: #000; overflow: hidden; border-radius: ${funSettings.borderRadius/2}px;">
-                                            <img src="${videoInfo.thumbnail}" style="width: 100%; height: 100%; object-fit: cover;"
-                                                onerror="this.src='https://via.placeholder.com/160x90?text=No+Thumbnail'">
-                                        </div>
-                                        ` : ''}
-                                        <div style="flex: 1; min-width: 0;">
-                                            <div style="font-size: ${funSettings.fontSize}px; font-weight: 500; margin-bottom: 4px;
-                                                    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${videoInfo.title}</div>
-                                            ${funSettings.showAuthor ? `<div style="font-size: ${funSettings.fontSize - 2}px; color: #999;">${videoInfo.author}</div>` : ''}
-                                        </div>
-                                    `;
+                                    // 썸네일 렌더링
+                                    if (funSettings.showThumbnails && videoInfo.thumbnail) {
+                                        const thumbnailContainer = document.createElement('div');
+                                        thumbnailContainer.style.width = '160px';
+                                        thumbnailContainer.style.height = '90px';
+                                        thumbnailContainer.style.flexShrink = '0';
+                                        thumbnailContainer.style.background = '#000';
+                                        thumbnailContainer.style.overflow = 'hidden';
+                                        thumbnailContainer.style.borderRadius = `${(funSettings.borderRadius || 8) / 2}px`;
+                                        
+                                        const thumbnail = document.createElement('img');
+                                        thumbnail.src = videoInfo.thumbnail || '';
+                                        thumbnail.style.width = '100%';
+                                        thumbnail.style.height = '100%';
+                                        thumbnail.style.objectFit = 'cover';
+                                        thumbnail.onerror = function() {
+                                            this.src = 'https://via.placeholder.com/160x90?text=No+Thumbnail';
+                                        };
+                                        
+                                        thumbnailContainer.appendChild(thumbnail);
+                                        listItem.appendChild(thumbnailContainer);
+                                    }
+                                    
+                                    // 텍스트 콘텐츠 렌더링
+                                    const contentDiv = document.createElement('div');
+                                    contentDiv.style.flex = '1';
+                                    contentDiv.style.minWidth = '0';
+                                    
+                                    const titleDiv = document.createElement('div');
+                                    titleDiv.style.fontSize = `${funSettings.fontSize || 16}px`;
+                                    titleDiv.style.fontWeight = '500';
+                                    titleDiv.style.marginBottom = '4px';
+                                    titleDiv.style.overflow = 'hidden';
+                                    titleDiv.style.textOverflow = 'ellipsis';
+                                    titleDiv.style.whiteSpace = 'nowrap';
+                                    titleDiv.textContent = videoInfo.title || '제목 없음';
+                                    contentDiv.appendChild(titleDiv);
+                                    
+                                    if (funSettings.showAuthor && videoInfo.author) {
+                                        const authorDiv = document.createElement('div');
+                                        authorDiv.style.fontSize = `${(funSettings.fontSize || 16) - 2}px`;
+                                        authorDiv.style.color = '#999';
+                                        authorDiv.textContent = videoInfo.author;
+                                        contentDiv.appendChild(authorDiv);
+                                    }
+                                    
+                                    listItem.appendChild(contentDiv);
                                     listItem.onmouseover = function() {
                                         this.style.background = funSettings.hoverBgColor;
                                         this.style.borderColor = '#444';
@@ -1224,8 +1341,18 @@
                         // 비동기로 렌더링 실행
                         renderFunYoutubeLinks();
                     } else {
-                        funYoutubeListContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
-                        funYoutubeGridContainer.innerHTML = '';
+                        // 빈 상태 메시지 표시
+                        if (funYoutubeListContainer) {
+                            funYoutubeListContainer.innerHTML = '';
+                            const emptyMessage = document.createElement('div');
+                            emptyMessage.style.color = '#666';
+                            emptyMessage.style.textAlign = 'center';
+                            emptyMessage.textContent = '링크가 없습니다. 관리자 페이지에서 추가하세요.';
+                            funYoutubeListContainer.appendChild(emptyMessage);
+                        }
+                        if (funYoutubeGridContainer) {
+                            funYoutubeGridContainer.innerHTML = '';
+                        }
                     }
                 }
                 
@@ -1242,28 +1369,45 @@
                             section.className = 'custom-category-section';
                             section.style.cssText = 'margin-top: 20px; padding-bottom: 20px;';
                             
-                            section.innerHTML = `
-                                <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
-                                    📌 ${category.name}
-                                </h2>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                                    ${categoryLinks.map(link => `
-                                        <a href="${link.url}" target="_blank" style="
-                                            background: #1a1a1a;
-                                            color: white;
-                                            padding: 15px;
-                                            border-radius: 10px;
-                                            text-align: center;
-                                            border: 1px solid #333;
-                                            text-decoration: none;
-                                            transition: transform 0.3s ease;
-                                            display: block;
-                                        ">
-                                            <div style="font-size: 1em;">${link.name}</div>
-                                        </a>
-                                    `).join('')}
-                                </div>
-                            `;
+                            // 카테고리 헤더 생성
+                            const header = document.createElement('h2');
+                            header.style.color = '#aaa';
+                            header.style.marginBottom = '20px';
+                            header.style.paddingBottom = '10px';
+                            header.style.borderBottom = '2px solid #333';
+                            header.textContent = `📌 ${category.name || '이름 없음'}`;
+                            section.appendChild(header);
+                            
+                            // 링크 그리드 컨테이너 생성
+                            const linksGrid = document.createElement('div');
+                            linksGrid.style.display = 'grid';
+                            linksGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(150px, 1fr))';
+                            linksGrid.style.gap = '15px';
+                            
+                            // 각 링크를 DOM 요소로 생성
+                            categoryLinks.forEach(link => {
+                                const linkElement = document.createElement('a');
+                                linkElement.href = link.url || '#';
+                                linkElement.target = '_blank';
+                                linkElement.style.background = '#1a1a1a';
+                                linkElement.style.color = 'white';
+                                linkElement.style.padding = '15px';
+                                linkElement.style.borderRadius = '10px';
+                                linkElement.style.textAlign = 'center';
+                                linkElement.style.border = '1px solid #333';
+                                linkElement.style.textDecoration = 'none';
+                                linkElement.style.transition = 'transform 0.3s ease';
+                                linkElement.style.display = 'block';
+                                
+                                const textDiv = document.createElement('div');
+                                textDiv.style.fontSize = '1em';
+                                textDiv.textContent = link.name || '이름 없음';
+                                
+                                linkElement.appendChild(textDiv);
+                                linksGrid.appendChild(linkElement);
+                            });
+                            
+                            section.appendChild(linksGrid);
                             
                             customSectionsContainer.appendChild(section);
                         }
