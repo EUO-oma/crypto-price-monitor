@@ -317,56 +317,16 @@
         </div>
 
         
-        <!-- 익명 채팅 섹션 -->
-        <div class="chat-section" style="margin-top: 30px; padding: 20px 0; border-top: 1px solid #333; border-bottom: 1px solid #333;">
-            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
-                💬 Anonymous Chat
-            </h2>
-            <div id="chat-container" style="background: linear-gradient(to bottom, #1a1a1a, #0f0f0f); border-radius: 15px; padding: 10px; height: 400px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #333; scroll-behavior: smooth; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);">
-                <div id="chat-messages" style="display: flex; flex-direction: column; width: 100%;">
-                    <!-- 메시지들이 여기에 표시됩니다 -->
-                </div>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <input type="text" 
-                    id="chat-input" 
-                    placeholder="메시지를 입력하세요..." 
-                    maxlength="200" 
-                    autocomplete="off"
-                    autocorrect="off"
-                    autocapitalize="off"
-                    spellcheck="false"
-                    style="flex: 1; padding: 10px 15px; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 20px; font-size: 14px; -webkit-appearance: none; outline: none;"
-                    onfocus="this.style.borderColor='#555'" 
-                    onblur="this.style.borderColor='#333'">
-                <button type="button" 
-                    id="chat-send" 
-                    onclick="sendMessage()" 
-                    style="
-                        width: 40px; 
-                        height: 40px; 
-                        background: #000; 
-                        border: 1px solid #333; 
-                        border-radius: 50%; 
-                        cursor: pointer; 
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center;
-                        transition: all 0.2s;
-                        -webkit-appearance: none; 
-                        touch-action: manipulation;
-                        padding: 0;
-                    "
-                    onmouseover="this.style.transform='scale(1.1)'; this.style.background='#222'" 
-                    onmouseout="this.style.transform='scale(1)'; this.style.background='#000'">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 2px;">
-                        <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="#fff"/>
-                    </svg>
-                </button>
-            </div>
-            <div style="margin-top: 10px; font-size: 12px; color: #666; text-align: center;">
-                익명 채팅 • 메시지는 7일 후 자동 삭제됩니다 • 최대 100개 메시지 유지
-            </div>
+        <!-- 실시간 채팅 섹션 -->
+        <div style="margin-top: 30px; margin-bottom: 30px; padding: 20px; background: #0a0a0a; border-radius: 15px; border: 1px solid #333;">
+            <h2 style="color: #aaa; margin-bottom: 20px; text-align: center;">💬 실시간 채팅</h2>
+            <iframe src="chat-popup.html" style="
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 10px;
+                background: #000;
+            "></iframe>
         </div>
         <!-- ============================================ -->
         <!-- 💰 SECTION 2 END: 코인 가격 카드 섹션 -->
@@ -2392,9 +2352,6 @@
             console.log('🚀 === 순차적 페이지 로딩 시작 ===');
             
             try {
-                // 아바타 맵핑 복원
-                loadSavedAvatarMappings();
-                
                 // 1단계: Supabase 데이터 우선 로드
                 console.log('📊 1단계: Supabase 데이터 로딩...');
                 await loadSupabaseDataFirst();
@@ -2410,12 +2367,6 @@
                 // 4단계: 가격 기록 로드
                 console.log('📈 4단계: 가격 기록 로딩...');
                 loadHistoryData();
-                
-                // 5단계: 채팅 시스템 초기화
-                console.log('💬 5단계: 채팅 시스템 시작...');
-                loadChatMessages();
-                setupChatListeners();
-                subscribeToChatUpdates();
                 
                 console.log('✅ === 모든 시스템 로딩 완료 ===');
                 
