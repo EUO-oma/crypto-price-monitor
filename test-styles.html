@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스타일 시스템 테스트</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+    </style>
+</head>
+<body>
+    <h1>🎨 스타일 시스템 테스트</h1>
+    
+    <div class="test-section">
+        <h2>1. localStorage 스타일 확인</h2>
+        <button onclick="checkStoredStyles()">저장된 스타일 확인</button>
+        <button onclick="clearStyles()">스타일 초기화</button>
+        <div id="stored-styles"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. getCardStyles 함수 테스트</h2>
+        <button onclick="testGetCardStyles()">함수 테스트</button>
+        <div id="styles-test"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 스타일 적용 시뮬레이션</h2>
+        <button onclick="simulateStyleApplication()">시뮬레이션 실행</button>
+        <div id="simulation-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 문제 가능성</h2>
+        <div id="issues"></div>
+    </div>
+
+    <script>
+        // getCardStyles 함수 복사
+        function getCardStyles(category) {
+            const savedStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
+            const defaultStyles = {
+                gpt: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                },
+                youtube: {
+                    fontSize: 17, fontWeight: '600', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102,
+                    showLiveIndicator: true
+                },
+                favorite: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                }
+            };
+            return { ...defaultStyles[category], ...(savedStyles[category] || {}) };
+        }
+        
+        // 1. 저장된 스타일 확인
+        function checkStoredStyles() {
+            const result = document.getElementById('stored-styles');
+            
+            try {
+                const savedStyles = localStorage.getItem('linkCardStyles');
+                
+                if (!savedStyles) {
+                    result.innerHTML = '<p class="warning">⚠️ 저장된 스타일 없음 (기본값 사용)</p>';
+                } else {
+                    const parsed = JSON.parse(savedStyles);
+                    result.innerHTML = `
+                        <p class="success">✅ 저장된 스타일 발견</p>
+                        <pre>${JSON.stringify(parsed, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ 파싱 오류: ${error.message}</p>`;
+            }
+        }
+        
+        // 스타일 초기화
+        function clearStyles() {
+            localStorage.removeItem('linkCardStyles');
+            document.getElementById('stored-styles').innerHTML = 
+                '<p class="success">✅ 스타일 초기화 완료</p>';
+        }
+        
+        // 2. getCardStyles 테스트
+        function testGetCardStyles() {
+            const result = document.getElementById('styles-test');
+            let html = '<h3>각 카테고리별 스타일:</h3>';
+            
+            ['gpt', 'youtube', 'favorite'].forEach(category => {
+                try {
+                    const styles = getCardStyles(category);
+                    html += `<h4>${category.toUpperCase()}</h4>`;
+                    html += '<pre>' + JSON.stringify(styles, null, 2) + '</pre>';
+                    
+                    // 필수 속성 확인
+                    const required = ['bgColor', 'textColor', 'fontSize', 'borderColor'];
+                    const missing = required.filter(prop => !styles[prop]);
+                    
+                    if (missing.length > 0) {
+                        html += `<p class="error">❌ 누락된 속성: ${missing.join(', ')}</p>`;
+                    } else {
+                        html += '<p class="success">✅ 모든 필수 속성 존재</p>';
+                    }
+                } catch (error) {
+                    html += `<p class="error">❌ 오류: ${error.message}</p>`;
+                }
+            });
+            
+            result.innerHTML = html;
+        }
+        
+        // 3. 스타일 적용 시뮬레이션
+        function simulateStyleApplication() {
+            const result = document.getElementById('simulation-result');
+            
+            try {
+                // 가짜 링크 데이터
+                const testLink = { name: '테스트 링크', url: 'https://example.com' };
+                const gptStyles = getCardStyles('gpt');
+                
+                // 템플릿 리터럴 테스트
+                const template = `
+                    <a href="${testLink.url}" target="_blank" style="
+                        background: ${gptStyles.bgColor};
+                        color: ${gptStyles.textColor};
+                        padding: 15px;
+                        border-radius: 10px;
+                        text-align: center;
+                        border: 1px solid ${gptStyles.borderColor};
+                        text-decoration: none;
+                        transition: transform 0.3s ease;
+                        display: block;
+                    ">
+                        <div style="font-size: ${gptStyles.fontSize}px;">${testLink.name}</div>
+                    </a>
+                `;
+                
+                // 렌더링 테스트
+                const testDiv = document.createElement('div');
+                testDiv.innerHTML = template;
+                
+                result.innerHTML = `
+                    <p class="success">✅ 템플릿 생성 성공</p>
+                    <p>생성된 HTML:</p>
+                    <pre>${escapeHtml(template)}</pre>
+                    <p>실제 렌더링:</p>
+                    <div style="background: #2a2a2a; padding: 20px; border-radius: 10px;">
+                        ${template}
+                    </div>
+                `;
+                
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ 시뮬레이션 실패: ${error.message}</p>`;
+            }
+        }
+        
+        // HTML 이스케이프
+        function escapeHtml(html) {
+            return html
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        
+        // 4. 문제 진단
+        function diagnoseIssues() {
+            const issues = document.getElementById('issues');
+            let problems = [];
+            
+            // localStorage 접근 테스트
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+            } catch (e) {
+                problems.push('localStorage 접근 불가');
+            }
+            
+            // JSON 파싱 테스트
+            try {
+                const testJson = '{"test": "value"}';
+                JSON.parse(testJson);
+            } catch (e) {
+                problems.push('JSON 파싱 문제');
+            }
+            
+            // 스프레드 연산자 테스트
+            try {
+                const test1 = {a: 1};
+                const test2 = {b: 2};
+                const merged = {...test1, ...test2};
+            } catch (e) {
+                problems.push('스프레드 연산자 미지원');
+            }
+            
+            if (problems.length === 0) {
+                issues.innerHTML = '<p class="success">✅ 알려진 문제 없음</p>';
+            } else {
+                issues.innerHTML = `
+                    <p class="error">❌ 발견된 문제:</p>
+                    <ul>${problems.map(p => `<li>${p}</li>`).join('')}</ul>
+                `;
+            }
+        }
+        
+        // 페이지 로드 시 진단
+        window.addEventListener('DOMContentLoaded', () => {
+            diagnoseIssues();
+            checkStoredStyles();
+        });
+    </script>
+</body>
+</html>
