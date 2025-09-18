@@ -1,0 +1,37 @@
+                // YouTube 링크 렌더링 (original card style)
+                const youtubeContainer = document.getElementById('youtube-links');
+                if (youtubeContainer) {
+                    if (youtubeLinks.length > 0) {
+                        youtubeContainer.innerHTML = youtubeLinks.map(link => `
+                        <a href="${link.url}" target="_blank" style="
+                            background: #1a1a1a;
+                            color: white;
+                            padding: 15px;
+                            border-radius: 10px;
+                            text-align: center;
+                            border: 1px solid #333;
+                            text-decoration: none;
+                            transition: transform 0.3s ease;
+                            display: block;
+                            position: relative;
+                        ">
+                            <div style="font-size: 1.1em; font-weight: bold;">${link.name}</div>
+                            <span class="live-indicator" data-channel-url="${link.url}" style="
+                                position: absolute;
+                                top: 5px;
+                                right: 5px;
+                                width: 10px;
+                                height: 10px;
+                                border-radius: 50%;
+                                background: #666;
+                                animation: none;
+                            "></span>
+                        </a>
+                        `).join('');
+
+                        // YouTube 라이브 상태 체크
+                        checkYouTubeLiveStatus();
+                    } else {
+                        youtubeContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                    }
+                }
