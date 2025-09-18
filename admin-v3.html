@@ -887,22 +887,45 @@
 
         function saveStyles() {
             const styles = {};
+            
+            // 기본값 정의
+            const defaultValues = {
+                fontSize: 16,
+                fontWeight: '500',
+                bgColor: '#1a1a1a',
+                textColor: '#ffffff',
+                borderColor: '#333333',
+                borderWidth: 1,
+                borderRadius: 10,
+                padding: 15,
+                gap: 10,
+                hoverBg: '#2a2a2a',
+                hoverScale: 102
+            };
 
             ['gpt', 'youtube', 'favorite'].forEach(category => {
+                // 값 가져오기 및 기본값 처리
+                const fontSize = parseInt(document.getElementById(`${category}-font-size`).value);
+                const borderWidth = parseInt(document.getElementById(`${category}-border-width`).value);
+                const borderRadius = parseInt(document.getElementById(`${category}-border-radius`).value);
+                const padding = parseInt(document.getElementById(`${category}-padding`).value);
+                const gap = parseInt(document.getElementById(`${category}-gap`).value);
+                const hoverScale = parseInt(document.getElementById(`${category}-hover-scale`).value);
+                
                 styles[category] = {
-                    fontSize: parseInt(document.getElementById(`${category}-font-size`).value),
-                    fontWeight: document.getElementById(`${category}-font-weight`).value,
-                    bgColor: document.getElementById(`${category}-bg-color`).value,
-                    textColor: document.getElementById(`${category}-text-color`).value,
-                    borderColor: document.getElementById(`${category}-border-color`).value,
-                    borderWidth: parseInt(document.getElementById(`${category}-border-width`).value),
-                    borderRadius: parseInt(document.getElementById(`${category}-border-radius`).value),
-                    padding: parseInt(document.getElementById(`${category}-padding`).value),
-                    gap: parseInt(document.getElementById(`${category}-gap`).value),
+                    fontSize: isNaN(fontSize) ? defaultValues.fontSize : fontSize,
+                    fontWeight: document.getElementById(`${category}-font-weight`).value || defaultValues.fontWeight,
+                    bgColor: document.getElementById(`${category}-bg-color`).value || defaultValues.bgColor,
+                    textColor: document.getElementById(`${category}-text-color`).value || defaultValues.textColor,
+                    borderColor: document.getElementById(`${category}-border-color`).value || defaultValues.borderColor,
+                    borderWidth: isNaN(borderWidth) ? defaultValues.borderWidth : borderWidth,
+                    borderRadius: isNaN(borderRadius) ? defaultValues.borderRadius : borderRadius,
+                    padding: isNaN(padding) ? defaultValues.padding : padding,
+                    gap: isNaN(gap) ? defaultValues.gap : gap,
                     shadow: document.getElementById(`${category}-shadow`).checked,
                     hoverEffect: document.getElementById(`${category}-hover-effect`).checked,
-                    hoverBg: document.getElementById(`${category}-hover-bg`).value,
-                    hoverScale: parseInt(document.getElementById(`${category}-hover-scale`).value)
+                    hoverBg: document.getElementById(`${category}-hover-bg`).value || defaultValues.hoverBg,
+                    hoverScale: isNaN(hoverScale) ? defaultValues.hoverScale : hoverScale
                 };
             });
 
@@ -924,17 +947,33 @@
 
         // Fun YouTube 설정 저장
         function saveFunYoutubeSettings() {
+            // 기본값 정의
+            const funDefaults = {
+                viewMode: 'list',
+                gridColumns: 3,
+                fontSize: 16,
+                bgColor: '#1a1a1a',
+                textColor: '#ffffff',
+                hoverBgColor: '#2a2a2a',
+                borderRadius: 8
+            };
+            
+            // 값 가져오기 및 검증
+            const gridColumns = parseInt(document.getElementById('fun-youtube-grid-columns').value);
+            const fontSize = parseInt(document.getElementById('fun-youtube-font-size').value);
+            const borderRadius = parseInt(document.getElementById('fun-youtube-border-radius').value);
+            
             const settings = {
-                viewMode: document.getElementById('fun-youtube-view-mode').value,
-                gridColumns: parseInt(document.getElementById('fun-youtube-grid-columns').value),
+                viewMode: document.getElementById('fun-youtube-view-mode').value || funDefaults.viewMode,
+                gridColumns: isNaN(gridColumns) ? funDefaults.gridColumns : gridColumns,
                 showThumbnails: document.getElementById('fun-youtube-thumbnails').checked,
                 showAuthor: document.getElementById('fun-youtube-author').checked,
                 showViewButton: document.getElementById('fun-youtube-view-button').checked,
-                fontSize: parseInt(document.getElementById('fun-youtube-font-size').value),
-                bgColor: document.getElementById('fun-youtube-bg-color').value,
-                textColor: document.getElementById('fun-youtube-text-color').value,
-                hoverBgColor: document.getElementById('fun-youtube-hover-bg').value,
-                borderRadius: parseInt(document.getElementById('fun-youtube-border-radius').value),
+                fontSize: isNaN(fontSize) ? funDefaults.fontSize : fontSize,
+                bgColor: document.getElementById('fun-youtube-bg-color').value || funDefaults.bgColor,
+                textColor: document.getElementById('fun-youtube-text-color').value || funDefaults.textColor,
+                hoverBgColor: document.getElementById('fun-youtube-hover-bg').value || funDefaults.hoverBgColor,
+                borderRadius: isNaN(borderRadius) ? funDefaults.borderRadius : borderRadius,
                 hoverScale: document.getElementById('fun-youtube-hover-scale').checked
             };
 
