@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>LINKS × CLOCK</title>
+    <title>LINKS</title>
     <style>
         * {
             margin: 0;
@@ -176,8 +176,6 @@
                     }
                 </style>
                 
-                <!-- 시계 카드들 -->
-                <div id="header-update-time" style="margin: 15px 0;"></div>
                 
                 <div style="margin-top: 10px;">
                     <a href="https://www.weather.go.kr/w/weather/warning/status.do" target="_blank" style="
@@ -283,212 +281,6 @@
     <script src="links-module.js"></script>
     <script src="supabase-config.js"></script>
     <script>
-        function updateLastUpdate() {
-            const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours % 12 || 12;
-            const dateString = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
-            
-            // Header update time with multiple timezones
-            const headerTimeElement = document.getElementById('header-update-time');
-            if (headerTimeElement) {
-                // Calculate different timezones
-                const korTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-                const euTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/London"}));
-                const usTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-                const jpTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
-                const dubaiTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Dubai"}));
-                const sydTime = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Sydney"}));
-                
-                // Format times (24-hour format)
-                const formatTime = (date) => {
-                    const h = date.getHours().toString().padStart(2, '0');
-                    const m = date.getMinutes().toString().padStart(2, '0');
-                    const s = date.getSeconds().toString().padStart(2, '0');
-                    return {hours: h, minutes: m, seconds: s};
-                };
-                
-                const kor = formatTime(korTime);
-                const eu = formatTime(euTime);
-                const us = formatTime(usTime);
-                const jp = formatTime(jpTime);
-                const dubai = formatTime(dubaiTime);
-                const syd = formatTime(sydTime);
-                
-                // US Market hours (9:30 AM - 4:00 PM ET)
-                const marketHour = usTime.getHours();
-                const marketMin = usTime.getMinutes();
-                let marketStatus = '';
-                
-                if ((marketHour === 9 && marketMin >= 30) || (marketHour > 9 && marketHour < 16)) {
-                    marketStatus = '<span style="color: #4caf50;">🟢 Market Open</span>';
-                } else if (marketHour < 9 || (marketHour === 9 && marketMin < 30)) {
-                    const openTime = new Date(usTime);
-                    openTime.setHours(9, 30, 0);
-                    const diff = Math.floor((openTime - usTime) / 60000);
-                    if (diff > 0) {
-                        marketStatus = `<span style="color: #ff9800;">⏰ Opens in ${Math.floor(diff/60)}h ${diff%60}m</span>`;
-                    }
-                } else {
-                    marketStatus = '<span style="color: #f44336;">🔴 Market Closed</span>';
-                }
-                
-                headerTimeElement.innerHTML = `
-                    <div style="text-align: center;">
-                        <div style="
-                            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #dda0dd);
-                            -webkit-background-clip: text;
-                            -webkit-text-fill-color: transparent;
-                            background-clip: text;
-                            font-size: 1.2em;
-                            font-weight: bold;
-                            margin-bottom: 15px;
-                        ">${dateString}</div>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin: 0 auto 10px;">
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Seoul', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/kr.png" alt="South Korea" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">KOR</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${kor.hours}:${kor.minutes}<span style="font-size: 0.6em; color: #666;">:${kor.seconds}</span>
-                                </div>
-                            </div>
-                            
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Europe/London', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/gb.png" alt="United Kingdom" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">LON</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${eu.hours}:${eu.minutes}<span style="font-size: 0.6em; color: #666;">:${eu.seconds}</span>
-                                </div>
-                            </div>
-                            
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=America/New_York', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/us.png" alt="United States" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">NYC</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${us.hours}:${us.minutes}<span style="font-size: 0.6em; color: #666;">:${us.seconds}</span>
-                                </div>
-                            </div>
-
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Tokyo', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/jp.png" alt="Japan" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">TYO</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${jp.hours}:${jp.minutes}<span style="font-size: 0.6em; color: #666;">:${jp.seconds}</span>
-                                </div>
-                            </div>
-
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Dubai', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/ae.png" alt="UAE" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">DXB</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${dubai.hours}:${dubai.minutes}<span style="font-size: 0.6em; color: #666;">:${dubai.seconds}</span>
-                                </div>
-                            </div>
-
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Australia/Sydney', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/au.png" alt="Australia" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">SYD</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${syd.hours}:${syd.minutes}<span style="font-size: 0.6em; color: #666;">:${syd.seconds}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="font-size: 0.85em; margin-top: 10px;">
-                            ${marketStatus}
-                        </div>
-                    </div>
-                `;
-            }
-        }
 
         // Fun YouTube view toggle function
         function toggleFunYoutubeView(view) {
@@ -1083,9 +875,6 @@
             checkYouTubeLiveStatus();
         }, 300000);
 
-        // 시계 업데이트
-        setInterval(updateLastUpdate, 1000);
-        updateLastUpdate();
     </script>
     
     <!-- 관리자 설정 버튼 -->

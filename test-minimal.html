@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>최소화 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', monospace;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #4facfe;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .test-section {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        
+        h2 {
+            color: #fbbf24;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #2563eb;
+        }
+        
+        .result {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            min-height: 50px;
+        }
+        
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+        
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .version-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+        
+        .version-card h3 {
+            color: #4facfe;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 소거법 테스트 - 문제 원인 찾기</h1>
+    
+    <div class="test-section">
+        <h2>현재 상황</h2>
+        <ul>
+            <li>원본 (index.html): 코인 + 시계 + 링크 = <span class="error">링크 안 보임</span></li>
+            <li>수정본 (index-duplicate.html): 시계 + 링크 = <span class="error">여전히 안 보임</span></li>
+            <li>다음 테스트: <span class="info">링크만 남기고 모두 제거</span></li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>직접 Supabase 테스트</h2>
+        <button onclick="testSupabaseDirectly()">Supabase 직접 연결 테스트</button>
+        <div id="supabase-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>링크 로딩 함수 테스트</h2>
+        <button onclick="testLinkLoading()">loadLinksFromSupabase 테스트</button>
+        <div id="loading-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>버전 비교</h2>
+        <div class="comparison">
+            <div class="version-card">
+                <h3>원본</h3>
+                <p>코인 + 시계 + 링크</p>
+                <button onclick="window.open('index.html', '_blank')">열기</button>
+            </div>
+            <div class="version-card">
+                <h3>코인 제거</h3>
+                <p>시계 + 링크</p>
+                <button onclick="window.open('index-duplicate.html', '_blank')">열기</button>
+            </div>
+            <div class="version-card">
+                <h3>단순 링크</h3>
+                <p>링크만</p>
+                <button onclick="window.open('simple-links.html', '_blank')">열기</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>콘솔 로그</h2>
+        <div id="console-logs" class="result" style="max-height: 300px; overflow-y: auto;">
+            <pre id="log-content">로그가 여기에 표시됩니다...</pre>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // 로그 캡처
+        const logs = [];
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logs.push(`[LOG] ${args.join(' ')}`);
+            updateLogs();
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logs.push(`[ERROR] ${args.join(' ')}`);
+            updateLogs();
+        };
+        
+        function updateLogs() {
+            document.getElementById('log-content').textContent = logs.join('\n');
+        }
+        
+        // Supabase 직접 테스트
+        async function testSupabaseDirectly() {
+            const result = document.getElementById('supabase-result');
+            result.innerHTML = '<p class="info">🔄 테스트 중...</p>';
+            
+            try {
+                // Supabase 클라이언트 생성
+                const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('Supabase 클라이언트 생성 완료');
+                
+                // 링크 조회
+                const { data: links, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('category')
+                    .order('position');
+                
+                if (error) {
+                    throw error;
+                }
+                
+                console.log(`링크 ${links.length}개 조회 성공`);
+                
+                // 카테고리별 분류
+                const categories = {};
+                links.forEach(link => {
+                    if (!categories[link.category]) {
+                        categories[link.category] = [];
+                    }
+                    categories[link.category].push(link);
+                });
+                
+                let html = `<p class="success">✅ Supabase 연결 성공!</p>`;
+                html += `<p>총 ${links.length}개 링크 조회됨</p>`;
+                
+                for (const [category, categoryLinks] of Object.entries(categories)) {
+                    html += `<p>${category}: ${categoryLinks.length}개</p>`;
+                }
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Supabase 테스트 실패:', error);
+                result.innerHTML = `<p class="error">❌ 실패: ${error.message}</p>`;
+            }
+        }
+        
+        // 링크 로딩 함수 테스트
+        async function testLinkLoading() {
+            const result = document.getElementById('loading-result');
+            result.innerHTML = '<p class="info">🔄 index-duplicate.html 분석 중...</p>';
+            
+            try {
+                // index-duplicate.html 소스 가져오기
+                const response = await fetch('index-duplicate.html');
+                const html = await response.text();
+                
+                // 주요 함수/요소 확인
+                const checks = {
+                    'loadLinksFromSupabase 함수': html.includes('function loadLinksFromSupabase'),
+                    'escapeHtml 함수': html.includes('function escapeHtml'),
+                    'Supabase 스크립트': html.includes('supabase-js@2'),
+                    'GPT 링크 컨테이너': html.includes('id="gpt-links"'),
+                    'YouTube 링크 컨테이너': html.includes('id="youtube-links"'),
+                    'window.supabaseClient': html.includes('window.supabaseClient'),
+                    'setTimeout 대기': html.includes('setTimeout(() => loadLinksFromSupabase')
+                };
+                
+                let html_result = '<h3>코드 체크 결과:</h3>';
+                for (const [item, exists] of Object.entries(checks)) {
+                    html_result += `<p class="${exists ? 'success' : 'error'}">${exists ? '✅' : '❌'} ${item}</p>`;
+                }
+                
+                // 문제가 될 수 있는 패턴 찾기
+                if (html.includes('window.addEventListener(\'DOMContentLoaded\'')) {
+                    html_result += '<p class="warning">⚠️ DOMContentLoaded 이벤트 사용 중</p>';
+                }
+                
+                if (html.includes('setTimeout') && html.includes('1000')) {
+                    html_result += '<p class="warning">⚠️ 1초 지연 후 링크 로딩</p>';
+                }
+                
+                result.innerHTML = html_result;
+                
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ 분석 실패: ${error.message}</p>`;
+            }
+        }
+        
+        // 페이지 로드 시 자동 테스트
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('테스트 페이지 로드 완료');
+            testSupabaseDirectly();
+        });
+    </script>
+</body>
+</html>
