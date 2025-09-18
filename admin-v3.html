@@ -671,7 +671,13 @@
         // 카테고리 드롭다운 업데이트
         function updateCategoryDropdown() {
             const select = document.getElementById('link-category');
-            
+
+            // select 요소가 없으면 리턴
+            if (!select) {
+                console.warn('link-category select element not found');
+                return;
+            }
+
             // 커스텀 카테고리 옵션 추가
             customCategories.forEach(cat => {
                 if (!document.querySelector(`option[value="${cat.id}"]`)) {
@@ -1092,6 +1098,14 @@
         async function loadLinks() {
             const container = document.getElementById('links-container');
 
+            if (!container) {
+                console.error('links-container element not found');
+                return;
+            }
+
+            console.log('Loading links...');
+            container.innerHTML = '<p>로딩 중...</p>';
+
             try {
                 // 모든 링크를 가져오기
                 const { data: allLinks, error } = await supabase
@@ -1100,7 +1114,12 @@
                     .order('category', { ascending: true })
                     .order('position', { ascending: true });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Supabase error:', error);
+                    throw error;
+                }
+
+                console.log('Loaded links:', allLinks);
 
                 // 카테고리별로 그룹화
                 const linksByCategory = {};
@@ -1141,10 +1160,13 @@
                 });
 
                 container.innerHTML = html || '<p>등록된 링크가 없습니다.</p>';
-                
+
+                console.log('Links rendered successfully');
+
                 // 드래그 앤 드롭 초기화
                 initSortable();
             } catch (error) {
+                console.error('Error loading links:', error);
                 container.innerHTML = `<p style="color: #f44336;">오류: ${error.message}</p>`;
             }
         }
@@ -1187,10 +1209,8 @@
                 { id: 'gpt', name: 'GPT Tools' },
                 { id: 'fun-youtube', name: 'Fun YouTube' }
             ];
-            
-            // localStorage에서 사용자 정의 카테고리 가져오기
-            const customCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
-            
+
+            // 전역 변수 customCategories 사용
             return [...defaultCategories, ...customCategories];
         }
 
