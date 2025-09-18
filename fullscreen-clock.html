@@ -249,9 +249,11 @@
             right: 40px;
             display: grid;
             grid-template-columns: repeat(5, 45px);
-            grid-template-rows: repeat(2, 45px);
+            grid-template-rows: repeat(4, 45px);
             gap: 10px;
             z-index: 100;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
         }
 
         .effect-toggle {
@@ -324,6 +326,56 @@
         .hearts-toggle.active {
             background: rgba(255, 105, 180, 0.3);
             border-color: rgba(255, 105, 180, 0.5);
+        }
+
+        .emoji-toggle.active {
+            background: rgba(255, 223, 0, 0.3);
+            border-color: rgba(255, 223, 0, 0.5);
+        }
+
+        .aurora-toggle.active {
+            background: rgba(0, 255, 170, 0.3);
+            border-color: rgba(0, 255, 170, 0.5);
+        }
+
+        .confetti-toggle.active {
+            background: rgba(255, 0, 128, 0.3);
+            border-color: rgba(255, 0, 128, 0.5);
+        }
+
+        .meteor-toggle.active {
+            background: rgba(255, 165, 0, 0.3);
+            border-color: rgba(255, 165, 0, 0.5);
+        }
+
+        .butterfly-toggle.active {
+            background: rgba(147, 112, 219, 0.3);
+            border-color: rgba(147, 112, 219, 0.5);
+        }
+
+        .lightning-toggle.active {
+            background: rgba(138, 43, 226, 0.3);
+            border-color: rgba(138, 43, 226, 0.5);
+        }
+
+        .rainbow-toggle.active {
+            background: linear-gradient(90deg, rgba(255,0,0,0.3), rgba(255,255,0,0.3), rgba(0,255,0,0.3), rgba(0,255,255,0.3), rgba(255,0,255,0.3));
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .firefly-toggle.active {
+            background: rgba(154, 205, 50, 0.3);
+            border-color: rgba(154, 205, 50, 0.5);
+        }
+
+        .diamond-toggle.active {
+            background: rgba(185, 242, 255, 0.3);
+            border-color: rgba(185, 242, 255, 0.5);
+        }
+
+        .music-toggle.active {
+            background: rgba(148, 0, 211, 0.3);
+            border-color: rgba(148, 0, 211, 0.5);
         }
 
         /* Rain effect styles */
@@ -532,12 +584,246 @@
             }
         }
 
+        /* Emoji rain effect */
+        .emoji-drop {
+            position: fixed;
+            top: -50px;
+            font-size: 2em;
+            animation: emoji-fall linear;
+            z-index: 1;
+        }
+
+        @keyframes emoji-fall {
+            to {
+                transform: translateY(calc(100vh + 50px)) rotate(720deg);
+            }
+        }
+
+        /* Aurora effect */
+        .aurora-wave {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Confetti effect */
+        .confetti-piece {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            animation: confetti-fall linear;
+            z-index: 1;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                transform: translateY(calc(100vh + 50px)) rotate(720deg);
+            }
+        }
+
+        /* Meteor shower effect */
+        .meteor {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: linear-gradient(45deg, white, transparent);
+            box-shadow: 0 0 10px 3px orange;
+            animation: meteor-fall linear;
+            z-index: 1;
+        }
+
+        .meteor::after {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 2px;
+            background: linear-gradient(to right, orange, transparent);
+            top: 0;
+            right: 0;
+        }
+
+        @keyframes meteor-fall {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(-150vw, 150vh);
+            }
+        }
+
+        /* Butterfly effect */
+        .butterfly {
+            position: fixed;
+            font-size: 1.5em;
+            animation: butterfly-fly linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes butterfly-fly {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(30px, -20px) scale(1.1);
+            }
+            50% {
+                transform: translate(-20px, -40px) scale(1);
+            }
+            75% {
+                transform: translate(40px, -20px) scale(1.1);
+            }
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        /* Lightning effect */
+        .lightning-bolt {
+            position: fixed;
+            top: 0;
+            width: 2px;
+            height: 100vh;
+            background: linear-gradient(to bottom, transparent, white, transparent);
+            opacity: 0;
+            animation: lightning-flash ease-out;
+            z-index: 1000;
+        }
+
+        @keyframes lightning-flash {
+            0%, 100% {
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Rainbow effect */
+        .rainbow-arc {
+            position: fixed;
+            top: -100px;
+            width: 200%;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                rgba(255,0,0,0.4) 14%,
+                rgba(255,165,0,0.4) 28%,
+                rgba(255,255,0,0.4) 42%,
+                rgba(0,255,0,0.4) 56%,
+                rgba(0,0,255,0.4) 70%,
+                rgba(75,0,130,0.4) 84%,
+                rgba(238,130,238,0.4) 98%,
+                transparent 100%);
+            animation: rainbow-move linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes rainbow-move {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* Firefly effect */
+        .firefly {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: yellow;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px yellow;
+            animation: firefly-float linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes firefly-float {
+            0% {
+                transform: translate(0, 0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(100px, -100px);
+                opacity: 0;
+            }
+        }
+
+        /* Diamond effect */
+        .diamond {
+            position: fixed;
+            font-size: 1.5em;
+            color: #b9f2ff;
+            text-shadow: 0 0 10px rgba(185, 242, 255, 0.8);
+            animation: diamond-sparkle linear;
+            z-index: 1;
+        }
+
+        @keyframes diamond-sparkle {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(calc(100vh + 50px)) rotate(360deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* Music notes effect */
+        .music-note {
+            position: fixed;
+            font-size: 1.8em;
+            animation: music-dance linear;
+            z-index: 1;
+        }
+
+        @keyframes music-dance {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg);
+            }
+            25% {
+                transform: translateY(75vh) translateX(20px) rotate(90deg);
+            }
+            50% {
+                transform: translateY(50vh) translateX(-20px) rotate(180deg);
+            }
+            75% {
+                transform: translateY(25vh) translateX(20px) rotate(270deg);
+            }
+            100% {
+                transform: translateY(-50px) translateX(0) rotate(360deg);
+            }
+        }
+
         @media (max-width: 768px) {
             .effects-panel {
                 top: 20px;
                 right: 20px;
                 grid-template-columns: repeat(5, 35px);
-                grid-template-rows: repeat(2, 35px);
+                grid-template-rows: repeat(4, 35px);
                 gap: 5px;
             }
 
@@ -558,16 +844,30 @@
         </a>
 
         <div class="effects-panel">
+            <!-- First row -->
             <div class="effect-toggle snow-toggle" id="snowToggle" title="Snow">❄️</div>
             <div class="effect-toggle rain-toggle" id="rainToggle" title="Light Rain">🌦️</div>
             <div class="effect-toggle heavy-rain-toggle" id="heavyRainToggle" title="Heavy Rain">🌧️</div>
             <div class="effect-toggle matrix-toggle" id="matrixToggle" title="Matrix">01</div>
             <div class="effect-toggle sakura-toggle" id="sakuraToggle" title="Cherry Blossoms">🌸</div>
+            <!-- Second row -->
             <div class="effect-toggle leaves-toggle" id="leavesToggle" title="Autumn Leaves">🍂</div>
             <div class="effect-toggle stars-toggle" id="starsToggle" title="Shooting Stars">⭐</div>
             <div class="effect-toggle fireworks-toggle" id="fireworksToggle" title="Fireworks">🎆</div>
             <div class="effect-toggle bubbles-toggle" id="bubblesToggle" title="Bubbles">🫧</div>
             <div class="effect-toggle hearts-toggle" id="heartsToggle" title="Hearts">💕</div>
+            <!-- Third row - New effects -->
+            <div class="effect-toggle emoji-toggle" id="emojiToggle" title="Emoji Rain">😊</div>
+            <div class="effect-toggle aurora-toggle" id="auroraToggle" title="Aurora">🌌</div>
+            <div class="effect-toggle confetti-toggle" id="confettiToggle" title="Confetti">🎊</div>
+            <div class="effect-toggle meteor-toggle" id="meteorToggle" title="Meteor Shower">☄️</div>
+            <div class="effect-toggle butterfly-toggle" id="butterflyToggle" title="Butterflies">🦋</div>
+            <!-- Fourth row - New effects -->
+            <div class="effect-toggle lightning-toggle" id="lightningToggle" title="Lightning">⚡</div>
+            <div class="effect-toggle rainbow-toggle" id="rainbowToggle" title="Rainbow">🌈</div>
+            <div class="effect-toggle firefly-toggle" id="fireflyToggle" title="Fireflies">✨</div>
+            <div class="effect-toggle diamond-toggle" id="diamondToggle" title="Diamonds">💎</div>
+            <div class="effect-toggle music-toggle" id="musicToggle" title="Music Notes">🎵</div>
         </div>
 
         <div class="market-status" id="market-status"></div>
@@ -972,6 +1272,16 @@
             stopFireworks();
             stopBubbles();
             stopHearts();
+            stopEmoji();
+            stopAurora();
+            stopConfetti();
+            stopMeteor();
+            stopButterfly();
+            stopLightning();
+            stopRainbow();
+            stopFirefly();
+            stopDiamond();
+            stopMusic();
         }
 
         // Heavy Rain Effect
@@ -1351,6 +1661,501 @@
             } else {
                 startHearts();
             }
+        });
+
+        // NEW EFFECTS - 10 MORE!
+
+        // 1. Emoji Rain Effect
+        let emojiInterval;
+        let emojiDrops = [];
+        let emojiActive = false;
+
+        function createEmojiDrop() {
+            const emoji = document.createElement('div');
+            emoji.className = 'emoji-drop';
+            const emojis = ['😊', '😎', '🥳', '😍', '🤩', '😄', '😃', '🎉', '🎈', '🎁', '🍕', '🍔', '🍟', '🍿', '🍩'];
+            emoji.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+            emoji.style.left = Math.random() * window.innerWidth + 'px';
+            emoji.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            document.body.appendChild(emoji);
+            emojiDrops.push(emoji);
+
+            setTimeout(() => {
+                emoji.remove();
+                const index = emojiDrops.indexOf(emoji);
+                if (index > -1) emojiDrops.splice(index, 1);
+            }, 6000);
+        }
+
+        function startEmoji() {
+            if (!emojiActive) {
+                stopAllEffects();
+                emojiActive = true;
+                document.getElementById('emojiToggle').classList.add('active');
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createEmojiDrop(), i * 200);
+                }
+                emojiInterval = setInterval(createEmojiDrop, 500);
+            }
+        }
+
+        function stopEmoji() {
+            if (emojiActive) {
+                emojiActive = false;
+                document.getElementById('emojiToggle').classList.remove('active');
+                clearInterval(emojiInterval);
+                emojiDrops.forEach(drop => drop.remove());
+                emojiDrops = [];
+            }
+        }
+
+        // 2. Aurora Effect
+        let auroraInterval;
+        let auroraWaves = [];
+        let auroraActive = false;
+
+        function createAurora() {
+            const aurora = document.createElement('div');
+            aurora.className = 'aurora-wave';
+            const gradient = `linear-gradient(${Math.random() * 360}deg,
+                rgba(0,255,170,0.3),
+                rgba(50,255,100,0.2),
+                rgba(0,200,255,0.3),
+                transparent)`;
+            aurora.style.background = gradient;
+            aurora.style.height = Math.random() * 300 + 200 + 'px';
+            aurora.style.top = Math.random() * window.innerHeight * 0.5 + 'px';
+            aurora.style.animation = `rainbow-move ${Math.random() * 10 + 10}s linear infinite`;
+            document.body.appendChild(aurora);
+            auroraWaves.push(aurora);
+        }
+
+        function startAurora() {
+            if (!auroraActive) {
+                stopAllEffects();
+                auroraActive = true;
+                document.getElementById('auroraToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #001a33, #003d5c)';
+                for (let i = 0; i < 3; i++) {
+                    createAurora();
+                }
+            }
+        }
+
+        function stopAurora() {
+            if (auroraActive) {
+                auroraActive = false;
+                document.getElementById('auroraToggle').classList.remove('active');
+                auroraWaves.forEach(wave => wave.remove());
+                auroraWaves = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 3. Confetti Effect
+        let confettiInterval;
+        let confettiPieces = [];
+        let confettiActive = false;
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti-piece';
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500'];
+            confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * window.innerWidth + 'px';
+            confetti.style.width = Math.random() * 10 + 5 + 'px';
+            confetti.style.height = Math.random() * 10 + 5 + 'px';
+            confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            document.body.appendChild(confetti);
+            confettiPieces.push(confetti);
+
+            setTimeout(() => {
+                confetti.remove();
+                const index = confettiPieces.indexOf(confetti);
+                if (index > -1) confettiPieces.splice(index, 1);
+            }, 5000);
+        }
+
+        function startConfetti() {
+            if (!confettiActive) {
+                stopAllEffects();
+                confettiActive = true;
+                document.getElementById('confettiToggle').classList.add('active');
+                for (let i = 0; i < 30; i++) {
+                    setTimeout(() => createConfetti(), i * 50);
+                }
+                confettiInterval = setInterval(createConfetti, 100);
+            }
+        }
+
+        function stopConfetti() {
+            if (confettiActive) {
+                confettiActive = false;
+                document.getElementById('confettiToggle').classList.remove('active');
+                clearInterval(confettiInterval);
+                confettiPieces.forEach(piece => piece.remove());
+                confettiPieces = [];
+            }
+        }
+
+        // 4. Meteor Shower Effect
+        let meteorInterval;
+        let meteors = [];
+        let meteorActive = false;
+
+        function createMeteor() {
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor';
+            meteor.style.left = (Math.random() * window.innerWidth * 1.5) + 'px';
+            meteor.style.top = Math.random() * window.innerHeight * 0.3 + 'px';
+            meteor.style.animationDuration = (Math.random() * 1 + 0.5) + 's';
+            document.body.appendChild(meteor);
+            meteors.push(meteor);
+
+            setTimeout(() => {
+                meteor.remove();
+                const index = meteors.indexOf(meteor);
+                if (index > -1) meteors.splice(index, 1);
+            }, 2000);
+        }
+
+        function startMeteor() {
+            if (!meteorActive) {
+                stopAllEffects();
+                meteorActive = true;
+                document.getElementById('meteorToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #000033, #000066)';
+                meteorInterval = setInterval(createMeteor, 500);
+            }
+        }
+
+        function stopMeteor() {
+            if (meteorActive) {
+                meteorActive = false;
+                document.getElementById('meteorToggle').classList.remove('active');
+                clearInterval(meteorInterval);
+                meteors.forEach(m => m.remove());
+                meteors = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 5. Butterfly Effect
+        let butterflyInterval;
+        let butterflies = [];
+        let butterflyActive = false;
+
+        function createButterfly() {
+            const butterfly = document.createElement('div');
+            butterfly.className = 'butterfly';
+            butterfly.innerHTML = '🦋';
+            butterfly.style.left = Math.random() * window.innerWidth + 'px';
+            butterfly.style.top = Math.random() * window.innerHeight + 'px';
+            butterfly.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            document.body.appendChild(butterfly);
+            butterflies.push(butterfly);
+
+            // Move butterfly randomly
+            const moveButterfly = () => {
+                if (!butterflyActive) return;
+                butterfly.style.left = Math.random() * window.innerWidth + 'px';
+                butterfly.style.top = Math.random() * window.innerHeight + 'px';
+                setTimeout(moveButterfly, Math.random() * 3000 + 2000);
+            };
+            setTimeout(moveButterfly, 2000);
+        }
+
+        function startButterfly() {
+            if (!butterflyActive) {
+                stopAllEffects();
+                butterflyActive = true;
+                document.getElementById('butterflyToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #ffeaa7, #dfe6e9)';
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => createButterfly(), i * 500);
+                }
+            }
+        }
+
+        function stopButterfly() {
+            if (butterflyActive) {
+                butterflyActive = false;
+                document.getElementById('butterflyToggle').classList.remove('active');
+                butterflies.forEach(b => b.remove());
+                butterflies = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 6. Lightning Effect
+        let lightningInterval;
+        let lightningActive = false;
+
+        function createLightning() {
+            const bolt = document.createElement('div');
+            bolt.className = 'lightning-bolt';
+            bolt.style.left = Math.random() * window.innerWidth + 'px';
+            bolt.style.animationDuration = '0.5s';
+            document.body.appendChild(bolt);
+
+            // Flash effect
+            document.querySelector('.clock-container').style.filter = 'brightness(2)';
+            setTimeout(() => {
+                document.querySelector('.clock-container').style.filter = 'brightness(1)';
+            }, 100);
+
+            setTimeout(() => {
+                bolt.remove();
+            }, 500);
+        }
+
+        function startLightning() {
+            if (!lightningActive) {
+                stopAllEffects();
+                lightningActive = true;
+                document.getElementById('lightningToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #1e3c72, #2a5298)';
+                lightningInterval = setInterval(createLightning, Math.random() * 3000 + 2000);
+            }
+        }
+
+        function stopLightning() {
+            if (lightningActive) {
+                lightningActive = false;
+                document.getElementById('lightningToggle').classList.remove('active');
+                clearInterval(lightningInterval);
+                document.querySelector('.clock-container').style.filter = 'brightness(1)';
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 7. Rainbow Effect
+        let rainbowInterval;
+        let rainbows = [];
+        let rainbowActive = false;
+
+        function createRainbow() {
+            const rainbow = document.createElement('div');
+            rainbow.className = 'rainbow-arc';
+            rainbow.style.animationDuration = '20s';
+            document.body.appendChild(rainbow);
+            rainbows.push(rainbow);
+
+            setTimeout(() => {
+                rainbow.remove();
+                const index = rainbows.indexOf(rainbow);
+                if (index > -1) rainbows.splice(index, 1);
+            }, 20000);
+        }
+
+        function startRainbow() {
+            if (!rainbowActive) {
+                stopAllEffects();
+                rainbowActive = true;
+                document.getElementById('rainbowToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #87CEEB, #98D8E8)';
+                createRainbow();
+                rainbowInterval = setInterval(createRainbow, 10000);
+            }
+        }
+
+        function stopRainbow() {
+            if (rainbowActive) {
+                rainbowActive = false;
+                document.getElementById('rainbowToggle').classList.remove('active');
+                clearInterval(rainbowInterval);
+                rainbows.forEach(r => r.remove());
+                rainbows = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 8. Firefly Effect
+        let fireflyInterval;
+        let fireflies = [];
+        let fireflyActive = false;
+
+        function createFirefly() {
+            const firefly = document.createElement('div');
+            firefly.className = 'firefly';
+            firefly.style.left = Math.random() * window.innerWidth + 'px';
+            firefly.style.bottom = Math.random() * window.innerHeight + 'px';
+            firefly.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            document.body.appendChild(firefly);
+            fireflies.push(firefly);
+
+            setTimeout(() => {
+                firefly.remove();
+                const index = fireflies.indexOf(firefly);
+                if (index > -1) fireflies.splice(index, 1);
+            }, 10000);
+        }
+
+        function startFirefly() {
+            if (!fireflyActive) {
+                stopAllEffects();
+                fireflyActive = true;
+                document.getElementById('fireflyToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0f0a, #1a2a1a)';
+                for (let i = 0; i < 15; i++) {
+                    setTimeout(() => createFirefly(), i * 300);
+                }
+                fireflyInterval = setInterval(createFirefly, 1000);
+            }
+        }
+
+        function stopFirefly() {
+            if (fireflyActive) {
+                fireflyActive = false;
+                document.getElementById('fireflyToggle').classList.remove('active');
+                clearInterval(fireflyInterval);
+                fireflies.forEach(f => f.remove());
+                fireflies = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 9. Diamond Effect
+        let diamondInterval;
+        let diamonds = [];
+        let diamondActive = false;
+
+        function createDiamond() {
+            const diamond = document.createElement('div');
+            diamond.className = 'diamond';
+            diamond.innerHTML = '💎';
+            diamond.style.left = Math.random() * window.innerWidth + 'px';
+            diamond.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            document.body.appendChild(diamond);
+            diamonds.push(diamond);
+
+            setTimeout(() => {
+                diamond.remove();
+                const index = diamonds.indexOf(diamond);
+                if (index > -1) diamonds.splice(index, 1);
+            }, 10000);
+        }
+
+        function startDiamond() {
+            if (!diamondActive) {
+                stopAllEffects();
+                diamondActive = true;
+                document.getElementById('diamondToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #000428, #004e92)';
+                for (let i = 0; i < 7; i++) {
+                    setTimeout(() => createDiamond(), i * 400);
+                }
+                diamondInterval = setInterval(createDiamond, 1500);
+            }
+        }
+
+        function stopDiamond() {
+            if (diamondActive) {
+                diamondActive = false;
+                document.getElementById('diamondToggle').classList.remove('active');
+                clearInterval(diamondInterval);
+                diamonds.forEach(d => d.remove());
+                diamonds = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 10. Music Notes Effect
+        let musicInterval;
+        let musicNotes = [];
+        let musicActive = false;
+
+        function createMusicNote() {
+            const note = document.createElement('div');
+            note.className = 'music-note';
+            const notes = ['🎵', '🎶', '🎼', '🎤', '🎸', '🎹', '🎺', '🎷'];
+            note.innerHTML = notes[Math.floor(Math.random() * notes.length)];
+            note.style.left = Math.random() * window.innerWidth + 'px';
+            note.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            note.style.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+            document.body.appendChild(note);
+            musicNotes.push(note);
+
+            setTimeout(() => {
+                note.remove();
+                const index = musicNotes.indexOf(note);
+                if (index > -1) musicNotes.splice(index, 1);
+            }, 10000);
+        }
+
+        function startMusic() {
+            if (!musicActive) {
+                stopAllEffects();
+                musicActive = true;
+                document.getElementById('musicToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createMusicNote(), i * 300);
+                }
+                musicInterval = setInterval(createMusicNote, 800);
+            }
+        }
+
+        function stopMusic() {
+            if (musicActive) {
+                musicActive = false;
+                document.getElementById('musicToggle').classList.remove('active');
+                clearInterval(musicInterval);
+                musicNotes.forEach(note => note.remove());
+                musicNotes = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // Event listeners for new effects
+        document.getElementById('emojiToggle').addEventListener('click', () => {
+            if (emojiActive) stopEmoji();
+            else startEmoji();
+        });
+
+        document.getElementById('auroraToggle').addEventListener('click', () => {
+            if (auroraActive) stopAurora();
+            else startAurora();
+        });
+
+        document.getElementById('confettiToggle').addEventListener('click', () => {
+            if (confettiActive) stopConfetti();
+            else startConfetti();
+        });
+
+        document.getElementById('meteorToggle').addEventListener('click', () => {
+            if (meteorActive) stopMeteor();
+            else startMeteor();
+        });
+
+        document.getElementById('butterflyToggle').addEventListener('click', () => {
+            if (butterflyActive) stopButterfly();
+            else startButterfly();
+        });
+
+        document.getElementById('lightningToggle').addEventListener('click', () => {
+            if (lightningActive) stopLightning();
+            else startLightning();
+        });
+
+        document.getElementById('rainbowToggle').addEventListener('click', () => {
+            if (rainbowActive) stopRainbow();
+            else startRainbow();
+        });
+
+        document.getElementById('fireflyToggle').addEventListener('click', () => {
+            if (fireflyActive) stopFirefly();
+            else startFirefly();
+        });
+
+        document.getElementById('diamondToggle').addEventListener('click', () => {
+            if (diamondActive) stopDiamond();
+            else startDiamond();
+        });
+
+        document.getElementById('musicToggle').addEventListener('click', () => {
+            if (musicActive) stopMusic();
+            else startMusic();
         });
     </script>
 </body>
