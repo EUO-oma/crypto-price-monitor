@@ -611,6 +611,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="links-module.js"></script>
     <script src="supabase-config.js"></script>
     <script>
         let binanceBtcWs = null;
@@ -1013,12 +1014,29 @@
         async function loadLinksFromSupabase() {
             console.log('Loading links from Supabase...');
             console.log('Supabase URL:', typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'NOT DEFINED');
-            console.log('Supabase client:', typeof supabase !== 'undefined' ? 'Initialized' : 'NOT INITIALIZED');
+            console.log('Supabase client:', (typeof supabase !== 'undefined' && supabase !== null) ? 'Initialized' : 'NOT INITIALIZED (null or undefined)');
 
-            // Check if Supabase is initialized
-            if (typeof supabase === 'undefined') {
-                console.error('Supabase is not initialized. Make sure supabase-config.js is loaded.');
-                return;
+            // Check if Supabase is initialized (null check added)
+            if (typeof supabase === 'undefined' || supabase === null) {
+                console.error('Supabase is not initialized or null. Make sure supabase-config.js is loaded.');
+                console.error('Supabase value:', supabase);
+                console.error('Attempting to initialize directly...');
+
+                // Try to initialize directly
+                if (window.supabase && window.supabase.createClient) {
+                    try {
+                        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                        console.log('✓ Supabase initialized directly in loadLinksFromSupabase');
+                    } catch (error) {
+                        console.error('Failed to initialize Supabase directly:', error);
+                        return;
+                    }
+                } else {
+                    console.error('Supabase library not available');
+                    return;
+                }
             }
 
             try {
@@ -2148,11 +2166,40 @@
             // 저장된 아바타 맵핑 복원
             loadSavedAvatarMappings();
 
-            // Wait for Supabase to initialize before loading links
-            setTimeout(() => {
-                console.log('Attempting to load links from Supabase...');
-                loadLinksFromSupabase();
-            }, 1000);
+            // 모듈화된 링크 로딩 사용
+            async function loadLinksUsingModule() {
+                console.log('LinksModule을 사용하여 링크 로딩 시작...');
+
+                // 디버그 모드 활성화
+                LinksModule.setDebug(true);
+
+                // 모듈 초기화 및 링크 로드
+                const result = await LinksModule.loadAndRender();
+
+                if (result.success) {
+                    console.log(`✅ 모듈 링크 로딩 성공: ${result.total}개 링크`);
+                } else {
+                    console.error(`❌ 모듈 링크 로딩 실패: ${result.error}`);
+
+                    // 실패시 기존 방식으로 폴백
+                    console.log('기존 방식으로 폴백...');
+                    loadLinksFromSupabase();
+                }
+            }
+
+            // 모듈이 로드될 때까지 대기
+            function waitForLinksModule() {
+                if (window.LinksModule) {
+                    console.log('✅ LinksModule 준비됨');
+                    loadLinksUsingModule();
+                } else {
+                    console.log('⏳ LinksModule 대기 중...');
+                    setTimeout(waitForLinksModule, 200);
+                }
+            }
+
+            // Start loading after 1 second
+            setTimeout(waitForLinksModule, 1000);
             loadBTCHistory(); // BTC 가격 기록 로드
             loadETHHistory(); // ETH 가격 기록 로드
             loadSOLHistory(); // SOL 가격 기록 로드

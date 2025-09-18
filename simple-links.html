@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Links Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            background: #1a1a1a;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        .section h2 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .link-card {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .link-card:hover {
+            background: #3a3a3a;
+            border-color: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+        }
+
+        .link-card h3 {
+            color: #fff;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .link-card .url {
+            color: #888;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        .status {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        .status.loading {
+            border-color: #2196F3;
+            background: #0a1a2a;
+        }
+
+        .status.success {
+            border-color: #4CAF50;
+            background: #0a2a0a;
+        }
+
+        .status.error {
+            border-color: #f44336;
+            background: #2a0a0a;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .debug-info {
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 0.9em;
+            border: 1px solid #444;
+        }
+
+        .debug-info h3 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .debug-log {
+            background: #111;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-size: 0.8em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .refresh-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Simple Links Page</h1>
+
+        <div id="status" class="status loading">
+            <div class="loading-spinner"></div>
+            로딩 중...
+        </div>
+
+        <div class="refresh-btn" onclick="location.reload()">🔄 새로고침</div>
+        <button class="refresh-btn" onclick="loadLinks()">📁 링크 다시 로드</button>
+        <button class="refresh-btn" onclick="toggleDebug()">🔍 디버그 정보 토글</button>
+
+        <!-- GPT Links -->
+        <div class="section">
+            <h2>🤖 GPT Tools</h2>
+            <div id="gpt-links" class="links-grid">
+                <div class="empty-message">로딩 중...</div>
+            </div>
+        </div>
+
+        <!-- YouTube Links -->
+        <div class="section">
+            <h2>📺 YouTube Channels</h2>
+            <div id="youtube-links" class="links-grid">
+                <div class="empty-message">로딩 중...</div>
+            </div>
+        </div>
+
+        <!-- Favorite Links -->
+        <div class="section">
+            <h2>⭐ Favorite Sites</h2>
+            <div id="favorite-links" class="links-grid">
+                <div class="empty-message">로딩 중...</div>
+            </div>
+        </div>
+
+        <!-- Debug Info -->
+        <div id="debug-section" class="debug-info" style="display: none;">
+            <h3>🔍 디버그 정보</h3>
+            <div>
+                <strong>Supabase 라이브러리:</strong> <span id="debug-library">확인 중...</span><br>
+                <strong>Supabase 클라이언트:</strong> <span id="debug-client">확인 중...</span><br>
+                <strong>마지막 업데이트:</strong> <span id="debug-timestamp">없음</span>
+            </div>
+            <div class="debug-log" id="debug-logs">로그가 여기에 표시됩니다...</div>
+        </div>
+    </div>
+
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // Global variables
+        let supabase = null;
+        let debugLogs = [];
+        let debugVisible = false;
+
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+
+        // Debug logging function
+        function debugLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            debugLogs.push(logEntry);
+
+            // Keep only last 50 logs
+            if (debugLogs.length > 50) {
+                debugLogs = debugLogs.slice(-50);
+            }
+
+            // Update debug display if visible
+            if (debugVisible) {
+                document.getElementById('debug-logs').textContent = debugLogs.join('\n');
+                document.getElementById('debug-timestamp').textContent = timestamp;
+            }
+
+            console.log(`[SimpleLinks] ${message}`);
+        }
+
+        // Toggle debug section
+        function toggleDebug() {
+            debugVisible = !debugVisible;
+            const debugSection = document.getElementById('debug-section');
+            debugSection.style.display = debugVisible ? 'block' : 'none';
+
+            if (debugVisible) {
+                updateDebugInfo();
+                document.getElementById('debug-logs').textContent = debugLogs.join('\n');
+            }
+        }
+
+        // Update debug information
+        function updateDebugInfo() {
+            document.getElementById('debug-library').textContent =
+                window.supabase ? '✅ 로드됨' : '❌ 로드되지 않음';
+            document.getElementById('debug-client').textContent =
+                supabase ? '✅ 초기화됨' : '❌ 초기화되지 않음';
+        }
+
+        // Initialize Supabase
+        function initializeSupabase() {
+            debugLog('Supabase 초기화 시작...');
+
+            if (!window.supabase) {
+                debugLog('❌ Supabase 라이브러리를 찾을 수 없습니다');
+                return false;
+            }
+
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                debugLog('✅ Supabase 클라이언트 생성 성공');
+                return true;
+            } catch (error) {
+                debugLog(`❌ Supabase 클라이언트 생성 실패: ${error.message}`);
+                return false;
+            }
+        }
+
+        // Create link card HTML
+        function createLinkCard(link) {
+            return `
+                <a href="${link.url}" target="_blank" class="link-card">
+                    <h3>${link.name}</h3>
+                    <div class="url">${link.url}</div>
+                </a>
+            `;
+        }
+
+        // Render links for a category
+        function renderLinks(category, links) {
+            const container = document.getElementById(`${category}-links`);
+
+            if (!container) {
+                debugLog(`❌ ${category} 컨테이너를 찾을 수 없습니다`);
+                return;
+            }
+
+            if (links.length === 0) {
+                container.innerHTML = '<div class="empty-message">링크가 없습니다</div>';
+                debugLog(`ℹ️ ${category} 링크: 0개`);
+            } else {
+                container.innerHTML = links.map(link => createLinkCard(link)).join('');
+                debugLog(`✅ ${category} 링크: ${links.length}개 렌더링 완료`);
+            }
+        }
+
+        // Load all links
+        async function loadLinks() {
+            debugLog('링크 로딩 시작...');
+
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status loading';
+            statusEl.innerHTML = '<div class="loading-spinner"></div> 링크를 로딩 중...';
+
+            // Initialize Supabase if not already done
+            if (!supabase) {
+                if (!initializeSupabase()) {
+                    statusEl.className = 'status error';
+                    statusEl.innerHTML = '❌ Supabase 초기화 실패';
+                    return;
+                }
+            }
+
+            try {
+                debugLog('데이터베이스에서 링크 조회 중...');
+
+                const { data: allLinks, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+
+                if (error) {
+                    throw error;
+                }
+
+                debugLog(`📊 총 ${allLinks?.length || 0}개 링크 조회됨`);
+
+                // Filter links by category
+                const gptLinks = allLinks?.filter(link => link.category === 'gpt') || [];
+                const youtubeLinks = allLinks?.filter(link => link.category === 'youtube') || [];
+                const favoriteLinks = allLinks?.filter(link => link.category === 'favorite') || [];
+
+                // Render each category
+                renderLinks('gpt', gptLinks);
+                renderLinks('youtube', youtubeLinks);
+                renderLinks('favorite', favoriteLinks);
+
+                // Update status
+                const totalLinks = gptLinks.length + youtubeLinks.length + favoriteLinks.length;
+                statusEl.className = 'status success';
+                statusEl.innerHTML = `✅ ${totalLinks}개 링크 로딩 완료 (GPT: ${gptLinks.length}, YouTube: ${youtubeLinks.length}, Favorites: ${favoriteLinks.length})`;
+
+                debugLog(`✅ 링크 로딩 완료: 총 ${totalLinks}개`);
+
+            } catch (error) {
+                debugLog(`❌ 링크 로딩 실패: ${error.message}`);
+                statusEl.className = 'status error';
+                statusEl.innerHTML = `❌ 로딩 실패: ${error.message}`;
+
+                // Show error in all sections
+                ['gpt', 'youtube', 'favorite'].forEach(category => {
+                    const container = document.getElementById(`${category}-links`);
+                    if (container) {
+                        container.innerHTML = `<div class="empty-message">로딩 실패: ${error.message}</div>`;
+                    }
+                });
+            }
+
+            updateDebugInfo();
+        }
+
+        // Wait for Supabase library to load
+        function waitForSupabaseLibrary() {
+            debugLog('Supabase 라이브러리 로딩 확인 중...');
+
+            if (window.supabase && window.supabase.createClient) {
+                debugLog('✅ Supabase 라이브러리 준비됨');
+                loadLinks();
+            } else {
+                debugLog('⏳ Supabase 라이브러리 대기 중... (500ms 후 재시도)');
+                setTimeout(waitForSupabaseLibrary, 500);
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            debugLog('페이지 로딩 완료');
+            updateDebugInfo();
+
+            // Start loading after a short delay
+            setTimeout(waitForSupabaseLibrary, 1000);
+        });
+
+        // Global error handler
+        window.addEventListener('error', (event) => {
+            debugLog(`❌ JavaScript 오류: ${event.error?.message || event.message}`);
+        });
+    </script>
+</body>
+</html>
