@@ -1,5 +1,5 @@
 @echo off
-cd C:\startcoding\crypto-price
+cd C:\startcoding
 git push -u origin main
 echo.
 echo GitHub push completed!

@@ -16,7 +16,9 @@
       "Bash(git rm:*)",
       "Bash(cat:*)",
       "Bash(gh auth:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
