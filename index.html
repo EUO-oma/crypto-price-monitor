@@ -479,38 +479,11 @@
         </div>
         
         <div class="youtube-section" style="margin-top: 20px; padding-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
-                <h2 style="color: #aaa; margin: 0; font-weight: 400; font-size: 1.5rem;">
-                    YouTube Live
-                </h2>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="toggleYoutubeView('list')" class="youtube-view-btn" data-view="list" style="
-                        padding: 6px 12px;
-                        background: #fff;
-                        color: #000;
-                        border: 1px solid #444;
-                        cursor: pointer;
-                        font-size: 12px;
-                        transition: all 0.2s ease;
-                        border-radius: 4px;
-                    ">List</button>
-                    <button onclick="toggleYoutubeView('grid')" class="youtube-view-btn" data-view="grid" style="
-                        padding: 6px 12px;
-                        background: transparent;
-                        color: #999;
-                        border: 1px solid #444;
-                        cursor: pointer;
-                        font-size: 12px;
-                        transition: all 0.2s ease;
-                        border-radius: 4px;
-                    ">Grid</button>
-                </div>
-            </div>
-            <div id="youtube-links-list" style="display: flex; flex-direction: column; gap: 1px; background: transparent;">
-                <!-- List view -->
-            </div>
-            <div id="youtube-links-grid" style="display: none; grid-template-columns: repeat(3, 1fr); gap: 20px; background: transparent;">
-                <!-- Grid view -->
+            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                📺 YouTube Live
+            </h2>
+            <div id="youtube-links" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <!-- YouTube 링크들이 여기에 동적으로 로드됩니다 -->
             </div>
         </div>
         
@@ -525,11 +498,38 @@
         
         <!-- Fun YouTube 섹션 -->
         <div class="fun-youtube-section" style="margin-top: 20px; padding-bottom: 20px;">
-            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
-                🎮 Fun YouTube
-            </h2>
-            <div id="fun-youtube-links" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                <!-- Fun YouTube 링크들이 여기에 동적으로 로드됩니다 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
+                <h2 style="color: #aaa; margin: 0; font-weight: 400; font-size: 1.5rem;">
+                    🎮 Fun YouTube
+                </h2>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="toggleFunYoutubeView('list')" class="fun-youtube-view-btn" data-view="list" style="
+                        padding: 6px 12px;
+                        background: #fff;
+                        color: #000;
+                        border: 1px solid #444;
+                        cursor: pointer;
+                        font-size: 12px;
+                        transition: all 0.2s ease;
+                        border-radius: 4px;
+                    ">List</button>
+                    <button onclick="toggleFunYoutubeView('grid')" class="fun-youtube-view-btn" data-view="grid" style="
+                        padding: 6px 12px;
+                        background: transparent;
+                        color: #999;
+                        border: 1px solid #444;
+                        cursor: pointer;
+                        font-size: 12px;
+                        transition: all 0.2s ease;
+                        border-radius: 4px;
+                    ">Grid</button>
+                </div>
+            </div>
+            <div id="fun-youtube-links-list" style="display: flex; flex-direction: column; gap: 1px; background: transparent;">
+                <!-- List view -->
+            </div>
+            <div id="fun-youtube-links-grid" style="display: none; grid-template-columns: repeat(3, 1fr); gap: 20px; background: transparent;">
+                <!-- Grid view -->
             </div>
         </div>
         
@@ -653,6 +653,9 @@
                 const korTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
                 const euTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/London"}));
                 const usTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+                const jpTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
+                const dubaiTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Dubai"}));
+                const sydTime = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Sydney"}));
                 
                 // Format times
                 const formatTime = (date) => {
@@ -667,6 +670,9 @@
                 const kor = formatTime(korTime);
                 const eu = formatTime(euTime);
                 const us = formatTime(usTime);
+                const jp = formatTime(jpTime);
+                const dubai = formatTime(dubaiTime);
+                const syd = formatTime(sydTime);
                 
                 // US Market hours (9:30 AM - 4:00 PM ET)
                 const marketHour = usTime.getHours();
@@ -698,7 +704,7 @@
                             margin-bottom: 15px;
                         ">${dateString}</div>
                         
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin: 0 auto 10px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin: 0 auto 10px;">
                             <div style="
                                 background: #0a0a0a;
                                 color: white;
@@ -712,7 +718,10 @@
                                 cursor: pointer;
                                 transition: all 0.3s ease;
                             " onclick="window.open('fullscreen-clock.html?tz=Asia/Seoul', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="color: #888; font-size: 0.9em; margin-bottom: 8px; font-weight: bold;">KOR</div>
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                                    <img src="https://flagcdn.com/24x18/kr.png" alt="South Korea" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">KOR</span>
+                                </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${kor.hours}:${kor.minutes}<span style="font-size: 0.6em; color: #666;">:${kor.seconds}</span>
                                     <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${kor.ampm}</span>
@@ -732,7 +741,10 @@
                                 cursor: pointer;
                                 transition: all 0.3s ease;
                             " onclick="window.open('fullscreen-clock.html?tz=Europe/London', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="color: #888; font-size: 0.9em; margin-bottom: 8px; font-weight: bold;">LON</div>
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                                    <img src="https://flagcdn.com/24x18/gb.png" alt="United Kingdom" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">LON</span>
+                                </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${eu.hours}:${eu.minutes}<span style="font-size: 0.6em; color: #666;">:${eu.seconds}</span>
                                     <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${eu.ampm}</span>
@@ -752,14 +764,86 @@
                                 cursor: pointer;
                                 transition: all 0.3s ease;
                             " onclick="window.open('fullscreen-clock.html?tz=America/New_York', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="color: #888; font-size: 0.9em; margin-bottom: 8px; font-weight: bold;">NYC</div>
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                                    <img src="https://flagcdn.com/24x18/us.png" alt="United States" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">NYC</span>
+                                </div>
                                 <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
                                     ${us.hours}:${us.minutes}<span style="font-size: 0.6em; color: #666;">:${us.seconds}</span>
                                     <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${us.ampm}</span>
                                 </div>
                             </div>
+
+                            <div style="
+                                background: #0a0a0a;
+                                color: white;
+                                padding: 15px 10px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid #333;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Tokyo', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                                    <img src="https://flagcdn.com/24x18/jp.png" alt="Japan" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">TYO</span>
+                                </div>
+                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
+                                    ${jp.hours}:${jp.minutes}<span style="font-size: 0.6em; color: #666;">:${jp.seconds}</span>
+                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${jp.ampm}</span>
+                                </div>
+                            </div>
+
+                            <div style="
+                                background: #0a0a0a;
+                                color: white;
+                                padding: 15px 10px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid #333;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Dubai', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                                    <img src="https://flagcdn.com/24x18/ae.png" alt="UAE" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">DXB</span>
+                                </div>
+                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
+                                    ${dubai.hours}:${dubai.minutes}<span style="font-size: 0.6em; color: #666;">:${dubai.seconds}</span>
+                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${dubai.ampm}</span>
+                                </div>
+                            </div>
+
+                            <div style="
+                                background: #0a0a0a;
+                                color: white;
+                                padding: 15px 10px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid #333;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            " onclick="window.open('fullscreen-clock.html?tz=Australia/Sydney', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                                    <img src="https://flagcdn.com/24x18/au.png" alt="Australia" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">SYD</span>
+                                </div>
+                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
+                                    ${syd.hours}:${syd.minutes}<span style="font-size: 0.6em; color: #666;">:${syd.seconds}</span>
+                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${syd.ampm}</span>
+                                </div>
+                            </div>
                         </div>
-                        
+
                         <div style="font-size: 0.85em; margin-top: 10px;">
                             ${marketStatus}
                         </div>
@@ -852,10 +936,10 @@
         // WebSocket 연결 시작
         connectBinance();
         
-        // YouTube view toggle function
-        function toggleYoutubeView(view) {
-            window.youtubeViewMode = view;
-            const buttons = document.querySelectorAll('.youtube-view-btn');
+        // Fun YouTube view toggle function
+        function toggleFunYoutubeView(view) {
+            window.funYoutubeViewMode = view;
+            const buttons = document.querySelectorAll('.fun-youtube-view-btn');
             buttons.forEach(btn => {
                 btn.style.background = btn.getAttribute('data-view') === view ? '#fff' : 'transparent';
                 btn.style.color = btn.getAttribute('data-view') === view ? '#000' : '#999';
@@ -935,22 +1019,11 @@
                     }
                 }
                 
-                // YouTube 링크 렌더링 (minimalist style with list/grid toggle)
-                const youtubeListContainer = document.getElementById('youtube-links-list');
-                const youtubeGridContainer = document.getElementById('youtube-links-grid');
-
-                if (youtubeListContainer && youtubeGridContainer) {
+                // YouTube 링크 렌더링 (original card style)
+                const youtubeContainer = document.getElementById('youtube-links');
+                if (youtubeContainer) {
                     if (youtubeLinks.length > 0) {
-                        // List view rendering
-                        if (window.youtubeViewMode === 'list' || !window.youtubeViewMode) {
-                            youtubeListContainer.style.display = 'flex';
-                            youtubeGridContainer.style.display = 'none';
-                            youtubeListContainer.innerHTML = youtubeLinks.map(link => {
-                                // Extract video ID from URL
-                                const videoId = getVideoIdFromUrl(link.url);
-                                const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '';
-
-                                return `
+                        youtubeContainer.innerHTML = youtubeLinks.map(link => `
                                 <div class="video-item-minimal" onclick="window.open('${link.url}', '_blank')" style="
                                     background: #1a1a1a;
                                     display: flex;
