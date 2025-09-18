@@ -275,7 +275,16 @@
             </div>
         </div>
 
-        <div class="add-form" style="margin-bottom: 20px; background: #1a1a1a;">
+        <!-- 디자인 설정 토글 버튼 -->
+        <div style="background: #1a1a1a; padding: 15px; margin-bottom: 20px; border-radius: 10px; cursor: pointer;" onclick="toggleDesignSettings()">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">🎨 디자인 설정 <span id="design-arrow" style="font-size: 0.8em;">▼</span></h3>
+                <span style="font-size: 0.9em; opacity: 0.7;">클릭하여 펼치기/접기</span>
+            </div>
+        </div>
+
+        <!-- 디자인 설정 컨텐츠 -->
+        <div id="design-settings-content" class="add-form" style="display: none; margin-bottom: 20px; background: #1a1a1a;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0;">🎨 링크 카드 스타일 설정</h3>
                 <div style="display: flex; gap: 10px;">
@@ -501,8 +510,16 @@
             </div>
         </div>
 
-        <!-- Fun YouTube 표시 설정 -->
-        <div class="add-form" style="margin-bottom: 20px; background: #1a1a1a;">
+        <!-- Fun YouTube 표시 설정 토글 버튼 -->
+        <div style="background: #1a1a1a; padding: 15px; margin-bottom: 20px; border-radius: 10px; cursor: pointer;" onclick="toggleFunYoutubeSettings()">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">🎬 Fun YouTube 표시 설정 <span id="fun-youtube-arrow" style="font-size: 0.8em;">▼</span></h3>
+                <span style="font-size: 0.9em; opacity: 0.7;">클릭하여 펼치기/접기</span>
+            </div>
+        </div>
+
+        <!-- Fun YouTube 표시 설정 컨텐츠 -->
+        <div id="fun-youtube-settings-content" class="add-form" style="display: none; margin-bottom: 20px; background: #1a1a1a;">
             <h3 style="width: 100%; margin-bottom: 15px;">🎬 Fun YouTube 표시 설정</h3>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
@@ -629,6 +646,8 @@
         let editingId = null;
         let customCategories = [];
         let guideOpen = false;
+        let designSettingsOpen = false;
+        let funYoutubeSettingsOpen = false;
 
         // 기능 안내 토글
         function toggleGuide() {
@@ -649,12 +668,68 @@
             localStorage.setItem('adminGuideOpen', guideOpen);
         }
 
+        // 디자인 설정 토글
+        function toggleDesignSettings() {
+            const settingsContent = document.getElementById('design-settings-content');
+            const settingsArrow = document.getElementById('design-arrow');
+
+            designSettingsOpen = !designSettingsOpen;
+
+            if (designSettingsOpen) {
+                settingsContent.style.display = 'block';
+                settingsArrow.textContent = '▲';
+            } else {
+                settingsContent.style.display = 'none';
+                settingsArrow.textContent = '▼';
+            }
+
+            // 상태 저장
+            localStorage.setItem('adminDesignSettingsOpen', designSettingsOpen);
+        }
+
+        // Fun YouTube 설정 토글
+        function toggleFunYoutubeSettings() {
+            const settingsContent = document.getElementById('fun-youtube-settings-content');
+            const settingsArrow = document.getElementById('fun-youtube-arrow');
+
+            funYoutubeSettingsOpen = !funYoutubeSettingsOpen;
+
+            if (funYoutubeSettingsOpen) {
+                settingsContent.style.display = 'block';
+                settingsArrow.textContent = '▲';
+            } else {
+                settingsContent.style.display = 'none';
+                settingsArrow.textContent = '▼';
+            }
+
+            // 상태 저장
+            localStorage.setItem('adminFunYoutubeSettingsOpen', funYoutubeSettingsOpen);
+        }
+
         // 페이지 로드시 가이드 상태 복원
         function restoreGuideState() {
             const savedState = localStorage.getItem('adminGuideOpen');
             if (savedState === 'true') {
                 guideOpen = false; // toggleGuide가 반대로 토글하므로
                 toggleGuide();
+            }
+        }
+
+        // 페이지 로드시 디자인 설정 상태 복원
+        function restoreDesignSettingsState() {
+            const savedState = localStorage.getItem('adminDesignSettingsOpen');
+            if (savedState === 'true') {
+                designSettingsOpen = false; // toggle이 반대로 토글하므로
+                toggleDesignSettings();
+            }
+        }
+
+        // 페이지 로드시 Fun YouTube 설정 상태 복원
+        function restoreFunYoutubeSettingsState() {
+            const savedState = localStorage.getItem('adminFunYoutubeSettingsOpen');
+            if (savedState === 'true') {
+                funYoutubeSettingsOpen = false; // toggle이 반대로 토글하므로
+                toggleFunYoutubeSettings();
             }
         }
 
@@ -1073,6 +1148,8 @@
             }
 
             restoreGuideState(); // 가이드 상태 복원
+            restoreDesignSettingsState(); // 디자인 설정 상태 복원
+            restoreFunYoutubeSettingsState(); // Fun YouTube 설정 상태 복원
             loadCustomCategories(); // 커스텀 카테고리 로드
             updateCategoryDropdown(); // 카테고리 드롭다운 업데이트
             loadSavedStyles(); // 저장된 스타일 로드
