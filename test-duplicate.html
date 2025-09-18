@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index Duplicate 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', monospace;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #4facfe;
+            margin-bottom: 40px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .test-box {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .test-box h2 {
+            color: #fbbf24;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 5px;
+            min-height: 50px;
+        }
+        
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #444;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 코인 제거 버전 테스트</h1>
+    
+    <div class="test-grid">
+        <div class="test-box">
+            <h2>📊 원본 (index.html)</h2>
+            <p>코인 가격 + 링크 + 시계</p>
+            <button onclick="openOriginal()">원본 열기</button>
+            <button onclick="testOriginal()">원본 테스트</button>
+            <div id="original-status" class="status"></div>
+        </div>
+        
+        <div class="test-box">
+            <h2>🔗 수정본 (index-duplicate.html)</h2>
+            <p>링크 + 시계만 (코인 제거)</p>
+            <button onclick="openDuplicate()">수정본 열기</button>
+            <button onclick="testDuplicate()">수정본 테스트</button>
+            <div id="duplicate-status" class="status"></div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 40px;">
+        <h2>비교 보기</h2>
+        <button onclick="showSideBySide()">나란히 보기</button>
+        <button onclick="hideFrames()">숨기기</button>
+    </div>
+    
+    <div id="frames-container" style="display: none; margin-top: 30px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <h3>원본 (index.html)</h3>
+                <iframe id="original-frame" src=""></iframe>
+            </div>
+            <div>
+                <h3>수정본 (index-duplicate.html)</h3>
+                <iframe id="duplicate-frame" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 콘솔 에러 수집
+        let originalErrors = [];
+        let duplicateErrors = [];
+        
+        function openOriginal() {
+            window.open('index.html', '_blank');
+        }
+        
+        function openDuplicate() {
+            window.open('index-duplicate.html', '_blank');
+        }
+        
+        async function testOriginal() {
+            const status = document.getElementById('original-status');
+            status.innerHTML = '<p class="info">🔄 원본 테스트 중...</p>';
+            
+            try {
+                // 새 창에서 열어서 테스트
+                const testWindow = window.open('index.html', 'originalTest', 'width=800,height=600');
+                
+                setTimeout(() => {
+                    if (testWindow && !testWindow.closed) {
+                        status.innerHTML = '<p class="success">✅ 원본 페이지 열림 (콘솔 확인 필요)</p>';
+                        testWindow.close();
+                    } else {
+                        status.innerHTML = '<p class="error">❌ 페이지 열기 실패</p>';
+                    }
+                }, 3000);
+                
+            } catch (error) {
+                status.innerHTML = `<p class="error">❌ 테스트 실패: ${error.message}</p>`;
+            }
+        }
+        
+        async function testDuplicate() {
+            const status = document.getElementById('duplicate-status');
+            status.innerHTML = '<p class="info">🔄 수정본 테스트 중...</p>';
+            
+            try {
+                // Supabase 연결 테스트
+                const response = await fetch('index-duplicate.html');
+                if (response.ok) {
+                    const html = await response.text();
+                    
+                    // 코인 관련 코드가 제거되었는지 확인
+                    const hasWebSocket = html.includes('WebSocket');
+                    const hasBinance = html.includes('binance');
+                    const hasPriceCard = html.includes('price-card');
+                    
+                    let result = '<p class="success">✅ 페이지 로드 가능</p>';
+                    
+                    if (!hasWebSocket && !hasBinance && !hasPriceCard) {
+                        result += '<p class="success">✅ 코인 관련 코드 제거됨</p>';
+                    } else {
+                        result += '<p class="warning">⚠️ 일부 코인 코드 잔여</p>';
+                    }
+                    
+                    // 링크 관련 코드 확인
+                    if (html.includes('loadLinksFromSupabase')) {
+                        result += '<p class="success">✅ 링크 로딩 함수 존재</p>';
+                    } else {
+                        result += '<p class="error">❌ 링크 로딩 함수 없음</p>';
+                    }
+                    
+                    status.innerHTML = result;
+                } else {
+                    status.innerHTML = '<p class="error">❌ 페이지 로드 실패</p>';
+                }
+                
+            } catch (error) {
+                status.innerHTML = `<p class="error">❌ 테스트 실패: ${error.message}</p>`;
+            }
+        }
+        
+        function showSideBySide() {
+            const container = document.getElementById('frames-container');
+            const originalFrame = document.getElementById('original-frame');
+            const duplicateFrame = document.getElementById('duplicate-frame');
+            
+            container.style.display = 'block';
+            originalFrame.src = 'index.html';
+            duplicateFrame.src = 'index-duplicate.html';
+        }
+        
+        function hideFrames() {
+            document.getElementById('frames-container').style.display = 'none';
+        }
+        
+        // 페이지 로드 시 자동 테스트
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('테스트 페이지 준비 완료');
+            
+            // 5초 후 자동으로 두 버전 테스트
+            setTimeout(() => {
+                testOriginal();
+                testDuplicate();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
