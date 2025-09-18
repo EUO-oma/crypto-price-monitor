@@ -640,6 +640,18 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        // Supabase가 로드된 후 즉시 초기화
+        window.addEventListener('load', function() {
+            if (window.supabase && !window.supabaseClient) {
+                window.supabaseClient = window.supabase.createClient(
+                    'https://ddfnxbkiewolgweivomv.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
+                );
+                console.log('Supabase client created in admin page');
+            }
+        });
+    </script>
     <script src="supabase-config.js"></script>
     <script src="auth-helper.js"></script>
     <script>
@@ -1141,6 +1153,28 @@
 
         // 페이지 로드시 인증 확인 후 링크 목록 불러오기
         window.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOMContentLoaded event fired');
+
+            // Supabase 초기화 확인
+            if (!window.supabase) {
+                console.error('Supabase library not loaded');
+                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ Supabase 라이브러리 로드 실패</span>';
+                return;
+            }
+
+            // Supabase client 사용
+            if (window.supabaseClient) {
+                supabase = window.supabaseClient;
+                console.log('Using supabaseClient from window');
+            } else if (typeof supabase === 'undefined' && window.supabase) {
+                // supabase-config.js에서 초기화되지 않았으면 여기서 초기화
+                supabase = window.supabase.createClient(
+                    'https://ddfnxbkiewolgweivomv.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
+                );
+                console.log('Supabase client initialized in DOMContentLoaded');
+            }
+
             // 인증 확인
             const hasAccess = await checkAdminAccess();
             if (!hasAccess) {
@@ -1155,18 +1189,37 @@
             loadSavedStyles(); // 저장된 스타일 로드
             initStyleControls(); // 스타일 컨트롤 초기화
             loadFunYoutubeSettings(); // Fun YouTube 설정 로드
+
             await checkConnection();
             await loadLinks();
+
+            // 실시간 업데이트 활성화
+            enableRealtimeUpdates();
         });
 
         // Supabase 연결 확인
         async function checkConnection() {
             const statusElement = document.getElementById('connection-status');
+
+            if (!statusElement) {
+                console.error('connection-status element not found');
+                return;
+            }
+
+            if (!supabase) {
+                console.error('Supabase client not initialized');
+                statusElement.innerHTML = '<span style="color: #f44336;">❌ Supabase 초기화 실패</span>';
+                return;
+            }
+
             try {
+                console.log('Checking Supabase connection...');
                 const { data, error } = await supabase.from('links').select('count').limit(1);
                 if (error) throw error;
+                console.log('Supabase connection successful');
                 statusElement.innerHTML = '<span style="color: #4caf50;">✅ 연결됨</span>';
             } catch (error) {
+                console.error('Supabase connection error:', error);
                 statusElement.innerHTML = `<span style="color: #f44336;">❌ 연결 실패: ${error.message}</span>`;
             }
         }
@@ -1489,27 +1542,19 @@
             }, 3000);
         }
 
-        // 실시간 업데이트 구독
-        function subscribeToLinks(callback) {
-            // Supabase Realtime 구독
-            const subscription = supabase
-                .channel('links-changes')
-                .on('postgres_changes',
-                    { event: '*', schema: 'public', table: 'links' },
-                    callback
-                )
-                .subscribe();
-
-            return subscription;
-        }
-
-        // 실시간 업데이트 활성화
-        subscribeToLinks(async (payload) => {
-            console.log('데이터 변경 감지:', payload);
-            if (!editingId) {  // 수정 중이 아닐 때만 자동 새로고침
-                await loadLinks();
+        // 실시간 업데이트는 페이지 로드 후에 활성화
+        function enableRealtimeUpdates() {
+            if (typeof subscribeToLinks === 'function') {
+                subscribeToLinks(async (payload) => {
+                    console.log('데이터 변경 감지:', payload);
+                    if (!editingId) {  // 수정 중이 아닐 때만 자동 새로고침
+                        await loadLinks();
+                    }
+                });
+            } else {
+                console.warn('subscribeToLinks function not available');
             }
-        });
+        }
     </script>
 </body>
 </html>
