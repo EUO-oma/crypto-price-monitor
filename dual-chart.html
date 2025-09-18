@@ -586,6 +586,52 @@
                 location.reload();  // 간단하게 리로드로 처리
             }, 500);
         });
+
+        // 로컬 환경에서 자동 갱신 (0.1초)
+        if (window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1' || 
+            window.location.hostname === '') {
+            
+            console.log('🔄 로컬 환경 감지: 0.1초 자동 갱신 활성화');
+            
+            // 자동 갱신 시작
+            let autoRefreshInterval = setInterval(function() {
+                location.reload();
+            }, 100); // 0.1초 (100ms)
+            
+            // 페이지 벗어날 때 인터벌 정리
+            window.addEventListener('beforeunload', function() {
+                clearInterval(autoRefreshInterval);
+            });
+            
+            // 자동 갱신 상태 표시
+            const indicator = document.createElement('div');
+            indicator.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: rgba(255, 0, 0, 0.8);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 5px;
+                font-size: 12px;
+                z-index: 10000;
+                animation: pulse 0.1s infinite;
+            `;
+            indicator.textContent = '🔄 0.1s';
+            document.body.appendChild(indicator);
+            
+            // 펄스 애니메이션 추가
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    0% { opacity: 0.8; }
+                    50% { opacity: 1; }
+                    100% { opacity: 0.8; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     </script>
 </body>
 </html>

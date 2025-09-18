@@ -996,20 +996,39 @@
                             linkElement.href = link.url || '#';
                             linkElement.target = '_blank';
                             
-                            // 스타일 적용 (안전하게)
-                            linkElement.style.background = gptStyles.bgColor || '#1a1a1a';
-                            linkElement.style.color = gptStyles.textColor || '#ffffff';
-                            linkElement.style.padding = '15px';
-                            linkElement.style.borderRadius = '10px';
-                            linkElement.style.textAlign = 'center';
-                            linkElement.style.border = `1px solid ${gptStyles.borderColor || '#333333'}`;
-                            linkElement.style.textDecoration = 'none';
-                            linkElement.style.transition = 'transform 0.3s ease';
-                            linkElement.style.display = 'block';
+                            // 스타일 적용 (cssText 사용 - gpt-links-only.html과 동일하게)
+                            linkElement.style.cssText = `
+                                background: ${gptStyles.bgColor || '#1a1a1a'};
+                                color: ${gptStyles.textColor || '#ffffff'};
+                                padding: ${gptStyles.padding || 15}px;
+                                border-radius: ${gptStyles.borderRadius || 10}px;
+                                text-align: center;
+                                border: ${gptStyles.borderWidth || 1}px solid ${gptStyles.borderColor || '#333333'};
+                                text-decoration: none;
+                                transition: transform 0.3s ease;
+                                display: block;
+                                font-weight: ${gptStyles.fontWeight || '500'};
+                                cursor: pointer;
+                            `;
                             
                             const textDiv = document.createElement('div');
                             textDiv.style.fontSize = `${gptStyles.fontSize || 16}px`;
                             textDiv.textContent = link.name || '이름 없음';
+                            
+                            // 호버 이벤트 추가 (gpt-links-only.html과 동일하게)
+                            linkElement.addEventListener('mouseover', function() {
+                                this.style.transform = 'translateY(-3px)';
+                                this.style.borderColor = '#555';
+                                if (gptStyles.hoverBg) {
+                                    this.style.background = gptStyles.hoverBg;
+                                }
+                            });
+                            
+                            linkElement.addEventListener('mouseout', function() {
+                                this.style.transform = 'translateY(0)';
+                                this.style.borderColor = gptStyles.borderColor || '#333333';
+                                this.style.background = gptStyles.bgColor || '#1a1a1a';
+                            });
                             
                             linkElement.appendChild(textDiv);
                             gptContainer.appendChild(linkElement);
@@ -1036,17 +1055,21 @@
                             linkElement.href = link.url || '#';
                             linkElement.target = '_blank';
                             
-                            // 스타일 적용 (안전하게)
-                            linkElement.style.background = youtubeStyles.bgColor || '#1a1a1a';
-                            linkElement.style.color = youtubeStyles.textColor || '#ffffff';
-                            linkElement.style.padding = '15px';
-                            linkElement.style.borderRadius = '10px';
-                            linkElement.style.textAlign = 'center';
-                            linkElement.style.border = `1px solid ${youtubeStyles.borderColor || '#333333'}`;
-                            linkElement.style.textDecoration = 'none';
-                            linkElement.style.transition = 'transform 0.3s ease';
-                            linkElement.style.display = 'block';
-                            linkElement.style.position = 'relative';
+                            // 스타일 적용 (cssText 사용)
+                            linkElement.style.cssText = `
+                                background: ${youtubeStyles.bgColor || '#1a1a1a'};
+                                color: ${youtubeStyles.textColor || '#ffffff'};
+                                padding: ${youtubeStyles.padding || 15}px;
+                                border-radius: ${youtubeStyles.borderRadius || 10}px;
+                                text-align: center;
+                                border: ${youtubeStyles.borderWidth || 1}px solid ${youtubeStyles.borderColor || '#333333'};
+                                text-decoration: none;
+                                transition: transform 0.3s ease;
+                                display: block;
+                                position: relative;
+                                font-weight: ${youtubeStyles.fontWeight || '600'};
+                                cursor: pointer;
+                            `;
                             
                             const textDiv = document.createElement('div');
                             textDiv.style.fontSize = `${youtubeStyles.fontSize || 17}px`;
@@ -1067,6 +1090,22 @@
                             
                             linkElement.appendChild(textDiv);
                             linkElement.appendChild(liveIndicator);
+                            
+                            // 호버 이벤트 추가
+                            linkElement.addEventListener('mouseover', function() {
+                                this.style.transform = 'translateY(-3px)';
+                                this.style.borderColor = '#555';
+                                if (youtubeStyles.hoverBg) {
+                                    this.style.background = youtubeStyles.hoverBg;
+                                }
+                            });
+                            
+                            linkElement.addEventListener('mouseout', function() {
+                                this.style.transform = 'translateY(0)';
+                                this.style.borderColor = youtubeStyles.borderColor || '#333333';
+                                this.style.background = youtubeStyles.bgColor || '#1a1a1a';
+                            });
+                            
                             youtubeContainer.appendChild(linkElement);
                         });
 
@@ -1094,20 +1133,39 @@
                             linkElement.href = link.url || '#';
                             linkElement.target = '_blank';
                             
-                            // 스타일 적용 (안전하게)
-                            linkElement.style.background = favoriteStyles.bgColor || '#1a1a1a';
-                            linkElement.style.color = favoriteStyles.textColor || '#ffffff';
-                            linkElement.style.padding = '15px';
-                            linkElement.style.borderRadius = '10px';
-                            linkElement.style.textAlign = 'center';
-                            linkElement.style.border = `1px solid ${favoriteStyles.borderColor || '#333333'}`;
-                            linkElement.style.textDecoration = 'none';
-                            linkElement.style.transition = 'transform 0.3s ease';
-                            linkElement.style.display = 'block';
+                            // 스타일 적용 (cssText 사용)
+                            linkElement.style.cssText = `
+                                background: ${favoriteStyles.bgColor || '#1a1a1a'};
+                                color: ${favoriteStyles.textColor || '#ffffff'};
+                                padding: ${favoriteStyles.padding || 15}px;
+                                border-radius: ${favoriteStyles.borderRadius || 10}px;
+                                text-align: center;
+                                border: ${favoriteStyles.borderWidth || 1}px solid ${favoriteStyles.borderColor || '#333333'};
+                                text-decoration: none;
+                                transition: transform 0.3s ease;
+                                display: block;
+                                font-weight: ${favoriteStyles.fontWeight || '500'};
+                                cursor: pointer;
+                            `;
                             
                             const textDiv = document.createElement('div');
                             textDiv.style.fontSize = `${favoriteStyles.fontSize || 16}px`;
                             textDiv.textContent = link.name || '이름 없음';
+                            
+                            // 호버 이벤트 추가
+                            linkElement.addEventListener('mouseover', function() {
+                                this.style.transform = 'translateY(-3px)';
+                                this.style.borderColor = '#555';
+                                if (favoriteStyles.hoverBg) {
+                                    this.style.background = favoriteStyles.hoverBg;
+                                }
+                            });
+                            
+                            linkElement.addEventListener('mouseout', function() {
+                                this.style.transform = 'translateY(0)';
+                                this.style.borderColor = favoriteStyles.borderColor || '#333333';
+                                this.style.background = favoriteStyles.bgColor || '#1a1a1a';
+                            });
                             
                             linkElement.appendChild(textDiv);
                             favoriteContainer.appendChild(linkElement);
@@ -1389,19 +1447,42 @@
                                 const linkElement = document.createElement('a');
                                 linkElement.href = link.url || '#';
                                 linkElement.target = '_blank';
-                                linkElement.style.background = '#1a1a1a';
-                                linkElement.style.color = 'white';
-                                linkElement.style.padding = '15px';
-                                linkElement.style.borderRadius = '10px';
-                                linkElement.style.textAlign = 'center';
-                                linkElement.style.border = '1px solid #333';
-                                linkElement.style.textDecoration = 'none';
-                                linkElement.style.transition = 'transform 0.3s ease';
-                                linkElement.style.display = 'block';
+                                
+                                // 카테고리별 스타일 가져오기
+                                const categoryStyles = getCardStyles(category.id) || getCardStyles('gpt'); // 기본값으로 gpt 스타일 사용
+                                
+                                linkElement.style.cssText = `
+                                    background: ${categoryStyles.bgColor || '#1a1a1a'};
+                                    color: ${categoryStyles.textColor || '#ffffff'};
+                                    padding: ${categoryStyles.padding || 15}px;
+                                    border-radius: ${categoryStyles.borderRadius || 10}px;
+                                    text-align: center;
+                                    border: ${categoryStyles.borderWidth || 1}px solid ${categoryStyles.borderColor || '#333333'};
+                                    text-decoration: none;
+                                    transition: transform 0.3s ease;
+                                    display: block;
+                                    font-weight: ${categoryStyles.fontWeight || '500'};
+                                    cursor: pointer;
+                                `;
                                 
                                 const textDiv = document.createElement('div');
-                                textDiv.style.fontSize = '1em';
+                                textDiv.style.fontSize = `${categoryStyles.fontSize || 16}px`;
                                 textDiv.textContent = link.name || '이름 없음';
+                                
+                                // 호버 이벤트 추가
+                                linkElement.addEventListener('mouseover', function() {
+                                    this.style.transform = 'translateY(-3px)';
+                                    this.style.borderColor = '#555';
+                                    if (categoryStyles.hoverBg) {
+                                        this.style.background = categoryStyles.hoverBg;
+                                    }
+                                });
+                                
+                                linkElement.addEventListener('mouseout', function() {
+                                    this.style.transform = 'translateY(0)';
+                                    this.style.borderColor = categoryStyles.borderColor || '#333333';
+                                    this.style.background = categoryStyles.bgColor || '#1a1a1a';
+                                });
                                 
                                 linkElement.appendChild(textDiv);
                                 linksGrid.appendChild(linkElement);
