@@ -1590,14 +1590,53 @@
                 }
                 
             } catch (error) {
-                console.error('링크 로드 실패:', error);
+                console.error('🗄️ === SECTION 3: 링크 로드 실패 ===');
+                console.error('Error:', error);
+                console.error('Error message:', error.message);
                 console.error('Error stack:', error.stack);
                 
-                // 에러 발생시 빈 컨테이너에 메시지 표시
-                const gptContainer = document.getElementById('gpt-links');
-                if (gptContainer && gptContainer.innerHTML === '') {
-                    gptContainer.innerHTML = '<div style="color: #666;">링크를 불러오는 중 오류가 발생했습니다. 콘솔을 확인하세요.</div>';
-                }
+                // 모든 컨테이너에 에러 메시지 표시
+                const containers = [
+                    { id: 'gpt-links', name: 'GPT 링크' },
+                    { id: 'youtube-links', name: 'YouTube 링크' },
+                    { id: 'favorite-links', name: 'Favorite 링크' },
+                    { id: 'fun-youtube-links-list', name: 'Fun YouTube 링크' }
+                ];
+                
+                containers.forEach(({ id, name }) => {
+                    const container = document.getElementById(id);
+                    if (container) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.style.cssText = `
+                            color: #f87171;
+                            text-align: center;
+                            padding: 20px;
+                            background: #1a1a1a;
+                            border-radius: 10px;
+                            border: 1px solid #333;
+                        `;
+                        errorDiv.innerHTML = `
+                            <div>❌ ${name} 로드 실패</div>
+                            <div style="font-size: 12px; margin-top: 5px; color: #888;">
+                                ${error.message}
+                            </div>
+                            <button onclick="location.reload()" style="
+                                margin-top: 10px;
+                                padding: 5px 15px;
+                                background: #333;
+                                color: #fff;
+                                border: 1px solid #555;
+                                border-radius: 5px;
+                                cursor: pointer;
+                            ">새로고침</button>
+                        `;
+                        container.innerHTML = '';
+                        container.appendChild(errorDiv);
+                    }
+                });
+                
+                // 추가 디버깅 정보 표시
+                alert(`섹션 3 로드 실패: ${error.message}\n\n디버그 페이지에서 자세한 정보를 확인하세요:\n/debug-section3.html`);
             }
         }
         
@@ -2124,6 +2163,7 @@
         <a href="index.html" style="text-decoration: none; color: #fff; font-weight: bold; border-bottom: 2px solid #f7931a;">Main</a>
         <a href="simple-test.html" style="text-decoration: none; color: #60a5fa; font-weight: bold;" title="단계별 테스트">🔍 Test</a>
         <a href="gpt-links-only.html" style="text-decoration: none; color: #4ade80; font-weight: bold;" title="GPT 링크만">🤖 GPT</a>
+        <a href="debug-section3.html" style="text-decoration: none; color: #a855f7; font-weight: bold;" title="섹션3 디버그">🐛 Debug</a>
         <a href="realtime-tick-chart.html" style="text-decoration: none; color: #ff6b6b; font-weight: bold;" title="실시간 틱 차트">📊 Tick</a>
         <a href="fix-localstorage.html" style="text-decoration: none; color: #fbbf24; font-weight: bold;" title="스타일 수정">🔧 Fix</a>
         <a href="admin-v3.html" style="text-decoration: none; color: #f87171; font-weight: bold;" title="관리자">⚙️ Admin</a>
