@@ -514,9 +514,24 @@
             const seconds = now.getSeconds().toString().padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             const displayHours = hours % 12 || 12;
-            // 일본어 월 이름과 숫자 날짜 형식
-            const japaneseMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-            const dateString = `${japaneseMonths[now.getMonth()]} ${now.getDate()}日`;
+            // 영어식 서수 날짜 형식 (예: 18th September)
+            const englishMonths = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                  'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            function getOrdinalSuffix(day) {
+                if (day >= 11 && day <= 13) return 'th';
+                const lastDigit = day % 10;
+                switch (lastDigit) {
+                    case 1: return 'st';
+                    case 2: return 'nd';
+                    case 3: return 'rd';
+                    default: return 'th';
+                }
+            }
+            
+            const day = now.getDate();
+            const month = englishMonths[now.getMonth()];
+            const dateString = `${day}${getOrdinalSuffix(day)} ${month}`;
             
             // Header update time with multiple timezones
             const headerTimeElement = document.getElementById('header-update-time');
@@ -999,62 +1014,53 @@
                 console.log('Fun YouTube links:', funYoutubeLinks.length);
                 console.log('Custom categories:', customCategories);
                 
-                // GPT 링크 렌더링
+                // 초간단 GPT 링크 렌더링
                 const gptContainer = document.getElementById('gpt-links');
                 if (gptContainer) {
+                    console.log('🤖 GPT 링크 렌더링 시작, 개수:', gptLinks.length);
                     gptContainer.innerHTML = ''; // 기존 내용 제거
                     
-                    if (gptLinks.length > 0) {
-                        const gptStyles = getCardStyles('gpt');
-                        
-                        gptLinks.forEach(link => {
-                            const linkElement = document.createElement('a');
-                            linkElement.href = link.url || '#';
-                            linkElement.target = '_blank';
+                    if (gptLinks && gptLinks.length > 0) {
+                        gptLinks.forEach((link, index) => {
+                            console.log(`GPT 링크 ${index + 1}:`, link);
                             
-                            // 스타일 적용 (cssText 사용 - gpt-links-only.html과 동일하게)
-                            linkElement.style.cssText = `
-                                background: ${gptStyles.bgColor || '#1a1a1a'};
-                                color: ${gptStyles.textColor || '#ffffff'};
-                                padding: ${gptStyles.padding || 15}px;
-                                border-radius: ${gptStyles.borderRadius || 10}px;
-                                text-align: center;
-                                border: ${gptStyles.borderWidth || 1}px solid ${gptStyles.borderColor || '#333333'};
-                                text-decoration: none;
-                                transition: transform 0.3s ease;
+                            // 초간단 링크 요소 생성
+                            const linkEl = document.createElement('a');
+                            linkEl.href = link.url || '#';
+                            linkEl.target = '_blank';
+                            linkEl.textContent = link.name || `GPT Link ${index + 1}`;
+                            
+                            // 초간단 스타일
+                            linkEl.style.cssText = `
                                 display: block;
-                                font-weight: ${gptStyles.fontWeight || '500'};
-                                cursor: pointer;
+                                background: #1a1a1a;
+                                color: #ffffff;
+                                padding: 15px;
+                                margin: 5px 0;
+                                border-radius: 8px;
+                                text-decoration: none;
+                                border: 1px solid #333;
+                                text-align: center;
+                                transition: all 0.3s ease;
                             `;
                             
-                            const textDiv = document.createElement('div');
-                            textDiv.style.fontSize = `${gptStyles.fontSize || 16}px`;
-                            textDiv.textContent = link.name || '이름 없음';
+                            // 호버 효과
+                            linkEl.onmouseover = () => {
+                                linkEl.style.background = '#2a2a2a';
+                                linkEl.style.borderColor = '#555';
+                            };
+                            linkEl.onmouseout = () => {
+                                linkEl.style.background = '#1a1a1a';
+                                linkEl.style.borderColor = '#333';
+                            };
                             
-                            // 호버 이벤트 추가 (gpt-links-only.html과 동일하게)
-                            linkElement.addEventListener('mouseover', function() {
-                                this.style.transform = 'translateY(-3px)';
-                                this.style.borderColor = '#555';
-                                if (gptStyles.hoverBg) {
-                                    this.style.background = gptStyles.hoverBg;
-                                }
-                            });
-                            
-                            linkElement.addEventListener('mouseout', function() {
-                                this.style.transform = 'translateY(0)';
-                                this.style.borderColor = gptStyles.borderColor || '#333333';
-                                this.style.background = gptStyles.bgColor || '#1a1a1a';
-                            });
-                            
-                            linkElement.appendChild(textDiv);
-                            gptContainer.appendChild(linkElement);
+                            gptContainer.appendChild(linkEl);
                         });
+                        
+                        console.log('✅ GPT 링크 렌더링 완료');
                     } else {
-                        const emptyMessage = document.createElement('div');
-                        emptyMessage.style.color = '#666';
-                        emptyMessage.style.textAlign = 'center';
-                        emptyMessage.textContent = '링크가 없습니다. 관리자 페이지에서 추가하세요.';
-                        gptContainer.appendChild(emptyMessage);
+                        gptContainer.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">GPT 링크가 없습니다</div>';
+                        console.log('⚠️ GPT 링크 없음');
                     }
                 }
                 
@@ -2225,7 +2231,7 @@
     </style>
     <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 30px; border: 1px solid #333; z-index: 9999;">
         <a href="index.html" style="text-decoration: none; color: #fff; font-weight: bold; border-bottom: 2px solid #f7931a;">Main</a>
-        <a href="simple-test.html" style="text-decoration: none; color: #60a5fa; font-weight: bold;" title="단계별 테스트">🔍 Test</a>
+        <a href="simple-gpt-test.html" style="text-decoration: none; color: #60a5fa; font-weight: bold;" title="간단한 GPT 링크 테스트">🔍 GPT Test</a>
         <a href="gpt-links-only.html" style="text-decoration: none; color: #4ade80; font-weight: bold;" title="GPT 링크만">🤖 GPT</a>
         <a href="debug-section3.html" style="text-decoration: none; color: #a855f7; font-weight: bold;" title="섹션3 디버그">🐛 Debug</a>
         <a href="tradingview-test.html" style="text-decoration: none; color: #ff6b6b; font-weight: bold;" title="TradingView 가격 연동 테스트">📈 TradingView</a>
