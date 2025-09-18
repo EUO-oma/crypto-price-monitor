@@ -255,44 +255,47 @@
             <!-- 섹션 헤더 (차트 페이지 링크 포함) -->
             <h2><a href="tradingview-test.html" style="color: inherit; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='inherit'">📈 Crypto Market Overview</a></h2>
             
-            <!-- TradingView Ticker Tape Widget -->
-            <div style="overflow: hidden; border-radius: 10px; margin-bottom: 20px;">
+            <!-- TradingView Mini Chart Widget Grid -->
+            <div style="margin-bottom: 20px;">
                 <!-- TradingView Widget BEGIN -->
                 <div class="tradingview-widget-container">
                   <div class="tradingview-widget-container__widget"></div>
-                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
                   {
                   "symbols": [
-                    {
-                      "proName": "BINANCE:BTCUSDT",
-                      "title": "BTC/USDT"
-                    },
-                    {
-                      "proName": "BINANCE:ETHUSDT",
-                      "title": "ETH/USDT"
-                    },
-                    {
-                      "proName": "BINANCE:SOLUSDT",
-                      "title": "SOL/USDT"
-                    },
-                    {
-                      "proName": "BINANCE:XRPUSDT",
-                      "title": "XRP/USDT"
-                    },
-                    {
-                      "proName": "BINANCE:AVAXUSDT",
-                      "title": "AVAX/USDT"
-                    },
-                    {
-                      "proName": "NASDAQ:NDX",
-                      "title": "NASDAQ 100"
-                    }
+                    ["BINANCE:BTCUSDT|1D"],
+                    ["BINANCE:ETHUSDT|1D"],
+                    ["BINANCE:SOLUSDT|1D"],
+                    ["BINANCE:XRPUSDT|1D"],
+                    ["BINANCE:AVAXUSDT|1D"],
+                    ["NASDAQ:NDX|1D"]
                   ],
-                  "showSymbolLogo": true,
+                  "chartOnly": false,
+                  "width": "100%",
+                  "height": 220,
+                  "locale": "en",
                   "colorTheme": "dark",
                   "isTransparent": true,
-                  "displayMode": "adaptive",
-                  "locale": "en"
+                  "autosize": false,
+                  "showVolume": false,
+                  "showMA": false,
+                  "hideDateRanges": false,
+                  "hideMarketStatus": false,
+                  "hideSymbolLogo": false,
+                  "scalePosition": "no",
+                  "scaleMode": "Normal",
+                  "fontFamily": "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
+                  "fontSize": "10",
+                  "noTimeScale": false,
+                  "valuesTracking": "1",
+                  "changeMode": "price-and-percent",
+                  "chartType": "area",
+                  "maLineColor": "#2962FF",
+                  "maLineWidth": 1,
+                  "maLength": 9,
+                  "lineWidth": 2,
+                  "lineType": 0,
+                  "dateRanges": ["1d|1", "1m|30", "3m|60", "12m|1D", "60m|1W", "all|1M"]
                   }
                   </script>
                 </div>
@@ -563,6 +566,20 @@
     <script src="links-module.js"></script>
     <script src="supabase-config.js"></script>
     <script>
+        // Clock toggle function
+        function toggleClockSection() {
+            const clockSection = document.getElementById('clock-section');
+            const toggleIcon = document.getElementById('clock-toggle-icon');
+            
+            if (clockSection.style.display === 'none') {
+                clockSection.style.display = 'block';
+                toggleIcon.textContent = '▲';
+            } else {
+                clockSection.style.display = 'none';
+                toggleIcon.textContent = '▼';
+            }
+        }
+
         let binanceBtcWs = null;
         let binanceEthWs = null;
         let binanceXrpWs = null;
@@ -666,7 +683,9 @@
                             align-items: center;
                             justify-content: center;
                             gap: 20px;
-                        ">
+                            cursor: pointer;
+                            user-select: none;
+                        " onclick="toggleClockSection()">
                             <span style="
                                 background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #dda0dd);
                                 -webkit-background-clip: text;
@@ -674,9 +693,11 @@
                                 background-clip: text;
                             ">${dateString}</span>
                             ${marketStatus}
+                            <span id="clock-toggle-icon" style="color: #666; font-size: 0.8em;">▼</span>
                         </div>
                         
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin: 0 auto 10px;">
+                        <div id="clock-section" style="display: none; overflow: hidden; transition: all 0.3s ease;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin: 0 auto 10px;">
                             <!-- KOR: UTC+9 -->
                             <div style="
                                 background: #0a0a0a;
@@ -791,6 +812,7 @@
                                     ${us.hours}:${us.minutes}<span style="font-size: 0.6em; color: #666;">:${us.seconds}</span>
                                 </div>
                             </div>
+                        </div>
                         </div>
                     </div>
                 `;
