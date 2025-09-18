@@ -355,6 +355,98 @@
             </div>
         </div>
 
+        <!-- Fun YouTube 표시 설정 -->
+        <div class="add-form" style="margin-bottom: 20px; background: #1a1a1a;">
+            <h3 style="width: 100%; margin-bottom: 15px;">🎬 Fun YouTube 표시 설정</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <!-- 표시 옵션 -->
+                <div style="border: 1px solid #333; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #ff6b6b; margin-bottom: 15px;">📺 표시 옵션</h4>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>기본 보기 모드:</strong>
+                        <select id="fun-youtube-default-view" style="width: 100%; margin-top: 5px; padding: 8px; background: #333; border: 1px solid #444; border-radius: 5px; color: #fff;">
+                            <option value="list">리스트 뷰 (가로형)</option>
+                            <option value="grid">그리드 뷰 (카드형)</option>
+                            <option value="compact">컴팩트 뷰 (텍스트만)</option>
+                        </select>
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>그리드 열 개수:</strong>
+                        <select id="fun-youtube-grid-cols" style="width: 100%; margin-top: 5px; padding: 8px; background: #333; border: 1px solid #444; border-radius: 5px; color: #fff;">
+                            <option value="2">2열</option>
+                            <option value="3" selected>3열</option>
+                            <option value="4">4열</option>
+                        </select>
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>썸네일 표시:</strong>
+                        <input type="checkbox" id="fun-youtube-show-thumbnail" checked style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>채널명 표시:</strong>
+                        <input type="checkbox" id="fun-youtube-show-author" checked style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>뷰 전환 버튼 표시:</strong>
+                        <input type="checkbox" id="fun-youtube-show-toggle" checked style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>자동으로 제목 가져오기:</strong>
+                        <input type="checkbox" id="fun-youtube-auto-fetch" checked style="margin-left: 10px;">
+                    </label>
+                </div>
+
+                <!-- 스타일 설정 -->
+                <div style="border: 1px solid #333; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #ff6b6b; margin-bottom: 15px;">🎨 스타일 설정</h4>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>제목 글자 크기:</strong>
+                        <input type="range" id="fun-youtube-title-size" min="12" max="20" value="15" style="width: 150px; margin-left: 10px;">
+                        <span id="fun-youtube-title-size-display">15px</span>
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>카드 배경색:</strong>
+                        <input type="color" id="fun-youtube-card-bg" value="#1a1a1a" style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>테두리 색상:</strong>
+                        <input type="color" id="fun-youtube-border-color" value="#333333" style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>호버 효과:</strong>
+                        <select id="fun-youtube-hover-effect" style="width: 100%; margin-top: 5px; padding: 8px; background: #333; border: 1px solid #444; border-radius: 5px; color: #fff;">
+                            <option value="lift" selected>들어올리기</option>
+                            <option value="glow">빛나기</option>
+                            <option value="scale">확대</option>
+                            <option value="none">효과 없음</option>
+                        </select>
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>모서리 둥글기:</strong>
+                        <input type="range" id="fun-youtube-border-radius" min="0" max="20" value="10" style="width: 150px; margin-left: 10px;">
+                        <span id="fun-youtube-radius-display">10px</span>
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button onclick="saveFunYoutubeSettings()" style="background: #ff6b6b;">💾 Fun YouTube 설정 저장</button>
+                <button onclick="resetFunYoutubeSettings()" style="background: #666;">🔄 기본값 초기화</button>
+            </div>
+        </div>
+
         <div class="add-form">
             <h3 style="width: 100%; margin-bottom: 10px;">➕ 새 링크 추가</h3>
             <input type="text" id="link-name" placeholder="이름 (예: 사또)">
@@ -532,6 +624,92 @@
             }
         }
 
+        // Fun YouTube 설정 저장
+        function saveFunYoutubeSettings() {
+            const settings = {
+                viewMode: document.getElementById('fun-youtube-view-mode').value,
+                gridColumns: parseInt(document.getElementById('fun-youtube-grid-columns').value),
+                showThumbnails: document.getElementById('fun-youtube-thumbnails').checked,
+                showAuthor: document.getElementById('fun-youtube-author').checked,
+                showViewButton: document.getElementById('fun-youtube-view-button').checked,
+                fontSize: parseInt(document.getElementById('fun-youtube-font-size').value),
+                bgColor: document.getElementById('fun-youtube-bg-color').value,
+                textColor: document.getElementById('fun-youtube-text-color').value,
+                hoverBgColor: document.getElementById('fun-youtube-hover-bg').value,
+                borderRadius: parseInt(document.getElementById('fun-youtube-border-radius').value),
+                hoverScale: document.getElementById('fun-youtube-hover-scale').checked
+            };
+
+            localStorage.setItem('funYoutubeSettings', JSON.stringify(settings));
+            showStatus('Fun YouTube 설정이 저장되었습니다', 'success');
+        }
+
+        // Fun YouTube 설정 초기화
+        function resetFunYoutubeSettings() {
+            const defaultSettings = {
+                viewMode: 'list',
+                gridColumns: 3,
+                showThumbnails: true,
+                showAuthor: false,
+                showViewButton: false,
+                fontSize: 16,
+                bgColor: '#1a1a1a',
+                textColor: '#ffffff',
+                hoverBgColor: '#2a2a2a',
+                borderRadius: 8,
+                hoverScale: true
+            };
+
+            // 폼에 기본값 설정
+            document.getElementById('fun-youtube-view-mode').value = defaultSettings.viewMode;
+            document.getElementById('fun-youtube-grid-columns').value = defaultSettings.gridColumns;
+            document.getElementById('fun-youtube-thumbnails').checked = defaultSettings.showThumbnails;
+            document.getElementById('fun-youtube-author').checked = defaultSettings.showAuthor;
+            document.getElementById('fun-youtube-view-button').checked = defaultSettings.showViewButton;
+            document.getElementById('fun-youtube-font-size').value = defaultSettings.fontSize;
+            document.getElementById('fun-youtube-bg-color').value = defaultSettings.bgColor;
+            document.getElementById('fun-youtube-text-color').value = defaultSettings.textColor;
+            document.getElementById('fun-youtube-hover-bg').value = defaultSettings.hoverBgColor;
+            document.getElementById('fun-youtube-border-radius').value = defaultSettings.borderRadius;
+            document.getElementById('fun-youtube-hover-scale').checked = defaultSettings.hoverScale;
+
+            localStorage.setItem('funYoutubeSettings', JSON.stringify(defaultSettings));
+            showStatus('Fun YouTube 설정이 초기화되었습니다', 'success');
+        }
+
+        // Fun YouTube 설정 로드
+        function loadFunYoutubeSettings() {
+            const defaultSettings = {
+                viewMode: 'list',
+                gridColumns: 3,
+                showThumbnails: true,
+                showAuthor: false,
+                showViewButton: false,
+                fontSize: 16,
+                bgColor: '#1a1a1a',
+                textColor: '#ffffff',
+                hoverBgColor: '#2a2a2a',
+                borderRadius: 8,
+                hoverScale: true
+            };
+
+            const savedSettings = JSON.parse(localStorage.getItem('funYoutubeSettings') || '{}');
+            const settings = { ...defaultSettings, ...savedSettings };
+
+            // 폼에 저장된 값 설정
+            document.getElementById('fun-youtube-view-mode').value = settings.viewMode;
+            document.getElementById('fun-youtube-grid-columns').value = settings.gridColumns;
+            document.getElementById('fun-youtube-thumbnails').checked = settings.showThumbnails;
+            document.getElementById('fun-youtube-author').checked = settings.showAuthor;
+            document.getElementById('fun-youtube-view-button').checked = settings.showViewButton;
+            document.getElementById('fun-youtube-font-size').value = settings.fontSize;
+            document.getElementById('fun-youtube-bg-color').value = settings.bgColor;
+            document.getElementById('fun-youtube-text-color').value = settings.textColor;
+            document.getElementById('fun-youtube-hover-bg').value = settings.hoverBgColor;
+            document.getElementById('fun-youtube-border-radius').value = settings.borderRadius;
+            document.getElementById('fun-youtube-hover-scale').checked = settings.hoverScale;
+        }
+
         function previewStyles() {
             const previewDiv = document.getElementById('style-preview');
             previewDiv.style.display = 'block';
@@ -562,6 +740,7 @@
             updateCategoryDropdown(); // 카테고리 드롭다운 업데이트
             loadSavedStyles(); // 저장된 스타일 로드
             initStyleControls(); // 스타일 컨트롤 초기화
+            loadFunYoutubeSettings(); // Fun YouTube 설정 로드
             await checkConnection();
             await loadLinks();
         });
