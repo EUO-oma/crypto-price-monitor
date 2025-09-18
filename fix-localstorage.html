@@ -299,6 +299,12 @@
                 
                 if (!custom) {
                     result.innerHTML = '<p class="info">커스텀 카테고리가 없습니다.</p>';
+                    // 기본 커스텀 카테고리 생성 제안
+                    result.innerHTML += `
+                        <button onclick="createDefaultCustomCategories()" class="success" style="margin-top: 10px;">
+                            기본 커스텀 카테고리 생성
+                        </button>
+                    `;
                     return;
                 }
                 
@@ -311,6 +317,50 @@
             } catch (error) {
                 result.innerHTML = `<p class="error">❌ 파싱 오류: ${error.message}</p>`;
             }
+        }
+        
+        // 기본 커스텀 카테고리 생성
+        function createDefaultCustomCategories() {
+            const defaultCustom = [
+                { id: 'tools', name: '🛠️ 도구', order: 4 },
+                { id: 'news', name: '📰 뉴스', order: 5 },
+                { id: 'research', name: '🔬 연구', order: 6 },
+                { id: 'education', name: '📚 교육', order: 7 }
+            ];
+            
+            localStorage.setItem('customCategories', JSON.stringify(defaultCustom));
+            
+            // 스타일도 함께 생성
+            const currentStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
+            
+            defaultCustom.forEach(cat => {
+                if (!currentStyles[cat.id]) {
+                    currentStyles[cat.id] = {
+                        fontSize: 16, 
+                        fontWeight: '500', 
+                        bgColor: '#1a1a1a', 
+                        textColor: '#ffffff',
+                        borderColor: '#333333', 
+                        borderWidth: 1, 
+                        borderRadius: 10, 
+                        padding: 15, 
+                        gap: 10,
+                        shadow: true, 
+                        hoverEffect: true, 
+                        hoverBg: '#2a2a2a', 
+                        hoverScale: 102
+                    };
+                }
+            });
+            
+            localStorage.setItem('linkCardStyles', JSON.stringify(currentStyles));
+            
+            document.getElementById('custom-categories').innerHTML = 
+                '<p class="success">✅ 기본 커스텀 카테고리가 생성되었습니다!</p>' +
+                '<p class="info">ℹ️ 페이지를 새로고침하면 적용됩니다.</p>';
+            
+            // 다시 확인
+            setTimeout(() => checkCustomCategories(), 1000);
         }
         
         // 전체 LocalStorage 보기
