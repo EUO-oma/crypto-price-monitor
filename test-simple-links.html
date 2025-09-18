@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Links 테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #444;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        pre {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Simple Links 테스트</h1>
+    
+    <div class="test-section">
+        <h2>1. 현재 상태 확인</h2>
+        <button onclick="checkStatus()">상태 체크</button>
+        <button onclick="testSupabase()">Supabase 연결 테스트</button>
+        <div id="status-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 링크 데이터 직접 조회</h2>
+        <button onclick="fetchLinksDirectly()">직접 조회</button>
+        <div id="direct-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. simple-links.html 페이지 보기</h2>
+        <button onclick="showSimpleLinks()">페이지 로드</button>
+        <button onclick="openInNewTab()">새 탭에서 열기</button>
+        <div class="iframe-container" id="iframe-container" style="display: none;">
+            <iframe src="" id="simple-links-iframe"></iframe>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 문제 진단</h2>
+        <div id="diagnosis"></div>
+    </div>
+
+    <script>
+        // Supabase 설정
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        let supabase = null;
+        
+        // 상태 체크
+        function checkStatus() {
+            const result = document.getElementById('status-result');
+            
+            const status = {
+                'Supabase 라이브러리': !!window.supabase,
+                'createClient 함수': !!(window.supabase?.createClient),
+                '클라이언트 초기화': !!supabase
+            };
+            
+            let html = '<h3>시스템 상태</h3><pre>';
+            for (const [key, value] of Object.entries(status)) {
+                html += `${key}: ${value ? '✅' : '❌'}\n`;
+            }
+            html += '</pre>';
+            
+            result.innerHTML = html;
+        }
+        
+        // Supabase 테스트
+        async function testSupabase() {
+            const result = document.getElementById('status-result');
+            result.innerHTML += '<p class="info">🔄 Supabase 테스트 중...</p>';
+            
+            try {
+                if (!supabase && window.supabase) {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
+                
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) throw error;
+                
+                result.innerHTML += '<p class="success">✅ Supabase 연결 성공</p>';
+            } catch (error) {
+                result.innerHTML += `<p class="error">❌ Supabase 연결 실패: ${error.message}</p>`;
+            }
+        }
+        
+        // 링크 직접 조회
+        async function fetchLinksDirectly() {
+            const result = document.getElementById('direct-result');
+            result.innerHTML = '<p class="info">🔄 링크 조회 중...</p>';
+            
+            try {
+                if (!supabase && window.supabase) {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
+                
+                const { data: links, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('category')
+                    .order('position');
+                
+                if (error) throw error;
+                
+                // 카테고리별 분류
+                const categories = {};
+                links.forEach(link => {
+                    if (!categories[link.category]) {
+                        categories[link.category] = [];
+                    }
+                    categories[link.category].push(link);
+                });
+                
+                let html = `<p class="success">✅ 총 ${links.length}개 링크 조회됨</p>`;
+                
+                for (const [category, categoryLinks] of Object.entries(categories)) {
+                    html += `<h4>${category} (${categoryLinks.length}개)</h4><ul>`;
+                    categoryLinks.forEach(link => {
+                        html += `<li><a href="${link.url}" target="_blank" class="info">${link.name}</a></li>`;
+                    });
+                    html += '</ul>';
+                }
+                
+                result.innerHTML = html;
+                
+                // 진단 정보 업데이트
+                updateDiagnosis(true, links.length);
+                
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ 조회 실패: ${error.message}</p>`;
+                updateDiagnosis(false, 0, error.message);
+            }
+        }
+        
+        // simple-links.html 보기
+        function showSimpleLinks() {
+            const container = document.getElementById('iframe-container');
+            const iframe = document.getElementById('simple-links-iframe');
+            
+            container.style.display = 'block';
+            iframe.src = 'simple-links.html';
+        }
+        
+        // 새 탭에서 열기
+        function openInNewTab() {
+            window.open('simple-links.html', '_blank');
+        }
+        
+        // 진단 정보 업데이트
+        function updateDiagnosis(success, linkCount = 0, error = '') {
+            const diagnosis = document.getElementById('diagnosis');
+            
+            if (success) {
+                diagnosis.innerHTML = `
+                    <h3 class="success">✅ 진단 결과: 정상</h3>
+                    <ul>
+                        <li>Supabase 연결: 정상</li>
+                        <li>데이터베이스 접근: 정상</li>
+                        <li>링크 데이터: ${linkCount}개 확인</li>
+                    </ul>
+                    <p class="info">simple-links.html 페이지가 정상적으로 작동해야 합니다.</p>
+                `;
+            } else {
+                diagnosis.innerHTML = `
+                    <h3 class="error">❌ 진단 결과: 문제 발견</h3>
+                    <p>오류: ${error}</p>
+                    <h4>해결 방법:</h4>
+                    <ol>
+                        <li>Supabase 라이브러리가 로드되었는지 확인</li>
+                        <li>Supabase URL과 Key가 올바른지 확인</li>
+                        <li>links 테이블에 대한 읽기 권한이 있는지 확인</li>
+                    </ol>
+                `;
+            }
+        }
+        
+        // 페이지 로드시 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            checkStatus();
+            
+            // Supabase 초기화 시도
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        });
+    </script>
+</body>
+</html>

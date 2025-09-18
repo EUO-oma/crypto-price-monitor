@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>CRYPTO × LIVE 💹 - Fixed Version</title>
+    <style>
+        /* 기존 스타일 유지 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid #1a1a1a;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .exchange-section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #aaa;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .price-card {
+            background: #1a1a1a;
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            border: 1px solid #333;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+
+        .price-card:hover {
+            transform: translateY(-5px);
+            border-color: #555;
+        }
+
+        .symbol {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .price {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .change {
+            font-size: 1.1em;
+        }
+
+        .change.positive { color: #4caf50; }
+        .change.negative { color: #f44336; }
+
+        .timestamp {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        /* 링크 섹션 스타일 */
+        .links-section {
+            margin-bottom: 30px;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        .links-section h3 {
+            color: #4facfe;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .link-card {
+            display: block;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #fff;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .link-card:hover {
+            background: #3a3a3a;
+            transform: translateY(-2px);
+            border-color: #666;
+        }
+
+        /* 초기화 상태 표시 */
+        .init-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1a1a1a;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid #333;
+            font-size: 0.9em;
+        }
+
+        .init-status.loading { border-color: #ff6f00; color: #ff6f00; }
+        .init-status.ready { border-color: #4caf50; color: #4caf50; }
+        .init-status.error { border-color: #f44336; color: #f44336; }
+
+        /* 채팅 버튼 */
+        .chat-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-button:hover {
+            background: #00e5ff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .chat-button:active {
+            transform: translateY(0);
+        }
+
+        .chat-button .badge {
+            background: #ff4444;
+            color: white;
+            font-size: 0.8em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .chat-button .badge.show {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="init-status loading" id="init-status">초기화 중...</div>
+    
+    <!-- 채팅 버튼 -->
+    <button class="chat-button" id="chat-button" onclick="openChat()">
+        💬 채팅
+        <span class="badge" id="chat-badge">New</span>
+    </button>
+    
+    <div class="container">
+        <h1>CRYPTO × LIVE 💹</h1>
+        
+        <!-- 암호화폐 가격 섹션 -->
+        <div class="exchange-section">
+            <h2>📊 실시간 암호화폐 가격</h2>
+            <div class="price-grid" id="crypto-prices">
+                <!-- 가격 카드들이 여기에 동적으로 생성됨 -->
+            </div>
+        </div>
+
+        <!-- 링크 섹션들 -->
+        <div class="exchange-section">
+            <h2>🔗 Quick Links</h2>
+            
+            <div class="links-section">
+                <h3>🤖 GPT Tools</h3>
+                <div class="links-grid" id="gpt-links">
+                    <div class="link-card">로딩 중...</div>
+                </div>
+            </div>
+            
+            <div class="links-section">
+                <h3>📺 YouTube Channels</h3>
+                <div class="links-grid" id="youtube-links">
+                    <div class="link-card">로딩 중...</div>
+                </div>
+            </div>
+            
+            <div class="links-section">
+                <h3>⭐ Favorite Sites</h3>
+                <div class="links-grid" id="favorite-links">
+                    <div class="link-card">로딩 중...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status">
+            <p id="ws-status">WebSocket 상태: 연결 대기중...</p>
+            <p id="supabase-status">Supabase 상태: 초기화 중...</p>
+        </div>
+    </div>
+
+    <!-- Supabase 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ========== 전역 설정 ==========
+        const CONFIG = {
+            supabase: {
+                url: 'https://ddfnxbkiewolgweivomv.supabase.co',
+                key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
+            },
+            coins: ['BTC', 'ETH', 'SOL', 'XRP', 'AVAX']
+        };
+
+        // ========== 앱 상태 관리 ==========
+        const AppState = {
+            supabase: null,
+            webSockets: {},
+            prices: {},
+            initialized: false,
+            
+            // 초기화 상태 업데이트
+            updateInitStatus(status, message) {
+                const el = document.getElementById('init-status');
+                el.className = `init-status ${status}`;
+                el.textContent = message;
+                
+                if (status === 'ready') {
+                    setTimeout(() => el.style.display = 'none', 3000);
+                }
+            }
+        };
+
+        // ========== Supabase 초기화 (단일 인스턴스) ==========
+        async function initializeSupabase() {
+            console.log('🔄 Supabase 초기화 시작...');
+            
+            // 라이브러리 로드 대기
+            let attempts = 0;
+            while (!window.supabase && attempts < 20) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+            }
+            
+            if (!window.supabase) {
+                throw new Error('Supabase 라이브러리 로드 실패');
+            }
+            
+            // 단일 클라이언트 생성
+            AppState.supabase = window.supabase.createClient(CONFIG.supabase.url, CONFIG.supabase.key);
+            
+            // 전역 참조 설정 (호환성)
+            window.supabaseClient = AppState.supabase;
+            
+            console.log('✅ Supabase 초기화 완료');
+            document.getElementById('supabase-status').textContent = 'Supabase 상태: ✅ 연결됨';
+            
+            return true;
+        }
+
+        // ========== 가격 카드 생성 ==========
+        function createPriceCards() {
+            const container = document.getElementById('crypto-prices');
+            
+            CONFIG.coins.forEach(coin => {
+                const card = document.createElement('div');
+                card.className = 'price-card';
+                card.id = `price-${coin.toLowerCase()}`;
+                card.innerHTML = `
+                    <div class="symbol">${coin}/USDT</div>
+                    <div class="price" id="${coin.toLowerCase()}-price">-</div>
+                    <div class="change" id="${coin.toLowerCase()}-change">-</div>
+                    <div class="timestamp" id="${coin.toLowerCase()}-time">-</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ========== WebSocket 연결 ==========
+        function connectWebSocket(coin) {
+            const ws = new WebSocket(`wss://fstream.binance.com/ws/${coin.toLowerCase()}usdt@ticker`);
+            
+            ws.onopen = () => {
+                console.log(`✅ ${coin} WebSocket 연결됨`);
+                updateWebSocketStatus();
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                updatePrice(coin, data);
+            };
+            
+            ws.onerror = (error) => {
+                console.error(`❌ ${coin} WebSocket 에러:`, error);
+            };
+            
+            ws.onclose = () => {
+                console.log(`🔄 ${coin} WebSocket 재연결 시도...`);
+                setTimeout(() => connectWebSocket(coin), 5000);
+            };
+            
+            AppState.webSockets[coin] = ws;
+        }
+
+        // ========== 가격 업데이트 ==========
+        function updatePrice(coin, data) {
+            const price = parseFloat(data.c);
+            const change = parseFloat(data.P);
+            
+            AppState.prices[coin] = price;
+            
+            // UI 업데이트
+            document.getElementById(`${coin.toLowerCase()}-price`).textContent = `$${price.toFixed(2)}`;
+            
+            const changeEl = document.getElementById(`${coin.toLowerCase()}-change`);
+            changeEl.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+            changeEl.className = `change ${change >= 0 ? 'positive' : 'negative'}`;
+            
+            document.getElementById(`${coin.toLowerCase()}-time`).textContent = 
+                new Date().toLocaleTimeString('ko-KR');
+        }
+
+        // ========== WebSocket 상태 업데이트 ==========
+        function updateWebSocketStatus() {
+            const connected = Object.values(AppState.webSockets).filter(ws => 
+                ws && ws.readyState === WebSocket.OPEN
+            ).length;
+            
+            document.getElementById('ws-status').textContent = 
+                `WebSocket 상태: ${connected}/${CONFIG.coins.length} 연결됨`;
+        }
+
+        // ========== 링크 로드 (단순화) ==========
+        async function loadLinks() {
+            if (!AppState.supabase) {
+                console.error('❌ Supabase가 초기화되지 않음');
+                return;
+            }
+            
+            try {
+                const { data: links, error } = await AppState.supabase
+                    .from('links')
+                    .select('*')
+                    .order('position');
+                
+                if (error) throw error;
+                
+                // 카테고리별 분류
+                const categories = {
+                    gpt: links.filter(l => l.category === 'gpt'),
+                    youtube: links.filter(l => l.category === 'youtube'),
+                    favorite: links.filter(l => l.category === 'favorite')
+                };
+                
+                // 렌더링
+                Object.entries(categories).forEach(([category, items]) => {
+                    const container = document.getElementById(`${category}-links`);
+                    if (container && items.length > 0) {
+                        container.innerHTML = items.map(link => 
+                            `<a href="${link.url}" target="_blank" class="link-card">${link.name}</a>`
+                        ).join('');
+                    }
+                });
+                
+                console.log(`✅ ${links.length}개 링크 로드 완료`);
+                
+            } catch (error) {
+                console.error('❌ 링크 로드 실패:', error);
+            }
+        }
+
+        // ========== 메인 초기화 함수 ==========
+        async function initialize() {
+            try {
+                AppState.updateInitStatus('loading', '초기화 중...');
+                
+                // 1. UI 준비
+                createPriceCards();
+                
+                // 2. Supabase 초기화 (먼저!)
+                await initializeSupabase();
+                
+                // 3. WebSocket 연결
+                CONFIG.coins.forEach(coin => connectWebSocket(coin));
+                
+                // 4. 링크 로드
+                await loadLinks();
+                
+                // 5. 완료
+                AppState.initialized = true;
+                AppState.updateInitStatus('ready', '✅ 준비 완료');
+                
+                console.log('🎉 앱 초기화 완료');
+                
+            } catch (error) {
+                console.error('❌ 초기화 실패:', error);
+                AppState.updateInitStatus('error', '초기화 실패');
+            }
+        }
+
+        // ========== 채팅 창 열기 ==========
+        function openChat() {
+            // 팝업 창 설정
+            const width = 400;
+            const height = 600;
+            const left = window.screen.width - width - 50;
+            const top = 100;
+            
+            const features = `
+                width=${width},
+                height=${height},
+                left=${left},
+                top=${top},
+                toolbar=no,
+                menubar=no,
+                scrollbars=no,
+                resizable=yes,
+                status=no
+            `.replace(/\s+/g, '');
+            
+            // 팝업 열기
+            const chatWindow = window.open('chat-popup.html', 'ChatWindow', features);
+            
+            // 포커스 주기
+            if (chatWindow) {
+                chatWindow.focus();
+                // 배지 숨기기
+                document.getElementById('chat-badge').classList.remove('show');
+            }
+        }
+        
+        // ========== 채팅 업데이트 확인 (옵션) ==========
+        async function checkChatUpdates() {
+            if (!AppState.supabase || !AppState.initialized) return;
+            
+            try {
+                // 마지막 확인 시간 가져오기 (localStorage)
+                const lastCheck = localStorage.getItem('lastChatCheck') || new Date(0).toISOString();
+                
+                const { data, error } = await AppState.supabase
+                    .from('messages')
+                    .select('created_at')
+                    .gt('created_at', lastCheck)
+                    .limit(1);
+                
+                if (!error && data && data.length > 0) {
+                    // 새 메시지가 있으면 배지 표시
+                    document.getElementById('chat-badge').classList.add('show');
+                }
+                
+            } catch (error) {
+                console.error('채팅 업데이트 확인 실패:', error);
+            }
+        }
+
+        // ========== 앱 시작 ==========
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 앱 시작...');
+            initialize();
+            
+            // 주기적으로 채팅 업데이트 확인 (30초마다)
+            setInterval(checkChatUpdates, 30000);
+        });
+        
+        // ========== 정리 작업 ==========
+        window.addEventListener('beforeunload', () => {
+            // WebSocket 연결 종료
+            Object.values(AppState.webSockets).forEach(ws => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                }
+            });
+            
+            // 마지막 확인 시간 저장
+            localStorage.setItem('lastChatCheck', new Date().toISOString());
+        });
+    </script>
+</body>
+</html>
