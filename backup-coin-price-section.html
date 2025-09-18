@@ -1,0 +1,111 @@
+<!-- BACKUP: Original Coin Price Section using Binance WebSocket -->
+<!-- Saved on: 2025-09-18 -->
+<!-- This is the original implementation with individual price cards -->
+
+<div class="exchange-section">
+    <!-- 섹션 헤더 (차트 페이지 링크 포함) -->
+    <h2><a href="dual-chart.html" style="color: inherit; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='inherit'">📈 Binance Futures Perpetual</a></h2>
+    
+    <!-- 가격 카드 그리드 컨테이너 -->
+    <div class="price-grid">
+        <a href="chart.html?symbol=BTCUSDT" class="price-card">
+            <div class="symbol"><span style="color: #f7931a;">₿</span> BTC<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
+            <div class="price" id="binance-btc">読込中...</div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                <span style="color: #aaa;"><span id="btc-high">-</span></span>
+                <span style="color: #aaa;"><span id="btc-low">-</span></span>
+            </div>
+        </a>
+        <a href="chart.html?symbol=ETHUSDT" class="price-card">
+            <div class="symbol"><span style="color: #627eea;">Ξ</span> ETH<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
+            <div class="price" id="binance-eth">読込中...</div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                <span style="color: #aaa;"><span id="eth-high">-</span></span>
+                <span style="color: #aaa;"><span id="eth-low">-</span></span>
+            </div>
+        </a>
+        <a href="chart.html?symbol=SOLUSDT" class="price-card">
+            <div class="symbol"><span style="color: #00FFA3;">◎</span> SOL<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
+            <div class="price" id="binance-sol">読込中...</div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                <span style="color: #aaa;"><span id="sol-high">-</span></span>
+                <span style="color: #aaa;"><span id="sol-low">-</span></span>
+            </div>
+        </a>
+        <a href="chart.html?symbol=XRPUSDT" class="price-card">
+            <div class="symbol"><span style="color: #00aae4;">✕</span> XRP<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
+            <div class="price" id="binance-xrp">読込中...</div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                <span style="color: #aaa;"><span id="xrp-high">-</span></span>
+                <span style="color: #aaa;"><span id="xrp-low">-</span></span>
+            </div>
+        </a>
+        <a href="chart.html?symbol=AVAXUSDT" class="price-card">
+            <div class="symbol"><span style="color: #e84142;">🔺</span> AVAX<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
+            <div class="price" id="binance-avax">読込中...</div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                <span style="color: #aaa;"><span id="avax-high">-</span></span>
+                <span style="color: #aaa;"><span id="avax-low">-</span></span>
+            </div>
+        </a>
+        <a href="chart.html?symbol=NASDAQ" class="price-card">
+            <div class="symbol"><span style="color: #00a2e8;">📈</span> NASDAQ<span style="color: #888; font-size: 0.9em;">100</span></div>
+            <div class="price" id="nasdaq-price">読込中...</div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                <span style="color: #aaa;">Day: <span id="nasdaq-change">-</span></span>
+                <span style="color: #aaa;"><span id="nasdaq-percent">-</span></span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- RELATED STYLES -->
+<style>
+.price-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.price-card {
+    background: #1a1a1a;
+    border-radius: 15px;
+    padding: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #333;
+    text-decoration: none;
+    display: block;
+}
+
+.price-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-color: #555;
+}
+
+.symbol {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #aaa;
+}
+
+.price {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.price.up {
+    color: #4caf50;
+}
+
+.price.down {
+    color: #f44336;
+}
+
+.price.neutral {
+    color: #fff;
+}
+</style>
