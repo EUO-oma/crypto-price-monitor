@@ -364,10 +364,10 @@
         </div>
         
         <div class="exchange-section">
-            <h2><a href="dual-chart.html" style="color: inherit; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='inherit'">📈 Binance Futures</a></h2>
+            <h2><a href="dual-chart.html" style="color: inherit; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='inherit'">📈 Binance Futures Perpetual</a></h2>
             <div class="price-grid">
                 <a href="chart.html?symbol=BTCUSDT" class="price-card">
-                    <div class="symbol"><span style="color: #f7931a;">₿</span> BTC<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="symbol"><span style="color: #f7931a;">₿</span> BTC<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
                     <div class="price" id="binance-btc">読込中...</div>
                     <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
                         <span style="color: #aaa;"><span id="btc-high">-</span></span>
@@ -375,7 +375,7 @@
                     </div>
                 </a>
                 <a href="chart.html?symbol=ETHUSDT" class="price-card">
-                    <div class="symbol"><span style="color: #627eea;">Ξ</span> ETH<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="symbol"><span style="color: #627eea;">Ξ</span> ETH<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
                     <div class="price" id="binance-eth">読込中...</div>
                     <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
                         <span style="color: #aaa;"><span id="eth-high">-</span></span>
@@ -383,7 +383,7 @@
                     </div>
                 </a>
                 <a href="chart.html?symbol=SOLUSDT" class="price-card">
-                    <div class="symbol"><span style="color: #00FFA3;">◎</span> SOL<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="symbol"><span style="color: #00FFA3;">◎</span> SOL<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
                     <div class="price" id="binance-sol">読込中...</div>
                     <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
                         <span style="color: #aaa;"><span id="sol-high">-</span></span>
@@ -391,7 +391,7 @@
                     </div>
                 </a>
                 <a href="chart.html?symbol=XRPUSDT" class="price-card">
-                    <div class="symbol"><span style="color: #00aae4;">✕</span> XRP<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="symbol"><span style="color: #00aae4;">✕</span> XRP<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
                     <div class="price" id="binance-xrp">読込中...</div>
                     <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
                         <span style="color: #aaa;"><span id="xrp-high">-</span></span>
@@ -399,7 +399,7 @@
                     </div>
                 </a>
                 <a href="chart.html?symbol=AVAXUSDT" class="price-card">
-                    <div class="symbol"><span style="color: #e84142;">🔺</span> AVAX<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="symbol"><span style="color: #e84142;">🔺</span> AVAX<span style="color: #888; font-size: 0.9em;">-PERP</span></div>
                     <div class="price" id="binance-avax">読込中...</div>
                     <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
                         <span style="color: #aaa;"><span id="avax-high">-</span></span>
@@ -538,8 +538,9 @@
         
         <!-- BTC 10일 가격 기록 섹션 -->
         <div class="btc-history-section" style="margin-top: 20px; padding: 20px; background: #0a0a0a; border-radius: 15px; border: 1px solid #333;">
-            <h3 style="color: #aaa; margin-bottom: 15px;">
-                <span style="color: #f7931a;">₿</span> BTC 최근 10일 기록
+            <h3 style="color: #aaa; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <span><span style="color: #f7931a;">₿</span> BTC 최근 10일 기록</span>
+                <button onclick="refreshPriceHistory()" style="padding: 5px 10px; background: #222; border: 1px solid #444; border-radius: 5px; color: #aaa; cursor: pointer; font-size: 12px;">🔄 새로고침</button>
             </h3>
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
@@ -562,8 +563,8 @@
         
         <!-- ETH 10일 가격 기록 섹션 -->
         <div class="eth-history-section" style="margin-top: 20px; padding: 20px; background: #0a0a0a; border-radius: 15px; border: 1px solid #333;">
-            <h3 style="color: #aaa; margin-bottom: 15px;">
-                <span style="color: #627eea;">Ξ</span> ETH 최근 10일 기록
+            <h3 style="color: #aaa; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <span><span style="color: #627eea;">Ξ</span> ETH 최근 10일 기록</span>
             </h3>
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
@@ -586,8 +587,8 @@
         
         <!-- SOL 10일 가격 기록 섹션 -->
         <div class="sol-history-section" style="margin-top: 20px; padding: 20px; background: #0a0a0a; border-radius: 15px; border: 1px solid #333;">
-            <h3 style="color: #aaa; margin-bottom: 15px;">
-                <span style="color: #00FFA3;">◎</span> SOL 최근 10일 기록
+            <h3 style="color: #aaa; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <span><span style="color: #00FFA3;">◎</span> SOL 최근 10일 기록</span>
             </h3>
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
@@ -889,14 +890,7 @@
                             lowElement.innerHTML = formatPrice(low);
                         }
                         
-                        // 가격 기록 저장 (매일 자정)
-                        if (symbol === 'btcusdt') {
-                            saveBTCDailyPrice(high, low, price);
-                        } else if (symbol === 'ethusdt') {
-                            saveETHDailyPrice(high, low, price);
-                        } else if (symbol === 'solusdt') {
-                            saveSOLDailyPrice(high, low, price);
-                        }
+                        // 가격 데이터는 savePriceHistory 함수에서 5분마다 자동 저장됨
                         
                         updateLastUpdate();
                     }
@@ -1230,84 +1224,6 @@
                 }
             });
         }
-        
-        // BTC 가격 기록 저장 (하루에 한 번)
-        let btcDailyData = {};
-        let lastSavedDate = null;
-        
-        function saveBTCDailyPrice(high, low, close) {
-            const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            
-            // 오늘 데이터 업데이트
-            btcDailyData = {
-                high: high,
-                low: low,
-                close: close
-            };
-            
-            // 자정이 되면 DB에 저장
-            if (now.getHours() === 0 && now.getMinutes() < 1 && lastSavedDate !== today) {
-                saveBTCToSupabase(today, high, low, close);
-                lastSavedDate = today;
-            }
-        }
-        
-        // Supabase에 BTC 가격 저장
-        async function saveBTCToSupabase(date, high, low, close) {
-            try {
-                const { error } = await supabase
-                    .from('price_history')
-                    .upsert({
-                        symbol: 'BTCUSDT',
-                        date: date,
-                        high_price: parseFloat(high),
-                        low_price: parseFloat(low),
-                        close_price: parseFloat(close)
-                    }, {
-                        onConflict: 'symbol,date'
-                    });
-                
-                if (!error) {
-                    loadBTCHistory(); // 저장 후 새로고침
-                }
-            } catch (err) {
-                console.error('BTC 가격 저장 실패:', err);
-            }
-        }
-        
-        // ETH 가격 기록 저장 (하루에 한 번)
-        let ethDailyData = {};
-        let ethLastSavedDate = null;
-        
-        function saveETHDailyPrice(high, low, close) {
-            const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            
-            ethDailyData = { high, low, close };
-            
-            if (now.getHours() === 0 && now.getMinutes() < 1 && ethLastSavedDate !== today) {
-                saveToSupabase('ETHUSDT', today, high, low, close);
-                ethLastSavedDate = today;
-            }
-        }
-        
-        // SOL 가격 기록 저장 (하루에 한 번)
-        let solDailyData = {};
-        let solLastSavedDate = null;
-        
-        function saveSOLDailyPrice(high, low, close) {
-            const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            
-            solDailyData = { high, low, close };
-            
-            if (now.getHours() === 0 && now.getMinutes() < 1 && solLastSavedDate !== today) {
-                saveToSupabase('SOLUSDT', today, high, low, close);
-                solLastSavedDate = today;
-            }
-        }
-        
         // 현재 가격 추적
         let currentPrices = {
             BTCUSDT: { high: 0, low: 999999999, current: 0 },
@@ -1382,7 +1298,7 @@
                             <td style="padding: 8px; color: #888;">${dateStr}</td>
                             <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.high_price)}</td>
                             <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.low_price)}</td>
-                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.price)}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.price || record.close_price)}</td>
                         </tr>`;
                     }).join('');
                 } else {
@@ -1432,7 +1348,7 @@
                             <td style="padding: 8px; color: #888;">${dateStr}</td>
                             <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.high_price)}</td>
                             <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.low_price)}</td>
-                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.price)}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.price || record.close_price)}</td>
                         </tr>`;
                     }).join('');
                 } else {
@@ -1478,7 +1394,7 @@
                             <td style="padding: 8px; color: #888;">${dateStr}</td>
                             <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.high_price)}</td>
                             <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.low_price)}</td>
-                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.price)}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.price || record.close_price)}</td>
                         </tr>`;
                     }).join('');
                 } else {
@@ -2077,6 +1993,11 @@
             loadBTCHistory(); // BTC 가격 기록 로드
             loadETHHistory(); // ETH 가격 기록 로드
             loadSOLHistory(); // SOL 가격 기록 로드
+
+            // 현재 가격 데이터가 있으면 바로 저장
+            setTimeout(() => {
+                savePriceHistory();
+            }, 5000); // 5초 후 첫 저장
             
             // 나스닥 데이터 로드
             fetchNasdaqData();
@@ -2129,15 +2050,15 @@
         async function savePriceHistory() {
             const today = new Date().toISOString().split('T')[0];
             console.log('가격 기록 자동 저장:', today, currentPrices);
-            
+
             // BTC 저장
             if (currentPrices.BTCUSDT && currentPrices.BTCUSDT.current > 0) {
-                await saveToSupabase('BTCUSDT', today, 
-                    currentPrices.BTCUSDT.high, 
-                    currentPrices.BTCUSDT.low, 
+                await saveToSupabase('BTCUSDT', today,
+                    currentPrices.BTCUSDT.high || currentPrices.BTCUSDT.current,
+                    currentPrices.BTCUSDT.low || currentPrices.BTCUSDT.current,
                     currentPrices.BTCUSDT.current);
             }
-            
+
             // ETH 저장
             if (currentPrices.ETHUSDT && currentPrices.ETHUSDT.current > 0) {
                 await saveToSupabase('ETHUSDT', today,
@@ -2157,9 +2078,27 @@
         
         // 5분마다 실행
         setInterval(savePriceHistory, 300000);
-        
+
         // 초기 실행 (20초 후 - WebSocket 연결 후)
         setTimeout(savePriceHistory, 20000);
+
+        // 수동 새로고침 함수
+        async function refreshPriceHistory() {
+            console.log('가격 기록 수동 새로고침 시작');
+
+            // 현재 가격 즉시 저장
+            await savePriceHistory();
+
+            // 잠시 대기 후 데이터 다시 로드
+            setTimeout(() => {
+                loadBTCHistory();
+                loadETHHistory();
+                loadSOLHistory();
+            }, 1000);
+        }
+
+        // 전역 스코프에 노출
+        window.refreshPriceHistory = refreshPriceHistory;
     </script>
     
     <!-- 관리자 설정 버튼 -->

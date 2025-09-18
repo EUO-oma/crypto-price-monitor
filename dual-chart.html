@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BTC/ETH/SOL Triple Chart Viewer</title>
     <style>
+        :root {
+            --chart-height: 400px;  /* 기본 차트 높이 */
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -62,46 +66,170 @@
             margin: 0;
         }
 
-        .chart-wrapper {
+        /* 레이아웃 1: 세로 3분할 (기본) */
+        .layout-1 .charts-container {
+            flex-direction: column;
+        }
+
+        .layout-1 .chart-wrapper {
             width: 100%;
-            height: 33.33%;  /* 3등분 */
+            /* height는 JavaScript에서 동적으로 설정 */
             overflow: hidden;
             position: relative;
             margin: 0;
             padding: 0;
-            aspect-ratio: 1 / 0.6;  /* 가로:세로 = 1:0.6 */
         }
-        
+
+        /* PC에서는 가변 높이 */
+        @media (min-width: 769px) {
+            .layout-1 .chart-wrapper {
+                height: var(--chart-height);
+            }
+        }
+
+        /* 레이아웃 2: 2개 차트 좌우 분할 (PC만) */
+        @media (min-width: 769px) {
+            .layout-2 .charts-container {
+                flex-direction: row;
+                height: var(--chart-height);
+            }
+
+            .layout-2 .chart-wrapper {
+                width: 50%;
+                height: var(--chart-height);
+            }
+
+            .layout-2 .chart-wrapper:nth-child(3) {
+                display: none;  /* 세 번째 차트 숨김 */
+            }
+
+            .layout-2 .chart-wrapper:not(:last-child) {
+                border-right: 1px solid #222;
+                border-bottom: none;
+            }
+        }
+
+        /* 레이아웃 3: 3개 차트 가로 분할 (PC만) */
+        @media (min-width: 769px) {
+            .layout-3 .charts-container {
+                flex-direction: row;
+                height: var(--chart-height);
+            }
+
+            .layout-3 .chart-wrapper {
+                width: 33.33%;
+                height: var(--chart-height);
+            }
+
+            .layout-3 .chart-wrapper:not(:last-child) {
+                border-right: 1px solid #222;
+                border-bottom: none;
+            }
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            /* 기본 높이는 JavaScript에서 설정 */
+            overflow: hidden;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* PC에서는 가변 높이 */
+        @media (min-width: 769px) {
+            .chart-wrapper {
+                height: var(--chart-height);
+            }
+        }
+
         #btc-chart, #eth-chart, #sol-chart {
             width: 100%;
             height: 100%;
         }
-        
+
         .chart-wrapper:not(:last-child) {
-            border-bottom: 1px solid #222;  /* 마지막 차트 제외하고 구분선 */
+            border-bottom: 1px solid #222;
         }
 
-        .chart-label {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 5px 10px;
-            border-radius: 3px;
+        /* 레이아웃 버튼 및 높이 조절 */
+        .layout-controls {
+            display: none;  /* 모바일에서는 숨김 */
+            gap: 20px;
+            align-items: center;
+            margin-left: auto;
+            margin-right: 20px;
+        }
+
+        .layout-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .height-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        @media (min-width: 769px) {
+            .layout-controls {
+                display: flex;
+            }
+        }
+
+        .layout-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #333;
+            background: #1a1a1a;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
             font-weight: bold;
-            z-index: 10;
+            border-radius: 5px;
         }
 
-        .btc-label {
-            color: #f7931a;
+        .layout-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
         }
 
-        .eth-label {
-            color: #627eea;
+        .layout-btn.active {
+            background: #f7931a;
+            color: #000;
+            border-color: #f7931a;
         }
-        
-        .sol-label {
-            color: #00FFA3;
+
+        .height-input {
+            width: 60px;
+            padding: 5px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 3px;
+        }
+
+        .height-btn {
+            width: 25px;
+            height: 25px;
+            border: 1px solid #333;
+            background: #1a1a1a;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .height-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
         }
 
         /* 모바일 대응 */
@@ -109,41 +237,65 @@
             .title {
                 font-size: 1.2em;
             }
-            
+
             .charts-container {
                 flex: 1;
             }
-            
+
             .chart-wrapper {
+                /* 모바일 높이도 유지 */
                 height: 33.33%;
-                aspect-ratio: 1 / 0.6;
             }
         }
     </style>
 </head>
-<body>
+<body class="layout-1">
     <div class="charts-container">
         <!-- 비트코인 차트 -->
         <div class="chart-wrapper">
-            <div class="chart-label btc-label">₿ BTC/USDT</div>
             <div id="btc-chart"></div>
         </div>
-        
+
         <!-- 이더리움 차트 -->
         <div class="chart-wrapper">
-            <div class="chart-label eth-label">Ξ ETH/USDT</div>
             <div id="eth-chart"></div>
         </div>
-        
+
         <!-- 솔라나 차트 -->
         <div class="chart-wrapper">
-            <div class="chart-label sol-label">◎ SOL/USDT</div>
             <div id="sol-chart"></div>
         </div>
     </div>
 
     <div class="footer">
         <div class="title">BTC / ETH / SOL Triple Chart</div>
+        <div class="legend" style="display: flex; gap: 20px; align-items: center;">
+            <span style="display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #f7931a;"></span>
+                <span style="color: #aaa;">BTC</span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #627eea;"></span>
+                <span style="color: #aaa;">ETH</span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #00FFA3;"></span>
+                <span style="color: #aaa;">SOL</span>
+            </span>
+        </div>
+        <div class="layout-controls">
+            <div class="height-controls">
+                <input type="number" id="heightInput" class="height-input" value="400" min="200" max="800">
+                <span style="color: #666; font-size: 12px;">px</span>
+                <button class="height-btn" onclick="adjustHeight(-10)">-</button>
+                <button class="height-btn" onclick="adjustHeight(10)">+</button>
+            </div>
+            <div class="layout-buttons">
+                <button class="layout-btn active" onclick="changeLayout(1)">1</button>
+                <button class="layout-btn" onclick="changeLayout(2)">2</button>
+                <button class="layout-btn" onclick="changeLayout(3)">3</button>
+            </div>
+        </div>
         <a href="index.html" class="back-btn">← 돌아가기</a>
     </div>
 
@@ -152,9 +304,14 @@
     <script type="text/javascript">
         // 차트 설정 함수
         function createChart(containerId, symbol, color) {
+            // 컨테이너의 실제 높이 가져오기
+            const container = document.getElementById(containerId);
+            const containerWrapper = container.parentElement;
+            const actualHeight = containerWrapper ? containerWrapper.offsetHeight : Math.floor(window.innerHeight / 3);
+
             return new TradingView.widget({
                 "width": "100%",
-                "height": "100%",
+                "height": actualHeight,  // 픽셀값으로 명시적 지정
                 "symbol": `BINANCE:${symbol}`,
                 "interval": "1",  // 1분봉
                 "timezone": "Asia/Seoul",
@@ -187,19 +344,239 @@
 
         // 페이지 로드 시 차트 생성
         window.addEventListener('DOMContentLoaded', function() {
-            // 비트코인 차트 생성
-            createChart('btc-chart', 'BTCUSDT', '#f7931a');
-            
-            // 이더리움 차트 생성
+            // 현재 레이아웃 확인
+            const currentLayout = document.body.className;
+
+            if (currentLayout === 'layout-1') {
+                // 레이아웃 1은 자동 계산
+                const autoHeight = Math.floor(window.innerHeight / 3);
+                document.getElementById('heightInput').value = autoHeight;
+
+                // 차트 wrapper와 차트 div 모두에 높이 강제 적용
+                document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                    wrapper.style.height = autoHeight + 'px';
+                    wrapper.style.minHeight = autoHeight + 'px';
+                });
+                document.querySelectorAll('#btc-chart, #eth-chart, #sol-chart').forEach(chart => {
+                    chart.style.height = '100%';
+                    chart.style.minHeight = autoHeight + 'px';
+                });
+
+                applyChartHeight(autoHeight);
+            } else {
+                // 레이아웃 2, 3은 저장된 높이값 사용
+                const savedHeight = localStorage.getItem('chartHeight') || '400';
+                document.getElementById('heightInput').value = savedHeight;
+                applyChartHeight(parseInt(savedHeight));
+            }
+
+            // 차트 div에 인라인 스타일로 높이 강제 설정
+            const chartHeight = currentLayout === 'layout-1' ?
+                Math.floor(window.innerHeight / 3) :
+                parseInt(document.getElementById('heightInput').value);
+
+            const chartDivs = ['btc-chart', 'eth-chart', 'sol-chart'];
+            chartDivs.forEach(id => {
+                const div = document.getElementById(id);
+                if (div) {
+                    div.style.height = chartHeight + 'px';
+                    div.style.minHeight = chartHeight + 'px';
+                    div.style.display = 'block';
+                }
+            });
+
+            // 차트 생성 전에 약간의 지연을 주어 DOM이 완전히 업데이트되도록 함
             setTimeout(() => {
-                createChart('eth-chart', 'ETHUSDT', '#627eea');
-            }, 1000);  // 1초 딜레이로 순차 로드
-            
-            // 솔라나 차트 생성
-            setTimeout(() => {
-                createChart('sol-chart', 'SOLUSDT', '#00FFA3');
-            }, 2000);  // 2초 딜레이로 순차 로드
+                // 비트코인 차트 생성
+                createChart('btc-chart', 'BTCUSDT', '#f7931a');
+
+                // 이더리움 차트 생성
+                setTimeout(() => {
+                    createChart('eth-chart', 'ETHUSDT', '#627eea');
+                }, 1000);  // 1초 딜레이로 순차 로드
+
+                // 솔라나 차트 생성
+                setTimeout(() => {
+                    createChart('sol-chart', 'SOLUSDT', '#00FFA3');
+                }, 2000);  // 2초 딜레이로 순차 로드
+            }, 200);  // DOM 업데이트 대기
         });
+
+        // 레이아웃 변경 함수
+        function changeLayout(layoutNumber) {
+            // 모바일에서는 동작하지 않음
+            if (window.innerWidth < 769) return;
+
+            // body 클래스 변경
+            document.body.className = 'layout-' + layoutNumber;
+
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 차트 리로드
+            setTimeout(() => {
+                location.reload();
+            }, 100);
+        }
+
+        // localStorage에 레이아웃 저장
+        function saveLayout(layoutNumber) {
+            localStorage.setItem('chartLayout', layoutNumber);
+        }
+
+        // 페이지 로드 시 저장된 레이아웃 불러오기
+        window.addEventListener('DOMContentLoaded', function() {
+            // PC에서만 레이아웃 복원
+            if (window.innerWidth >= 769) {
+                const savedLayout = localStorage.getItem('chartLayout') || '1';
+                document.body.className = 'layout-' + savedLayout;
+
+                // 버튼 활성화 상태 설정
+                document.querySelectorAll('.layout-btn').forEach((btn, index) => {
+                    btn.classList.remove('active');
+                    if (btn.textContent === savedLayout) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        });
+
+        // 레이아웃 변경 시 저장
+        window.changeLayout = function(layoutNumber) {
+            // 모바일에서는 동작하지 않음
+            if (window.innerWidth < 769) return;
+
+            saveLayout(layoutNumber);
+            document.body.className = 'layout-' + layoutNumber;
+
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === layoutNumber.toString()) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // 레이아웃 1로 변경 시 높이 자동 계산
+            if (layoutNumber === 1) {
+                const autoHeight = Math.floor(window.innerHeight / 3);
+                document.getElementById('heightInput').value = autoHeight;
+                localStorage.setItem('layout1Height', autoHeight);  // 높이 저장
+            }
+
+            // 컨트롤 상태 업데이트
+            updateHeightControlState();
+
+            // 차트 리로드 (즉시)
+            location.reload();
+        };
+
+        // 높이 조절 함수
+        function adjustHeight(change) {
+            if (window.innerWidth < 769) return;
+
+            const currentLayout = document.body.className;
+
+            // 레이아웃 1에서는 높이 조절 비활성화 (자동 계산)
+            if (currentLayout === 'layout-1') {
+                return;
+            }
+
+            const input = document.getElementById('heightInput');
+            let currentHeight = parseInt(input.value) || 400;
+            let newHeight = currentHeight + change;
+
+            // 최소/최대값 제한
+            newHeight = Math.max(200, Math.min(800, newHeight));
+
+            input.value = newHeight;
+            applyChartHeight(newHeight);
+            localStorage.setItem('chartHeight', newHeight);
+        }
+
+        // 차트 높이 적용
+        function applyChartHeight(height) {
+            if (window.innerWidth < 769) return;
+
+            const currentLayout = document.body.className;
+
+            // 레이아웃 1은 윈도우 높이 기반으로 자동 계산
+            if (currentLayout === 'layout-1') {
+                const autoHeight = Math.floor(window.innerHeight / 3);
+                document.documentElement.style.setProperty('--chart-height', autoHeight + 'px');
+                document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                    wrapper.style.height = autoHeight + 'px';
+                });
+                // 입력창에 계산된 값 표시
+                document.getElementById('heightInput').value = autoHeight;
+            } else {
+                // 레이아웃 2, 3은 사용자 설정값 사용
+                document.documentElement.style.setProperty('--chart-height', height + 'px');
+                document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                    wrapper.style.height = height + 'px';
+                });
+
+                if (currentLayout === 'layout-2' || currentLayout === 'layout-3') {
+                    document.querySelector('.charts-container').style.height = height + 'px';
+                }
+            }
+        }
+
+        // 입력창에서 직접 값 입력 시
+        document.addEventListener('DOMContentLoaded', function() {
+            const heightInput = document.getElementById('heightInput');
+            if (heightInput) {
+                heightInput.addEventListener('change', function() {
+                    const currentLayout = document.body.className;
+
+                    // 레이아웃 1에서는 수정 불가
+                    if (currentLayout === 'layout-1') {
+                        const autoHeight = Math.floor(window.innerHeight / 3);
+                        this.value = autoHeight;
+                        return;
+                    }
+
+                    let newHeight = parseInt(this.value) || 400;
+                    newHeight = Math.max(200, Math.min(800, newHeight));
+                    this.value = newHeight;
+                    applyChartHeight(newHeight);
+                    localStorage.setItem('chartHeight', newHeight);
+                });
+
+                // 레이아웃에 따라 입력창 활성화/비활성화
+                updateHeightControlState();
+            }
+        });
+
+        // 높이 컨트롤 상태 업데이트
+        function updateHeightControlState() {
+            const currentLayout = document.body.className;
+            const heightInput = document.getElementById('heightInput');
+            const heightButtons = document.querySelectorAll('.height-btn');
+
+            if (currentLayout === 'layout-1') {
+                // 레이아웃 1: 비활성화 (읽기 전용)
+                heightInput.style.opacity = '0.5';
+                heightInput.style.cursor = 'not-allowed';
+                heightInput.readOnly = true;
+                heightButtons.forEach(btn => {
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                });
+            } else {
+                // 레이아웃 2, 3: 활성화
+                heightInput.style.opacity = '1';
+                heightInput.style.cursor = 'text';
+                heightInput.readOnly = false;
+                heightButtons.forEach(btn => {
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                });
+            }
+        }
 
         // 화면 크기 변경 시 대응
         let resizeTimeout;
