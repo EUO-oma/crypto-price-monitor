@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수정된 Index.html 테스트</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #444;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 수정된 Index.html 테스트</h1>
+    
+    <div class="test-section">
+        <h2>수정 사항</h2>
+        <ul>
+            <li class="success">✅ HTML 이스케이프 함수 추가 (XSS 방지)</li>
+            <li class="success">✅ saveToSupabase 재시도 제한 추가 (무한 루프 방지)</li>
+            <li class="success">✅ 링크 렌더링 시 escapeHtml 적용</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>테스트</h2>
+        <button onclick="openIndex()">Index.html 열기</button>
+        <button onclick="testConsoleErrors()">콘솔 에러 확인</button>
+        <button onclick="checkSupabase()">Supabase 연결 확인</button>
+        <div id="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>실시간 모니터링</h2>
+        <iframe id="index-frame" src="" style="display: none;"></iframe>
+    </div>
+
+    <script>
+        function openIndex() {
+            const iframe = document.getElementById('index-frame');
+            iframe.style.display = 'block';
+            iframe.src = 'index.html';
+            
+            // iframe 로드 완료 감지
+            iframe.onload = () => {
+                document.getElementById('test-result').innerHTML = 
+                    '<p class="success">✅ Index.html 로드 완료. 개발자 도구를 열어 콘솔을 확인하세요.</p>';
+            };
+        }
+        
+        function testConsoleErrors() {
+            // 새 창에서 열어서 콘솔 확인
+            const testWindow = window.open('index.html', '_blank');
+            
+            document.getElementById('test-result').innerHTML = 
+                '<p class="info">새 창에서 index.html이 열렸습니다. F12를 눌러 콘솔을 확인하세요.</p>';
+        }
+        
+        async function checkSupabase() {
+            const result = document.getElementById('test-result');
+            result.innerHTML = '<p class="info">🔄 Supabase 연결 테스트 중...</p>';
+            
+            // Supabase 라이브러리 로드 대기
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            if (!window.supabase) {
+                // 스크립트 동적 로드
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                document.head.appendChild(script);
+                
+                await new Promise(resolve => {
+                    script.onload = resolve;
+                });
+            }
+            
+            try {
+                const supabase = window.supabase.createClient(
+                    'https://ddfnxbkiewolgweivomv.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
+                );
+                
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    result.innerHTML = `<p class="error">❌ Supabase 연결 실패: ${error.message}</p>`;
+                } else {
+                    result.innerHTML = '<p class="success">✅ Supabase 연결 성공!</p>';
+                }
+            } catch (e) {
+                result.innerHTML = `<p class="error">❌ 테스트 실패: ${e.message}</p>`;
+            }
+        }
+        
+        // 전역 에러 핸들러
+        window.addEventListener('error', (event) => {
+            console.error('전역 에러 감지:', event.error);
+        });
+    </script>
+</body>
+</html>

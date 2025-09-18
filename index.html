@@ -877,6 +877,17 @@
             return { ...defaultStyles[category], ...(savedStyles[category] || {}) };
         }
 
+        // HTML 이스케이프 함수 (XSS 방지)
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         // 채팅 팝업 열기 함수
         function openChatPopup() {
             // 팝업 창 설정
@@ -978,7 +989,7 @@
                     if (gptLinks.length > 0) {
                         const gptStyles = getCardStyles('gpt');
                         gptContainer.innerHTML = gptLinks.map(link => `
-                            <a href="${link.url}" target="_blank" style="
+                            <a href="${escapeHtml(link.url)}" target="_blank" style="
                                 background: ${gptStyles.bgColor};
                                 color: ${gptStyles.textColor};
                                 padding: 15px;
@@ -989,7 +1000,7 @@
                                 transition: transform 0.3s ease;
                                 display: block;
                             ">
-                                <div style="font-size: ${gptStyles.fontSize}px;">${link.name}</div>
+                                <div style="font-size: ${gptStyles.fontSize}px;">${escapeHtml(link.name)}</div>
                             </a>
                         `).join('');
                     } else {
@@ -1015,8 +1026,8 @@
                             display: block;
                             position: relative;
                         ">
-                            <div style="font-size: ${youtubeStyles.fontSize}px; font-weight: bold;">${link.name}</div>
-                            <span class="live-indicator" data-channel-url="${link.url}" style="
+                            <div style="font-size: ${youtubeStyles.fontSize}px; font-weight: bold;">${escapeHtml(link.name)}</div>
+                            <span class="live-indicator" data-channel-url="${escapeHtml(link.url)}" style="
                                 position: absolute;
                                 top: 5px;
                                 right: 5px;
@@ -1053,7 +1064,7 @@
                             transition: transform 0.3s ease;
                             display: block;
                         ">
-                            <div style="font-size: ${favoriteStyles.fontSize}px;">${link.name}</div>
+                            <div style="font-size: ${favoriteStyles.fontSize}px;">${escapeHtml(link.name)}</div>
                         </a>
                         `).join('');
                     } else {
@@ -1312,11 +1323,20 @@
         };
         
         // 공통 Supabase 저장 함수
-        async function saveToSupabase(symbol, date, high, low, close) {
+        // 재시도 카운터를 위한 전역 객체
+        const retryCounters = {};
+        
+        async function saveToSupabase(symbol, date, high, low, close, retryCount = 0) {
+            const MAX_RETRIES = 10;
+            
             // window.supabaseClient 확인
             if (!window.supabaseClient) {
-                console.error('Supabase client가 아직 초기화되지 않았습니다');
-                setTimeout(() => saveToSupabase(symbol, date, high, low, close), 100);
+                if (retryCount >= MAX_RETRIES) {
+                    console.error(`Supabase 초기화 실패 (${MAX_RETRIES}회 재시도 후)`);
+                    return;
+                }
+                console.log(`Supabase 초기화 대기 중... (${retryCount + 1}/${MAX_RETRIES})`);
+                setTimeout(() => saveToSupabase(symbol, date, high, low, close, retryCount + 1), 500);
                 return;
             }
             

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index.html 오류 수정 가이드</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', monospace;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .issue {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .critical { border-color: #dc2626; }
+        .warning { border-color: #f59e0b; }
+        .fix { border-color: #10b981; }
+        
+        h2 { color: #4facfe; }
+        h3 { color: #fbbf24; margin-top: 20px; }
+        
+        pre {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #333;
+        }
+        .error-code { background: #7f1d1d; color: #fecaca; }
+        .fixed-code { background: #14532d; color: #bbf7d0; }
+        
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Index.html 오류 수정 가이드</h1>
+    
+    <div class="issue critical">
+        <h2>🚨 문제 1: saveToSupabase 무한 루프 위험</h2>
+        <p>재시도 제한이 없어 무한 루프에 빠질 수 있습니다.</p>
+        
+        <h3>현재 코드 (문제):</h3>
+        <pre class="error-code">async function saveToSupabase(symbol, date, high, low, close) {
+    if (!window.supabaseClient) {
+        console.error('Supabase client가 아직 초기화되지 않았습니다');
+        setTimeout(() => saveToSupabase(symbol, date, high, low, close), 100);
+        return;
+    }
+    // ...
+}</pre>
+        
+        <h3>수정된 코드:</h3>
+        <pre class="fixed-code">// 재시도 카운터를 위한 전역 변수
+const retryCounters = {};
+
+async function saveToSupabase(symbol, date, high, low, close, retryCount = 0) {
+    const MAX_RETRIES = 10;
+    
+    if (!window.supabaseClient) {
+        if (retryCount >= MAX_RETRIES) {
+            console.error(`Supabase 초기화 실패 (${MAX_RETRIES}회 재시도 후)`);
+            return;
+        }
+        console.log(`Supabase 초기화 대기 중... (${retryCount + 1}/${MAX_RETRIES})`);
+        setTimeout(() => saveToSupabase(symbol, date, high, low, close, retryCount + 1), 500);
+        return;
+    }
+    // ... 나머지 코드
+}</pre>
+    </div>
+    
+    <div class="issue warning">
+        <h2>⚠️ 문제 2: XSS 취약점 (innerHTML 사용)</h2>
+        <p>사용자 입력값을 이스케이프하지 않고 innerHTML에 직접 삽입하면 XSS 공격에 취약합니다.</p>
+        
+        <h3>안전한 HTML 이스케이프 함수 추가:</h3>
+        <pre class="fixed-code">function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// 사용 예시
+gptContainer.innerHTML = gptLinks.map(link => `
+    <a href="${escapeHtml(link.url)}" target="_blank" style="...">
+        <div>${escapeHtml(link.name)}</div>
+    </a>
+`).join('');</pre>
+    </div>
+    
+    <div class="issue warning">
+        <h2>⚠️ 문제 3: 복잡한 중첩 템플릿 리터럴</h2>
+        <p>가독성이 떨어지고 디버깅이 어렵습니다.</p>
+        
+        <h3>함수로 분리하여 개선:</h3>
+        <pre class="fixed-code">function createVideoThumbnail(videoInfo, settings) {
+    if (!settings.showThumbnails) return '';
+    
+    return `
+        <div style="width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; position: relative;">
+            <img src="${escapeHtml(videoInfo.thumbnail)}" 
+                 style="width: 100%; height: 100%; object-fit: cover;"
+                 onerror="this.src='https://via.placeholder.com/320x180?text=No+Thumbnail'">
+        </div>
+    `;
+}
+
+function createVideoCard(videoInfo, settings) {
+    return `
+        ${createVideoThumbnail(videoInfo, settings)}
+        <div style="padding: 12px;">
+            <div style="font-size: ${settings.fontSize}px; font-weight: 600;">
+                ${escapeHtml(videoInfo.title)}
+            </div>
+            ${settings.showAuthor ? createAuthorInfo(videoInfo, settings) : ''}
+        </div>
+    `;
+}</pre>
+    </div>
+    
+    <div class="issue fix">
+        <h2>✅ 문제 4: 인라인 이벤트 핸들러</h2>
+        <p>addEventListener를 사용하여 더 안전하게 처리합니다.</p>
+        
+        <h3>개선된 코드:</h3>
+        <pre class="fixed-code">// HTML 생성
+const linkElement = document.createElement('a');
+linkElement.href = link.url;
+linkElement.target = '_blank';
+linkElement.className = 'link-card';
+linkElement.textContent = link.name;
+
+// 이벤트 리스너 추가
+linkElement.addEventListener('mouseover', function() {
+    this.style.transform = 'translateY(-3px)';
+    this.style.borderColor = '#555';
+});
+
+linkElement.addEventListener('mouseout', function() {
+    this.style.transform = 'translateY(0)';
+    this.style.borderColor = '#333';
+});
+
+container.appendChild(linkElement);</pre>
+    </div>
+    
+    <div class="issue fix">
+        <h2>✅ 빠른 수정 스크립트</h2>
+        <button onclick="generateFixedCode()">수정된 코드 생성</button>
+        <div id="fixed-code-output"></div>
+    </div>
+    
+    <script>
+        function generateFixedCode() {
+            const output = document.getElementById('fixed-code-output');
+            
+            const fixedCode = `
+// 1. HTML 이스케이프 함수 추가
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// 2. 재시도 제한이 있는 saveToSupabase
+async function saveToSupabase(symbol, date, high, low, close, retryCount = 0) {
+    const MAX_RETRIES = 10;
+    
+    if (!window.supabaseClient) {
+        if (retryCount >= MAX_RETRIES) {
+            console.error(\`Supabase 초기화 실패 (최대 재시도 횟수 초과)\`);
+            return;
+        }
+        console.log(\`Supabase 초기화 대기 중... (\${retryCount + 1}/\${MAX_RETRIES})\`);
+        setTimeout(() => saveToSupabase(symbol, date, high, low, close, retryCount + 1), 500);
+        return;
+    }
+    
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('price_history')
+            .insert([{
+                symbol: symbol,
+                date: date,
+                high: high,
+                low: low, 
+                close: close
+            }]);
+
+        if (error) {
+            console.error(\`데이터 저장 실패 (\${symbol}):\`, error);
+        } else {
+            console.log(\`데이터 저장 성공 (\${symbol}):\`, date);
+        }
+    } catch (error) {
+        console.error(\`saveToSupabase 오류 (\${symbol}):\`, error);
+    }
+}
+
+// 3. 안전한 링크 생성 함수
+function createSafeLinkElement(link, styles) {
+    const element = document.createElement('a');
+    element.href = link.url;
+    element.target = '_blank';
+    element.textContent = link.name;
+    
+    // 스타일 적용
+    Object.assign(element.style, {
+        background: styles.bgColor || '#1a1a1a',
+        color: styles.textColor || '#fff',
+        padding: '15px',
+        borderRadius: '10px',
+        textAlign: 'center',
+        border: \`1px solid \${styles.borderColor || '#333'}\`,
+        textDecoration: 'none',
+        transition: 'transform 0.3s ease',
+        display: 'block'
+    });
+    
+    // 이벤트 리스너
+    element.addEventListener('mouseover', () => {
+        element.style.transform = 'translateY(-3px)';
+    });
+    
+    element.addEventListener('mouseout', () => {
+        element.style.transform = 'translateY(0)';
+    });
+    
+    return element;
+}
+`;
+            
+            output.innerHTML = `
+                <h3>수정된 코드를 index.html에 추가하세요:</h3>
+                <pre class="fixed-code">${escapeHtml(fixedCode)}</pre>
+                <p style="margin-top: 20px;">
+                    <strong>적용 방법:</strong><br>
+                    1. 위 코드를 복사하여 index.html의 &lt;script&gt; 태그 시작 부분에 추가<br>
+                    2. 기존 saveToSupabase 함수를 새 버전으로 교체<br>
+                    3. innerHTML을 사용하는 부분에서 escapeHtml() 함수 사용<br>
+                    4. 가능한 경우 createElement를 사용하여 DOM 요소 생성
+                </p>
+            `;
+        }
+        
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
