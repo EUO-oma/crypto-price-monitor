@@ -408,30 +408,55 @@
         // 링크 목록 로드
         async function loadLinks() {
             const container = document.getElementById('links-container');
-            
+
             try {
-                const links = await fetchLinks();
-                
+                // 모든 링크를 가져오기
+                const { data: allLinks, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('category', { ascending: true })
+                    .order('position', { ascending: true });
+
+                if (error) throw error;
+
+                // 카테고리별로 그룹화
+                const linksByCategory = {};
+                allLinks.forEach(link => {
+                    if (!linksByCategory[link.category]) {
+                        linksByCategory[link.category] = [];
+                    }
+                    linksByCategory[link.category].push(link);
+                });
+
                 let html = '';
-                
-                // YouTube 링크
-                if (links.youtube.length > 0) {
-                    html += '<h3 style="margin: 20px 0 10px;">🎬 YouTube</h3>';
-                    html += createTable(links.youtube, 'youtube');
-                }
-                
-                // Favorite 링크
-                if (links.favorites.length > 0) {
-                    html += '<h3 style="margin: 20px 0 10px;">⭐ Favorites</h3>';
-                    html += createTable(links.favorites, 'favorite');
-                }
-                
-                // GPT 링크
-                if (links.gpt.length > 0) {
-                    html += '<h3 style="margin: 20px 0 10px;">🤖 GPT Tools</h3>';
-                    html += createTable(links.gpt, 'gpt');
-                }
-                
+
+                // 카테고리 순서 정의 (기본 카테고리 먼저)
+                const categoryOrder = ['youtube', 'favorite', 'gpt', 'fun-youtube'];
+                const customCats = Object.keys(linksByCategory).filter(cat => !categoryOrder.includes(cat));
+                const allCategories = [...categoryOrder, ...customCats];
+
+                // 카테고리 이름 매핑
+                const categoryNames = {
+                    'youtube': '🎬 YouTube',
+                    'favorite': '⭐ Favorites',
+                    'gpt': '🤖 GPT Tools',
+                    'fun-youtube': '🎮 Fun YouTube'
+                };
+
+                // 커스텀 카테고리 이름 추가
+                customCategories.forEach(cat => {
+                    categoryNames[cat.id] = `📌 ${cat.name}`;
+                });
+
+                // 모든 카테고리 렌더링
+                allCategories.forEach(category => {
+                    if (linksByCategory[category] && linksByCategory[category].length > 0) {
+                        const displayName = categoryNames[category] || `📁 ${category}`;
+                        html += `<h3 style="margin: 20px 0 10px;">${displayName}</h3>`;
+                        html += createTable(linksByCategory[category], category);
+                    }
+                });
+
                 container.innerHTML = html || '<p>등록된 링크가 없습니다.</p>';
                 
                 // 드래그 앤 드롭 초기화
@@ -557,8 +582,10 @@
 
         // 드래그 앤 드롭 초기화
         function initSortable() {
-            ['youtube', 'favorite', 'gpt', 'fun-youtube'].forEach(category => {
-                const element = document.getElementById(`sortable-${category}`);
+            // 모든 sortable tbody 요소를 찾아서 초기화
+            const allSortables = document.querySelectorAll('[id^="sortable-"]');
+            allSortables.forEach(element => {
+                const category = element.id.replace('sortable-', '');
                 if (element) {
                     new Sortable(element, {
                         handle: '.drag-handle',
