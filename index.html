@@ -1160,21 +1160,19 @@
                             linkElement.href = link.url || '#';
                             linkElement.target = '_blank';
                             
-                            // 스타일 적용 (cssText 사용)
-                            linkElement.style.cssText = `
-                                background: ${youtubeStyles.bgColor || '#1a1a1a'};
-                                color: ${youtubeStyles.textColor || '#ffffff'};
-                                padding: ${youtubeStyles.padding || 15}px;
-                                border-radius: ${youtubeStyles.borderRadius || 10}px;
-                                text-align: center;
-                                border: ${youtubeStyles.borderWidth || 1}px solid ${youtubeStyles.borderColor || '#333333'};
-                                text-decoration: none;
-                                transition: transform 0.3s ease;
-                                display: block;
-                                position: relative;
-                                font-weight: ${youtubeStyles.fontWeight || '600'};
-                                cursor: pointer;
-                            `;
+                            // 스타일 적용 (개별 속성으로 안전하게)
+                            linkElement.style.background = youtubeStyles.bgColor || '#1a1a1a';
+                            linkElement.style.color = youtubeStyles.textColor || '#ffffff';
+                            linkElement.style.padding = (youtubeStyles.padding || 15) + 'px';
+                            linkElement.style.borderRadius = (youtubeStyles.borderRadius || 10) + 'px';
+                            linkElement.style.textAlign = 'center';
+                            linkElement.style.border = `${youtubeStyles.borderWidth || 1}px solid ${youtubeStyles.borderColor || '#333333'}`;
+                            linkElement.style.textDecoration = 'none';
+                            linkElement.style.transition = 'transform 0.3s ease';
+                            linkElement.style.display = 'block';
+                            linkElement.style.position = 'relative';
+                            linkElement.style.fontWeight = youtubeStyles.fontWeight || '600';
+                            linkElement.style.cursor = 'pointer';
                             
                             const textDiv = document.createElement('div');
                             textDiv.style.fontSize = `${youtubeStyles.fontSize || 17}px`;
@@ -1238,20 +1236,18 @@
                             linkElement.href = link.url || '#';
                             linkElement.target = '_blank';
                             
-                            // 스타일 적용 (cssText 사용)
-                            linkElement.style.cssText = `
-                                background: ${favoriteStyles.bgColor || '#1a1a1a'};
-                                color: ${favoriteStyles.textColor || '#ffffff'};
-                                padding: ${favoriteStyles.padding || 15}px;
-                                border-radius: ${favoriteStyles.borderRadius || 10}px;
-                                text-align: center;
-                                border: ${favoriteStyles.borderWidth || 1}px solid ${favoriteStyles.borderColor || '#333333'};
-                                text-decoration: none;
-                                transition: transform 0.3s ease;
-                                display: block;
-                                font-weight: ${favoriteStyles.fontWeight || '500'};
-                                cursor: pointer;
-                            `;
+                            // 스타일 적용 (개별 속성으로 안전하게)
+                            linkElement.style.background = favoriteStyles.bgColor || '#1a1a1a';
+                            linkElement.style.color = favoriteStyles.textColor || '#ffffff';
+                            linkElement.style.padding = (favoriteStyles.padding || 15) + 'px';
+                            linkElement.style.borderRadius = (favoriteStyles.borderRadius || 10) + 'px';
+                            linkElement.style.textAlign = 'center';
+                            linkElement.style.border = `${favoriteStyles.borderWidth || 1}px solid ${favoriteStyles.borderColor || '#333333'}`;
+                            linkElement.style.textDecoration = 'none';
+                            linkElement.style.transition = 'transform 0.3s ease';
+                            linkElement.style.display = 'block';
+                            linkElement.style.fontWeight = favoriteStyles.fontWeight || '500';
+                            linkElement.style.cursor = 'pointer';
                             
                             const textDiv = document.createElement('div');
                             textDiv.style.fontSize = `${favoriteStyles.fontSize || 16}px`;
