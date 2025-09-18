@@ -838,11 +838,9 @@
 
         function startRain() {
             if (!rainActive) {
+                stopAllEffects();
                 rainActive = true;
                 document.getElementById('rainToggle').classList.add('active');
-                // Stop other effects
-                stopSnow();
-                stopMatrix();
                 // Start rain
                 for (let i = 0; i < 10; i++) {
                     setTimeout(() => createRaindrop(), i * 100);
@@ -904,11 +902,9 @@
 
         function startMatrix() {
             if (!matrixActive) {
+                stopAllEffects();
                 matrixActive = true;
                 document.getElementById('matrixToggle').classList.add('active');
-                // Stop other effects
-                stopSnow();
-                stopRain();
                 // Change background for better effect
                 document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #000000, #001100)';
                 // Start Matrix rain
@@ -931,13 +927,19 @@
             }
         }
 
-        // Update snow functions to stop other effects
+        // Update snow function to stop other effects
         const originalStartSnow = startSnow;
         startSnow = function() {
             if (!snowActive) {
-                stopRain();
-                stopMatrix();
-                originalStartSnow();
+                stopAllEffects();
+                snowActive = true;
+                document.getElementById('snowToggle').classList.add('active');
+                // Create initial snowflakes
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createSnowflake(), i * 200);
+                }
+                // Continue creating snowflakes
+                snowInterval = setInterval(createSnowflake, 800);
             }
         };
 
@@ -1293,30 +1295,6 @@
             }
         }
 
-        // Update existing effects to use stopAllEffects
-        const originalStartSnow = startSnow;
-        startSnow = function() {
-            if (!snowActive) {
-                stopAllEffects();
-                originalStartSnow();
-            }
-        };
-
-        const originalStartRain = startRain;
-        startRain = function() {
-            if (!rainActive) {
-                stopAllEffects();
-                originalStartRain();
-            }
-        };
-
-        const originalStartMatrix = startMatrix;
-        startMatrix = function() {
-            if (!matrixActive) {
-                stopAllEffects();
-                originalStartMatrix();
-            }
-        };
 
         // Add event listeners for new effects
         document.getElementById('heavyRainToggle').addEventListener('click', () => {
