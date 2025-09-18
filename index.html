@@ -1417,8 +1417,15 @@
         
         // 공통 Supabase 저장 함수
         async function saveToSupabase(symbol, date, high, low, close) {
+            // window.supabaseClient 확인
+            if (!window.supabaseClient) {
+                console.error('Supabase client가 아직 초기화되지 않았습니다');
+                setTimeout(() => saveToSupabase(symbol, date, high, low, close), 100);
+                return;
+            }
+            
             try {
-                const { error } = await supabase
+                const { error } = await window.supabaseClient
                     .from('price_history')
                     .upsert({
                         symbol: symbol,
@@ -1443,8 +1450,16 @@
         // BTC 10일 가격 기록 불러오기
         async function loadBTCHistory() {
             console.log('BTC 기록 로드 시작');
+            
+            // window.supabaseClient 확인
+            if (!window.supabaseClient) {
+                console.error('Supabase client가 아직 초기화되지 않았습니다');
+                setTimeout(loadBTCHistory, 100);
+                return;
+            }
+            
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('price_history')
                     .select('*')
                     .eq('symbol', 'BTCUSDT')
@@ -1499,8 +1514,15 @@
         
         // ETH 10일 가격 기록 불러오기
         async function loadETHHistory() {
+            // window.supabaseClient 확인
+            if (!window.supabaseClient) {
+                console.error('Supabase client가 아직 초기화되지 않았습니다');
+                setTimeout(loadETHHistory, 100);
+                return;
+            }
+            
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('price_history')
                     .select('*')
                     .eq('symbol', 'ETHUSDT')
@@ -1545,8 +1567,15 @@
         
         // SOL 10일 가격 기록 불러오기
         async function loadSOLHistory() {
+            // window.supabaseClient 확인
+            if (!window.supabaseClient) {
+                console.error('Supabase client가 아직 초기화되지 않았습니다');
+                setTimeout(loadSOLHistory, 100);
+                return;
+            }
+            
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('price_history')
                     .select('*')
                     .eq('symbol', 'SOLUSDT')
@@ -1635,8 +1664,15 @@
         // 채팅 메시지 로드
         async function loadChatMessages() {
             try {
+                // supabase 클라이언트 확인
+                if (!window.supabaseClient) {
+                    console.log('채팅 로드 대기 중 (Supabase 클라이언트 없음)');
+                    setTimeout(loadChatMessages, 1000);
+                    return;
+                }
+                
                 console.log('채팅 메시지 로드 시작...');
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('messages')
                     .select('*')
                     .order('created_at', { ascending: true })
@@ -1959,6 +1995,13 @@
         async function sendMessage() {
             console.log('sendMessage 함수 시작');
             
+            // window.supabaseClient 확인
+            if (!window.supabaseClient) {
+                console.error('Supabase client가 아직 초기화되지 않았습니다');
+                setTimeout(sendMessage, 100);
+                return;
+            }
+            
             const input = document.getElementById('chat-input');
             const sendButton = document.getElementById('chat-send');
             
@@ -1988,7 +2031,7 @@
                 console.log('메시지 전송시 Browser ID:', browserId);
                 
                 // 메시지 전송
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('messages')
                     .insert([{ 
                         message: message,
@@ -2003,7 +2046,7 @@
                     
                     // 테이블 구조 문제일 수 있으므로 browser_id 없이 재시도
                     console.log('browser_id 없이 재시도');
-                    const { data: retryData, error: retryError } = await supabase
+                    const { data: retryData, error: retryError } = await window.supabaseClient
                         .from('messages')
                         .insert([{ message: message }])
                         .select();
@@ -2038,12 +2081,19 @@
         function subscribeToChatUpdates() {
             console.log('채팅 실시간 구독 시작');
             
+            // window.supabaseClient 확인
+            if (!window.supabaseClient) {
+                console.error('Supabase client가 아직 초기화되지 않았습니다');
+                setTimeout(subscribeToChatUpdates, 100);
+                return;
+            }
+            
             // 기존 채널 구독 해제
             if (chatChannel) {
                 chatChannel.unsubscribe();
             }
             
-            chatChannel = supabase
+            chatChannel = window.supabaseClient
                 .channel('chat-channel-' + Date.now())
                 .on('postgres_changes', 
                     { event: 'INSERT', schema: 'public', table: 'messages' },
@@ -2225,29 +2275,38 @@
             setupChatListeners();
             subscribeToChatUpdates();
             
-            // 실시간 업데이트 구독 (선택사항)
-            const subscription = supabase
-                .channel('links-channel')
-                .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'links' }, 
-                    () => {
-                        loadLinksFromSupabase(); // 변경사항 발생시 자동 새로고침
-                    }
-                )
-                .subscribe();
-            
-            // 가격 기록 실시간 업데이트
-            const priceHistorySubscription = supabase
-                .channel('price-history-channel')
-                .on('postgres_changes',
-                    { event: '*', schema: 'public', table: 'price_history' },
-                    (payload) => {
-                        if (payload.new && payload.new.symbol === 'BTCUSDT') loadBTCHistory();
-                        if (payload.new && payload.new.symbol === 'ETHUSDT') loadETHHistory();
-                        if (payload.new && payload.new.symbol === 'SOLUSDT') loadSOLHistory();
-                    }
-                )
-                .subscribe();
+            // Supabase 실시간 구독은 클라이언트가 초기화된 후에 설정
+            setTimeout(() => {
+                if (window.supabaseClient) {
+                    // 실시간 업데이트 구독 (선택사항)
+                    const subscription = window.supabaseClient
+                        .channel('links-channel')
+                        .on('postgres_changes', 
+                            { event: '*', schema: 'public', table: 'links' }, 
+                            () => {
+                                loadLinksFromSupabase(); // 변경사항 발생시 자동 새로고침
+                            }
+                        )
+                        .subscribe();
+                    
+                    // 가격 기록 실시간 업데이트
+                    const priceHistorySubscription = window.supabaseClient
+                        .channel('price-history-channel')
+                        .on('postgres_changes',
+                            { event: '*', schema: 'public', table: 'price_history' },
+                            (payload) => {
+                                if (payload.new && payload.new.symbol === 'BTCUSDT') loadBTCHistory();
+                                if (payload.new && payload.new.symbol === 'ETHUSDT') loadETHHistory();
+                                if (payload.new && payload.new.symbol === 'SOLUSDT') loadSOLHistory();
+                            }
+                        )
+                        .subscribe();
+                    
+                    console.log('✓ Supabase 실시간 구독 설정 완료');
+                } else {
+                    console.log('⚠️ Supabase 실시간 구독 건너뜀 (클라이언트 없음)');
+                }
+            }, 2000);
         });
         
         // 5분마다 YouTube 라이브 상태 재확인
