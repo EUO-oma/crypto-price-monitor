@@ -299,40 +299,37 @@
                 <!-- TradingView Widget END -->
             </div>
             
-            <!-- TradingView Crypto Tickers Widget -->
-            <div style="border-radius: 10px; overflow: hidden;">
-                <!-- TradingView Widget BEGIN -->
-                <div class="tradingview-widget-container">
-                  <div class="tradingview-widget-container__widget"></div>
-                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-tickers.js" async>
-                  {
-                  "symbols": [
-                    {
-                      "proName": "BINANCE:BTCUSDT",
-                      "title": "BTC/USDT"
-                    },
-                    {
-                      "proName": "BINANCE:ETHUSDT", 
-                      "title": "ETH/USDT"
-                    },
-                    {
-                      "proName": "BINANCE:SOLUSDT",
-                      "title": "SOL/USDT"
-                    },
-                    {
-                      "proName": "NASDAQ:NDX",
-                      "title": "NASDAQ 100"
-                    }
-                  ],
-                  "colorTheme": "dark",
-                  "isTransparent": true,
-                  "showSymbolLogo": true,
-                  "locale": "en",
-                  "largeChartUrl": ""
-                  }
-                  </script>
+            <!-- Custom Crypto Price Display -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                <!-- BTC Price Card -->
+                <div style="background: #1a1a1a; border-radius: 10px; padding: 20px; border: 1px solid #333;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: #f7931a; font-size: 1.2em; font-weight: bold;">₿ BTC</span>
+                        <span style="color: #666; font-size: 0.9em;">USDT</span>
+                    </div>
+                    <div id="btc-price-custom" style="font-size: 2.5em; font-weight: bold; color: #fff; margin-bottom: 5px;">Loading...</div>
+                    <div id="btc-change-custom" style="font-size: 1em; color: #4caf50;">-</div>
                 </div>
-                <!-- TradingView Widget END -->
+                
+                <!-- ETH Price Card -->
+                <div style="background: #1a1a1a; border-radius: 10px; padding: 20px; border: 1px solid #333;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: #627eea; font-size: 1.2em; font-weight: bold;">Ξ ETH</span>
+                        <span style="color: #666; font-size: 0.9em;">USDT</span>
+                    </div>
+                    <div id="eth-price-custom" style="font-size: 2.5em; font-weight: bold; color: #fff; margin-bottom: 5px;">Loading...</div>
+                    <div id="eth-change-custom" style="font-size: 1em; color: #4caf50;">-</div>
+                </div>
+                
+                <!-- SOL Price Card -->
+                <div style="background: #1a1a1a; border-radius: 10px; padding: 20px; border: 1px solid #333;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: #00FFA3; font-size: 1.2em; font-weight: bold;">◎ SOL</span>
+                        <span style="color: #666; font-size: 0.9em;">USDT</span>
+                    </div>
+                    <div id="sol-price-custom" style="font-size: 2.5em; font-weight: bold; color: #fff; margin-bottom: 5px;">Loading...</div>
+                    <div id="sol-change-custom" style="font-size: 1em; color: #4caf50;">-</div>
+                </div>
             </div>
         </div>
 
@@ -785,12 +782,12 @@
             }
         }
 
-        // Binance WebSocket
+        // Binance WebSocket for custom price cards
         function connectBinance() {
-            const symbols = ['btcusdt', 'ethusdt', 'solusdt', 'xrpusdt', 'avaxusdt'];
+            const symbols = ['btcusdt', 'ethusdt', 'solusdt'];
             
             symbols.forEach(symbol => {
-                const ws = new WebSocket(`wss://fstream.binance.com/ws/${symbol}@ticker`);
+                const ws = new WebSocket(`wss://stream.binance.com/ws/${symbol}@ticker`);
                 
 
                 ws.onmessage = function(event) {
@@ -818,6 +815,37 @@
                         if (priceElement) {
                             priceElement.innerHTML = formatPrice(price);
                             priceElement.classList.remove('loading');
+                        }
+                        
+                        // Custom price cards 업데이트
+                        const customPriceElement = document.getElementById(`${coinName}-price-custom`);
+                        const customChangeElement = document.getElementById(`${coinName}-change-custom`);
+                        
+                        if (customPriceElement) {
+                            const priceNum = parseFloat(price);
+                            const change = parseFloat(data.P || 0); // 24h 변화율 %
+                            const changeAmount = parseFloat(data.p || 0); // 24h 변화량
+                            
+                            customPriceElement.textContent = `$${priceNum.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })}`;
+                            
+                            // 가격 색상 변경
+                            if (change > 0) {
+                                customPriceElement.style.color = '#4caf50';
+                            } else if (change < 0) {
+                                customPriceElement.style.color = '#f44336';
+                            } else {
+                                customPriceElement.style.color = '#fff';
+                            }
+                            
+                            // 변화량 표시
+                            if (customChangeElement) {
+                                const sign = change >= 0 ? '+' : '';
+                                customChangeElement.textContent = `${sign}${changeAmount.toFixed(2)} (${sign}${change.toFixed(2)}%)`;
+                                customChangeElement.style.color = change >= 0 ? '#4caf50' : '#f44336';
+                            }
                         }
                         
                         // 최고가/최저가 업데이트
@@ -859,8 +887,8 @@
             el.classList.add('loading');
         });
 
-        // WebSocket 연결 시작 - DISABLED (Using TradingView Widget instead)
-        // connectBinance();
+        // WebSocket 연결 시작 - Re-enabled for custom price cards
+        connectBinance();
         
         // Fun YouTube view toggle function
         function toggleFunYoutubeView(view) {
@@ -2015,8 +2043,8 @@
         function startCryptoSystem() {
             console.log('💰 코인 데이터 시스템 시작...');
             
-            // Binance WebSocket 연결 - DISABLED (Using TradingView Widget instead)
-            // connectBinance();
+            // Binance WebSocket 연결 - Re-enabled for custom price cards
+            connectBinance();
             
             console.log('✅ 코인 데이터 시스템 시작 완료');
         }
