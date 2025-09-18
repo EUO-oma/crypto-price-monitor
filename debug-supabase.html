@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Supabase Debug Page</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .success { color: #4caf50; font-weight: bold; }
+        .error { color: #f44336; font-weight: bold; }
+        .info { color: #2196f3; }
+        .warning { color: #ff9800; }
+        .log {
+            margin: 5px 0;
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 5px;
+            border-left: 3px solid #444;
+        }
+        .log.success { border-left-color: #4caf50; }
+        .log.error { border-left-color: #f44336; }
+        .log.info { border-left-color: #2196f3; }
+        .log.warning { border-left-color: #ff9800; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #data-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: #333;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #222;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase Connection Debug</h1>
+
+    <div class="section">
+        <h2>Test Controls</h2>
+        <button onclick="testDirectConnection()">Test Direct Connection</button>
+        <button onclick="testWithConfig()">Test with Config File</button>
+        <button onclick="fetchAllLinks()">Fetch All Links</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+        <button onclick="location.reload()">Reload Page</button>
+    </div>
+
+    <div class="section">
+        <h2>Connection Status</h2>
+        <div id="status">Checking...</div>
+    </div>
+
+    <div class="section">
+        <h2>Debug Logs</h2>
+        <div id="logs"></div>
+    </div>
+
+    <div class="section">
+        <h2>Data Display</h2>
+        <div id="data-display">No data fetched yet</div>
+    </div>
+
+    <!-- Step 1: Load Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+        const dataDisplay = document.getElementById('data-display');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            div.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logs.appendChild(div);
+            console.log(`[${type}] ${message}`);
+        }
+
+        function clearLogs() {
+            logs.innerHTML = '';
+            dataDisplay.innerHTML = 'No data fetched yet';
+            log('Logs cleared', 'info');
+        }
+
+        // Test 1: Direct Connection (without config file)
+        async function testDirectConnection() {
+            log('=== Testing Direct Connection ===', 'info');
+
+            const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+
+            try {
+                if (!window.supabase) {
+                    throw new Error('Supabase library not loaded');
+                }
+
+                log('Creating Supabase client...', 'info');
+                const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+                if (!client) {
+                    throw new Error('Failed to create client');
+                }
+
+                log('✓ Client created successfully', 'success');
+
+                // Test connection
+                log('Testing connection with links table...', 'info');
+                const { data, error, count } = await client
+                    .from('links')
+                    .select('*', { count: 'exact' });
+
+                if (error) {
+                    throw error;
+                }
+
+                log(`✓ Connection successful! Found ${data?.length || 0} links`, 'success');
+                status.innerHTML = '<span class="success">✅ Direct Connection Working</span>';
+
+                // Display data
+                dataDisplay.innerHTML = `<strong>Links Data (${data?.length || 0} items):</strong>\n\n${JSON.stringify(data, null, 2)}`;
+
+                // Test by category
+                const categories = ['youtube', 'favorite', 'gpt'];
+                for (const category of categories) {
+                    const { data: catData, error: catError } = await client
+                        .from('links')
+                        .select('*')
+                        .eq('category', category);
+
+                    if (catError) {
+                        log(`✗ Error fetching ${category}: ${catError.message}`, 'error');
+                    } else {
+                        log(`✓ Found ${catData?.length || 0} ${category} links`, 'success');
+                    }
+                }
+
+                return client;
+
+            } catch (error) {
+                log(`✗ Direct connection failed: ${error.message}`, 'error');
+                status.innerHTML = `<span class="error">❌ Direct Connection Failed: ${error.message}</span>`;
+                return null;
+            }
+        }
+
+        // Test 2: With Config File
+        async function testWithConfig() {
+            log('=== Testing with Config File ===', 'info');
+
+            // Load config file
+            const script = document.createElement('script');
+            script.src = 'supabase-config.js';
+            script.onload = async () => {
+                log('Config file loaded', 'info');
+
+                // Wait a bit for initialization
+                setTimeout(async () => {
+                    if (typeof supabase !== 'undefined' && supabase) {
+                        log('✓ Global supabase variable found', 'success');
+
+                        try {
+                            const { data, error } = await supabase
+                                .from('links')
+                                .select('*');
+
+                            if (error) throw error;
+
+                            log(`✓ Config file connection successful! Found ${data?.length || 0} links`, 'success');
+                            status.innerHTML = '<span class="success">✅ Config File Connection Working</span>';
+                            dataDisplay.innerHTML = `<strong>Links via Config (${data?.length || 0} items):</strong>\n\n${JSON.stringify(data, null, 2)}`;
+
+                        } catch (error) {
+                            log(`✗ Config file connection failed: ${error.message}`, 'error');
+                            status.innerHTML = `<span class="error">❌ Config File Connection Failed</span>`;
+                        }
+                    } else {
+                        log('✗ Global supabase variable not found', 'error');
+
+                        // Try calling initializeSupabase if it exists
+                        if (typeof initializeSupabase === 'function') {
+                            log('Calling initializeSupabase()...', 'info');
+                            const result = initializeSupabase();
+                            log(`initializeSupabase returned: ${result}`, result ? 'success' : 'warning');
+
+                            if (supabase) {
+                                await testWithConfig(); // Retry
+                            }
+                        }
+                    }
+                }, 1000);
+            };
+
+            script.onerror = () => {
+                log('✗ Failed to load config file', 'error');
+            };
+
+            document.head.appendChild(script);
+        }
+
+        // Test 3: Fetch all links using fetchLinks function
+        async function fetchAllLinks() {
+            log('=== Testing fetchLinks Function ===', 'info');
+
+            if (typeof fetchLinks === 'function') {
+                try {
+                    log('Calling fetchLinks()...', 'info');
+                    const links = await fetchLinks();
+
+                    log(`✓ fetchLinks successful!`, 'success');
+                    log(`  - YouTube: ${links.youtube?.length || 0} links`, 'info');
+                    log(`  - Favorites: ${links.favorites?.length || 0} links`, 'info');
+                    log(`  - GPT: ${links.gpt?.length || 0} links`, 'info');
+
+                    dataDisplay.innerHTML = `<strong>fetchLinks() Result:</strong>\n\n${JSON.stringify(links, null, 2)}`;
+
+                } catch (error) {
+                    log(`✗ fetchLinks failed: ${error.message}`, 'error');
+                }
+            } else {
+                log('✗ fetchLinks function not found. Load config file first.', 'warning');
+            }
+        }
+
+        // Initial checks
+        window.addEventListener('DOMContentLoaded', () => {
+            log('Page loaded', 'info');
+
+            // Check if Supabase library is loaded
+            if (window.supabase) {
+                log('✓ Supabase library is loaded', 'success');
+                log(`  - Type: ${typeof window.supabase}`, 'info');
+                log(`  - createClient: ${typeof window.supabase.createClient}`, 'info');
+            } else {
+                log('✗ Supabase library NOT loaded', 'error');
+            }
+
+            // Check for global supabase client
+            if (typeof supabase !== 'undefined') {
+                log('✓ Global supabase variable exists', 'info');
+                log(`  - Value: ${supabase}`, 'info');
+            } else {
+                log('⚠ Global supabase variable not found (config not loaded yet)', 'warning');
+            }
+        });
+
+        // Network monitoring
+        window.addEventListener('online', () => {
+            log('✓ Network connection restored', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            log('✗ Network connection lost', 'error');
+        });
+    </script>
+</body>
+</html>

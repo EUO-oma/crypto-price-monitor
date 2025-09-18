@@ -44,51 +44,59 @@ window.addEventListener('load', function() {
     }
 });
 
-// 링크 데이터 가져오기
+// 링크 데이터 가져오기 (index.html과 동일한 방식으로 수정)
 async function fetchLinks() {
+    console.log('[fetchLinks] Starting fetchLinks function');
+    console.log('[fetchLinks] supabase client status:', supabase ? 'available' : 'not available');
+
     if (!supabase) {
         console.error('[supabase-config.js] Supabase client not available in fetchLinks');
+        console.log('[fetchLinks] Attempting to initialize...');
         initializeSupabase(); // 한 번 더 시도
         if (!supabase) {
+            console.error('[fetchLinks] Still no supabase client after initialization attempt');
             return { youtube: [], favorites: [], gpt: [] };
         }
     }
 
     try {
-        // YouTube 채널 가져오기
-        const { data: youtubeLinks, error: ytError } = await supabase
+        console.log('[fetchLinks] Fetching all links at once...');
+
+        // 모든 링크를 한 번에 가져오기 (index.html 방식과 동일)
+        const { data: links, error } = await supabase
             .from('links')
             .select('*')
-            .eq('category', 'youtube')
-            .order('position');
+            .order('position', { ascending: true });
 
-        if (ytError) throw ytError;
+        if (error) {
+            console.error('[fetchLinks] Supabase error:', error);
+            console.error('[fetchLinks] Error details:', error.message, error.code);
+            throw error;
+        }
 
-        // Favorite 사이트 가져오기
-        const { data: favoriteLinks, error: favError } = await supabase
-            .from('links')
-            .select('*')
-            .eq('category', 'favorite')
-            .order('position');
+        console.log('[fetchLinks] All links loaded:', links?.length || 0);
 
-        if (favError) throw favError;
+        // 카테고리별로 링크 분류 (클라이언트에서 필터링)
+        const youtubeLinks = links ? links.filter(link => link.category === 'youtube') : [];
+        const favoriteLinks = links ? links.filter(link => link.category === 'favorite') : [];
+        const gptLinks = links ? links.filter(link => link.category === 'gpt') : [];
 
-        // GPT 도구 링크 가져오기
-        const { data: gptLinks, error: gptError } = await supabase
-            .from('links')
-            .select('*')
-            .eq('category', 'gpt')
-            .order('position');
+        console.log('[fetchLinks] YouTube links found:', youtubeLinks.length);
+        console.log('[fetchLinks] Favorite links found:', favoriteLinks.length);
+        console.log('[fetchLinks] GPT links found:', gptLinks.length);
 
-        if (gptError) throw gptError;
-
-        return {
-            youtube: youtubeLinks || [],
-            favorites: favoriteLinks || [],
-            gpt: gptLinks || []
+        const result = {
+            youtube: youtubeLinks,
+            favorites: favoriteLinks, // 주의: 'favorites' (복수형)
+            gpt: gptLinks
         };
+
+        console.log('[fetchLinks] Final result:', result);
+        return result;
+
     } catch (error) {
-        console.error('Error fetching links:', error);
+        console.error('[fetchLinks] Error fetching links:', error);
+        console.error('[fetchLinks] Error details:', error.message, error.details, error.hint);
         return { youtube: [], favorites: [], gpt: [] };
     }
 }
