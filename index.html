@@ -161,62 +161,6 @@
             }
         }
         
-        /* 커스텀 스크롤바 스타일 (웹킷 브라우저) */
-        #chat-container::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        #chat-container::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 10px;
-            margin: 5px;
-        }
-        
-        #chat-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #444 0%, #222 100%);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        #chat-container::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #555 0%, #333 100%);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-        
-        #chat-container::-webkit-scrollbar-thumb:active {
-            background: linear-gradient(180deg, #666 0%, #444 100%);
-        }
-        
-        /* Firefox 스크롤바 */
-        #chat-container {
-            scrollbar-width: thin;
-            scrollbar-color: #444 rgba(0, 0, 0, 0.4);
-        }
-        
-        /* 채팅 컨테이너 호버 시 스크롤바 더 선명하게 */
-        #chat-container:hover::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #555 0%, #333 100%);
-            box-shadow: 0 0 3px rgba(255, 255, 255, 0.1);
-        }
-        
-        /* 채팅 메시지 반응형 스타일 */
-        .message-content-wrapper {
-            display: flex;
-            align-items: flex-end;
-            gap: 5px;
-        }
-        
-        .my-message-wrapper {
-            display: flex;
-            align-items: flex-end;
-            gap: 5px;
-        }
-        
-        .message-time {
-            margin-bottom: 5px;
-            white-space: nowrap;
-        }
         
         /* 모바일 스타일 (화면 너비 768px 이하) */
         @media (max-width: 768px) {
@@ -245,18 +189,6 @@
                 padding: 12px;
             }
             
-            /* 채팅 섹션 모바일 최적화 */
-            .chat-section {
-                padding: 10px !important;
-                margin-top: 15px !important;
-                border-radius: 0 !important;
-            }
-            
-            #chat-container {
-                border-radius: 10px !important;
-                height: 350px !important;
-                padding: 10px !important;
-            }
             
             /* 헤더 카드 모바일 최적화 */
             .header-card {
@@ -276,39 +208,6 @@
                 padding: 10px 5px !important;
             }
             
-            /* 모바일에서 스크롤바 숨기기 */
-            #chat-container::-webkit-scrollbar {
-                width: 4px;
-                opacity: 0.5;
-            }
-            
-            #chat-container::-webkit-scrollbar-thumb {
-                background: rgba(255, 255, 255, 0.2);
-            }
-            
-            .message-content-wrapper {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 2px;
-            }
-            
-            .my-message-wrapper {
-                flex-direction: column-reverse;
-                align-items: flex-end;
-                gap: 2px;
-            }
-            
-            .message-time {
-                margin-bottom: 2px;
-                margin-left: 5px;
-                font-size: 10px !important;
-                opacity: 0.8;
-            }
-            
-            .my-message-wrapper .message-time {
-                margin-left: 0;
-                margin-right: 5px;
-            }
         }
     </style>
 </head>
@@ -417,56 +316,24 @@
             </div>
         </div>
 
-        <!-- 익명 채팅 섹션 -->
-        <div class="chat-section" style="margin-top: 30px; padding: 20px 0; border-top: 1px solid #333; border-bottom: 1px solid #333;">
-            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
-                💬 Anonymous Chat
-            </h2>
-            <div id="chat-container" style="background: linear-gradient(to bottom, #1a1a1a, #0f0f0f); border-radius: 15px; padding: 10px; height: 400px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #333; scroll-behavior: smooth; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);">
-                <div id="chat-messages" style="display: flex; flex-direction: column; width: 100%;">
-                    <!-- 메시지들이 여기에 표시됩니다 -->
-                </div>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <input type="text" 
-                    id="chat-input" 
-                    placeholder="메시지를 입력하세요..." 
-                    maxlength="200" 
-                    autocomplete="off"
-                    autocorrect="off"
-                    autocapitalize="off"
-                    spellcheck="false"
-                    style="flex: 1; padding: 10px 15px; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 20px; font-size: 14px; -webkit-appearance: none; outline: none;"
-                    onfocus="this.style.borderColor='#555'" 
-                    onblur="this.style.borderColor='#333'">
-                <button type="button" 
-                    id="chat-send" 
-                    onclick="sendMessage()" 
-                    style="
-                        width: 40px; 
-                        height: 40px; 
-                        background: #000; 
-                        border: 1px solid #333; 
-                        border-radius: 50%; 
-                        cursor: pointer; 
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center;
-                        transition: all 0.2s;
-                        -webkit-appearance: none; 
-                        touch-action: manipulation;
-                        padding: 0;
-                    "
-                    onmouseover="this.style.transform='scale(1.1)'; this.style.background='#222'" 
-                    onmouseout="this.style.transform='scale(1)'; this.style.background='#000'">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 2px;">
-                        <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="#fff"/>
-                    </svg>
-                </button>
-            </div>
-            <div style="margin-top: 10px; font-size: 12px; color: #666; text-align: center;">
-                익명 채팅 • 메시지는 7일 후 자동 삭제됩니다 • 최대 100개 메시지 유지
-            </div>
+        
+        <!-- 채팅 버튼 섹션 -->
+        <div style="margin-top: 30px; margin-bottom: 30px; text-align: center;">
+            <button onclick="openChatPopup()" style="
+                padding: 12px 24px;
+                background: linear-gradient(135deg, #4facfe 0%, #00e5ff 100%);
+                color: #fff;
+                border: none;
+                border-radius: 30px;
+                font-weight: 600;
+                font-size: 16px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(79, 172, 254, 0.4)'" 
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(79, 172, 254, 0.3)'">
+                💬 실시간 채팅
+            </button>
         </div>
         
         <div class="gpt-section" style="margin-top: 20px; padding-bottom: 20px;">
@@ -1008,6 +875,35 @@
                 }
             };
             return { ...defaultStyles[category], ...(savedStyles[category] || {}) };
+        }
+
+        // 채팅 팝업 열기 함수
+        function openChatPopup() {
+            // 팝업 창 설정
+            const width = 400;
+            const height = 600;
+            const left = window.screen.width - width - 50;
+            const top = 100;
+            
+            const features = `
+                width=${width},
+                height=${height},
+                left=${left},
+                top=${top},
+                toolbar=no,
+                menubar=no,
+                scrollbars=no,
+                resizable=yes,
+                status=no
+            `.replace(/\s+/g, '');
+            
+            // 팝업 열기
+            const chatWindow = window.open('chat-popup.html', 'ChatWindow', features);
+            
+            // 포커스 주기
+            if (chatWindow) {
+                chatWindow.focus();
+            }
         }
 
         // Supabase에서 링크 데이터 로드
@@ -1618,558 +1514,18 @@
             }
         }
         
-        // 채팅 기능
-        let chatChannel = null;
         
-        // 브라우저 fingerprint 생성 (모바일 호환 버전)
-        function getBrowserFingerprint() {
-            // localStorage에서 기존 ID 확인 (영구 보존)
-            let storedId = localStorage.getItem('persistent_browser_id');
-            
-            if (storedId) {
-                console.log('기존 Browser ID 사용:', storedId);
-                return storedId;
-            }
-            
-            // 새 ID 생성 (처음 접속시)
-            try {
-                const isMobile = /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent);
-                const deviceType = isMobile ? 'M' : 'D'; // Mobile 또는 Desktop
-                const timestamp = Date.now().toString(36);
-                const randomStr = Math.random().toString(36).substring(2, 9);
-                
-                // 형식: M_timestamp_random 또는 D_timestamp_random
-                const newId = `${deviceType}_${timestamp}_${randomStr}`;
-                
-                // localStorage에 영구 저장
-                localStorage.setItem('persistent_browser_id', newId);
-                localStorage.setItem('browser_id', newId); // 호환성을 위해 두 곳에 저장
-                
-                console.log('새 Browser ID 생성:', newId, {
-                    디바이스: isMobile ? '모바일' : '데스크탑',
-                    화면: `${screen.width}x${screen.height}`,
-                    언어: navigator.language
-                });
-                
-                return newId;
-            } catch (e) {
-                // 에러 발생시 간단한 ID 생성
-                const fallbackId = 'F_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 5);
-                localStorage.setItem('persistent_browser_id', fallbackId);
-                console.error('Browser ID 생성 에러, fallback 사용:', fallbackId);
-                return fallbackId;
-            }
-        }
         
-        // 채팅 메시지 로드
-        async function loadChatMessages() {
-            try {
-                // supabase 클라이언트 확인
-                if (!window.supabaseClient) {
-                    console.log('채팅 로드 대기 중 (Supabase 클라이언트 없음)');
-                    setTimeout(loadChatMessages, 1000);
-                    return;
-                }
-                
-                console.log('채팅 메시지 로드 시작...');
-                const { data, error } = await window.supabaseClient
-                    .from('messages')
-                    .select('*')
-                    .order('created_at', { ascending: true })
-                    .limit(100);
-                
-                if (error) {
-                    console.error('채팅 메시지 로드 실패:', error);
-                    const messagesContainer = document.getElementById('chat-messages');
-                    if (messagesContainer) {
-                        messagesContainer.innerHTML = `<div style="color: #f44; padding: 10px;">메시지 로드 실패: ${error.message}</div>`;
-                    }
-                    return;
-                }
-                
-                console.log('로드된 메시지:', data);
-                const messagesContainer = document.getElementById('chat-messages');
-                if (messagesContainer) {
-                    if (data && data.length > 0) {
-                        messagesContainer.innerHTML = data.map(msg => createMessageElement(msg)).join('');
-                    } else {
-                        messagesContainer.innerHTML = '<div style="color: #666; text-align: center; padding: 10px;">아직 메시지가 없습니다. 첫 메시지를 보내보세요!</div>';
-                    }
-                    scrollToBottom();
-                }
-            } catch (error) {
-                console.error('채팅 로드 중 오류:', error);
-                const messagesContainer = document.getElementById('chat-messages');
-                if (messagesContainer) {
-                    messagesContainer.innerHTML = `<div style="color: #f44; padding: 10px;">오류 발생: ${error.message}</div>`;
-                }
-            }
-        }
         
-        // 코인 목록 - 안정적인 CDN 이미지 URL 사용  
-        const coinAvatars = [
-            { id: 'btc', name: 'Bitcoin', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/btc.png', color: '#f7931a' },
-            { id: 'eth', name: 'Ethereum', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/eth.png', color: '#627eea' },
-            { id: 'bnb', name: 'BNB', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/bnb.png', color: '#f3ba2f' },
-            { id: 'xrp', name: 'XRP', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/xrp.png', color: '#23292f' },
-            { id: 'sol', name: 'Solana', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/sol.png', color: '#14f195' },
-            { id: 'ada', name: 'Cardano', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/ada.png', color: '#0033ad' },
-            { id: 'doge', name: 'Dogecoin', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/doge.png', color: '#c3a634' },
-            { id: 'avax', name: 'Avalanche', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/avax.png', color: '#e84142' },
-            { id: 'dot', name: 'Polkadot', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/dot.png', color: '#e6007a' },
-            { id: 'matic', name: 'Polygon', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/matic.png', color: '#8247e5' },
-            { id: 'link', name: 'Chainlink', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/link.png', color: '#2a5ada' },
-            { id: 'uni', name: 'Uniswap', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/uni.png', color: '#ff007a' },
-            { id: 'atom', name: 'Cosmos', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/atom.png', color: '#2e3148' },
-            { id: 'ltc', name: 'Litecoin', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/ltc.png', color: '#bfbbbb' },
-            { id: 'xlm', name: 'Stellar', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/xlm.png', color: '#14b8a6' },
-            { id: 'algo', name: 'Algorand', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/algo.png', color: '#000000' },
-            { id: 'vet', name: 'VeChain', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/vet.png', color: '#15bdff' },
-            { id: 'icp', name: 'ICP', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/icp.png', color: '#29abe2' },
-            { id: 'fil', name: 'Filecoin', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/fil.png', color: '#0090ff' },
-            { id: 'sand', name: 'Sandbox', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/sand.png', color: '#04adef' },
-            { id: 'mana', name: 'Decentraland', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/mana.png', color: '#ff2d55' },
-            { id: 'trx', name: 'Tron', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/trx.png', color: '#ff0013' },
-            { id: 'near', name: 'NEAR', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/near.png', color: '#000000' },
-            { id: 'mkr', name: 'Maker', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/mkr.png', color: '#1aab9b' },
-            { id: 'aave', name: 'Aave', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/aave.png', color: '#b6509e' },
-            { id: 'crv', name: 'Curve', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/crv.png', color: '#fffc33' },
-            { id: 'grt', name: 'The Graph', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/grt.png', color: '#6f4cff' },
-            { id: 'shib', name: 'Shiba Inu', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/shib.png', color: '#fda32b' },
-            { id: 'ftm', name: 'Fantom', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/ftm.png', color: '#1969ff' },
-            { id: 'eos', name: 'EOS', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/eos.png', color: '#000000' }
-        ];
         
-        // 사용자별 고정 코인 아바타 할당
-        const userAvatarMap = {}; // 사용자 ID -> 코인 아바타 맵핑
-        const usedAvatarIndices = new Set(); // 이미 사용된 아바타 인덱스
         
-        function getCoinAvatar(userId) {
-            // userId가 없거나 유효하지 않은 경우 기본값(비트코인) 반환
-            if (!userId || userId === 'undefined' || userId === 'null') {
-                return coinAvatars[0]; // 기본값은 비트코인
-            }
-            
-            // 이미 할당된 아바타가 있으면 반환
-            if (userAvatarMap[userId]) {
-                return userAvatarMap[userId];
-            }
-            
-            // 새로운 사용자에게 코인 할당
-            let avatarIndex;
-            
-            // 아직 사용 안 된 코인이 있으면 순차적으로 할당
-            if (usedAvatarIndices.size < coinAvatars.length) {
-                for (let i = 0; i < coinAvatars.length; i++) {
-                    if (!usedAvatarIndices.has(i)) {
-                        avatarIndex = i;
-                        break;
-                    }
-                }
-            } else {
-                // 모든 코인이 사용 중이면 해시 기반 할당
-                let hashNum = 0;
-                for (let i = 0; i < Math.min(userId.length, 10); i++) {
-                    hashNum += userId.charCodeAt(i) * (i + 1);
-                }
-                avatarIndex = hashNum % coinAvatars.length;
-            }
-            
-            // avatarIndex가 유효하지 않은 경우 기본값 사용
-            if (avatarIndex === undefined || avatarIndex < 0 || avatarIndex >= coinAvatars.length) {
-                avatarIndex = 0;
-            }
-            
-            // 아바타 할당 및 저장
-            const avatar = coinAvatars[avatarIndex];
-            userAvatarMap[userId] = avatar;
-            usedAvatarIndices.add(avatarIndex);
-            
-            // localStorage에도 저장 (영구 보존)
-            try {
-                const savedMappings = JSON.parse(localStorage.getItem('userCoinAvatars') || '{}');
-                savedMappings[userId] = avatarIndex;
-                localStorage.setItem('userCoinAvatars', JSON.stringify(savedMappings));
-            } catch (e) {
-                console.error('아바타 맵핑 저장 실패:', e);
-            }
-            
-            return avatar;
-        }
         
-        // 페이지 로드 시 저장된 맵핑 복원
-        function loadSavedAvatarMappings() {
-            try {
-                const savedMappings = JSON.parse(localStorage.getItem('userCoinAvatars') || '{}');
-                for (const [userId, avatarIndex] of Object.entries(savedMappings)) {
-                    if (avatarIndex < coinAvatars.length) {
-                        userAvatarMap[userId] = coinAvatars[avatarIndex];
-                        usedAvatarIndices.add(avatarIndex);
-                    }
-                }
-                console.log('코인 아바타 맵핑 복원:', Object.keys(userAvatarMap).length, '명');
-            } catch (e) {
-                console.error('아바타 맵핑 로드 실패:', e);
-            }
-        }
         
-        // 메시지 요소 생성 (카카오톡 스타일)
-        function createMessageElement(message) {
-            const time = new Date(message.created_at).toLocaleTimeString('ko-KR', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            
-            // 현재 브라우저의 fingerprint와 비교
-            const currentBrowserId = getBrowserFingerprint();
-            const isMyMessage = message.browser_id === currentBrowserId || 
-                               message.browser_id === localStorage.getItem('chat_browser_id');
-            
-            // 브라우저 ID 저장 (일관성 유지)
-            if (isMyMessage && message.browser_id) {
-                localStorage.setItem('chat_browser_id', message.browser_id);
-            }
-            
-            // 디바이스 정보 표시 텍스트
-            let deviceInfo = '';
-            if (message.device_type || message.browser_name) {
-                const parts = [];
-                if (message.device_type) {
-                    const icon = message.device_type === 'Mobile' ? '📱' : 
-                                message.device_type === 'Tablet' ? '📋' : '💻';
-                    parts.push(icon + ' ' + message.device_type);
-                }
-                if (message.browser_name) parts.push(message.browser_name);
-                if (message.os_name) parts.push(message.os_name);
-                if (parts.length > 0) {
-                    deviceInfo = parts.join(' · ');
-                }
-            }
-            
-            // 사용자의 코인 아바타 가져오기 (browser_id 기반)
-            const userIdentifier = message.browser_id || message.ip_hash || `user_${message.id}`;
-            const coinAvatar = getCoinAvatar(userIdentifier);
-            
-            if (isMyMessage) {
-                // 내 메시지 (좌측 정렬로 변경) - 전체 너비 사용
-                return `
-                    <div data-message-id="${message.id}" style="
-                        display: flex;
-                        margin-bottom: 10px;
-                        width: 100%;
-                    ">
-                        <div style="
-                            width: 36px;
-                            height: 36px;
-                            border-radius: 50%;
-                            margin-right: 8px;
-                            background: ${coinAvatar.color || '#fff'};
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            overflow: hidden;
-                            position: relative;
-                            flex-shrink: 0;
-                        ">
-                            <img src="${coinAvatar.image}"
-                                style="
-                                    width: 100%;
-                                    height: 100%;
-                                    object-fit: contain;
-                                    padding: 4px;
-                                "
-                                alt="${coinAvatar.name}"
-                                onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIGZpbGw9IiNmN2EwMGMiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7CpzwvdGV4dD48L3N2Zz4='">
-                        </div>
-                        <div style="
-                            flex-grow: 1;
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                            min-width: 0;
-                            width: calc(100% - 44px);
-                        ">
-                            <div class="message-bubble" style="
-                                background: #1a1a1a;
-                                color: #fff;
-                                padding: 8px 12px;
-                                border-radius: 15px;
-                                border-top-left-radius: 4px;
-                                font-size: 14px;
-                                line-height: 1.4;
-                                word-wrap: break-word;
-                                border: 1px solid #444;
-                                flex-grow: 1;
-                                min-width: 0;
-                            ">
-                                ${escapeHtml(message.message)}
-                            </div>
-                            <span class="message-time" style="color: #666; font-size: 11px; flex-shrink: 0; width: 45px;">
-                                ${time}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            } else {
-                // 다른 사람 메시지 (왼쪽 정렬)
-                return `
-                    <div data-message-id="${message.id}" style="
-                        display: flex;
-                        margin-bottom: 10px;
-                        width: 100%;
-                    ">
-                        <div style="
-                            width: 36px;
-                            height: 36px;
-                            border-radius: 50%;
-                            margin-right: 8px;
-                            background: ${coinAvatar.color || '#fff'};
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            overflow: hidden;
-                            position: relative;
-                            flex-shrink: 0;
-                        ">
-                            <img src="${coinAvatar.image}"
-                                style="
-                                    width: 100%;
-                                    height: 100%;
-                                    object-fit: contain;
-                                    padding: 4px;
-                                "
-                                alt="${coinAvatar.name}"
-                                onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIGZpbGw9IiNmN2EwMGMiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7CpzwvdGV4dD48L3N2Zz4='">
-                        </div>
-                        <div style="
-                            flex-grow: 1;
-                            display: flex;
-                            flex-direction: column;
-                            gap: 2px;
-                            min-width: 0;
-                            width: calc(100% - 44px);
-                        ">
-                            ${deviceInfo ? `<div style="color: #888; font-size: 11px; margin-left: 5px;">${deviceInfo}</div>` : ''}
-                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
-                                <div class="message-bubble" style="
-                                    background: #000;
-                                    color: #fff;
-                                    padding: 8px 12px;
-                                    border-radius: 15px;
-                                    border-top-left-radius: 4px;
-                                    font-size: 14px;
-                                    line-height: 1.4;
-                                    word-wrap: break-word;
-                                    border: 1px solid #333;
-                                    flex-grow: 1;
-                                    min-width: 0;
-                                ">
-                                    ${escapeHtml(message.message)}
-                                </div>
-                                <span class="message-time" style="color: #666; font-size: 11px; flex-shrink: 0; width: 45px;">
-                                    ${time}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
         
-        // HTML 이스케이프
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
         
-        // 스크롤을 맨 아래로
-        function scrollToBottom() {
-            const container = document.getElementById('chat-container');
-            if (container) {
-                container.scrollTop = container.scrollHeight;
-            }
-        }
         
-        // 메시지 전송 (디버깅 포함)
-        async function sendMessage() {
-            console.log('sendMessage 함수 시작');
-            
-            // window.supabaseClient 확인
-            if (!window.supabaseClient) {
-                console.error('Supabase client가 아직 초기화되지 않았습니다');
-                setTimeout(sendMessage, 100);
-                return;
-            }
-            
-            const input = document.getElementById('chat-input');
-            const sendButton = document.getElementById('chat-send');
-            
-            console.log('입력 요소:', input);
-            console.log('버튼 요소:', sendButton);
-            console.log('입력값:', input?.value);
-            
-            if (!input || !input.value.trim()) {
-                console.log('입력값이 비어있음');
-                return;
-            }
-            
-            const message = input.value.trim();
-            console.log('전송할 메시지:', message);
-            
-            // UI 상태 변경
-            if (sendButton) {
-                sendButton.disabled = true;
-                sendButton.style.opacity = '0.5';
-            }
-            
-            try {
-                console.log('Supabase 전송 시작');
-                
-                // browser_id 생성 (기존 함수 사용하여 일관성 유지)
-                const browserId = getBrowserFingerprint();
-                console.log('메시지 전송시 Browser ID:', browserId);
-                
-                // 메시지 전송
-                const { data, error } = await window.supabaseClient
-                    .from('messages')
-                    .insert([{ 
-                        message: message,
-                        browser_id: browserId
-                    }])
-                    .select();
-                
-                console.log('Supabase 응답:', { data, error });
-                
-                if (error) {
-                    console.error('전송 에러 상세:', error);
-                    
-                    // 테이블 구조 문제일 수 있으므로 browser_id 없이 재시도
-                    console.log('browser_id 없이 재시도');
-                    const { data: retryData, error: retryError } = await window.supabaseClient
-                        .from('messages')
-                        .insert([{ message: message }])
-                        .select();
-                    
-                    if (retryError) {
-                        console.error('재시도도 실패:', retryError);
-                        alert(`메시지 전송 실패\n에러: ${retryError.message}\n\n관리자에게 문의하세요.`);
-                    } else {
-                        console.log('재시도 성공:', retryData);
-                        input.value = '';
-                        await loadChatMessages();
-                    }
-                } else {
-                    console.log('전송 성공:', data);
-                    input.value = '';
-                    await loadChatMessages();
-                }
-                
-            } catch (error) {
-                console.error('예외 발생:', error);
-                alert('메시지 전송 중 오류가 발생했습니다: ' + error.message);
-            } finally {
-                // 버튼 재활성화
-                if (sendButton) {
-                    sendButton.disabled = false;
-                    sendButton.style.opacity = '1';
-                }
-            }
-        }
         
-        // 실시간 구독 설정
-        function subscribeToChatUpdates() {
-            console.log('채팅 실시간 구독 시작');
-            
-            // window.supabaseClient 확인
-            if (!window.supabaseClient) {
-                console.error('Supabase client가 아직 초기화되지 않았습니다');
-                setTimeout(subscribeToChatUpdates, 100);
-                return;
-            }
-            
-            // 기존 채널 구독 해제
-            if (chatChannel) {
-                chatChannel.unsubscribe();
-            }
-            
-            chatChannel = window.supabaseClient
-                .channel('chat-channel-' + Date.now())
-                .on('postgres_changes', 
-                    { event: 'INSERT', schema: 'public', table: 'messages' },
-                    (payload) => {
-                        console.log('새 메시지 수신:', payload);
-                        const messagesContainer = document.getElementById('chat-messages');
-                        if (messagesContainer && payload.new) {
-                            // 이미 표시된 메시지인지 확인
-                            const existingMessage = document.querySelector(`[data-message-id="${payload.new.id}"]`);
-                            if (!existingMessage) {
-                                messagesContainer.innerHTML += createMessageElement(payload.new);
-                                scrollToBottom();
-                            }
-                            
-                            // 100개 이상이면 오래된 메시지 제거
-                            const messages = messagesContainer.children;
-                            while (messages.length > 100) {
-                                messages[0].remove();
-                            }
-                        }
-                    }
-                )
-                .subscribe((status) => {
-                    console.log('채팅 구독 상태:', status);
-                });
         
-            // 20초마다 메시지 새로고침 (fallback)
-            setInterval(async () => {
-                await loadChatMessages();
-            }, 20000);
-        }
-        
-        // 채팅 이벤트 리스너 설정
-        function setupChatListeners() {
-            console.log('채팅 리스너 설정 시작');
-            
-            const input = document.getElementById('chat-input');
-            const button = document.getElementById('chat-send');
-            
-            if (input) {
-                console.log('입력 필드 이벤트 설정');
-                
-                // Enter 키 처리
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' || e.keyCode === 13) {
-                        console.log('Enter 키 감지');
-                        e.preventDefault();
-                        sendMessage();
-                    }
-                });
-            }
-            
-            // 버튼 클릭 이벤트 (추가 보장)
-            if (button) {
-                console.log('버튼 이벤트 설정');
-                
-                // 기존 onclick 제거하고 새로 추가
-                button.onclick = null;
-                
-                // 클릭 이벤트
-                button.addEventListener('click', (e) => {
-                    console.log('버튼 클릭 이벤트');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    sendMessage();
-                });
-                
-                // 터치 이벤트 (모바일)
-                button.addEventListener('touchend', (e) => {
-                    console.log('버튼 터치 이벤트');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    sendMessage();
-                });
-            }
-        }
         
         // 나스닥 지수 가져오기 (Yahoo Finance API 대체)
         async function fetchNasdaqData() {
@@ -2216,8 +1572,6 @@
         
         // 페이지 로드시 링크 데이터 가져오기
         window.addEventListener('DOMContentLoaded', () => {
-            // 저장된 아바타 맵핑 복원
-            loadSavedAvatarMappings();
 
             // 모듈화된 링크 로딩 사용
             async function loadLinksUsingModule() {
@@ -2270,10 +1624,6 @@
             // 1분마다 나스닥 업데이트 (실제 API 사용 시)
             setInterval(fetchNasdaqData, 60000);
             
-            // 채팅 기능 초기화
-            loadChatMessages();
-            setupChatListeners();
-            subscribeToChatUpdates();
             
             // Supabase 실시간 구독은 클라이언트가 초기화된 후에 설정
             setTimeout(() => {
