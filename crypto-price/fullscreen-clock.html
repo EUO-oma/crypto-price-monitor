@@ -242,11 +242,10 @@
             animation: snowfall linear, sway ease-in-out infinite;
         }
 
-        /* Toggle button for snow effect */
-        .snow-toggle {
+        /* Toggle buttons for effects */
+        .effect-toggle {
             position: absolute;
             top: 40px;
-            right: 100px;
             width: 50px;
             height: 50px;
             background: rgba(255, 255, 255, 0.1);
@@ -258,11 +257,24 @@
             justify-content: center;
             transition: all 0.3s ease;
             z-index: 100;
+            font-size: 1.2em;
         }
 
-        .snow-toggle:hover {
+        .effect-toggle:hover {
             background: rgba(255, 255, 255, 0.2);
             transform: scale(1.1);
+        }
+
+        .snow-toggle {
+            right: 100px;
+        }
+
+        .rain-toggle {
+            right: 160px;
+        }
+
+        .matrix-toggle {
+            right: 220px;
         }
 
         .snow-toggle.active {
@@ -270,12 +282,72 @@
             border-color: rgba(100, 149, 237, 0.5);
         }
 
+        .rain-toggle.active {
+            background: rgba(70, 130, 180, 0.3);
+            border-color: rgba(70, 130, 180, 0.5);
+        }
+
+        .matrix-toggle.active {
+            background: rgba(0, 255, 0, 0.2);
+            border-color: rgba(0, 255, 0, 0.4);
+        }
+
+        /* Rain effect styles */
+        .raindrop {
+            position: fixed;
+            top: -100px;
+            color: rgba(174, 194, 224, 0.5);
+            user-select: none;
+            pointer-events: none;
+            animation: rainfall linear;
+            z-index: 1;
+        }
+
+        @keyframes rainfall {
+            to {
+                transform: translateY(calc(100vh + 100px));
+            }
+        }
+
+        /* Matrix effect styles */
+        .matrix-column {
+            position: fixed;
+            top: -100px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            color: #0F0;
+            text-shadow: 0 0 5px #0F0;
+            user-select: none;
+            pointer-events: none;
+            z-index: 1;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+
+        @keyframes matrix-fall {
+            to {
+                transform: translateY(calc(100vh + 500px));
+            }
+        }
+
         @media (max-width: 768px) {
-            .snow-toggle {
+            .effect-toggle {
                 top: 20px;
-                right: 80px;
                 width: 40px;
                 height: 40px;
+                font-size: 1em;
+            }
+
+            .snow-toggle {
+                right: 80px;
+            }
+
+            .rain-toggle {
+                right: 130px;
+            }
+
+            .matrix-toggle {
+                right: 180px;
             }
         }
     </style>
@@ -288,7 +360,15 @@
             ←
         </a>
 
-        <div class="snow-toggle" id="snowToggle" title="Toggle Snow Effect">
+        <div class="effect-toggle matrix-toggle" id="matrixToggle" title="Toggle Matrix Effect">
+            01
+        </div>
+
+        <div class="effect-toggle rain-toggle" id="rainToggle" title="Toggle Rain Effect">
+            🌧️
+        </div>
+
+        <div class="effect-toggle snow-toggle" id="snowToggle" title="Toggle Snow Effect">
             ❄️
         </div>
 
@@ -531,10 +611,159 @@
             }
         });
 
-        // Auto-start snow effect
-        setTimeout(() => {
-            startSnow();
-        }, 1000);
+        // Rain effect
+        let rainInterval;
+        let raindrops = [];
+        let rainActive = false;
+
+        function createRaindrop() {
+            const raindrop = document.createElement('div');
+            raindrop.className = 'raindrop';
+            raindrop.innerHTML = '|';
+
+            raindrop.style.left = Math.random() * window.innerWidth + 'px';
+            raindrop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's'; // 0.5-1s (faster than snow)
+            raindrop.style.fontSize = (Math.random() * 10 + 10) + 'px'; // 10-20px
+            raindrop.style.opacity = Math.random() * 0.3 + 0.1; // 0.1-0.4
+
+            document.body.appendChild(raindrop);
+            raindrops.push(raindrop);
+
+            setTimeout(() => {
+                raindrop.remove();
+                const index = raindrops.indexOf(raindrop);
+                if (index > -1) {
+                    raindrops.splice(index, 1);
+                }
+            }, 1000);
+        }
+
+        function startRain() {
+            if (!rainActive) {
+                rainActive = true;
+                document.getElementById('rainToggle').classList.add('active');
+                // Stop other effects
+                stopSnow();
+                stopMatrix();
+                // Start rain
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => createRaindrop(), i * 100);
+                }
+                rainInterval = setInterval(createRaindrop, 50); // Much faster than snow
+            }
+        }
+
+        function stopRain() {
+            if (rainActive) {
+                rainActive = false;
+                document.getElementById('rainToggle').classList.remove('active');
+                clearInterval(rainInterval);
+                raindrops.forEach(drop => drop.remove());
+                raindrops = [];
+            }
+        }
+
+        // Matrix effect
+        let matrixInterval;
+        let matrixColumns = [];
+        let matrixActive = false;
+
+        function getRandomMatrixChar() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()_+-=[]{}|;:,.<>?ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ';
+            return chars[Math.floor(Math.random() * chars.length)];
+        }
+
+        function createMatrixColumn() {
+            const column = document.createElement('div');
+            column.className = 'matrix-column';
+
+            // Generate random string of characters
+            let text = '';
+            const length = Math.floor(Math.random() * 15 + 10); // 10-25 characters
+            for (let i = 0; i < length; i++) {
+                const char = getRandomMatrixChar();
+                const opacity = 1 - (i / length) * 0.8; // Fade out towards the end
+                text += `<span style="opacity: ${opacity}">${char}</span>`;
+            }
+            column.innerHTML = text;
+
+            column.style.left = Math.floor(Math.random() * (window.innerWidth / 20)) * 20 + 'px'; // Grid alignment
+            column.style.animationName = 'matrix-fall';
+            column.style.animationDuration = (Math.random() * 5 + 5) + 's'; // 5-10s
+            column.style.fontSize = (Math.random() * 6 + 14) + 'px'; // 14-20px
+
+            document.body.appendChild(column);
+            matrixColumns.push(column);
+
+            setTimeout(() => {
+                column.remove();
+                const index = matrixColumns.indexOf(column);
+                if (index > -1) {
+                    matrixColumns.splice(index, 1);
+                }
+            }, 10000);
+        }
+
+        function startMatrix() {
+            if (!matrixActive) {
+                matrixActive = true;
+                document.getElementById('matrixToggle').classList.add('active');
+                // Stop other effects
+                stopSnow();
+                stopRain();
+                // Change background for better effect
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #000000, #001100)';
+                // Start Matrix rain
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createMatrixColumn(), i * 200);
+                }
+                matrixInterval = setInterval(createMatrixColumn, 300);
+            }
+        }
+
+        function stopMatrix() {
+            if (matrixActive) {
+                matrixActive = false;
+                document.getElementById('matrixToggle').classList.remove('active');
+                clearInterval(matrixInterval);
+                matrixColumns.forEach(col => col.remove());
+                matrixColumns = [];
+                // Restore original background
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // Update snow functions to stop other effects
+        const originalStartSnow = startSnow;
+        startSnow = function() {
+            if (!snowActive) {
+                stopRain();
+                stopMatrix();
+                originalStartSnow();
+            }
+        };
+
+        // Toggle event listeners
+        document.getElementById('rainToggle').addEventListener('click', () => {
+            if (rainActive) {
+                stopRain();
+            } else {
+                startRain();
+            }
+        });
+
+        document.getElementById('matrixToggle').addEventListener('click', () => {
+            if (matrixActive) {
+                stopMatrix();
+            } else {
+                startMatrix();
+            }
+        });
+
+        // Auto-start snow effect (optional - you can comment this out)
+        // setTimeout(() => {
+        //     startSnow();
+        // }, 1000);
     </script>
 </body>
 </html>
