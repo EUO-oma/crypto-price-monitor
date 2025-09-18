@@ -2,15 +2,12 @@
 const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
 
-// 전역 supabase 변수
-var supabase = null;
-
 // Supabase 초기화 함수
 function initializeSupabase() {
     if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
-        if (!supabase) {
+        if (!window.supabaseClient) {
             try {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 console.log('[supabase-config.js] Supabase client initialized successfully');
                 return true;
             } catch (error) {
@@ -39,7 +36,7 @@ if (document.readyState === 'loading') {
 // window.load 이벤트에서도 시도
 window.addEventListener('load', function() {
     console.log('[supabase-config.js] Window load - attempting initialization');
-    if (!supabase) {
+    if (!window.supabaseClient) {
         initializeSupabase();
     }
 });
@@ -47,13 +44,13 @@ window.addEventListener('load', function() {
 // 링크 데이터 가져오기 (index.html과 동일한 방식으로 수정)
 async function fetchLinks() {
     console.log('[fetchLinks] Starting fetchLinks function');
-    console.log('[fetchLinks] supabase client status:', supabase ? 'available' : 'not available');
+    console.log('[fetchLinks] supabase client status:', window.supabaseClient ? 'available' : 'not available');
 
-    if (!supabase) {
+    if (!window.supabaseClient) {
         console.error('[supabase-config.js] Supabase client not available in fetchLinks');
         console.log('[fetchLinks] Attempting to initialize...');
         initializeSupabase(); // 한 번 더 시도
-        if (!supabase) {
+        if (!window.supabaseClient) {
             console.error('[fetchLinks] Still no supabase client after initialization attempt');
             return { youtube: [], favorites: [], gpt: [] };
         }
@@ -63,7 +60,7 @@ async function fetchLinks() {
         console.log('[fetchLinks] Fetching all links at once...');
 
         // 모든 링크를 한 번에 가져오기 (index.html 방식과 동일)
-        const { data: links, error } = await supabase
+        const { data: links, error } = await window.supabaseClient
             .from('links')
             .select('*')
             .order('position', { ascending: true });
@@ -103,13 +100,13 @@ async function fetchLinks() {
 
 // 링크 추가
 async function addLink(name, url, category, position = 999) {
-    if (!supabase) {
+    if (!window.supabaseClient) {
         console.error('[supabase-config.js] Supabase client not available');
         return null;
     }
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await window.supabaseClient
             .from('links')
             .insert([
                 { name, url, category, position }
@@ -126,7 +123,7 @@ async function addLink(name, url, category, position = 999) {
 
 // 링크 삭제
 async function deleteLink(id) {
-    if (!supabase) {
+    if (!window.supabaseClient) {
         console.error('[supabase-config.js] Supabase client not available');
         return false;
     }
@@ -147,13 +144,13 @@ async function deleteLink(id) {
 
 // 링크 업데이트
 async function updateLink(id, updates) {
-    if (!supabase) {
+    if (!window.supabaseClient) {
         console.error('[supabase-config.js] Supabase client not available');
         return null;
     }
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await window.supabaseClient
             .from('links')
             .update(updates)
             .eq('id', id)
@@ -169,12 +166,12 @@ async function updateLink(id, updates) {
 
 // 실시간 구독
 function subscribeToLinks(callback) {
-    if (!supabase) {
+    if (!window.supabaseClient) {
         console.error('[supabase-config.js] Supabase client not available for subscription');
         return null;
     }
 
-    const subscription = supabase
+    const subscription = window.supabaseClient
         .channel('links_changes')
         .on('postgres_changes',
             { event: '*', schema: 'public', table: 'links' },
