@@ -523,6 +523,22 @@
                 </table>
             </div>
         </div>
+        
+        <!-- ============================================ -->
+        <!-- 🌍 SECTION 5: World Clock -->
+        <!-- ============================================ -->
+        <div class="exchange-section" style="margin-top: 40px;">
+            <h2 style="text-align: center; color: #aaa; margin-bottom: 20px;">🌍 World Clock</h2>
+            <div id="clock-container" style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 15px;
+                max-width: 800px;
+                margin: 0 auto;
+            ">
+                <!-- Clocks will be inserted here by JavaScript -->
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2416,25 +2432,6 @@
         setInterval(updateWorldClock, 1000);
         updateWorldClock(); // Initial call
     </script>
-    
-    <!-- World Clock Section at Bottom -->
-    <div id="world-clock-bottom" style="
-        background: #0a0a0a;
-        border-top: 1px solid #333;
-        padding: 20px;
-        margin-top: 40px;
-    ">
-        <h2 style="text-align: center; color: #aaa; margin-bottom: 20px;">🌍 World Clock</h2>
-        <div id="clock-container" style="
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            max-width: 800px;
-            margin: 0 auto;
-        ">
-            <!-- Clocks will be inserted here by JavaScript -->
-        </div>
-    </div>
     
     <!-- 관리자 설정 버튼 -->
     <a href="login.html" class="settings-btn" title="관리자 설정">
