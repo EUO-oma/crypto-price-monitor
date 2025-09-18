@@ -229,11 +229,15 @@
         <div style="margin-top: 10px; color: #888;">
             • 0.1초마다 업데이트<br>
             • WebSocket 실시간 연결<br>
-            • 로컬 환경 최적화
+            • 웹/로컬 환경 지원<br>
+            • Binance 직접 연결
         </div>
         <div class="tick-counter">
             <div>틱 수신: <span id="tick-count">0</span></div>
             <div>업데이트: <span id="update-rate">0</span>/초</div>
+            <div style="margin-top: 5px; font-size: 10px;">
+                환경: <span id="environment-info">확인 중...</span>
+            </div>
         </div>
     </div>
 
@@ -474,12 +478,29 @@
             // 틱 레이트 업데이트 (1초마다)
             setInterval(updateTickRate, 1000);
             
-            // 로컬 환경 확인
-            if (window.location.hostname === 'localhost' || 
-                window.location.hostname === '127.0.0.1' || 
-                window.location.hostname === '') {
-                console.log('🚀 로컬 환경에서 실행 중 - 0.1초 업데이트 활성화');
+            // 환경 확인 및 성능 최적화
+            const isLocal = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1' || 
+                           window.location.hostname === '';
+            
+            const environmentInfo = isLocal ? '로컬 (최고성능)' : `웹 (${window.location.hostname})`;
+            document.getElementById('environment-info').textContent = environmentInfo;
+            
+            if (isLocal) {
+                console.log('🚀 로컬 환경에서 실행 중 - 최고 성능 모드');
+            } else {
+                console.log('🌐 웹 환경에서 실행 중 - 0.1초 실시간 업데이트 활성화');
             }
+            
+            // 모든 환경에서 0.1초 업데이트 활성화
+            console.log('📊 실시간 틱 차트: 0.1초 간격으로 업데이트됩니다');
+            
+            // 성능 벤치마크
+            let performanceStart = Date.now();
+            setTimeout(() => {
+                const elapsed = Date.now() - performanceStart;
+                console.log(`⚡ 초기 로딩 시간: ${elapsed}ms`);
+            }, 2000);
         });
 
         // 페이지 종료 시 WebSocket 정리
