@@ -342,8 +342,18 @@
             });
         }
 
+        // 모바일 디바이스 감지
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth < 768;
+        }
+
         // 페이지 로드 시 차트 생성
         window.addEventListener('DOMContentLoaded', function() {
+            // 모바일에서는 차트 로딩 딜레이 증가
+            const loadDelay = isMobileDevice() ? 500 : 200;
+            const chartDelay = isMobileDevice() ? 2000 : 1500;
+            
             // 현재 레이아웃 확인
             const currentLayout = document.body.className;
 
@@ -393,13 +403,13 @@
                 // 이더리움 차트 생성
                 setTimeout(() => {
                     createChart('eth-chart', 'ETHUSDT', '#627eea');
-                }, 1000);  // 1초 딜레이로 순차 로드
+                }, chartDelay);  // 모바일: 2초, PC: 1.5초
 
                 // 솔라나 차트 생성
                 setTimeout(() => {
                     createChart('sol-chart', 'SOLUSDT', '#00FFA3');
-                }, 2000);  // 2초 딜레이로 순차 로드
-            }, 200);  // DOM 업데이트 대기
+                }, chartDelay * 2);  // 모바일: 4초, PC: 3초
+            }, loadDelay);  // 모바일: 0.5초, PC: 0.2초
         });
 
         // 레이아웃 변경 함수
@@ -416,10 +426,10 @@
             });
             event.target.classList.add('active');
 
-            // 차트 리로드
+            // 차트 리로드 (레이아웃 변경 후 충분한 시간을 둔 뒤 리로드)
             setTimeout(() => {
                 location.reload();
-            }, 100);
+            }, 500); // 0.5초 후 리로드
         }
 
         // localStorage에 레이아웃 저장
