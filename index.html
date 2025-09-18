@@ -849,7 +849,7 @@
                             // 달러 기호를 검정색으로, 가격은 브랜드 색상으로
                             const parts = priceNum.toFixed(2).split('.');
                             const integerPart = parseInt(parts[0]).toLocaleString('en-US');
-                            customPriceElement.innerHTML = `<span style="color: #000;">$</span>${integerPart}<span style="font-size: 0.7em;">.${parts[1]}</span>`;
+                            customPriceElement.innerHTML = `$${integerPart}<span style="font-size: 0.7em;">.${parts[1]}</span>`;
                             
                             // 가격 색상은 브랜드 컬러 유지 (변경하지 않음)
                             
