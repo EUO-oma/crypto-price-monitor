@@ -302,45 +302,6 @@
     <!-- TradingView Widget -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script type="text/javascript">
-        // 로드된 차트 수 추적
-        let chartsLoaded = 0;
-        const totalCharts = 3;
-        
-        // 모든 차트가 로드되었는지 확인
-        function onChartReady() {
-            chartsLoaded++;
-            console.log(`차트 ${chartsLoaded}/${totalCharts} 로드 완료`);
-            
-            if (chartsLoaded === totalCharts) {
-                console.log('✅ 모든 차트 로드 완료!');
-                // 모든 차트가 로드된 후 실행할 작업
-                enablePageInteractions();
-            }
-        }
-        
-        // 페이지 상호작용 활성화
-        function enablePageInteractions() {
-            // 레이아웃 변경 버튼 활성화
-            document.querySelectorAll('.layout-btn').forEach(btn => {
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-            });
-            
-            // 높이 조절 컨트롤 활성화
-            const heightInput = document.getElementById('heightInput');
-            const heightButtons = document.querySelectorAll('.height-btn');
-            if (heightInput) {
-                heightInput.disabled = false;
-            }
-            heightButtons.forEach(btn => {
-                btn.disabled = false;
-            });
-            
-            // 리사이즈 이벤트 활성화
-            allowResize = true;
-            console.log('✅ 리사이즈 이벤트 활성화');
-        }
-        
         // 차트 설정 함수
         function createChart(containerId, symbol, color) {
             // 컨테이너의 실제 높이 가져오기
@@ -348,7 +309,7 @@
             const containerWrapper = container.parentElement;
             const actualHeight = containerWrapper ? containerWrapper.offsetHeight : Math.floor(window.innerHeight / 3);
 
-            const widget = new TradingView.widget({
+            return new TradingView.widget({
                 "width": "100%",
                 "height": actualHeight,  // 픽셀값으로 명시적 지정
                 "symbol": `BINANCE:${symbol}`,
@@ -379,41 +340,10 @@
                     "mainSeriesProperties.candleStyle.wickDownColor": "#666"
                 }
             });
-            
-            // 차트가 준비되면 콜백 실행
-            widget.onChartReady(() => {
-                onChartReady();
-            });
-            
-            return widget;
-        }
-
-        // 모바일 디바이스 감지
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                   window.innerWidth < 768;
         }
 
         // 페이지 로드 시 차트 생성
         window.addEventListener('DOMContentLoaded', function() {
-            // 초기에 버튼들 비활성화
-            document.querySelectorAll('.layout-btn').forEach(btn => {
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.5';
-            });
-            const heightInput = document.getElementById('heightInput');
-            const heightButtons = document.querySelectorAll('.height-btn');
-            if (heightInput) {
-                heightInput.disabled = true;
-            }
-            heightButtons.forEach(btn => {
-                btn.disabled = true;
-            });
-            
-            // 모바일에서는 차트 로딩 딜레이 증가
-            const loadDelay = isMobileDevice() ? 500 : 200;
-            const chartDelay = isMobileDevice() ? 2000 : 1500;
-            
             // 현재 레이아웃 확인
             const currentLayout = document.body.className;
 
@@ -463,13 +393,13 @@
                 // 이더리움 차트 생성
                 setTimeout(() => {
                     createChart('eth-chart', 'ETHUSDT', '#627eea');
-                }, chartDelay);  // 모바일: 2초, PC: 1.5초
+                }, 1000);  // 1초 딜레이로 순차 로드
 
                 // 솔라나 차트 생성
                 setTimeout(() => {
                     createChart('sol-chart', 'SOLUSDT', '#00FFA3');
-                }, chartDelay * 2);  // 모바일: 4초, PC: 3초
-            }, loadDelay);  // 모바일: 0.5초, PC: 0.2초
+                }, 2000);  // 2초 딜레이로 순차 로드
+            }, 200);  // DOM 업데이트 대기
         });
 
         // 레이아웃 변경 함수
@@ -486,10 +416,10 @@
             });
             event.target.classList.add('active');
 
-            // 차트 리로드 (레이아웃 변경 후 충분한 시간을 둔 뒤 리로드)
+            // 차트 리로드
             setTimeout(() => {
                 location.reload();
-            }, 500); // 0.5초 후 리로드
+            }, 100);
         }
 
         // localStorage에 레이아웃 저장
@@ -650,66 +580,12 @@
 
         // 화면 크기 변경 시 대응
         let resizeTimeout;
-        let allowResize = false;
-        
         window.addEventListener('resize', function() {
-            // 차트가 모두 로드되지 않았으면 리사이즈 무시
-            if (!allowResize) {
-                console.log('⏸️ 차트 로딩 중... 리사이즈 이벤트 무시');
-                return;
-            }
-            
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(function() {
-                console.log('🔄 화면 크기 변경 감지 - 페이지 리로드');
-                location.reload();
-            }, 1000);  // 1초로 증가
+                location.reload();  // 간단하게 리로드로 처리
+            }, 500);
         });
-
-        // 로컬 환경 안내 메시지
-        if (window.location.hostname === 'localhost' || 
-            window.location.hostname === '127.0.0.1' || 
-            window.location.hostname === '') {
-            
-            console.log('📊 로컬 환경 감지');
-            
-            // TradingView 실시간 업데이트 안내
-            const notice = document.createElement('div');
-            notice.style.cssText = `
-                position: fixed;
-                bottom: 70px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(79, 172, 254, 0.9);
-                color: white;
-                padding: 10px 20px;
-                border-radius: 5px;
-                font-size: 12px;
-                z-index: 10000;
-            `;
-            notice.innerHTML = `
-                <div>💡 TradingView 차트는 실시간으로 자동 업데이트됩니다</div>
-                <div style="font-size: 11px; margin-top: 5px; opacity: 0.9;">
-                    • 1분봉 기준으로 틱 데이터가 반영됩니다
-                    • WebSocket으로 실시간 가격을 받아옵니다
-                </div>
-            `;
-            document.body.appendChild(notice);
-            
-            // 5초 후 안내 메시지 페이드아웃
-            setTimeout(() => {
-                notice.style.transition = 'opacity 1s';
-                notice.style.opacity = '0';
-                setTimeout(() => notice.remove(), 1000);
-            }, 5000);
-        }
-        
-        // TradingView 위젯 실시간 업데이트 정보
-        // TradingView는 자체적으로 WebSocket을 통해 실시간 데이터를 받아옵니다.
-        // interval: "1" 설정은 1분봉을 의미하며, 틱 데이터는 자동으로 업데이트됩니다.
-        // 더 빠른 업데이트를 원하면:
-        // 1. interval을 "1S"로 변경 (1초봉) - 지원되는 경우
-        // 2. 또는 Binance WebSocket API를 직접 연결하여 커스텀 차트 구현
     </script>
 </body>
 </html>
