@@ -348,44 +348,37 @@
             const containerWrapper = container.parentElement;
             const actualHeight = containerWrapper ? containerWrapper.offsetHeight : Math.floor(window.innerHeight / 3);
 
-            const widget = new TradingView.widget({
-                "width": "100%",
-                "height": actualHeight,  // 픽셀값으로 명시적 지정
-                "symbol": `BINANCE:${symbol}`,
-                "interval": "1",  // 1분봉
-                "timezone": "Asia/Seoul",
-                "theme": "dark",
-                "style": "1",  // Candlestick
-                "locale": "kr",
-                "toolbar_bg": "#f1f3f6",
-                "enable_publishing": false,
-                "allow_symbol_change": false,
-                "container_id": containerId,
-                "hide_side_toolbar": true,
-                "hide_drawing_toolbar": true,
-                "hide_top_toolbar": false,
-                "hide_legend": true,
-                "hide_volume": true,  // 볼륨 제거
-                "withdateranges": false,
-                "details": false,
-                "show_popup_button": false,
-                "studies": [],  // 보조지표 없음
-                "overrides": {
-                    "mainSeriesProperties.candleStyle.upColor": color,
-                    "mainSeriesProperties.candleStyle.downColor": "#666",
-                    "mainSeriesProperties.candleStyle.borderUpColor": color,
-                    "mainSeriesProperties.candleStyle.borderDownColor": "#666",
-                    "mainSeriesProperties.candleStyle.wickUpColor": color,
-                    "mainSeriesProperties.candleStyle.wickDownColor": "#666"
-                }
-            });
-            
-            // 차트가 준비되면 콜백 실행
-            widget.onChartReady(() => {
-                onChartReady();
-            });
-            
-            return widget;
+            return new TradingView.widget({
+                    "width": "100%",
+                    "height": actualHeight,  // 픽셀값으로 명시적 지정
+                    "symbol": `BINANCE:${symbol}`,
+                    "interval": "1",  // 1분봉
+                    "timezone": "Asia/Seoul",
+                    "theme": "dark",
+                    "style": "1",  // Candlestick
+                    "locale": "kr",
+                    "toolbar_bg": "#f1f3f6",
+                    "enable_publishing": false,
+                    "allow_symbol_change": false,
+                    "container_id": containerId,
+                    "hide_side_toolbar": true,
+                    "hide_drawing_toolbar": true,
+                    "hide_top_toolbar": false,
+                    "hide_legend": true,
+                    "hide_volume": true,  // 볼륨 제거
+                    "withdateranges": false,
+                    "details": false,
+                    "show_popup_button": false,
+                    "studies": [],  // 보조지표 없음
+                    "overrides": {
+                        "mainSeriesProperties.candleStyle.upColor": color,
+                        "mainSeriesProperties.candleStyle.downColor": "#666",
+                        "mainSeriesProperties.candleStyle.borderUpColor": color,
+                        "mainSeriesProperties.candleStyle.borderDownColor": "#666",
+                        "mainSeriesProperties.candleStyle.wickUpColor": color,
+                        "mainSeriesProperties.candleStyle.wickDownColor": "#666"
+                    }
+                });
         }
 
         // 모바일 디바이스 감지
@@ -457,19 +450,16 @@
 
             // 차트 생성 전에 약간의 지연을 주어 DOM이 완전히 업데이트되도록 함
             setTimeout(() => {
-                // 비트코인 차트 생성
+                // 모든 차트를 동시에 생성
                 createChart('btc-chart', 'BTCUSDT', '#f7931a');
-
-                // 이더리움 차트 생성
+                createChart('eth-chart', 'ETHUSDT', '#627eea');
+                createChart('sol-chart', 'SOLUSDT', '#00FFA3');
+                
+                // 차트 로드 후 버튼 활성화
                 setTimeout(() => {
-                    createChart('eth-chart', 'ETHUSDT', '#627eea');
-                }, chartDelay);  // 모바일: 2초, PC: 1.5초
-
-                // 솔라나 차트 생성
-                setTimeout(() => {
-                    createChart('sol-chart', 'SOLUSDT', '#00FFA3');
-                }, chartDelay * 2);  // 모바일: 4초, PC: 3초
-            }, loadDelay);  // 모바일: 0.5초, PC: 0.2초
+                    enablePageInteractions();
+                }, 2000);
+            }, 1000);  // 1초 대기 후 차트 생성
         });
 
         // 레이아웃 변경 함수
