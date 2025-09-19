@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auto Icon Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: green;
+        }
+        .info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crypto Price Monitor - 자동 아이콘 생성기</h1>
+    <p>버튼을 클릭하면 모든 아이콘이 자동으로 생성되어 다운로드됩니다.</p>
+    
+    <button onclick="generateAndDownloadAll()">모든 아이콘 생성 및 다운로드</button>
+    
+    <div id="status"></div>
+    
+    <div class="info">
+        <p><strong>참고:</strong></p>
+        <ul>
+            <li>브라우저에서 여러 파일 다운로드를 허용해야 합니다.</li>
+            <li>다운로드 폴더에 모든 아이콘이 저장됩니다.</li>
+            <li>icons 폴더를 만들고 모든 파일을 이동시켜 주세요.</li>
+        </ul>
+    </div>
+    
+    <script>
+        function createIcon(size, isSquare = false) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // 검은 배경
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, size, size);
+            
+            // 둥근 모서리 (큰 아이콘에만)
+            if (size >= 120 && !isSquare) {
+                const radius = size * 0.15;
+                ctx.globalCompositeOperation = 'destination-out';
+                
+                // 모서리 잘라내기
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(radius, 0);
+                ctx.arc(radius, radius, radius, -Math.PI/2, -Math.PI, false);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(size, 0);
+                ctx.lineTo(size - radius, 0);
+                ctx.arc(size - radius, radius, radius, -Math.PI/2, 0, false);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, size);
+                ctx.lineTo(0, size - radius);
+                ctx.arc(radius, size - radius, radius, Math.PI, Math.PI/2, true);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(size, size);
+                ctx.lineTo(size - radius, size);
+                ctx.arc(size - radius, size - radius, radius, 0, Math.PI/2, false);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.globalCompositeOperation = 'source-over';
+            }
+            
+            // 그라데이션 원
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const circleRadius = size * 0.35;
+            
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, circleRadius);
+            gradient.addColorStop(0, '#f7931a');
+            gradient.addColorStop(0.5, '#627eea');
+            gradient.addColorStop(1, '#00FFA3');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // C 문자
+            ctx.fillStyle = '#000000';
+            const fontSize = size * 0.5;
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('C', centerX, centerY);
+            
+            // 차트 라인 (큰 아이콘에만)
+            if (size >= 144) {
+                ctx.strokeStyle = '#00FFA3';
+                ctx.lineWidth = Math.max(2, size * 0.015);
+                ctx.globalAlpha = 0.7;
+                
+                ctx.beginPath();
+                ctx.moveTo(size * 0.2, size * 0.75);
+                ctx.lineTo(size * 0.35, size * 0.65);
+                ctx.lineTo(size * 0.5, size * 0.7);
+                ctx.lineTo(size * 0.65, size * 0.6);
+                ctx.lineTo(size * 0.8, size * 0.65);
+                ctx.stroke();
+                
+                ctx.globalAlpha = 1;
+            }
+            
+            return canvas;
+        }
+        
+        function createOGImage(width, height) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // 검은 배경
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, width, height);
+            
+            // CRYPTO 텍스트
+            ctx.fillStyle = '#f7931a';
+            ctx.font = 'bold 120px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('CRYPTO', width / 2, height / 2 - 80);
+            
+            // × LIVE 텍스트
+            ctx.fillStyle = '#627eea';
+            ctx.font = 'bold 80px Arial';
+            ctx.fillText('× LIVE', width / 2, height / 2 + 40);
+            
+            // 차트 라인
+            ctx.strokeStyle = '#00FFA3';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(200, 450);
+            ctx.lineTo(350, 400);
+            ctx.lineTo(500, 420);
+            ctx.lineTo(650, 370);
+            ctx.lineTo(800, 390);
+            ctx.lineTo(950, 340);
+            ctx.stroke();
+            
+            return canvas;
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    setTimeout(resolve, 100); // 다운로드 간 딜레이
+                });
+            });
+        }
+        
+        async function generateAndDownloadAll() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p>아이콘 생성 중...</p>';
+            
+            const icons = [
+                // 파비콘
+                { size: 16, name: 'favicon-16x16.png', square: true },
+                { size: 32, name: 'favicon-32x32.png', square: true },
+                
+                // Apple Touch Icons
+                { size: 57, name: 'apple-touch-icon-57x57.png' },
+                { size: 60, name: 'apple-touch-icon-60x60.png' },
+                { size: 72, name: 'apple-touch-icon-72x72.png' },
+                { size: 76, name: 'apple-touch-icon-76x76.png' },
+                { size: 114, name: 'apple-touch-icon-114x114.png' },
+                { size: 120, name: 'apple-touch-icon-120x120.png' },
+                { size: 144, name: 'apple-touch-icon-144x144.png' },
+                { size: 152, name: 'apple-touch-icon-152x152.png' },
+                { size: 180, name: 'apple-touch-icon.png' },
+                
+                // Android Chrome Icons
+                { size: 192, name: 'android-chrome-192x192.png' },
+                { size: 512, name: 'android-chrome-512x512.png' },
+                
+                // Windows Tile
+                { size: 144, name: 'mstile-144x144.png', square: true }
+            ];
+            
+            let completed = 0;
+            
+            for (const icon of icons) {
+                const canvas = createIcon(icon.size, icon.square);
+                await downloadCanvas(canvas, icon.name);
+                completed++;
+                statusDiv.innerHTML = `<p>진행 중... ${completed}/${icons.length} 완료</p>`;
+            }
+            
+            // Social Media Images
+            const ogImage = createOGImage(1200, 630);
+            await downloadCanvas(ogImage, 'og-image.png');
+            completed++;
+            statusDiv.innerHTML = `<p>진행 중... ${completed}/${icons.length + 2} 완료</p>`;
+            
+            const twitterCard = createOGImage(1200, 630);
+            await downloadCanvas(twitterCard, 'twitter-card.png');
+            
+            statusDiv.innerHTML = '<p class="success">✅ 모든 아이콘이 성공적으로 생성되었습니다!</p>';
+        }
+    </script>
+</body>
+</html>

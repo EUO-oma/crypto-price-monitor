@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon.ico Generator</title>
+</head>
+<body>
+    <h1>Favicon.ico 생성기</h1>
+    <p>아래 버튼을 클릭하여 favicon.ico 파일을 다운로드하세요.</p>
+    
+    <button id="downloadBtn">favicon.ico 다운로드</button>
+    
+    <script>
+        // ICO 파일 헤더 생성
+        function createICOFile(images) {
+            // ICO 헤더: 0x00 0x00 (reserved), 0x01 0x00 (type: icon), image count
+            const headerSize = 6;
+            const directorySize = 16 * images.length;
+            let header = new ArrayBuffer(headerSize + directorySize);
+            let headerView = new DataView(header);
+            
+            // ICO 헤더
+            headerView.setUint16(0, 0, true); // Reserved
+            headerView.setUint16(2, 1, true); // Type (1 = icon)
+            headerView.setUint16(4, images.length, true); // Number of images
+            
+            let offset = headerSize + directorySize;
+            let imageData = [];
+            
+            // 각 이미지에 대한 디렉토리 엔트리
+            images.forEach((img, index) => {
+                const entryOffset = headerSize + (index * 16);
+                const imgData = atob(img.data.split(',')[1]);
+                const imgArray = new Uint8Array(imgData.length);
+                for (let i = 0; i < imgData.length; i++) {
+                    imgArray[i] = imgData.charCodeAt(i);
+                }
+                
+                headerView.setUint8(entryOffset + 0, img.width); // Width
+                headerView.setUint8(entryOffset + 1, img.height); // Height
+                headerView.setUint8(entryOffset + 2, 0); // Color palette
+                headerView.setUint8(entryOffset + 3, 0); // Reserved
+                headerView.setUint16(entryOffset + 4, 1, true); // Color planes
+                headerView.setUint16(entryOffset + 6, 32, true); // Bits per pixel
+                headerView.setUint32(entryOffset + 8, imgArray.length, true); // Image size
+                headerView.setUint32(entryOffset + 12, offset, true); // Image offset
+                
+                imageData.push(imgArray);
+                offset += imgArray.length;
+            });
+            
+            // 전체 데이터 결합
+            const totalSize = headerSize + directorySize + imageData.reduce((sum, data) => sum + data.length, 0);
+            const icoFile = new Uint8Array(totalSize);
+            
+            // 헤더 복사
+            icoFile.set(new Uint8Array(header), 0);
+            
+            // 이미지 데이터 복사
+            let currentOffset = headerSize + directorySize;
+            imageData.forEach(data => {
+                icoFile.set(data, currentOffset);
+                currentOffset += data.length;
+            });
+            
+            return icoFile;
+        }
+        
+        // 아이콘 생성 함수
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // 검은 배경
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, size, size);
+            
+            // 그라데이션 원
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const circleRadius = size * 0.35;
+            
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, circleRadius);
+            gradient.addColorStop(0, '#f7931a');
+            gradient.addColorStop(0.5, '#627eea');
+            gradient.addColorStop(1, '#00FFA3');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // C 문자
+            ctx.fillStyle = '#000000';
+            const fontSize = size * 0.5;
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('C', centerX, centerY);
+            
+            return canvas.toDataURL('image/png');
+        }
+        
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            // 다양한 크기의 아이콘 생성
+            const images = [
+                { width: 16, height: 16, data: createIcon(16) },
+                { width: 32, height: 32, data: createIcon(32) },
+                { width: 48, height: 48, data: createIcon(48) }
+            ];
+            
+            // ICO 파일 생성
+            const icoData = createICOFile(images);
+            
+            // Blob 생성 및 다운로드
+            const blob = new Blob([icoData], { type: 'image/x-icon' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'favicon.ico';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

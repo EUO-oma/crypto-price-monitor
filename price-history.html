@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>암호화폐 가격 기록</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #333;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #fff;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: #1a1a1a;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+            border-color: #555;
+        }
+
+        .date-filter {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .date-filter button {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .date-filter button.active {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+
+        .date-filter button:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .price-section {
+            background: #0a0a0a;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .refresh-btn {
+            padding: 5px 10px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #333;
+            color: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 10px;
+            text-align: left;
+            color: #888;
+            border-bottom: 2px solid #333;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #222;
+        }
+
+        tr:hover {
+            background: #1a1a1a;
+        }
+
+        .today-row {
+            background: #1a1a1a !important;
+        }
+
+        .price-change {
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+
+        .price-up {
+            color: #4caf50;
+        }
+
+        .price-down {
+            color: #f44336;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .chart-container {
+            background: #0a0a0a;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+
+        /* 심볼별 색상 */
+        .btc-color { color: #f7931a; }
+        .eth-color { color: #9a8ff8; }
+        .sol-color { color: #00FFA3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 암호화폐 가격 기록</h1>
+            <a href="index.html" class="back-btn">← 돌아가기</a>
+        </div>
+
+        <div class="date-filter">
+            <button onclick="loadHistory(10)" class="active" id="btn-10">최근 10일</button>
+            <button onclick="loadHistory(30)" id="btn-30">최근 30일</button>
+            <button onclick="loadHistory(90)" id="btn-90">최근 90일</button>
+            <button onclick="loadHistory(365)" id="btn-365">최근 1년</button>
+            <button onclick="loadHistory(0)" id="btn-all">전체</button>
+        </div>
+
+        <!-- 통계 카드 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">BTC 역대 최고가</div>
+                <div class="stat-value btc-color" id="btc-ath">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">ETH 역대 최고가</div>
+                <div class="stat-value eth-color" id="eth-ath">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">SOL 역대 최고가</div>
+                <div class="stat-value sol-color" id="sol-ath">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">데이터 수집 일수</div>
+                <div class="stat-value" id="data-days">-</div>
+            </div>
+        </div>
+
+        <!-- 차트 영역 (추후 구현) -->
+        <div class="chart-container">
+            <p>차트 기능은 추후 구현 예정입니다</p>
+        </div>
+
+        <!-- BTC 가격 기록 -->
+        <div class="price-section">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <span class="btc-color">₿</span> BTC 가격 기록
+                </h3>
+                <button onclick="refreshHistory()" class="refresh-btn">🔄 새로고침</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th style="text-align: right;">최고가</th>
+                            <th style="text-align: right;">최저가</th>
+                            <th style="text-align: right;">종가</th>
+                            <th style="text-align: right;">변동폭</th>
+                        </tr>
+                    </thead>
+                    <tbody id="btc-history-tbody">
+                        <tr>
+                            <td colspan="5" class="loading">데이터 로딩 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ETH 가격 기록 -->
+        <div class="price-section">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <span class="eth-color">Ξ</span> ETH 가격 기록
+                </h3>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th style="text-align: right;">최고가</th>
+                            <th style="text-align: right;">최저가</th>
+                            <th style="text-align: right;">종가</th>
+                            <th style="text-align: right;">변동폭</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eth-history-tbody">
+                        <tr>
+                            <td colspan="5" class="loading">데이터 로딩 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SOL 가격 기록 -->
+        <div class="price-section">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <span class="sol-color">◎</span> SOL 가격 기록
+                </h3>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th style="text-align: right;">최고가</th>
+                            <th style="text-align: right;">최저가</th>
+                            <th style="text-align: right;">종가</th>
+                            <th style="text-align: right;">변동폭</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sol-history-tbody">
+                        <tr>
+                            <td colspan="5" class="loading">데이터 로딩 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        // Supabase 설정
+        const supabaseUrl = 'https://intyabzhvtkxgldmvpvr.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        window.supabaseClient = supabase;
+
+        let currentDays = 10;
+
+        // 가격 포맷 함수
+        function formatPrice(price) {
+            if (price === null || price === undefined || price === '') return '-';
+            const num = parseFloat(price);
+            if (isNaN(num)) return '-';
+            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // 날짜 포맷 함수
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const weekday = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+            return `${month}/${day} (${weekday})`;
+        }
+
+        // 역대 최고가 로드
+        async function loadAllTimeHighs() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                
+                for (const symbol of symbols) {
+                    const { data, error } = await supabase
+                        .from('price_history')
+                        .select('high_price')
+                        .eq('symbol', symbol)
+                        .order('high_price', { ascending: false })
+                        .limit(1);
+                    
+                    if (data && data.length > 0) {
+                        const elementId = symbol.replace('USDT', '').toLowerCase() + '-ath';
+                        document.getElementById(elementId).textContent = formatPrice(data[0].high_price);
+                    }
+                }
+
+                // 데이터 수집 일수
+                const { data: countData } = await supabase
+                    .from('price_history')
+                    .select('date')
+                    .eq('symbol', 'BTCUSDT');
+                
+                if (countData) {
+                    const uniqueDates = new Set(countData.map(d => d.date));
+                    document.getElementById('data-days').textContent = uniqueDates.size + '일';
+                }
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+
+        // 가격 기록 로드
+        async function loadPriceHistory(symbol, tbodyId, days = 10) {
+            try {
+                const query = supabase
+                    .from('price_history')
+                    .select('*')
+                    .eq('symbol', symbol)
+                    .order('date', { ascending: false });
+                
+                if (days > 0) {
+                    const today = new Date();
+                    const startDate = new Date(today);
+                    startDate.setDate(startDate.getDate() - days);
+                    query.gte('date', startDate.toISOString().split('T')[0]);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                
+                const tbody = document.getElementById(tbodyId);
+                if (!tbody) return;
+                
+                const today = new Date().toISOString().split('T')[0];
+                
+                if (data && data.length > 0) {
+                    tbody.innerHTML = data.map((record, index) => {
+                        const isToday = record.date === today;
+                        const rowClass = isToday ? 'today-row' : '';
+                        
+                        // 변동폭 계산 (고가 - 저가)
+                        const range = record.high_price - record.low_price;
+                        const rangePercent = ((range / record.low_price) * 100).toFixed(2);
+                        
+                        // 전일 대비 변화
+                        let changeHtml = '';
+                        if (index < data.length - 1) {
+                            const prevClose = data[index + 1].price;
+                            if (prevClose) {
+                                const change = ((record.price - prevClose) / prevClose * 100);
+                                const changeClass = change >= 0 ? 'price-up' : 'price-down';
+                                const changeSymbol = change >= 0 ? '+' : '';
+                                changeHtml = `<span class="price-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</span>`;
+                            }
+                        }
+                        
+                        return `
+                        <tr class="${rowClass}">
+                            <td style="color: ${isToday ? getSymbolColor(symbol) : '#888'};">
+                                ${isToday ? '오늘' : formatDate(record.date)}
+                            </td>
+                            <td style="text-align: right; color: #fff;">${formatPrice(record.high_price)}</td>
+                            <td style="text-align: right; color: #fff;">${formatPrice(record.low_price)}</td>
+                            <td style="text-align: right; color: #fff;">
+                                ${formatPrice(record.price)}${changeHtml}
+                            </td>
+                            <td style="text-align: right; color: #888;">${rangePercent}%</td>
+                        </tr>`;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="loading">데이터가 없습니다</td></tr>';
+                }
+            } catch (error) {
+                console.error(`${symbol} 기록 로드 실패:`, error);
+                const tbody = document.getElementById(tbodyId);
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="loading" style="color: #f44336;">데이터 로드 실패</td></tr>';
+                }
+            }
+        }
+
+        // 심볼별 색상
+        function getSymbolColor(symbol) {
+            switch(symbol) {
+                case 'BTCUSDT': return '#f7931a';
+                case 'ETHUSDT': return '#9a8ff8';
+                case 'SOLUSDT': return '#00FFA3';
+                default: return '#888';
+            }
+        }
+
+        // 전체 기록 로드
+        function loadHistory(days) {
+            currentDays = days;
+            
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.date-filter button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (days === 0) {
+                document.getElementById('btn-all').classList.add('active');
+            } else {
+                document.getElementById(`btn-${days}`).classList.add('active');
+            }
+            
+            // 데이터 로드
+            loadPriceHistory('BTCUSDT', 'btc-history-tbody', days);
+            loadPriceHistory('ETHUSDT', 'eth-history-tbody', days);
+            loadPriceHistory('SOLUSDT', 'sol-history-tbody', days);
+        }
+
+        // 새로고침
+        function refreshHistory() {
+            loadHistory(currentDays);
+            loadAllTimeHighs();
+        }
+
+        // 초기 로드
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory(10);
+            loadAllTimeHighs();
+            
+            // 1분마다 자동 새로고침
+            setInterval(refreshHistory, 60000);
+        });
+
+        // 전역 함수로 노출
+        window.loadHistory = loadHistory;
+        window.refreshHistory = refreshHistory;
+    </script>
+</body>
+</html>
