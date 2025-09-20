@@ -23,6 +23,9 @@
     </style>
 </head>
 <body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
     <h1>Localhost 환경 확인</h1>
     <pre id="log"></pre>
     
@@ -41,9 +44,33 @@
             // Supabase 테스트
             log.innerHTML += 'Supabase 연결 테스트 중...\n';
             
-            fetch('https://intyabzhvtkxgldmvpvr.supabase.co/rest/v1/', {
+            (async () => {
+            
+            // Wait for config and get Supabase settings
+            const waitForConfig = () => {
+                return new Promise((resolve) => {
+                    if (window.APP_CONFIG?.SUPABASE?.URL) {
+                        resolve();
+                    } else {
+                        window.addEventListener('configLoaded', resolve, { once: true });
+                        setTimeout(resolve, 2000); // Fallback
+                    }
+                });
+            };
+            
+            await waitForConfig();
+            
+            const supabaseUrl = window.APP_CONFIG?.SUPABASE?.URL || 'https://intyabzhvtkxgldmvpvr.supabase.co';
+            const supabaseKey = window.APP_CONFIG?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
+            
+            if (!supabaseUrl || !supabaseKey) {
+                log.innerHTML += '<span class="error">❌ Supabase configuration not found</span>\n';
+                return;
+            }
+            
+            fetch(`${supabaseUrl}/rest/v1/`, {
                 headers: {
-                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0'
+                    'apikey': supabaseKey
                 }
             })
             .then(res => {
@@ -60,6 +87,7 @@
                 log.innerHTML += '2. 다른 와이파이나 모바일 핫스팟 사용\n';
                 log.innerHTML += '3. VPN이 켜져있다면 끄기\n';
             });
+            })(); // End async IIFE
             
         } else {
             log.innerHTML += '<span class="error">❌ 로컬 서버로 실행되지 않았습니다!</span>\n\n';

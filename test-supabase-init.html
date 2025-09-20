@@ -12,6 +12,9 @@
     </style>
 </head>
 <body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
     <h1>Supabase 초기화 테스트</h1>
     <div id="logs"></div>
 
@@ -42,8 +45,35 @@
         // Step 3: Try to create client
         log('Step 2: Attempting to create Supabase client...', 'info');
 
-        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        // Wait for config to load
+        function waitForConfig() {
+            return new Promise((resolve) => {
+                if (window.APP_CONFIG?.SUPABASE?.URL) {
+                    resolve();
+                } else {
+                    window.addEventListener('configLoaded', resolve, { once: true });
+                    // Fallback timeout
+                    setTimeout(resolve, 2000);
+                }
+            });
+        }
+        
+        // Get configuration from environment
+        function getSupabaseConfig() {
+            const url = window.APP_CONFIG?.SUPABASE?.URL;
+            const key = window.APP_CONFIG?.SUPABASE?.ANON_KEY;
+            
+            if (!url || !key) {
+                log('❌ Supabase configuration not found. Please check your environment variables.', 'error');
+                return null;
+            }
+            
+            return { url, key };
+        }
+        
+        const config = getSupabaseConfig();
+        const SUPABASE_URL = config?.url || 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = config?.key || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
 
         let supabaseClient = null;
 
@@ -80,7 +110,16 @@
         }
 
         // Step 5: Check after DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            await waitForConfig();
+            
+            // Update config after load
+            const newConfig = getSupabaseConfig();
+            if (newConfig) {
+                SUPABASE_URL = newConfig.url;
+                SUPABASE_ANON_KEY = newConfig.key;
+                log('Configuration updated from environment', 'info');
+            }
             log('Step 4: DOMContentLoaded fired', 'info');
 
             if (!supabaseClient && window.supabase) {
@@ -95,7 +134,8 @@
         });
 
         // Step 6: Check after window.load
-        window.addEventListener('load', function() {
+        window.addEventListener('load', async function() {
+            await waitForConfig();
             log('Step 5: Window load event fired', 'info');
 
             if (!supabaseClient && window.supabase) {

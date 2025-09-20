@@ -12,11 +12,34 @@
     let isInitialized = false;
     let debugEnabled = false;
 
-    // Supabase 설정
-    const SUPABASE_CONFIG = {
-        url: 'https://ddfnxbkiewolgweivomv.supabase.co',
-        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
-    };
+    // Supabase 설정 (환경 변수 사용)
+    function getSupabaseConfig() {
+        // config-loader.js를 통해 로드된 설정 사용
+        if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+            return {
+                url: window.APP_CONFIG.SUPABASE.URL,
+                key: window.APP_CONFIG.SUPABASE.ANON_KEY
+            };
+        }
+        
+        // 환경 변수 직접 사용 (빌드 시 생성됨)
+        if (window.ENV_CONFIG && window.ENV_CONFIG.SUPABASE) {
+            return {
+                url: window.ENV_CONFIG.SUPABASE.URL,
+                key: window.ENV_CONFIG.SUPABASE.ANON_KEY
+            };
+        }
+        
+        // 전역 변수 사용 (하위 호환성)
+        if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+            return {
+                url: window.SUPABASE_URL,
+                key: window.SUPABASE_ANON_KEY
+            };
+        }
+        
+        throw new Error('Supabase 설정을 찾을 수 없습니다. config-env.js 또는 config-loader.js가 로드되었는지 확인하세요.');
+    }
 
     // 디버그 로그 함수
     function log(message, type = 'info') {
@@ -47,7 +70,10 @@
         }
 
         try {
-            linksSupabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+            const supabaseConfig = getSupabaseConfig();
+            log(`Supabase 설정 로드 완료: ${supabaseConfig.url ? 'URL ✓' : 'URL ✗'}, ${supabaseConfig.key ? 'KEY ✓' : 'KEY ✗'}`);
+            
+            linksSupabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.key);
             isInitialized = true;
             log('✅ Supabase 클라이언트 초기화 완료');
             return true;

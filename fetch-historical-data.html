@@ -65,6 +65,9 @@
     </style>
 </head>
 <body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
     <div class="container">
         <h1>📊 Historical Data Fetcher</h1>
         <p>2025년 1월 1일부터 어제까지의 암호화폐 가격 데이터를 수집합니다.</p>
@@ -94,8 +97,29 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
         import { DebugLogger } from './debug-logger.js';
 
-        const supabaseUrl = 'https://intyabzhvtkxgldmvpvr.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
+        // Wait for config to load
+        function waitForConfig() {
+            return new Promise((resolve) => {
+                if (window.APP_CONFIG?.SUPABASE?.URL) {
+                    resolve();
+                } else {
+                    window.addEventListener('configLoaded', resolve);
+                }
+            });
+        }
+
+        await waitForConfig();
+        
+        // Use environment variables from config
+        const supabaseUrl = window.APP_CONFIG.SUPABASE.URL;
+        const supabaseKey = window.APP_CONFIG.SUPABASE.ANON_KEY;
+        
+        if (!supabaseUrl || !supabaseKey) {
+            console.error('❌ Supabase configuration not found');
+            log('❌ Supabase configuration not found. Please check your environment variables.', 'error');
+            throw new Error('Missing Supabase configuration');
+        }
+        
         const supabase = createClient(supabaseUrl, supabaseKey);
         
         window.supabaseClient = supabase;

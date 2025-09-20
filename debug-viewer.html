@@ -219,6 +219,9 @@
     </style>
 </head>
 <body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
     <div class="container">
         <div class="header">
             <h1>🐛 디버그 로그 뷰어</h1>
@@ -312,8 +315,29 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-        const supabaseUrl = 'https://intyabzhvtkxgldmvpvr.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
+        // Wait for config to load
+        function waitForConfig() {
+            return new Promise((resolve) => {
+                if (window.APP_CONFIG?.SUPABASE?.URL) {
+                    resolve();
+                } else {
+                    window.addEventListener('configLoaded', resolve);
+                }
+            });
+        }
+
+        await waitForConfig();
+        
+        // Use environment variables from config
+        const supabaseUrl = window.APP_CONFIG.SUPABASE.URL;
+        const supabaseKey = window.APP_CONFIG.SUPABASE.ANON_KEY;
+        
+        if (!supabaseUrl || !supabaseKey) {
+            console.error('❌ Supabase configuration not found');
+            document.getElementById('logs-tbody').innerHTML = '<tr><td colspan="6" class="loading" style="color: #f44336;">❌ Supabase configuration not found</td></tr>';
+            throw new Error('Missing Supabase configuration');
+        }
+        
         const supabase = createClient(supabaseUrl, supabaseKey);
         
         window.supabaseClient = supabase;

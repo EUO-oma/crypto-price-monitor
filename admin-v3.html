@@ -240,6 +240,15 @@
     <div class="container">
         <h1>🔗 링크 관리 시스템 v3</h1>
         
+        <!-- 로그인 사용자 정보 표시 -->
+        <div class="config-section" style="margin-bottom: 20px;">
+            <h3>👤 관리자 정보</h3>
+            <div id="admin-info">
+                <div id="admin-email" style="color: #4caf50; font-weight: 500;">로그인 정보 확인 중...</div>
+                <div id="admin-session" style="font-size: 0.9em; color: #888; margin-top: 5px;"></div>
+            </div>
+        </div>
+        
         <div class="info" style="position: relative;">
             <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleGuide()">
                 <span>💡 기능 안내 <span id="guide-arrow" style="font-size: 0.8em;">▼</span></span>
@@ -425,7 +434,9 @@
 
         <div style="text-align: center; margin-top: 30px;">
             <a href="index.html" style="margin-right: 20px;">← 메인 페이지로 돌아가기</a>
-            <button onclick="signOut()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">로그아웃</button>
+            <button onclick="signOut()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                <span id="logout-user-email">로그아웃</span>
+            </button>
         </div>
     </div>
 
@@ -545,10 +556,24 @@
             }
 
             try {
+                // 링크 데이터에 추가자 정보 포함
+                const linkData = { 
+                    name, 
+                    url, 
+                    category, 
+                    position,
+                    created_by: window.currentAdminUser?.email || 'unknown',
+                    created_at: new Date().toISOString()
+                };
+                
+                console.log('📝 링크 추가:', {
+                    name: name,
+                    category: category,
+                    addedBy: linkData.created_by
+                });
+
                 const { data, error } = await supabase.from('links')
-                    .insert([
-                        { name, url, category, position }
-                    ])
+                    .insert([linkData])
                     .select();
 
                 if (error) throw error;
@@ -566,11 +591,26 @@
             }
 
             try {
+                // 삭제 전 링크 정보 가져오기 (로그용)
+                const { data: linkInfo } = await supabase.from('links')
+                    .select('name, category')
+                    .eq('id', id)
+                    .single();
+
                 const { error } = await supabase.from('links')
                     .delete()
                     .eq('id', id);
 
                 if (error) throw error;
+                
+                console.log('🗑️ 링크 삭제:', {
+                    id: id,
+                    name: linkInfo?.name || 'unknown',
+                    category: linkInfo?.category || 'unknown',
+                    deletedBy: window.currentAdminUser?.email || 'unknown',
+                    deletedAt: new Date().toISOString()
+                });
+                
                 return true;
             } catch (error) {
                 console.error('Error deleting link:', error);
@@ -585,8 +625,21 @@
             }
 
             try {
+                // 수정자 정보 추가
+                const updateData = {
+                    ...updates,
+                    updated_by: window.currentAdminUser?.email || 'unknown',
+                    updated_at: new Date().toISOString()
+                };
+                
+                console.log('✏️ 링크 수정:', {
+                    id: id,
+                    changes: Object.keys(updates),
+                    updatedBy: updateData.updated_by
+                });
+
                 const { data, error } = await supabase.from('links')
-                    .update(updates)
+                    .update(updateData)
                     .eq('id', id)
                     .select();
 
@@ -1128,6 +1181,60 @@
             });
         }
 
+        // 관리자 정보 표시 함수
+        function displayAdminInfo(session) {
+            const adminEmailEl = document.getElementById('admin-email');
+            const adminSessionEl = document.getElementById('admin-session');
+            
+            if (!adminEmailEl || !adminSessionEl) {
+                console.warn('Admin info elements not found');
+                return;
+            }
+            
+            if (session && session.user) {
+                const user = session.user;
+                const email = user.email;
+                const provider = user.app_metadata?.provider || '알 수 없음';
+                const loginTime = new Date(session.expires_at * 1000 - (session.expires_in || 3600) * 1000);
+                
+                adminEmailEl.innerHTML = `✅ <strong>${email}</strong>`;
+                adminSessionEl.innerHTML = `
+                    <div>제공자: ${provider} | 로그인 시간: ${loginTime.toLocaleString('ko-KR')}</div>
+                    <div>세션 만료: ${new Date(session.expires_at * 1000).toLocaleString('ko-KR')}</div>
+                `;
+                
+                // 로그아웃 버튼에 사용자 정보 표시
+                const logoutBtn = document.getElementById('logout-user-email');
+                if (logoutBtn) {
+                    logoutBtn.textContent = `${email} 로그아웃`;
+                }
+                
+                // 전역 변수에 사용자 정보 저장 (다른 함수에서 사용)
+                window.currentAdminUser = {
+                    email: email,
+                    id: user.id,
+                    provider: provider
+                };
+                
+                console.log('👤 관리자 정보:', {
+                    email: email,
+                    provider: provider,
+                    userId: user.id
+                });
+            } else {
+                adminEmailEl.innerHTML = '❌ 로그인 정보 없음';
+                adminSessionEl.innerHTML = '';
+                
+                // 로그아웃 버튼 기본값으로 복원
+                const logoutBtn = document.getElementById('logout-user-email');
+                if (logoutBtn) {
+                    logoutBtn.textContent = '로그아웃';
+                }
+                
+                window.currentAdminUser = null;
+            }
+        }
+
         // initializeAdmin은 이미 위의 DOMContentLoaded에서 호출됨
 
         async function initializeAdmin() {
@@ -1157,6 +1264,9 @@
             const userSession = await checkAuth();
             console.log('5. User session:', userSession ? 'authenticated' : 'not authenticated');
             
+            // 사용자 정보 표시
+            displayAdminInfo(userSession);
+            
             // 인증 확인
             if (typeof checkAdminAccess !== 'function') {
                 console.error('[admin-v3] checkAdminAccess function not found');
@@ -1184,6 +1294,13 @@
 
             // 실시간 업데이트 활성화
             enableRealtimeUpdates();
+            
+            // 환영 메시지 표시
+            if (window.currentAdminUser?.email) {
+                setTimeout(() => {
+                    showStatus(`${window.currentAdminUser.email}님, 환영합니다! 관리자 모드가 활성화되었습니다.`, 'success');
+                }, 1000);
+            }
         }
 
         // Supabase 연결 확인
@@ -1292,7 +1409,7 @@
         // 테이블 생성
         function createTable(links, category) {
             let html = `<table class="links-table" data-category="${category}">`;
-            html += '<thead><tr><th width="30">⇅</th><th width="60">순서</th><th>이름</th><th>URL</th><th width="120">카테고리</th><th width="250">작업</th></tr></thead>';
+            html += '<thead><tr><th width="30">⇅</th><th width="60">순서</th><th>이름</th><th>URL</th><th width="120">카테고리</th><th width="150">관리 정보</th><th width="250">작업</th></tr></thead>';
             html += `<tbody id="sortable-${category}">`;
             
             links.forEach(link => {
@@ -1305,6 +1422,11 @@
                             <a href="${link.url}" target="_blank">${link.url.substring(0, 50)}${link.url.length > 50 ? '...' : ''}</a>
                         </td>
                         <td class="category-cell" id="category-${link.id}" style="text-align: center; color: #888; font-size: 0.9em;">${link.category}</td>
+                        <td class="info-cell" style="font-size: 0.8em; color: #666;">
+                            ${link.created_by ? `<div>추가: ${link.created_by.split('@')[0]}</div>` : ''}
+                            ${link.updated_by ? `<div>수정: ${link.updated_by.split('@')[0]}</div>` : ''}
+                            ${link.created_at ? `<div style="font-size: 0.75em; margin-top: 2px;">${new Date(link.created_at).toLocaleDateString('ko-KR')}</div>` : ''}
+                        </td>
                         <td class="action-cell" id="actions-${link.id}">
                             <button class="position-btn" onclick="moveUp(${link.id}, ${link.position}, '${category}')">↑</button>
                             <button class="position-btn" onclick="moveDown(${link.id}, ${link.position}, '${category}')">↓</button>

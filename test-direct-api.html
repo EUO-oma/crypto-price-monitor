@@ -30,6 +30,9 @@
     </style>
 </head>
 <body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
     <h1>Direct REST API 테스트 (Supabase 라이브러리 없이)</h1>
     
     <button onclick="testDirectAPI()">Direct API 테스트</button>
@@ -39,8 +42,25 @@
     <pre id="log"></pre>
 
     <script>
-        const SUPABASE_URL = 'https://intyabzhvtkxgldmvpvr.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
+        // Wait for config
+        async function waitForConfig() {
+            return new Promise((resolve) => {
+                if (window.APP_CONFIG?.SUPABASE?.URL) {
+                    resolve();
+                } else {
+                    window.addEventListener('configLoaded', resolve, { once: true });
+                    setTimeout(resolve, 2000); // Fallback
+                }
+            });
+        }
+        
+        // Get configuration
+        function getSupabaseConfig() {
+            return {
+                url: window.APP_CONFIG?.SUPABASE?.URL || 'https://intyabzhvtkxgldmvpvr.supabase.co',
+                key: window.APP_CONFIG?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0'
+            };
+        }
         
         function log(message, type = '') {
             const logEl = document.getElementById('log');
@@ -53,12 +73,21 @@
             log('Direct API 테스트 시작...');
             
             try {
+                // Wait for config
+                await waitForConfig();
+                
+                const config = getSupabaseConfig();
+                if (!config.url || !config.key) {
+                    log('❌ Supabase configuration not found', 'error');
+                    return;
+                }
+                
                 // 가장 기본적인 방법으로 시도
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/price_history?select=*&limit=1`, {
+                const response = await fetch(`${config.url}/rest/v1/price_history?select=*&limit=1`, {
                     method: 'GET',
                     headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'apikey': config.key,
+                        'Authorization': `Bearer ${config.key}`,
                         'Content-Type': 'application/json',
                         'Prefer': 'return=representation'
                     }
@@ -92,9 +121,17 @@
         async function testWithProxy() {
             log('Proxy 경유 테스트...');
             
+            await waitForConfig();
+            const config = getSupabaseConfig();
+            
+            if (!config.url || !config.key) {
+                log('❌ Supabase configuration not found', 'error');
+                return;
+            }
+            
             // CORS 프록시 서비스 사용 (테스트용)
             const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-            const targetUrl = `${SUPABASE_URL}/rest/v1/price_history?select=*&limit=1`;
+            const targetUrl = `${config.url}/rest/v1/price_history?select=*&limit=1`;
             
             log('⚠️ 이 방법은 테스트용입니다. 실제 사용시에는 권장하지 않습니다.', 'error');
             log(`Proxy URL: ${proxyUrl}${targetUrl}`);
@@ -102,8 +139,8 @@
             try {
                 const response = await fetch(proxyUrl + targetUrl, {
                     headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                        'apikey': config.key,
+                        'Authorization': `Bearer ${config.key}`
                     }
                 });
                 
@@ -122,6 +159,9 @@
         async function checkNetwork() {
             log('네트워크 진단 시작...');
             
+            await waitForConfig();
+            const config = getSupabaseConfig();
+            
             // 1. 기본 네트워크 상태
             log(`온라인 상태: ${navigator.onLine ? '온라인' : '오프라인'}`, navigator.onLine ? 'success' : 'error');
             
@@ -129,7 +169,7 @@
             const img = new Image();
             img.onload = () => log('Supabase 도메인 접근 가능 (이미지 테스트)', 'success');
             img.onerror = () => log('Supabase 도메인 접근 불가 (이미지 테스트)', 'error');
-            img.src = `${SUPABASE_URL}/favicon.ico?t=${Date.now()}`;
+            img.src = `${config.url}/favicon.ico?t=${Date.now()}`;
             
             // 3. 다른 API 테스트
             try {
