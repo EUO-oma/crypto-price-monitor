@@ -72,10 +72,11 @@
         .price-item {
             display: flex;
             flex-direction: row;
-            align-items: center;
+            align-items: flex-start;
             justify-content: flex-start;
             gap: 15px;
             width: 100%;
+            line-height: 1.4;
         }
         
         .price {
@@ -201,6 +202,7 @@
             transition: all 0.2s ease;
             padding: 0;
             position: relative;
+            margin-top: 8px;
         }
         
         .hide-btn:hover {
@@ -378,6 +380,12 @@
         function formatPriceWithLow(currentPrice, low24h) {
             const diff = currentPrice - low24h;
             
+            // Calculate percentage levels from 24h low
+            const low10percent = low24h * 0.90; // -10%
+            const low5percent = low24h * 0.95;  // -5%
+            const high5percent = low24h * 1.05; // +5%
+            const high10percent = low24h * 1.10; // +10%
+            
             // Format numbers with commas for thousands
             const formatNumber = (num) => {
                 return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -390,8 +398,24 @@
             const diffFormatted = formatNumber(diff);
             const diffColor = diff >= 0 ? '#4caf50' : '#f44336'; // Green for positive, red for negative
             
-            // Return formatted string with current - low = difference
-            return `${currentFormatted} <span style="color: #444;">-</span> ${lowFormatted} <span style="color: #444;">=</span> <span style="color: ${diffColor};">${diffFormatted}</span>`;
+            // Format percentage level prices
+            const low10Formatted = formatPrice(low10percent);
+            const low5Formatted = formatPrice(low5percent);
+            const high5Formatted = formatPrice(high5percent);
+            const high10Formatted = formatPrice(high10percent);
+            
+            // Return formatted string with spaces around operators
+            let result = `${currentFormatted} <span style="color: #444;"> - </span> ${lowFormatted} <span style="color: #444;"> = </span> <span style="color: ${diffColor};">${diffFormatted}</span>`;
+            
+            // Add percentage indicators on new lines with improved layout
+            result += `<br><span style="font-size: 0.75em;">`;
+            result += `<span style="color: #e91e63;">-10%: ${low10Formatted}</span> `;
+            result += `<span style="color: #ff5722;">-5%: ${low5Formatted}</span> `;
+            result += `<span style="color: #4caf50;">+5%: ${high5Formatted}</span> `;
+            result += `<span style="color: #00bcd4;">+10%: ${high10Formatted}</span>`;
+            result += `</span>`;
+            
+            return result;
         }
         
         function toggleSecurity() {
