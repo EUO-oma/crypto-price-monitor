@@ -32,6 +32,13 @@
             z-index: 100;
         }
         
+        .security-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
         .control-btn {
             background: transparent;
             border: 1px solid #333;
@@ -99,6 +106,38 @@
             letter-spacing: 3px;
         }
         
+        /* Security mode styles */
+        .security-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 50px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        .security-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .security-btn.active {
+            color: #4caf50;
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        
+        .price.secure {
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        
         @media (max-width: 768px) {
             .price-container {
                 gap: 30px;
@@ -118,6 +157,12 @@
     </style>
 </head>
 <body class="size-m">
+    <div class="security-controls">
+        <button class="security-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
+            👁️
+        </button>
+    </div>
+    
     <div class="controls">
         <button class="control-btn" onclick="adjustSize('decrease')">-</button>
         <button class="control-btn" onclick="adjustSize('increase')">+</button>
@@ -141,6 +186,13 @@
         // Size control
         const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
         let currentSizeIndex = 2; // Start with 'm'
+        
+        // Security mode
+        let isSecureMode = false;
+        const numberMap = {
+            '1': 'T', '2': 'N', '3': 'M', '4': 'R', '5': 'L',
+            '6': 'S', '7': 'G', '8': 'F', '9': 'P', '0': '*'
+        };
         
         function adjustSize(action) {
             const body = document.body;
@@ -178,7 +230,59 @@
             // Format price with commas
             const parts = price.toFixed(2).split('.');
             const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            return `${integerPart}.${parts[1]}`;
+            const formattedPrice = `${integerPart}.${parts[1]}`;
+            
+            // Apply security encoding if enabled
+            if (isSecureMode) {
+                return encodePrice(formattedPrice);
+            }
+            
+            return formattedPrice;
+        }
+        
+        function encodePrice(priceStr) {
+            let encoded = '';
+            for (let char of priceStr) {
+                if (numberMap[char]) {
+                    encoded += numberMap[char];
+                } else {
+                    encoded += char;
+                }
+            }
+            return encoded;
+        }
+        
+        function toggleSecurity() {
+            isSecureMode = !isSecureMode;
+            const btn = document.getElementById('securityToggle');
+            
+            if (isSecureMode) {
+                btn.classList.add('active');
+                btn.innerHTML = '🔒';
+                document.querySelectorAll('.price').forEach(el => el.classList.add('secure'));
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '👁️';
+                document.querySelectorAll('.price').forEach(el => el.classList.remove('secure'));
+            }
+            
+            // Update all prices immediately
+            updateAllPrices();
+        }
+        
+        function updateAllPrices() {
+            // Update displayed prices with current values
+            if (window.lastPrices) {
+                if (window.lastPrices.btc) {
+                    document.getElementById('btc-price').textContent = formatPrice(window.lastPrices.btc);
+                }
+                if (window.lastPrices.eth) {
+                    document.getElementById('eth-price').textContent = formatPrice(window.lastPrices.eth);
+                }
+                if (window.lastPrices.sol) {
+                    document.getElementById('sol-price').textContent = formatPrice(window.lastPrices.sol);
+                }
+            }
         }
         
         function connectBinanceWebSocket(symbol, elementId) {
@@ -192,6 +296,11 @@
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 const price = parseFloat(data.c); // Current price
+                
+                // Store price for later updates
+                if (!window.lastPrices) window.lastPrices = {};
+                const coinType = symbol.replace('USDT', '').toLowerCase();
+                window.lastPrices[coinType] = price;
                 
                 document.getElementById(elementId).textContent = formatPrice(price);
             };
@@ -228,16 +337,25 @@
                 
                 const results = await Promise.all(promises);
                 
+                // Store prices
+                if (!window.lastPrices) window.lastPrices = {};
+                
                 if (results[0]) {
-                    document.getElementById('btc-price').textContent = formatPrice(parseFloat(results[0].lastPrice));
+                    const btcPrice = parseFloat(results[0].lastPrice);
+                    window.lastPrices.btc = btcPrice;
+                    document.getElementById('btc-price').textContent = formatPrice(btcPrice);
                     document.getElementById('btc-price').classList.remove('loading');
                 }
                 if (results[1]) {
-                    document.getElementById('eth-price').textContent = formatPrice(parseFloat(results[1].lastPrice));
+                    const ethPrice = parseFloat(results[1].lastPrice);
+                    window.lastPrices.eth = ethPrice;
+                    document.getElementById('eth-price').textContent = formatPrice(ethPrice);
                     document.getElementById('eth-price').classList.remove('loading');
                 }
                 if (results[2]) {
-                    document.getElementById('sol-price').textContent = formatPrice(parseFloat(results[2].lastPrice));
+                    const solPrice = parseFloat(results[2].lastPrice);
+                    window.lastPrices.sol = solPrice;
+                    document.getElementById('sol-price').textContent = formatPrice(solPrice);
                     document.getElementById('sol-price').classList.remove('loading');
                 }
             } catch (error) {

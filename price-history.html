@@ -470,13 +470,9 @@
                 </div>
             </div>
             
-            <div class="control-group">
-                <label>특수 차트:</label>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="show-high-low" onchange="toggleHighLowRange()">
-                    <label for="show-high-low">상한가/하한가 범위</label>
-                </div>
-            </div>
+            <button class="download-btn" onclick="window.location.href='high-low-range.html'" style="background: #ff5722;">
+                📊 상한가/하한가 범위 보기
+            </button>
             
             <button class="download-btn" onclick="downloadChart()">📥 차트 다운로드</button>
         </div>
@@ -629,7 +625,7 @@
         let currentView = 'chart';
         let currentChartTab = 'combined';
         let priceChart = null;
-        let showHighLowRange = false;
+        // showHighLowRange 변수 제거됨 - 기능이 별도 페이지로 이동
 
         // 차트 색상
         const chartColors = {
@@ -860,21 +856,7 @@
             const ctx = document.getElementById('priceChart').getContext('2d');
             const chartType = document.getElementById('chart-type').value;
             
-            // 상한가/하한가 범위 표시시 단일 코인만 가능
-            if (showHighLowRange) {
-                const checkedCoins = [
-                    document.getElementById('show-btc').checked,
-                    document.getElementById('show-eth').checked,
-                    document.getElementById('show-sol').checked
-                ].filter(checked => checked).length;
-                
-                if (checkedCoins > 1) {
-                    alert('상한가/하한가 범위는 하나의 코인만 선택하여 볼 수 있습니다.');
-                    document.getElementById('show-high-low').checked = false;
-                    showHighLowRange = false;
-                    return;
-                }
-            }
+            // 상한가/하한가 범위 기능은 별도 페이지로 이동됨
             
             // 기존 차트 제거
             if (priceChart) {
@@ -891,7 +873,7 @@
                 const btcPrices = filteredData.map(d => d.btc || null);
                 
                 // 상한가/하한가 범위 차트
-                if (showHighLowRange && currentChartTab !== 'combined') {
+                if (false) { // 상한가/하한가 범위 기능 제거됨
                     const btcHighPrices = filteredData.map(d => d.btc_high || d.btc || null);
                     const btcLowPrices = filteredData.map(d => d.btc_low || d.btc || null);
                     
@@ -929,7 +911,7 @@
                         fill: false,
                         yAxisID: currentChartTab === 'combined' ? 'y-btc' : 'y'
                     });
-                } else if (!showHighLowRange) {
+                } else {
                     // 일반 차트
                     if (chartType === 'candlestick') {
                         // 캔들스틱 차트
@@ -961,7 +943,7 @@
                 }
                 
                 // 이동평균선 (상한가/하한가 범위가 아닐 때만)
-                if (!showHighLowRange && document.getElementById('show-ma7').checked) {
+                if (document.getElementById('show-ma7').checked) {
                     datasets.push({
                         label: 'BTC MA7',
                         data: calculateMA(btcPrices, 7),
@@ -972,7 +954,7 @@
                         yAxisID: currentChartTab === 'combined' ? 'y-btc' : 'y'
                     });
                 }
-                if (!showHighLowRange && document.getElementById('show-ma30').checked) {
+                if (document.getElementById('show-ma30').checked) {
                     datasets.push({
                         label: 'BTC MA30',
                         data: calculateMA(btcPrices, 30),
@@ -991,7 +973,7 @@
                 const ethPrices = filteredData.map(d => d.eth || null);
                 
                 // 상한가/하한가 범위 차트
-                if (showHighLowRange && currentChartTab !== 'combined') {
+                if (false) { // 상한가/하한가 범위 기능 제거됨
                     const ethHighPrices = filteredData.map(d => d.eth_high || d.eth || null);
                     const ethLowPrices = filteredData.map(d => d.eth_low || d.eth || null);
                     
@@ -1027,7 +1009,7 @@
                         fill: false,
                         yAxisID: currentChartTab === 'combined' ? 'y-eth' : 'y'
                     });
-                } else if (!showHighLowRange) {
+                } else {
                     datasets.push({
                         label: 'ETH',
                         data: ethPrices,
@@ -1046,7 +1028,7 @@
                 const solPrices = filteredData.map(d => d.sol || null);
                 
                 // 상한가/하한가 범위 차트
-                if (showHighLowRange && currentChartTab !== 'combined') {
+                if (false) { // 상한가/하한가 범위 기능 제거됨
                     const solHighPrices = filteredData.map(d => d.sol_high || d.sol || null);
                     const solLowPrices = filteredData.map(d => d.sol_low || d.sol || null);
                     
@@ -1082,7 +1064,7 @@
                         fill: false,
                         yAxisID: currentChartTab === 'combined' ? 'y-sol' : 'y'
                     });
-                } else if (!showHighLowRange) {
+                } else {
                     datasets.push({
                         label: 'SOL',
                         data: solPrices,
@@ -1293,43 +1275,7 @@
             updateChart();
         }
 
-        // 상한가/하한가 범위 토글
-        function toggleHighLowRange() {
-            showHighLowRange = document.getElementById('show-high-low').checked;
-            
-            if (showHighLowRange) {
-                // 현재 체크된 코인 수 확인
-                const checkedCoins = [
-                    document.getElementById('show-btc').checked,
-                    document.getElementById('show-eth').checked,
-                    document.getElementById('show-sol').checked
-                ].filter(checked => checked).length;
-                
-                if (checkedCoins > 1) {
-                    alert('상한가/하한가 범위는 하나의 코인만 선택하여 볼 수 있습니다.');
-                    document.getElementById('show-high-low').checked = false;
-                    showHighLowRange = false;
-                    return;
-                }
-                
-                if (checkedCoins === 0) {
-                    alert('코인을 하나 선택해주세요.');
-                    document.getElementById('show-high-low').checked = false;
-                    showHighLowRange = false;
-                    return;
-                }
-                
-                // 통합 차트에서는 사용 불가
-                if (currentChartTab === 'combined') {
-                    alert('상한가/하한가 범위는 개별 코인 차트에서만 사용 가능합니다.');
-                    document.getElementById('show-high-low').checked = false;
-                    showHighLowRange = false;
-                    return;
-                }
-            }
-            
-            updateChart();
-        }
+        // 상한가/하한가 범위 토글 함수 제거됨 - 별도 페이지로 이동
         
         // 차트 다운로드
         function downloadChart() {
