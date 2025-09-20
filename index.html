@@ -422,7 +422,7 @@
                     " onmouseover="this.style.background='#2a2a2a'; this.style.color='#fff'" onmouseout="this.style.background='#1a1a1a'; this.style.color='#888'">
                         A-
                     </button>
-                    <button onclick="adjustPriceSize('reset')" style="
+                    <button onclick="toggleBWMode()" style="
                         background: #1a1a1a;
                         border: 1px solid #333;
                         border-radius: 6px;
@@ -433,7 +433,7 @@
                         color: #888;
                         transition: all 0.2s;
                     " onmouseover="this.style.background='#2a2a2a'; this.style.color='#fff'" onmouseout="this.style.background='#1a1a1a'; this.style.color='#888'">
-                        Reset
+                        BW
                     </button>
                     <button onclick="adjustPriceSize('increase')" style="
                         background: #1a1a1a;
@@ -552,6 +552,8 @@
 
         // Price size adjustment
         let priceScale = 1;
+        let bwMode = false;
+        
         function adjustPriceSize(action) {
             const priceElements = document.querySelectorAll('.crypto-price');
             
@@ -609,6 +611,9 @@
         }
         
         // Initialize on load
+        // Store page load time
+        window.pageLoadTime = Date.now();
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Restore price scale
             const savedScale = localStorage.getItem('priceScale');
@@ -620,7 +625,60 @@
             // Update market status
             updateMarketStatus();
             setInterval(updateMarketStatus, 60000); // Update every minute
+            
+            // Hide percentage changes after 10 seconds
+            setTimeout(() => {
+                hidePercentageChanges();
+            }, 10000);
         });
+        
+        // BW Mode Toggle Function
+        function toggleBWMode() {
+            bwMode = !bwMode;
+            const priceElements = document.querySelectorAll('.crypto-price');
+            const symbolElements = document.querySelectorAll('.coin-symbol');
+            
+            if (bwMode) {
+                // Make all prices white
+                priceElements.forEach(el => {
+                    el.style.color = '#ffffff';
+                });
+                symbolElements.forEach(el => {
+                    el.style.color = '#ffffff';
+                });
+            } else {
+                // Restore original colors
+                document.getElementById('btc-price-custom').style.color = '#f7931a';
+                document.getElementById('eth-price-custom').style.color = '#627eea';
+                document.getElementById('sol-price-custom').style.color = '#00ffa3';
+                
+                // Restore symbol colors
+                const btcSymbol = document.querySelector('[style*="#f7931a"].coin-symbol');
+                const ethSymbol = document.querySelector('[style*="#627eea"].coin-symbol');
+                const solSymbol = document.querySelector('[style*="#00ffa3"].coin-symbol');
+                
+                if (btcSymbol) btcSymbol.style.color = '#f7931a';
+                if (ethSymbol) ethSymbol.style.color = '#627eea';
+                if (solSymbol) solSymbol.style.color = '#00ffa3';
+            }
+        }
+        
+        // Hide percentage changes function
+        function hidePercentageChanges() {
+            const percentageElements = [
+                document.getElementById('btc-change-custom'),
+                document.getElementById('eth-change-custom'),
+                document.getElementById('sol-change-custom'),
+                document.getElementById('nasdaq-percent')
+            ];
+            
+            percentageElements.forEach(el => {
+                if (el) {
+                    el.style.transition = 'color 0.5s ease';
+                    el.style.color = '#000000';
+                }
+            });
+        }
 
         let binanceBtcWs = null;
         let binanceEthWs = null;
@@ -2756,10 +2814,18 @@
                     const lowPrice = parseFloat(data.lowPrice);
                     
                     // 가격 포맷 함수
-                    const formatPrice = (price) => {
+                    const formatPrice = (price, coinSymbol) => {
                         const parts = price.toFixed(2).split('.');
                         const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                        return `<span style="color: #000;">$</span>${integerPart}<span style="color: #666; font-size: 0.7em;">.${parts[1]}</span>`;
+                        let color = '#000';
+                        if (!bwMode) {
+                            if (coinSymbol === 'BTCUSDT') color = '#f7931a';
+                            else if (coinSymbol === 'ETHUSDT') color = '#627eea';
+                            else if (coinSymbol === 'SOLUSDT') color = '#00ffa3';
+                        } else {
+                            color = '#ffffff';
+                        }
+                        return `<span style="color: ${color};">$</span>${integerPart}<span style="color: ${color}; font-size: 0.7em;">.${parts[1]}</span>`;
                     };
                     
                     // DOM 업데이트
@@ -2795,7 +2861,7 @@
                     const changeElement = document.getElementById(changeElementId);
                     
                     if (priceElement) {
-                        priceElement.innerHTML = formatPrice(price);
+                        priceElement.innerHTML = formatPrice(price, symbol);
                     }
                     
                     if (changeElement) {
@@ -2803,6 +2869,13 @@
                         const changeSymbol = priceChange >= 0 ? '+' : '';
                         changeElement.innerHTML = `${changeSymbol}${priceChangePercent.toFixed(2)}%`;
                         changeElement.style.color = changeColor;
+                        
+                        // Apply black color if already past 10 seconds
+                        const now = Date.now();
+                        const pageLoadTime = window.pageLoadTime || now;
+                        if (now - pageLoadTime > 10000) {
+                            changeElement.style.color = '#000000';
+                        }
                     }
                 });
                 
