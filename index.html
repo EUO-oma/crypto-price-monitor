@@ -3115,31 +3115,43 @@
     <!-- Navigation Buttons Container -->
     <div class="nav-buttons-container" style="
         position: fixed;
-        bottom: 30px;
-        right: 30px;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
         display: flex;
-        flex-direction: column;
-        gap: 15px;
+        flex-direction: row;
+        gap: 10px;
         z-index: 1000;
+        background: rgba(0, 0, 0, 0.95);
+        padding: 8px 16px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        border: 1px solid #333;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     ">
+        <!-- 홈 버튼 -->
+        <a href="index.html" class="nav-btn" title="홈">
+            <span style="font-size: 20px;">🏠</span>
+        </a>
+        
         <!-- 차트 버튼 -->
         <a href="triple-chart.html" class="nav-btn" title="차트">
-            <span style="font-size: 24px;">📊</span>
+            <span style="font-size: 20px;">📊</span>
         </a>
         
         <!-- 링크 모음 버튼 -->
-        <a href="links.html" class="nav-btn" title="링크 모음">
-            <span style="font-size: 24px;">🔗</span>
+        <a href="links.html" class="nav-btn" title="링크">
+            <span style="font-size: 20px;">🔗</span>
         </a>
         
         <!-- 로그인 버튼 -->
         <a href="login.html" class="nav-btn" title="로그인">
-            <span style="font-size: 24px;">🔐</span>
+            <span style="font-size: 20px;">🔐</span>
         </a>
         
         <!-- 관리자 설정 버튼 -->
-        <a href="admin-v3.html" class="nav-btn" title="관리자 설정">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <a href="admin-v3.html" class="nav-btn" title="설정">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24M22 12h-6m-6 0H1"></path>
             </svg>
@@ -3149,55 +3161,80 @@
     <style>
         /* Unified Navigation Buttons Style */
         .nav-btn {
-            width: 50px;
-            height: 50px;
-            background: #0a0a0a;
-            border: 2px solid #333;
+            width: 45px;
+            height: 45px;
+            background: transparent;
+            border: none;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #888;
             text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+            position: relative;
         }
         
         .nav-btn:hover {
-            background: #1a1a1a;
-            border-color: #666;
+            background: rgba(255, 255, 255, 0.1);
             color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+            transform: scale(1.1);
         }
         
         .nav-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+        }
+        
+        /* Current page indicator */
+        .nav-btn.active {
+            color: #f7931a;
+            background: rgba(247, 147, 26, 0.1);
         }
         
         /* Tooltip for navigation buttons */
         .nav-btn::after {
             content: attr(title);
             position: absolute;
-            right: 60px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #1a1a1a;
+            bottom: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 26, 0.95);
             color: #fff;
             padding: 6px 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 12px;
             white-space: nowrap;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.2s ease;
             border: 1px solid #333;
         }
         
         .nav-btn:hover::after {
             opacity: 1;
+        }
+        
+        /* Responsive adjustments for mobile */
+        @media (max-width: 768px) {
+            .nav-buttons-container {
+                bottom: 10px !important;
+                padding: 6px 12px !important;
+                gap: 5px !important;
+            }
+            
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .nav-btn span {
+                font-size: 18px !important;
+            }
+            
+            .nav-btn svg {
+                width: 18px !important;
+                height: 18px !important;
+            }
         }
         
         .settings-btn {
