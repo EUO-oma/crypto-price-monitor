@@ -81,7 +81,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
     <script>
         // 로그 함수
         function log(elementId, message, type = 'info') {
@@ -97,7 +97,7 @@
             
             try {
                 // Supabase 객체 확인
-                if (typeof supabase === 'undefined') {
+                if (!window.supabaseClient) {
                     log('connection-log', 'Supabase 객체가 없습니다!', 'error');
                     return;
                 }
@@ -105,8 +105,7 @@
                 log('connection-log', 'Supabase URL: ' + (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'undefined'), 'info');
                 
                 // 간단한 쿼리
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .select('count');
                 
                 if (error) {
@@ -127,8 +126,7 @@
             log('simple-log', '전송 시도: ' + message, 'info');
             
             try {
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .insert([{ message: message }])
                     .select();
                 
@@ -165,8 +163,7 @@
                 // 전송
                 log('full-log', 'Supabase 호출...', 'info');
                 
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .insert([{ 
                         message: message,
                         browser_id: browserId

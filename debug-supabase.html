@@ -177,7 +177,7 @@
 
             // Load config file
             const script = document.createElement('script');
-            script.src = 'supabase-config.js';
+            script.src = 'config-loader.js';
             script.onload = async () => {
                 log('Config file loaded', 'info');
 
@@ -187,8 +187,7 @@
                         log('✓ Global supabase variable found', 'success');
 
                         try {
-                            const { data, error } = await supabase
-                                .from('links')
+                            const { data, error } = await window.supabaseClient.from('links')
                                 .select('*');
 
                             if (error) throw error;

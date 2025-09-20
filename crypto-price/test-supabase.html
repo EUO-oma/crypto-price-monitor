@@ -105,7 +105,7 @@ SELECT * FROM links;
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
     <script>
         // 환경 변수 확인
         document.addEventListener('DOMContentLoaded', () => {
@@ -140,8 +140,7 @@ SELECT * FROM links;
             
             try {
                 // 간단한 쿼리로 연결 테스트
-                const { data, error } = await supabase
-                    .from('links')
+                const { data, error } = await window.supabaseClient.from('links')
                     .select('count');
                 
                 if (error) {
@@ -163,8 +162,7 @@ SELECT * FROM links;
             resultDiv.innerHTML = '<p>읽기 시도 중...</p>';
             
             try {
-                const { data: links, error } = await supabase
-                    .from('links')
+                const { data: links, error } = await window.supabaseClient.from('links')
                     .select('*')
                     .order('position', { ascending: true });
                 
@@ -209,8 +207,7 @@ SELECT * FROM links;
             ];
             
             try {
-                const { data, error } = await supabase
-                    .from('links')
+                const { data, error } = await window.supabaseClient.from('links')
                     .insert(sampleData)
                     .select();
                 

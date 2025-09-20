@@ -91,7 +91,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
     <script>
         // 상태 표시
         function showStatus(message, type = 'info') {
@@ -111,8 +111,7 @@
             showStatus('연결 테스트 중...', 'info');
             
             try {
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .select('count');
                 
                 if (error) {
@@ -139,8 +138,7 @@
             
             try {
                 // 가장 간단하게 - message 필드만
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .insert([{ message: message }])
                     .select();
                 
@@ -163,8 +161,7 @@
             showStatus('메시지 불러오는 중...', 'info');
             
             try {
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(10);

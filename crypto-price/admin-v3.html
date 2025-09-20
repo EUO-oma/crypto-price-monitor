@@ -298,7 +298,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
     <script src="auth-helper.js"></script>
     <script>
         let editingId = null;
@@ -397,7 +397,7 @@
         async function checkConnection() {
             const statusElement = document.getElementById('connection-status');
             try {
-                const { data, error } = await supabase.from('links').select('count').limit(1);
+                const { data, error } = await window.supabaseClient.from('links').select('count').limit(1);
                 if (error) throw error;
                 statusElement.innerHTML = '<span style="color: #4caf50;">✅ 연결됨</span>';
             } catch (error) {
@@ -595,8 +595,7 @@
         async function moveUp(id, currentPos, category) {
             if (currentPos <= 1) return;
             
-            const { data: links } = await supabase
-                .from('links')
+            const { data: links } = await window.supabaseClient.from('links')
                 .select('*')
                 .eq('category', category)
                 .order('position');
@@ -614,8 +613,7 @@
 
         // 아래로 이동
         async function moveDown(id, currentPos, category) {
-            const { data: links } = await supabase
-                .from('links')
+            const { data: links } = await window.supabaseClient.from('links')
                 .select('*')
                 .eq('category', category)
                 .order('position');

@@ -222,7 +222,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
     <script>
         // 페이지 로드시 이미 로그인되어 있는지 확인 (안전한 버전)
         window.addEventListener('DOMContentLoaded', async () => {
@@ -230,7 +231,10 @@
             await waitForSupabase();
             
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                const supabaseClient = window.getSupabaseClient();
+                if (!supabaseClient) return;
+                
+                const { data: { session } } = await supabaseClient.auth.getSession();
                 if (session) {
                     showStatus('이미 로그인되어 있습니다. 관리 페이지로 이동합니다...', 'success');
                     setTimeout(() => {
@@ -249,14 +253,14 @@
             const maxAttempts = 50; // 10초 대기
             
             while (attempts < maxAttempts) {
-                if (window.supabase && supabase) {
-                    console.log('✅ Supabase 클라이언트 준비됨');
-                    return true;
-                }
-                
-                // supabase-config.js에서 초기화 시도
-                if (typeof initializeSupabase === 'function') {
-                    initializeSupabase();
+                // getSupabaseClient 함수가 준비될 때까지 대기
+                if (window.getSupabaseClient && typeof window.getSupabaseClient === 'function') {
+                    const client = window.getSupabaseClient();
+                    if (client) {
+                        window.supabase = client;
+                        console.log('✅ Supabase 클라이언트 준비됨');
+                        return true;
+                    }
                 }
                 
                 await new Promise(resolve => setTimeout(resolve, 200));
@@ -273,7 +277,12 @@
                 // Supabase 초기화 확인
                 await waitForSupabase();
                 
-                const { data, error } = await supabase.auth.signInWithOAuth({
+                const supabaseClient = window.getSupabaseClient();
+                if (!supabaseClient) {
+                    throw new Error('Supabase 클라이언트를 초기화할 수 없습니다.');
+                }
+                
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
                         redirectTo: window.location.origin + '/admin-v3.html'
@@ -304,12 +313,12 @@
                 // Supabase 초기화 확인
                 await waitForSupabase();
                 
-                ensureSupabase();
-                if (!supabase) {
+                const supabaseClient = window.getSupabaseClient();
+                if (!supabaseClient) {
                     throw new Error('Supabase 클라이언트를 초기화할 수 없습니다.');
                 }
                 
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password
                 });

@@ -279,7 +279,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="links-module.js"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
     <script>
 
         // Fun YouTube view toggle function
@@ -442,8 +442,7 @@
             const supabase = window.supabaseClient;
 
             try {
-                const { data: links, error } = await supabase
-                    .from('links')
+                const { data: links, error } = await window.supabaseClient.from('links')
                     .select('*')
                     .order('position', { ascending: true });
                 

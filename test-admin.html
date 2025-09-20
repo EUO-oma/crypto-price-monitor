@@ -10,26 +10,33 @@
     <div id="links">Loading links...</div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
     <script>
         async function testConnection() {
             const statusDiv = document.getElementById('status');
             const linksDiv = document.getElementById('links');
 
-            // Check if Supabase is initialized
-            if (typeof supabase === 'undefined') {
-                statusDiv.innerHTML = 'Error: Supabase not initialized';
-                console.error('Supabase is not initialized');
-                return;
+            // Initialize Supabase if needed
+            if (!window.supabaseClient) {
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    statusDiv.innerHTML = 'Error: Configuration not loaded';
+                    console.error('Configuration not loaded');
+                    return;
+                }
             }
 
             statusDiv.innerHTML = 'Supabase initialized successfully';
-            console.log('Supabase client:', supabase);
+            console.log('Supabase client:', window.supabaseClient);
 
             try {
                 // Try to fetch links
                 console.log('Fetching links...');
-                const { data: links, error } = await supabase
+                const { data: links, error } = await window.supabaseClient
                     .from('links')
                     .select('*')
                     .limit(5);

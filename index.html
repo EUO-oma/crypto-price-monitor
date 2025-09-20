@@ -2284,9 +2284,16 @@
                 console.log('채팅 메시지 로드 시작...');
                 
                 if (!window.supabaseClient) {
-                    console.error('Supabase client not initialized');
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    console.error('Configuration not loaded');
                     return;
                 }
+            }
                 
                 const { data, error } = await window.supabaseClient
                     .from('messages')
@@ -2401,8 +2408,15 @@
             console.log('채팅 실시간 구독 시작');
             
             if (!window.supabaseClient) {
-                console.error('Supabase client not initialized for subscription');
-                return;
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    console.error('Configuration not loaded');
+                    return;
+                }
             }
             
             if (chatChannel) {

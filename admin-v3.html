@@ -433,7 +433,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
-    <!-- Supabase 직접 초기화 (supabase-config.js 의존성 제거) -->
+    <!-- Supabase 직접 초기화 (config-loader.js 의존성 제거) -->
     <script>
         // Supabase 설정
         const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
@@ -466,8 +466,7 @@
 
             try {
                 // YouTube 채널 가져오기
-                const { data: youtubeLinks, error: ytError } = await supabase
-                    .from('links')
+                const { data: youtubeLinks, error: ytError } = await window.supabaseClient.from('links')
                     .select('*')
                     .eq('category', 'youtube')
                     .order('position');
@@ -475,8 +474,7 @@
                 if (ytError) throw ytError;
 
                 // Favorite 사이트 가져오기
-                const { data: favoriteLinks, error: favError } = await supabase
-                    .from('links')
+                const { data: favoriteLinks, error: favError } = await window.supabaseClient.from('links')
                     .select('*')
                     .eq('category', 'favorite')
                     .order('position');
@@ -484,8 +482,7 @@
                 if (favError) throw favError;
 
                 // GPT 도구 링크 가져오기
-                const { data: gptLinks, error: gptError } = await supabase
-                    .from('links')
+                const { data: gptLinks, error: gptError } = await window.supabaseClient.from('links')
                     .select('*')
                     .eq('category', 'gpt')
                     .order('position');
@@ -510,8 +507,7 @@
             }
 
             try {
-                const { data, error } = await supabase
-                    .from('links')
+                const { data, error } = await window.supabaseClient.from('links')
                     .insert([
                         { name, url, category, position }
                     ])
@@ -532,8 +528,7 @@
             }
 
             try {
-                const { error } = await supabase
-                    .from('links')
+                const { error } = await window.supabaseClient.from('links')
                     .delete()
                     .eq('id', id);
 
@@ -552,8 +547,7 @@
             }
 
             try {
-                const { data, error } = await supabase
-                    .from('links')
+                const { data, error } = await window.supabaseClient.from('links')
                     .update(updates)
                     .eq('id', id)
                     .select();
@@ -572,8 +566,7 @@
                 return null;
             }
 
-            const subscription = supabase
-                .channel('links_changes')
+            const subscription = window.supabaseClient.channel('links_changes')
                 .on('postgres_changes',
                     { event: '*', schema: 'public', table: 'links' },
                     (payload) => {
@@ -1179,7 +1172,7 @@
 
             try {
                 console.log('Checking Supabase connection...');
-                const { data, error } = await supabase.from('links').select('count').limit(1);
+                const { data, error } = await window.supabaseClient.from('links').select('count').limit(1);
                 if (error) throw error;
                 console.log('Supabase connection successful');
                 statusElement.innerHTML = '<span style="color: #4caf50;">✅ 연결됨</span>';
@@ -1203,8 +1196,7 @@
 
             try {
                 // 모든 링크를 가져오기
-                const { data: allLinks, error } = await supabase
-                    .from('links')
+                const { data: allLinks, error } = await window.supabaseClient.from('links')
                     .select('*')
                     .order('category', { ascending: true })
                     .order('position', { ascending: true });
@@ -1420,8 +1412,7 @@
         async function moveUp(id, currentPos, category) {
             if (currentPos <= 1) return;
             
-            const { data: links } = await supabase
-                .from('links')
+            const { data: links } = await window.supabaseClient.from('links')
                 .select('*')
                 .eq('category', category)
                 .order('position');
@@ -1439,8 +1430,7 @@
 
         // 아래로 이동
         async function moveDown(id, currentPos, category) {
-            const { data: links } = await supabase
-                .from('links')
+            const { data: links } = await window.supabaseClient.from('links')
                 .select('*')
                 .eq('category', category)
                 .order('position');

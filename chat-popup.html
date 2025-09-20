@@ -276,7 +276,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
     <script>
         // 브라우저 식별 ID
         function getBrowserId() {
@@ -388,7 +388,20 @@
         async function sendMessage() {
             const message = chatInput.value.trim();
             
-            if (!message || !window.supabaseClient) return;
+            if (!message) return;
+            
+            // Initialize Supabase if needed
+            if (!window.supabaseClient) {
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    console.error('Configuration not loaded');
+                    return;
+                }
+            }
 
             // Hide empty state
             emptyState.classList.remove('show');
@@ -481,9 +494,17 @@
 
         // 메시지 로드
         async function loadMessages() {
+            // Initialize Supabase if needed
             if (!window.supabaseClient) {
-                setTimeout(loadMessages, 100);
-                return;
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    setTimeout(loadMessages, 100);
+                    return;
+                }
             }
             
             try {
@@ -513,9 +534,17 @@
 
         // 실시간 구독 설정
         function setupRealtimeSubscription() {
+            // Initialize Supabase if needed
             if (!window.supabaseClient) {
-                setTimeout(setupRealtimeSubscription, 100);
-                return;
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    setTimeout(setupRealtimeSubscription, 100);
+                    return;
+                }
             }
             
             channel = window.supabaseClient

@@ -95,7 +95,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
     <script>
         let subscription = null;
         
@@ -106,8 +106,7 @@
                 resultDiv.innerHTML = '<p class="warning">연결 테스트 중...</p>';
                 
                 // 간단한 쿼리로 연결 테스트
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .select('count');
                 
                 if (error) {
@@ -133,8 +132,7 @@
             try {
                 resultDiv.innerHTML = '<p class="warning">메시지 읽기 중...</p>';
                 
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(10);
@@ -176,8 +174,7 @@
                 
                 console.log('전송할 메시지:', message);
                 
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .insert([{ message: message }])
                     .select();
                 
@@ -220,8 +217,7 @@
                 resultDiv.textContent = '정책 확인 중...';
                 
                 // 테이블 존재 여부 확인
-                const { data: tables, error: tableError } = await supabase
-                    .from('messages')
+                const { data: tables, error: tableError } = await window.supabaseClient.from('messages')
                     .select('*')
                     .limit(1);
                 
@@ -236,8 +232,7 @@
                     
                     // 테스트 메시지 전송
                     const testMsg = `정책 테스트 ${Date.now()}`;
-                    const { error: insertError } = await supabase
-                        .from('messages')
+                    const { error: insertError } = await window.supabaseClient.from('messages')
                         .insert([{ message: testMsg }]);
                     
                     if (insertError) {
@@ -260,8 +255,7 @@
                 return;
             }
             
-            subscription = supabase
-                .channel('test-chat-channel')
+            subscription = window.supabaseClient.channel('test-chat-channel')
                 .on('postgres_changes', 
                     { event: 'INSERT', schema: 'public', table: 'messages' },
                     (payload) => {
@@ -286,7 +280,7 @@
             const resultDiv = document.getElementById('subscription-result');
             
             if (subscription) {
-                supabase.removeChannel(subscription);
+                window.supabaseClient.removeChannel(subscription);
                 subscription = null;
                 resultDiv.innerHTML = '<p class="warning">구독이 중지되었습니다.</p>';
             } else {

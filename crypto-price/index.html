@@ -583,7 +583,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="config-loader.js"></script>
     <script>
         let binanceBtcWs = null;
         let binanceEthWs = null;
@@ -832,8 +832,7 @@
             console.log('Supabase client:', typeof supabase !== 'undefined' ? 'Initialized' : 'NOT INITIALIZED');
             
             try {
-                const { data: links, error } = await supabase
-                    .from('links')
+                const { data: links, error } = await window.supabaseClient.from('links')
                     .select('*')
                     .order('position', { ascending: true });
                 
@@ -1087,8 +1086,7 @@
         // Supabase에 BTC 가격 저장
         async function saveBTCToSupabase(date, high, low, close) {
             try {
-                const { error } = await supabase
-                    .from('price_history')
+                const { error } = await window.supabaseClient.from('price_history')
                     .upsert({
                         symbol: 'BTCUSDT',
                         date: date,
@@ -1149,8 +1147,7 @@
         // 공통 Supabase 저장 함수
         async function saveToSupabase(symbol, date, high, low, close) {
             try {
-                const { error } = await supabase
-                    .from('price_history')
+                const { error } = await window.supabaseClient.from('price_history')
                     .upsert({
                         symbol: symbol,
                         date: date,
@@ -1175,8 +1172,7 @@
         async function loadBTCHistory() {
             console.log('BTC 기록 로드 시작');
             try {
-                const { data, error } = await supabase
-                    .from('price_history')
+                const { data, error } = await window.supabaseClient.from('price_history')
                     .select('*')
                     .eq('symbol', 'BTCUSDT')
                     .order('date', { ascending: false })
@@ -1231,8 +1227,7 @@
         // ETH 10일 가격 기록 불러오기
         async function loadETHHistory() {
             try {
-                const { data, error } = await supabase
-                    .from('price_history')
+                const { data, error } = await window.supabaseClient.from('price_history')
                     .select('*')
                     .eq('symbol', 'ETHUSDT')
                     .order('date', { ascending: false })
@@ -1277,8 +1272,7 @@
         // SOL 10일 가격 기록 불러오기
         async function loadSOLHistory() {
             try {
-                const { data, error } = await supabase
-                    .from('price_history')
+                const { data, error } = await window.supabaseClient.from('price_history')
                     .select('*')
                     .eq('symbol', 'SOLUSDT')
                     .order('date', { ascending: false })
@@ -1367,8 +1361,7 @@
         async function loadChatMessages() {
             try {
                 console.log('채팅 메시지 로드 시작...');
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .select('*')
                     .order('created_at', { ascending: true })
                     .limit(100);
@@ -1719,8 +1712,7 @@
                 console.log('메시지 전송시 Browser ID:', browserId);
                 
                 // 메시지 전송
-                const { data, error } = await supabase
-                    .from('messages')
+                const { data, error } = await window.supabaseClient.from('messages')
                     .insert([{ 
                         message: message,
                         browser_id: browserId
@@ -1734,8 +1726,7 @@
                     
                     // 테이블 구조 문제일 수 있으므로 browser_id 없이 재시도
                     console.log('browser_id 없이 재시도');
-                    const { data: retryData, error: retryError } = await supabase
-                        .from('messages')
+                    const { data: retryData, error: retryError } = await window.supabaseClient.from('messages')
                         .insert([{ message: message }])
                         .select();
                     
@@ -1774,8 +1765,7 @@
                 chatChannel.unsubscribe();
             }
             
-            chatChannel = supabase
-                .channel('chat-channel-' + Date.now())
+            chatChannel = window.supabaseClient.channel('chat-channel-' + Date.now())
                 .on('postgres_changes', 
                     { event: 'INSERT', schema: 'public', table: 'messages' },
                     (payload) => {
@@ -1916,8 +1906,7 @@
             subscribeToChatUpdates();
             
             // 실시간 업데이트 구독 (선택사항)
-            const subscription = supabase
-                .channel('links-channel')
+            const subscription = window.supabaseClient.channel('links-channel')
                 .on('postgres_changes', 
                     { event: '*', schema: 'public', table: 'links' }, 
                     () => {
@@ -1927,8 +1916,7 @@
                 .subscribe();
             
             // 가격 기록 실시간 업데이트
-            const priceHistorySubscription = supabase
-                .channel('price-history-channel')
+            const priceHistorySubscription = window.supabaseClient.channel('price-history-channel')
                 .on('postgres_changes',
                     { event: '*', schema: 'public', table: 'price_history' },
                     (payload) => {
