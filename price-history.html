@@ -955,7 +955,12 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 layout: {
-                    padding: 0
+                    padding: {
+                        left: 10,
+                        right: currentChartTab === 'combined' ? 120 : 10,
+                        top: 10,
+                        bottom: 10
+                    }
                 },
                 plugins: {
                     legend: {
@@ -1011,9 +1016,25 @@
                             color: '#333'
                         },
                         ticks: {
-                            color: '#888',
+                            color: currentChartTab === 'btc' ? chartColors.btc : 
+                                   currentChartTab === 'eth' ? chartColors.eth : 
+                                   currentChartTab === 'sol' ? chartColors.sol : '#888',
+                            font: {
+                                weight: currentChartTab !== 'combined' ? 'bold' : 'normal'
+                            },
                             callback: function(value) {
                                 return '$' + value.toLocaleString();
+                            }
+                        },
+                        title: {
+                            display: currentChartTab !== 'combined',
+                            text: currentChartTab.toUpperCase(),
+                            color: currentChartTab === 'btc' ? chartColors.btc : 
+                                   currentChartTab === 'eth' ? chartColors.eth : 
+                                   currentChartTab === 'sol' ? chartColors.sol : '#888',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
                             }
                         }
                     }
@@ -1026,30 +1047,82 @@
                     type: 'linear',
                     position: 'left',
                     grid: {
-                        drawOnChartArea: false
+                        drawOnChartArea: false,
+                        color: chartColors.btc + '30'
                     },
                     ticks: {
-                        color: chartColors.btc
+                        color: chartColors.btc,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        },
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'BTC',
+                        color: chartColors.btc,
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
                     }
                 };
                 options.scales['y-eth'] = {
                     type: 'linear',
                     position: 'right',
                     grid: {
-                        drawOnChartArea: false
+                        drawOnChartArea: false,
+                        color: chartColors.eth + '30'
                     },
                     ticks: {
-                        color: chartColors.eth
+                        color: chartColors.eth,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        },
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'ETH',
+                        color: chartColors.eth,
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
                     }
                 };
                 options.scales['y-sol'] = {
                     type: 'linear',
                     position: 'right',
+                    offset: true,
                     grid: {
-                        drawOnChartArea: false
+                        drawOnChartArea: false,
+                        color: chartColors.sol + '30'
                     },
                     ticks: {
-                        color: chartColors.sol
+                        color: chartColors.sol,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        },
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'SOL',
+                        color: chartColors.sol,
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
                     }
                 };
             }
