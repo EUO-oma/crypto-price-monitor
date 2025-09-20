@@ -969,10 +969,10 @@
                         borderDash: [5, 5],
                         tension: 0.1,
                         fill: false,
-                        yAxisID: 'y-btc'
+                        yAxisID: currentChartTab === 'combined' ? 'y-btc' : 'y'
                     });
                 }
-                if (document.getElementById('show-ma30').checked) {
+                if (!showHighLowRange && document.getElementById('show-ma30').checked) {
                     datasets.push({
                         label: 'BTC MA30',
                         data: calculateMA(btcPrices, 30),
@@ -980,7 +980,7 @@
                         borderDash: [10, 5],
                         tension: 0.1,
                         fill: false,
-                        yAxisID: 'y-btc'
+                        yAxisID: currentChartTab === 'combined' ? 'y-btc' : 'y'
                     });
                 }
             }
@@ -1029,14 +1029,15 @@
                     });
                 } else if (!showHighLowRange) {
                     datasets.push({
-                    label: 'ETH',
-                    data: ethPrices,
-                    borderColor: chartColors.eth,
-                    backgroundColor: chartType === 'area' ? chartColors.eth + '20' : 'transparent',
-                    tension: 0.1,
-                    fill: chartType === 'area',
-                    yAxisID: currentChartTab === 'combined' ? 'y-eth' : 'y'
-                });
+                        label: 'ETH',
+                        data: ethPrices,
+                        borderColor: chartColors.eth,
+                        backgroundColor: chartType === 'area' ? chartColors.eth + '20' : 'transparent',
+                        tension: 0.1,
+                        fill: chartType === 'area',
+                        yAxisID: currentChartTab === 'combined' ? 'y-eth' : 'y'
+                    });
+                }
             }
             
             // SOL 데이터
@@ -1083,14 +1084,15 @@
                     });
                 } else if (!showHighLowRange) {
                     datasets.push({
-                    label: 'SOL',
-                    data: solPrices,
-                    borderColor: chartColors.sol,
-                    backgroundColor: chartType === 'area' ? chartColors.sol + '20' : 'transparent',
-                    tension: 0.1,
-                    fill: chartType === 'area',
-                    yAxisID: currentChartTab === 'combined' ? 'y-sol' : 'y'
-                });
+                        label: 'SOL',
+                        data: solPrices,
+                        borderColor: chartColors.sol,
+                        backgroundColor: chartType === 'area' ? chartColors.sol + '20' : 'transparent',
+                        tension: 0.1,
+                        fill: chartType === 'area',
+                        yAxisID: currentChartTab === 'combined' ? 'y-sol' : 'y'
+                    });
+                }
             }
             
             // 차트 옵션
