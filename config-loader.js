@@ -75,7 +75,7 @@
     if (window.ENV_CONFIG) {
         mergeConfig(window.APP_CONFIG, window.ENV_CONFIG);
         console.log('✅ Environment config loaded');
-        console.log('📧 ENV_CONFIG ADMIN:', window.ENV_CONFIG.ADMIN);
+        // 보안상 ADMIN 설정은 로그하지 않음
     }
     // 2. ENV_CONFIG가 없고 로컬 환경인 경우에만 config.js 사용
     else if (!isNetlify) {
@@ -154,4 +154,8 @@
         obj[keys[keys.length - 1]] = newValue;
         return true;
     };
+    // Config 로드 완료 이벤트 발생
+    window.addEventListener('load', () => {
+        window.dispatchEvent(new Event('configLoaded'));
+    });
 })();

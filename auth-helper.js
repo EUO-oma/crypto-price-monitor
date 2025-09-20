@@ -77,8 +77,9 @@ async function checkAdminAccess() {
     const devMode = window.getConfig('ADMIN.DEV_MODE') || false;
     
     // Fallback: 환경변수가 비어있으면 하드코딩된 이메일 사용
-    if (allowedEmails.length === 0 && window.location.hostname.includes('netlify.app')) {
+    if (allowedEmails.length === 0) {
         console.warn('⚠️ ADMIN.ALLOWED_EMAILS is empty, using fallback');
+        // Netlify 환경이거나 로컬 환경에서 기본 관리자 이메일 사용
         allowedEmails = ['icandoit13579@gmail.com'];
     }
     
@@ -88,23 +89,17 @@ async function checkAdminAccess() {
         return true;
     }
 
-    // 특정 이메일만 허용 (기본 설정)
-    if (allowedEmails.length === 0) {
-        console.error('⚠️ 허용된 이메일이 설정되지 않았습니다. config.js 파일의 ADMIN.ALLOWED_EMAILS 배열에 관리자 이메일을 추가하세요.');
-        alert('관리자 이메일이 설정되지 않았습니다.\n\nconfig.js 파일을 수정하여 관리자 이메일을 추가하세요.');
-        await signOut();
-        return false;
-    }
+    // 이미 위에서 fallback 처리했으므로 빈 배열 체크는 불필요
     
     if (allowedEmails.includes(session.user.email)) {
-        console.log('✅ 인증된 관리자:', session.user.email);
+        console.log('✅ 인증된 관리자');
         return true;
     } else {
-        console.warn('❌ 접근 거부:', session.user.email);
+        console.warn('❌ 접근 거부');
         // admin-links.html에서는 alert을 표시하지 않음 (페이지에서 처리)
         const currentPath = window.location.pathname;
         if (!currentPath.includes('admin-links.html')) {
-            alert(`접근 권한이 없습니다.\n\n현재 로그인: ${session.user.email}\n관리자에게 문의하세요.`);
+            alert('접근 권한이 없습니다.\n관리자에게 문의하세요.');
             await signOut();
         }
         return false;

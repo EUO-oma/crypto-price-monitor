@@ -432,30 +432,68 @@
     <!-- Supabase 라이브러리를 먼저 로드하고 초기화 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
-    <!-- Supabase 직접 초기화 (config-loader.js 의존성 제거) -->
+    <script src="config-env.js"></script>
+    <script src="config-loader.js"></script>
+    
+    <!-- Supabase 초기화 -->
     <script>
-        // Supabase 설정
-        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
-
         // 전역 supabase 클라이언트
         let supabase = null;
 
-        // Supabase 클라이언트 생성
-        if (window.supabase && window.supabase.createClient) {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('[admin-v3] Supabase client created successfully');
-        } else {
-            // 라이브러리가 아직 로드되지 않은 경우 대기
-            const checkSupabase = setInterval(() => {
-                if (window.supabase && window.supabase.createClient) {
-                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    console.log('[admin-v3] Supabase client created after waiting');
-                    clearInterval(checkSupabase);
+        // config와 auth-helper가 모두 로드될 때까지 대기
+        window.addEventListener('DOMContentLoaded', function() {
+            let configReady = false;
+            let authReady = false;
+            
+            // Config 로드 확인
+            if (window.APP_CONFIG && window.getConfig) {
+                configReady = true;
+            } else {
+                window.addEventListener('configLoaded', () => {
+                    configReady = true;
+                    checkReady();
+                });
+            }
+            
+            // 초기화 준비 확인
+            function checkReady() {
+                if (configReady && authReady) {
+                    // Supabase 클라이언트 가져오기
+                    try {
+                        supabase = window.getSupabaseClient();
+                        if (supabase) {
+                            console.log('[admin-v3] All dependencies loaded, initializing...');
+                            initializeAdmin();
+                        } else {
+                            throw new Error('Supabase client is null');
+                        }
+                    } catch (error) {
+                        console.error('[admin-v3] Error initializing:', error);
+                        document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 초기화 실패: ' + error.message + '</span>';
+                    }
                 }
-            }, 100);
-        }
+            }
+            
+            // Auth helper 로드 확인
+            const authInterval = setInterval(() => {
+                if (typeof window.getSupabaseClient === 'function' && 
+                    typeof window.checkAuth === 'function' && 
+                    typeof window.checkAdminAccess === 'function') {
+                    authReady = true;
+                    clearInterval(authInterval);
+                    checkReady();
+                }
+            }, 50);
+            
+            // 10초 타임아웃
+            setTimeout(() => {
+                clearInterval(authInterval);
+                if (!authReady || !configReady) {
+                    console.error('[admin-v3] Dependencies failed to load');
+                    document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 필수 모듈 로드 실패</span>';
+                }
+            }, 10000);
+        });
 
         // 링크 관련 함수들 직접 정의
         async function fetchLinks() {
@@ -466,7 +504,7 @@
 
             try {
                 // YouTube 채널 가져오기
-                const { data: youtubeLinks, error: ytError } = await window.supabaseClient.from('links')
+                const { data: youtubeLinks, error: ytError } = await supabase.from('links')
                     .select('*')
                     .eq('category', 'youtube')
                     .order('position');
@@ -474,7 +512,7 @@
                 if (ytError) throw ytError;
 
                 // Favorite 사이트 가져오기
-                const { data: favoriteLinks, error: favError } = await window.supabaseClient.from('links')
+                const { data: favoriteLinks, error: favError } = await supabase.from('links')
                     .select('*')
                     .eq('category', 'favorite')
                     .order('position');
@@ -482,7 +520,7 @@
                 if (favError) throw favError;
 
                 // GPT 도구 링크 가져오기
-                const { data: gptLinks, error: gptError } = await window.supabaseClient.from('links')
+                const { data: gptLinks, error: gptError } = await supabase.from('links')
                     .select('*')
                     .eq('category', 'gpt')
                     .order('position');
@@ -507,7 +545,7 @@
             }
 
             try {
-                const { data, error } = await window.supabaseClient.from('links')
+                const { data, error } = await supabase.from('links')
                     .insert([
                         { name, url, category, position }
                     ])
@@ -528,7 +566,7 @@
             }
 
             try {
-                const { error } = await window.supabaseClient.from('links')
+                const { error } = await supabase.from('links')
                     .delete()
                     .eq('id', id);
 
@@ -547,7 +585,7 @@
             }
 
             try {
-                const { data, error } = await window.supabaseClient.from('links')
+                const { data, error } = await supabase.from('links')
                     .update(updates)
                     .eq('id', id)
                     .select();
@@ -566,7 +604,7 @@
                 return null;
             }
 
-            const subscription = window.supabaseClient.channel('links_changes')
+            const subscription = supabase.channel('links_changes')
                 .on('postgres_changes',
                     { event: '*', schema: 'public', table: 'links' },
                     (payload) => {
@@ -1090,38 +1128,7 @@
             });
         }
 
-        // 페이지 로드시 인증 확인 후 링크 목록 불러오기
-        window.addEventListener('DOMContentLoaded', async () => {
-            console.log('DOMContentLoaded event fired');
-
-            // Supabase 초기화 확인
-            console.log('[admin-v3] Checking Supabase initialization...');
-            console.log('[admin-v3] supabase variable:', typeof supabase !== 'undefined' ? 'defined' : 'undefined');
-            console.log('[admin-v3] supabase client:', supabase);
-
-            // Supabase가 아직 초기화되지 않았다면 조금 더 대기
-            if (!supabase) {
-                console.log('[admin-v3] Waiting for Supabase client...');
-                // setInterval로 생성된 클라이언트를 기다림
-                let waitCount = 0;
-                const waitForSupabase = setInterval(() => {
-                    waitCount++;
-                    if (supabase) {
-                        console.log('[admin-v3] Supabase client now available after waiting');
-                        clearInterval(waitForSupabase);
-                        initializeAdmin();
-                    } else if (waitCount > 20) { // 2초 대기
-                        clearInterval(waitForSupabase);
-                        console.error('[admin-v3] Failed to initialize Supabase client after waiting');
-                        document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ Supabase 초기화 실패</span>';
-                    }
-                }, 100);
-                return;
-            }
-
-            // Supabase가 준비되어 있으면 바로 초기화
-            initializeAdmin();
-        });
+        // initializeAdmin은 이미 위의 DOMContentLoaded에서 호출됨
 
         async function initializeAdmin() {
             // 최종 확인
@@ -1135,12 +1142,28 @@
 
             // 디버깅: 환경변수 확인
             console.log('=== Admin Auth Debug ===');
-            console.log('1. APP_CONFIG:', window.APP_CONFIG);
-            console.log('2. ENV_CONFIG:', window.ENV_CONFIG);
-            console.log('3. ALLOWED_EMAILS:', window.getConfig('ADMIN.ALLOWED_EMAILS'));
-            console.log('4. Current user session:', await checkAuth());
+            console.log('1. APP_CONFIG:', window.APP_CONFIG || 'Not loaded');
+            console.log('2. ENV_CONFIG:', window.ENV_CONFIG || 'Not loaded');
+            console.log('3. getConfig function:', typeof window.getConfig);
+            console.log('4. ALLOWED_EMAILS:', window.getConfig ? 'configured' : 'getConfig not available');
+            
+            // checkAuth 함수 확인
+            if (typeof checkAuth !== 'function') {
+                console.error('[admin-v3] checkAuth function not found');
+                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 인증 함수 없음</span>';
+                return;
+            }
+            
+            const userSession = await checkAuth();
+            console.log('5. User session:', userSession ? 'authenticated' : 'not authenticated');
             
             // 인증 확인
+            if (typeof checkAdminAccess !== 'function') {
+                console.error('[admin-v3] checkAdminAccess function not found');
+                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 관리자 인증 함수 없음</span>';
+                return;
+            }
+            
             const hasAccess = await checkAdminAccess();
             if (!hasAccess) {
                 console.error('Admin access denied');
@@ -1180,7 +1203,7 @@
 
             try {
                 console.log('Checking Supabase connection...');
-                const { data, error } = await window.supabaseClient.from('links').select('count').limit(1);
+                const { data, error } = await supabase.from('links').select('count').limit(1);
                 if (error) throw error;
                 console.log('Supabase connection successful');
                 statusElement.innerHTML = '<span style="color: #4caf50;">✅ 연결됨</span>';
@@ -1204,7 +1227,7 @@
 
             try {
                 // 모든 링크를 가져오기
-                const { data: allLinks, error } = await window.supabaseClient.from('links')
+                const { data: allLinks, error } = await supabase.from('links')
                     .select('*')
                     .order('category', { ascending: true })
                     .order('position', { ascending: true });
@@ -1420,7 +1443,7 @@
         async function moveUp(id, currentPos, category) {
             if (currentPos <= 1) return;
             
-            const { data: links } = await window.supabaseClient.from('links')
+            const { data: links } = await supabase.from('links')
                 .select('*')
                 .eq('category', category)
                 .order('position');
@@ -1438,7 +1461,7 @@
 
         // 아래로 이동
         async function moveDown(id, currentPos, category) {
-            const { data: links } = await window.supabaseClient.from('links')
+            const { data: links } = await supabase.from('links')
                 .select('*')
                 .eq('category', category)
                 .order('position');
