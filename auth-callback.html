@@ -81,8 +81,8 @@
                     const isAdmin = await checkAdminAccess();
                     
                     // 원래 가려던 페이지로 리다이렉트
-                    const redirectTo = sessionStorage.getItem('adminRedirectTo') || 'admin-v3.html';
-                    sessionStorage.removeItem('adminRedirectTo');
+                    const redirectTo = sessionStorage.getItem('redirectTo') || 'admin-v3.html';
+                    sessionStorage.removeItem('redirectTo');
                     
                     if (isAdmin) {
                         window.location.href = redirectTo;

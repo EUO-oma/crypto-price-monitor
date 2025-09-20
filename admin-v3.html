@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>링크 관리 - Admin v3 (수정 기능 포함)</title>
+    <title>링크 편집기</title>
     <style>
         * {
             margin: 0;
@@ -238,14 +238,14 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔗 링크 관리 시스템 v3</h1>
+        <h1>🔗 링크 편집기</h1>
         
         <!-- 로그인 사용자 정보 표시 -->
         <div class="config-section" style="margin-bottom: 20px;">
             <h3>👤 사용자 정보</h3>
-            <div id="admin-info">
-                <div id="admin-email" style="color: #4caf50; font-weight: 500;">정보 확인 중...</div>
-                <div id="admin-session" style="font-size: 0.9em; color: #888; margin-top: 5px;"></div>
+            <div id="user-info">
+                <div id="user-email" style="color: #4caf50; font-weight: 500;">정보 확인 중...</div>
+                <div id="user-session" style="font-size: 0.9em; color: #888; margin-top: 5px;"></div>
             </div>
         </div>
         
@@ -262,7 +262,7 @@
                     <li>➕ <strong>추가</strong>: 새 링크 추가</li>
                     <li>🗑️ <strong>삭제</strong>: 링크 제거</li>
                     <li>🎨 <strong>스타일 설정</strong>: 각 섹션별 글자 크기, 색상, 효과 등 커스터마이징</li>
-                    <li>🏷️ <strong>카테고리 관리</strong>: 새로운 카테고리 추가 및 관리</li>
+                    <li>🏷️ <strong>카테고리</strong>: 새로운 카테고리 추가</li>
                 </ul>
             </div>
         </div>
@@ -273,7 +273,7 @@
         </div>
 
         <div class="add-form" style="margin-bottom: 20px;">
-            <h3 style="width: 100%; margin-bottom: 10px;">🏷️ 카테고리 관리</h3>
+            <h3 style="width: 100%; margin-bottom: 10px;">🏷️ 카테고리 설정</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" id="new-category-id" placeholder="카테고리 ID (예: voucher)" style="flex: 1;">
                 <input type="text" id="new-category-name" placeholder="표시 이름 (예: Voucher)" style="flex: 1;">
@@ -461,15 +461,15 @@
                     supabase = window.supabaseClient;
                     
                     if (supabase) {
-                        console.log('[admin-v3] Supabase client ready');
-                        initializeAdmin();
+                        console.log('[app] Supabase client ready');
+                        initializeApp();
                     } else {
-                        console.error('[admin-v3] Supabase client not found');
+                        console.error('[app] Supabase client not found');
                         document.getElementById('connection-status').innerHTML = 
                             '<span style="color: #f44336;">❌ Supabase에 연결할 수 없습니다.</span>';
                     }
                 } catch (error) {
-                    console.error('[admin-v3] 초기화 오류:', error);
+                    console.error('[app] 초기화 오류:', error);
                     document.getElementById('connection-status').innerHTML = 
                         '<span style="color: #f44336;">❌ 초기화 실패: ' + error.message + '</span>';
                 }
@@ -479,7 +479,7 @@
         // 링크 관련 함수들 직접 정의
         async function fetchLinks() {
             if (!supabase) {
-                console.error('[admin-v3] Supabase client not available in fetchLinks');
+                console.error('[app] Supabase client not available in fetchLinks');
                 return { youtube: [], favorites: [], gpt: [] };
             }
 
@@ -521,7 +521,7 @@
 
         async function addLink(name, url, category, position = 999) {
             if (!supabase) {
-                console.error('[admin-v3] Supabase client not available');
+                console.error('[app] Supabase client not available');
                 return null;
             }
 
@@ -532,7 +532,7 @@
                     url, 
                     category, 
                     position,
-                    created_by: window.currentAdminUser?.email || 'unknown',
+                    created_by: window.currentUser?.email || 'unknown',
                     created_at: new Date().toISOString()
                 };
                 
@@ -556,7 +556,7 @@
 
         async function deleteLink(id) {
             if (!supabase) {
-                console.error('[admin-v3] Supabase client not available');
+                console.error('[app] Supabase client not available');
                 return false;
             }
 
@@ -577,7 +577,7 @@
                     id: id,
                     name: linkInfo?.name || 'unknown',
                     category: linkInfo?.category || 'unknown',
-                    deletedBy: window.currentAdminUser?.email || 'unknown',
+                    deletedBy: window.currentUser?.email || 'unknown',
                     deletedAt: new Date().toISOString()
                 });
                 
@@ -590,7 +590,7 @@
 
         async function updateLink(id, updates) {
             if (!supabase) {
-                console.error('[admin-v3] Supabase client not available');
+                console.error('[app] Supabase client not available');
                 return null;
             }
 
@@ -598,7 +598,7 @@
                 // 수정자 정보 추가
                 const updateData = {
                     ...updates,
-                    updated_by: window.currentAdminUser?.email || 'unknown',
+                    updated_by: window.currentUser?.email || 'unknown',
                     updated_at: new Date().toISOString()
                 };
                 
@@ -623,7 +623,7 @@
 
         function subscribeToLinks(callback) {
             if (!supabase) {
-                console.error('[admin-v3] Supabase client not available for subscription');
+                console.error('[app] Supabase client not available for subscription');
                 return null;
             }
 
@@ -666,7 +666,7 @@
             }
 
             // 상태 저장
-            localStorage.setItem('adminGuideOpen', guideOpen);
+            localStorage.setItem('guideOpen', guideOpen);
         }
 
         // Fun YouTube 설정 토글
@@ -685,12 +685,12 @@
             }
 
             // 상태 저장
-            localStorage.setItem('adminFunYoutubeSettingsOpen', funYoutubeSettingsOpen);
+            localStorage.setItem('funYoutubeSettingsOpen', funYoutubeSettingsOpen);
         }
 
         // 페이지 로드시 가이드 상태 복원
         function restoreGuideState() {
-            const savedState = localStorage.getItem('adminGuideOpen');
+            const savedState = localStorage.getItem('guideOpen');
             if (savedState === 'true') {
                 guideOpen = false; // toggleGuide가 반대로 토글하므로
                 toggleGuide();
@@ -699,7 +699,7 @@
 
         // 페이지 로드시 Fun YouTube 설정 상태 복원
         function restoreFunYoutubeSettingsState() {
-            const savedState = localStorage.getItem('adminFunYoutubeSettingsOpen');
+            const savedState = localStorage.getItem('funYoutubeSettingsOpen');
             if (savedState === 'true') {
                 funYoutubeSettingsOpen = false; // toggle이 반대로 토글하므로
                 toggleFunYoutubeSettings();
@@ -1154,7 +1154,7 @@
         // 로그인 함수
         async function loginWithGoogle() {
             try {
-                sessionStorage.setItem('adminRedirectTo', 'admin-v3.html');
+                sessionStorage.setItem('redirectTo', 'admin-v3.html');
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
@@ -1175,12 +1175,12 @@
         window.loginWithGoogle = loginWithGoogle;
 
         // 사용자 정보 표시 함수
-        function displayAdminInfo(session) {
-            const adminEmailEl = document.getElementById('admin-email');
-            const adminSessionEl = document.getElementById('admin-session');
+        function displayUserInfo(session) {
+            const userEmailEl = document.getElementById('user-email');
+            const userSessionEl = document.getElementById('user-session');
             
-            if (!adminEmailEl || !adminSessionEl) {
-                console.warn('Admin info elements not found');
+            if (!userEmailEl || !userSessionEl) {
+                console.warn('User info elements not found');
                 return;
             }
             
@@ -1190,8 +1190,8 @@
                 const provider = user.app_metadata?.provider || '알 수 없음';
                 const loginTime = new Date(session.expires_at * 1000 - (session.expires_in || 3600) * 1000);
                 
-                adminEmailEl.innerHTML = `✅ <strong>${email}</strong>`;
-                adminSessionEl.innerHTML = `
+                userEmailEl.innerHTML = `✅ <strong>${email}</strong>`;
+                userSessionEl.innerHTML = `
                     <div>제공자: ${provider} | 로그인 시간: ${loginTime.toLocaleString('ko-KR')}</div>
                     <div>세션 만료: ${new Date(session.expires_at * 1000).toLocaleString('ko-KR')}</div>
                 `;
@@ -1203,7 +1203,7 @@
                 }
                 
                 // 전역 변수에 사용자 정보 저장 (다른 함수에서 사용)
-                window.currentAdminUser = {
+                window.currentUser = {
                     email: email,
                     id: user.id,
                     provider: provider
@@ -1215,8 +1215,8 @@
                     userId: user.id
                 });
             } else {
-                adminEmailEl.innerHTML = '❌ 로그인 정보 없음';
-                adminSessionEl.innerHTML = '';
+                userEmailEl.innerHTML = '❌ 정보 없음';
+                userSessionEl.innerHTML = '';
                 
                 // 로그아웃 버튼 기본값으로 복원
                 const logoutBtn = document.getElementById('logout-user-email');
@@ -1224,24 +1224,24 @@
                     logoutBtn.textContent = '로그아웃';
                 }
                 
-                window.currentAdminUser = null;
+                window.currentUser = null;
             }
         }
 
-        // initializeAdmin은 이미 위의 DOMContentLoaded에서 호출됨
+        // initializeApp은 이미 위의 DOMContentLoaded에서 호출됨
 
-        async function initializeAdmin() {
+        async function initializeApp() {
             // 최종 확인
             if (!supabase) {
-                console.error('[admin-v3] Failed to initialize Supabase client');
+                console.error('[app] Failed to initialize Supabase client');
                 document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ Supabase 초기화 실패</span>';
                 return;
             }
 
-            console.log('[admin-v3] Supabase client ready:', supabase);
+            console.log('[app] Supabase client ready:', supabase);
 
             // 디버깅: 환경변수 확인
-            console.log('=== Admin Auth Debug ===');
+            console.log('=== App Auth Debug ===');
             console.log('1. APP_CONFIG:', window.APP_CONFIG || 'Not loaded');
             console.log('2. ENV_CONFIG:', window.ENV_CONFIG || 'Not loaded');
             console.log('3. getConfig function:', typeof window.getConfig);
@@ -1249,7 +1249,7 @@
             
             // checkAuth 함수 확인
             if (typeof checkAuth !== 'function') {
-                console.error('[admin-v3] checkAuth function not found');
+                console.error('[app] checkAuth function not found');
                 document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 함수 없음</span>';
                 return;
             }
@@ -1263,7 +1263,7 @@
                 // 로그인 UI 표시
                 document.getElementById('connection-status').innerHTML = `
                     <div style="text-align: center; padding: 20px;">
-                        <p style="color: #ff9800; margin-bottom: 20px;">링크 관리 페이지</p>
+                        <p style="color: #ff9800; margin-bottom: 20px;">링크 편집 페이지</p>
                         <button onclick="loginWithGoogle()" style="background: #4285F4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px;">
                             <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px;" viewBox="0 0 24 24">
                                 <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1279,7 +1279,7 @@
             }
             
             // 사용자 정보 표시
-            displayAdminInfo(userSession);
+            displayUserInfo(userSession);
             
             // 로그인 상태 확인 완료
 
@@ -1299,9 +1299,9 @@
             enableRealtimeUpdates();
             
             // 환영 메시지 표시
-            if (window.currentAdminUser?.email) {
+            if (window.currentUser?.email) {
                 setTimeout(() => {
-                    showStatus(`${window.currentAdminUser.email}님 환영합니다!`, 'success');
+                    showStatus(`${window.currentUser.email}님 환영합니다!`, 'success');
                 }, 1000);
             }
         }
@@ -1427,7 +1427,7 @@
         // 테이블 생성
         function createTable(links, category) {
             let html = `<table class="links-table" data-category="${category}">`;
-            html += '<thead><tr><th width="30">⇅</th><th width="60">순서</th><th>이름</th><th>URL</th><th width="120">카테고리</th><th width="150">관리 정보</th><th width="250">작업</th></tr></thead>';
+            html += '<thead><tr><th width="30">⇅</th><th width="60">순서</th><th>이름</th><th>URL</th><th width="120">카테고리</th><th width="150">정보</th><th width="250">작업</th></tr></thead>';
             html += `<tbody id="sortable-${category}">`;
             
             links.forEach(link => {
