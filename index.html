@@ -59,6 +59,8 @@
     <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png">
     <meta name="msapplication-config" content="/browserconfig.xml">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -66,13 +68,18 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #000000;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            font-weight: 400;
+        }
+        
+        .mono {
+            font-family: 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
         }
 
         .container {
@@ -398,7 +405,56 @@
         <!-- ============================================ -->
         <div class="exchange-section">
             <!-- 섹션 헤더 (차트 페이지 링크 포함) -->
-            <h2><a href="triple-chart.html" style="color: inherit; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='inherit'">📈 Crypto Market Overview</a></h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="margin: 0; font-weight: 600; font-size: 1.5em;"><a href="triple-chart.html" style="color: inherit; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='inherit'">📈 Crypto Market Overview</a></h2>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #666; font-weight: 300;">
+                        <span id="market-date"></span>
+                        <span id="market-status" style="margin-left: 10px;"></span>
+                    </p>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button onclick="adjustPriceSize('decrease')" style="
+                        background: #1a1a1a;
+                        border: 1px solid #333;
+                        border-radius: 6px;
+                        padding: 6px 12px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        font-weight: 500;
+                        color: #888;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='#2a2a2a'; this.style.color='#fff'" onmouseout="this.style.background='#1a1a1a'; this.style.color='#888'">
+                        A-
+                    </button>
+                    <button onclick="adjustPriceSize('reset')" style="
+                        background: #1a1a1a;
+                        border: 1px solid #333;
+                        border-radius: 6px;
+                        padding: 6px 12px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        font-weight: 500;
+                        color: #888;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='#2a2a2a'; this.style.color='#fff'" onmouseout="this.style.background='#1a1a1a'; this.style.color='#888'">
+                        Reset
+                    </button>
+                    <button onclick="adjustPriceSize('increase')" style="
+                        background: #1a1a1a;
+                        border: 1px solid #333;
+                        border-radius: 6px;
+                        padding: 6px 12px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        font-weight: 500;
+                        color: #888;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='#2a2a2a'; this.style.color='#fff'" onmouseout="this.style.background='#1a1a1a'; this.style.color='#888'">
+                        A+
+                    </button>
+                </div>
+            </div>
             
             
             <!-- Custom Crypto Price Display -->
@@ -412,8 +468,8 @@
                         <span style="color: #f7931a; font-size: 1.2em; font-weight: bold;">₿ BTC</span>
                         <span style="color: #666; font-size: 0.9em;">USDT</span>
                     </div>
-                    <div id="btc-price-custom" style="font-size: 2.5em; font-weight: bold; color: #f7931a; margin-bottom: 5px; text-align: right;">Loading...</div>
-                    <div id="btc-change-custom" style="font-size: 1em; color: #4caf50; text-align: right;">-</div>
+                    <div id="btc-price-custom" class="crypto-price mono" style="font-size: 2.5em; font-weight: 600; color: #f7931a; margin-bottom: 5px; text-align: right;">Loading...</div>
+                    <div id="btc-change-custom" class="mono" style="font-size: 0.9em; color: #4caf50; text-align: right; font-weight: 400;">-</div>
                 </div>
                 </a>
                 
@@ -426,8 +482,8 @@
                         <span style="color: #9a8ff8; font-size: 1.2em; font-weight: bold;">Ξ ETH</span>
                         <span style="color: #666; font-size: 0.9em;">USDT</span>
                     </div>
-                    <div id="eth-price-custom" style="font-size: 2.5em; font-weight: bold; color: #9a8ff8; margin-bottom: 5px; text-align: right;">Loading...</div>
-                    <div id="eth-change-custom" style="font-size: 1em; color: #4caf50; text-align: right;">-</div>
+                    <div id="eth-price-custom" class="crypto-price mono" style="font-size: 2.5em; font-weight: 600; color: #9a8ff8; margin-bottom: 5px; text-align: right;">Loading...</div>
+                    <div id="eth-change-custom" class="mono" style="font-size: 0.9em; color: #4caf50; text-align: right; font-weight: 400;">-</div>
                 </div>
                 </a>
                 
@@ -440,8 +496,8 @@
                         <span style="color: #00FFA3; font-size: 1.2em; font-weight: bold;">◎ SOL</span>
                         <span style="color: #666; font-size: 0.9em;">USDT</span>
                     </div>
-                    <div id="sol-price-custom" style="font-size: 2.5em; font-weight: bold; color: #00FFA3; margin-bottom: 5px; text-align: right;">Loading...</div>
-                    <div id="sol-change-custom" style="font-size: 1em; color: #4caf50; text-align: right;">-</div>
+                    <div id="sol-price-custom" class="crypto-price mono" style="font-size: 2.5em; font-weight: 600; color: #00FFA3; margin-bottom: 5px; text-align: right;">Loading...</div>
+                    <div id="sol-change-custom" class="mono" style="font-size: 0.9em; color: #4caf50; text-align: right; font-weight: 400;">-</div>
                 </div>
                 </a>
                 
@@ -451,8 +507,8 @@
                         <span style="color: #4facfe; font-size: 1.2em; font-weight: bold;">📊 NDX</span>
                         <span style="color: #666; font-size: 0.9em;">NASDAQ-100</span>
                     </div>
-                    <div id="nasdaq-price" style="font-size: 2.5em; font-weight: bold; color: #4facfe; margin-bottom: 5px; text-align: right;">Loading...</div>
-                    <div style="font-size: 1em; text-align: right;">
+                    <div id="nasdaq-price" class="crypto-price mono" style="font-size: 2.5em; font-weight: 600; color: #4facfe; margin-bottom: 5px; text-align: right;">Loading...</div>
+                    <div class="mono" style="font-size: 0.9em; text-align: right; font-weight: 400;">
                         <span id="nasdaq-change" style="color: #4caf50;">-</span>
                         <span style="color: #666; margin: 0 5px;">|</span>
                         <span id="nasdaq-percent" style="color: #4caf50;">-</span>
@@ -570,6 +626,78 @@
                 toggleIcon.textContent = '▼';
             }
         }
+
+        // Price size adjustment
+        let priceScale = 1;
+        function adjustPriceSize(action) {
+            const priceElements = document.querySelectorAll('.crypto-price');
+            
+            if (action === 'increase') {
+                priceScale = Math.min(priceScale + 0.2, 2);
+            } else if (action === 'decrease') {
+                priceScale = Math.max(priceScale - 0.2, 0.6);
+            } else if (action === 'reset') {
+                priceScale = 1;
+            }
+            
+            priceElements.forEach(el => {
+                el.style.transform = `scale(${priceScale})`;
+                el.style.transformOrigin = 'right center';
+            });
+            
+            // Save preference
+            localStorage.setItem('priceScale', priceScale);
+        }
+        
+        // Update market date and status
+        function updateMarketStatus() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric'
+            };
+            const dateStr = now.toLocaleDateString('en-US', options);
+            
+            const dateElement = document.getElementById('market-date');
+            const statusElement = document.getElementById('market-status');
+            
+            if (dateElement) {
+                dateElement.textContent = dateStr;
+            }
+            
+            // Check if market is open (crypto is 24/7, but we can show trading hours)
+            const hours = now.getUTCHours();
+            const day = now.getUTCDay();
+            
+            // NYSE hours: 9:30 AM - 4:00 PM EST (14:30 - 21:00 UTC)
+            const isNYSEOpen = day >= 1 && day <= 5 && hours >= 14 && hours < 21;
+            
+            if (statusElement) {
+                if (isNYSEOpen) {
+                    statusElement.innerHTML = '🟢 Markets Open';
+                    statusElement.style.color = '#4caf50';
+                } else {
+                    statusElement.innerHTML = '🔴 Markets Closed';
+                    statusElement.style.color = '#888';
+                }
+            }
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Restore price scale
+            const savedScale = localStorage.getItem('priceScale');
+            if (savedScale) {
+                priceScale = parseFloat(savedScale);
+                setTimeout(() => adjustPriceSize(''), 100);
+            }
+            
+            // Update market status
+            updateMarketStatus();
+            setInterval(updateMarketStatus, 60000); // Update every minute
+        });
 
         let binanceBtcWs = null;
         let binanceEthWs = null;
