@@ -264,6 +264,7 @@
         <button class="security-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
             <span class="eye-icon"></span>
         </button>
+        <button class="control-btn" onclick="openCalculator()" title="계산기 모드" style="margin-left: 10px; font-size: 16px;">🧮</button>
     </div>
     
     <div class="controls">
@@ -542,6 +543,11 @@
                 btnEl.classList.remove('hidden');
                 btnEl.innerHTML = '👁';
             }
+        }
+        
+        // Open calculator page
+        function openCalculator() {
+            window.open('BW_cal.html', '_blank');
         }
         
         // Clean up on page unload
