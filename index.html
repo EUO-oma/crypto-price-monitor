@@ -741,24 +741,13 @@
             // Header update time - simplified version
             const headerTimeElement = document.getElementById('header-update-time');
             if (headerTimeElement) {
-                const usTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-                const marketHour = usTime.getHours();
-                const marketMin = usTime.getMinutes();
-                let marketStatus = '';
-                
-                if ((marketHour === 9 && marketMin >= 30) || (marketHour > 9 && marketHour < 16)) {
-                    marketStatus = '<span style="color: #4caf50;">🟢 Market Open</span>';
-                } else {
-                    marketStatus = '<span style="color: #f44336;">🔴 Market Closed</span>';
-                }
-                
                 headerTimeElement.innerHTML = `
                     <div style="text-align: center;">
                         <div style="font-size: 2em; font-weight: 600; color: #fff; margin-bottom: 5px;">
                             ${displayHours}:${minutes}:${seconds} ${ampm}
                         </div>
                         <div style="font-size: 1em; color: #888;">
-                            ${month} ${day} • ${marketStatus}
+                            ${month} ${day}
                         </div>
                     </div>
                 `;
