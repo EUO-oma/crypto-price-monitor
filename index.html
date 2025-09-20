@@ -810,6 +810,150 @@
             }
         }
 
+        // Alternative price sources
+        const priceAPIs = {
+            coinGecko: {
+                url: 'https://api.coingecko.com/api/v3/simple/price',
+                params: 'ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true&include_24hr_high=true&include_24hr_low=true',
+                parse: (data) => ({
+                    btc: {
+                        price: data.bitcoin.usd,
+                        change: data.bitcoin.usd_24h_change,
+                        high: data.bitcoin.usd_24h_high,
+                        low: data.bitcoin.usd_24h_low
+                    },
+                    eth: {
+                        price: data.ethereum.usd,
+                        change: data.ethereum.usd_24h_change,
+                        high: data.ethereum.usd_24h_high,
+                        low: data.ethereum.usd_24h_low
+                    },
+                    sol: {
+                        price: data.solana.usd,
+                        change: data.solana.usd_24h_change,
+                        high: data.solana.usd_24h_high,
+                        low: data.solana.usd_24h_low
+                    }
+                })
+            },
+            coinCap: {
+                url: 'https://api.coincap.io/v2/assets',
+                params: 'ids=bitcoin,ethereum,solana',
+                parse: (data) => {
+                    const assets = data.data;
+                    const btc = assets.find(a => a.id === 'bitcoin');
+                    const eth = assets.find(a => a.id === 'ethereum');
+                    const sol = assets.find(a => a.id === 'solana');
+                    return {
+                        btc: {
+                            price: parseFloat(btc.priceUsd),
+                            change: parseFloat(btc.changePercent24Hr),
+                            high: null,
+                            low: null
+                        },
+                        eth: {
+                            price: parseFloat(eth.priceUsd),
+                            change: parseFloat(eth.changePercent24Hr),
+                            high: null,
+                            low: null
+                        },
+                        sol: {
+                            price: parseFloat(sol.priceUsd),
+                            change: parseFloat(sol.changePercent24Hr),
+                            high: null,
+                            low: null
+                        }
+                    };
+                }
+            }
+        };
+
+        // Fallback price fetching
+        async function fetchPricesFromAPI(api) {
+            try {
+                const response = await fetch(`${api.url}?${api.params}`);
+                const data = await response.json();
+                return api.parse(data);
+            } catch (error) {
+                console.error(`Failed to fetch from ${api.url}:`, error);
+                return null;
+            }
+        }
+
+        // Update prices from API data
+        function updatePricesFromAPI(prices) {
+            if (!prices) return;
+            
+            ['btc', 'eth', 'sol'].forEach(coin => {
+                if (prices[coin]) {
+                    const coinData = prices[coin];
+                    const coinUpper = coin.toUpperCase() + 'USDT';
+                    
+                    // Update global price data
+                    if (currentPrices[coinUpper]) {
+                        currentPrices[coinUpper].current = coinData.price;
+                        if (coinData.high) currentPrices[coinUpper].high = coinData.high;
+                        if (coinData.low) currentPrices[coinUpper].low = coinData.low;
+                    }
+                    
+                    // Update custom price cards
+                    const priceElement = document.getElementById(`${coin}-price-custom`);
+                    const changeElement = document.getElementById(`${coin}-change-custom`);
+                    
+                    if (priceElement) {
+                        const parts = coinData.price.toFixed(2).split('.');
+                        const integerPart = parseInt(parts[0]).toLocaleString('en-US');
+                        priceElement.innerHTML = `<span style="color: #000;">$</span>${integerPart}<span style="font-size: 0.7em;">.${parts[1]}</span>`;
+                    }
+                    
+                    if (changeElement && coinData.change !== null) {
+                        const sign = coinData.change >= 0 ? '+' : '';
+                        changeElement.textContent = `${sign}${coinData.change.toFixed(2)}%`;
+                        changeElement.style.color = coinData.change >= 0 ? '#4caf50' : '#f44336';
+                    }
+                }
+            });
+            
+            updateLastUpdate();
+        }
+
+        // Test Binance connectivity
+        async function testBinanceConnection() {
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/ping');
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Use fallback APIs
+        async function useFallbackAPIs() {
+            console.log('Binance blocked, using fallback APIs...');
+            
+            // Try CoinGecko first
+            let prices = await fetchPricesFromAPI(priceAPIs.coinGecko);
+            if (prices) {
+                updatePricesFromAPI(prices);
+                // Set up periodic updates
+                setInterval(async () => {
+                    prices = await fetchPricesFromAPI(priceAPIs.coinGecko);
+                    if (prices) updatePricesFromAPI(prices);
+                }, 30000); // Update every 30 seconds
+                return;
+            }
+            
+            // If CoinGecko fails, try CoinCap
+            prices = await fetchPricesFromAPI(priceAPIs.coinCap);
+            if (prices) {
+                updatePricesFromAPI(prices);
+                setInterval(async () => {
+                    prices = await fetchPricesFromAPI(priceAPIs.coinCap);
+                    if (prices) updatePricesFromAPI(prices);
+                }, 30000);
+            }
+        }
+
         // Binance WebSocket for custom price cards
         function connectBinance() {
             const symbols = ['btcusdt', 'ethusdt', 'solusdt'];
@@ -887,6 +1031,20 @@
 
                 ws.onerror = function(error) {
                     console.error('Binance WebSocket error:', error);
+                    // Trigger fallback on first error
+                    if (!window.binanceFallbackTriggered) {
+                        window.binanceFallbackTriggered = true;
+                        useFallbackAPIs();
+                    }
+                };
+                
+                ws.onclose = function() {
+                    console.log('Binance WebSocket closed');
+                    // Trigger fallback on close
+                    if (!window.binanceFallbackTriggered) {
+                        window.binanceFallbackTriggered = true;
+                        useFallbackAPIs();
+                    }
                 };
 
                 if (symbol === 'btcusdt') {
@@ -909,7 +1067,17 @@
         });
 
         // WebSocket 연결 시작 - Re-enabled for custom price cards
-        connectBinance();
+        // First test if Binance is accessible
+        testBinanceConnection().then(isAccessible => {
+            if (isAccessible) {
+                console.log('Binance is accessible, using WebSocket');
+                connectBinance();
+            } else {
+                console.log('Binance is blocked, using fallback APIs');
+                window.binanceFallbackTriggered = true;
+                useFallbackAPIs();
+            }
+        });
         
         // Fun YouTube view toggle function
         function toggleFunYoutubeView(view) {
