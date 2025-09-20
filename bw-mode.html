@@ -66,7 +66,7 @@
             gap: 40px;
             padding: 20px;
             width: 100%;
-            max-width: 800px;
+            max-width: 1200px;
         }
         
         .price-item {
@@ -107,12 +107,12 @@
         }
         
         /* Size variations */
-        .size-xs .price { font-size: 24px; }
-        .size-s .price { font-size: 36px; }
-        .size-m .price { font-size: 48px; }
-        .size-l .price { font-size: 60px; }
-        .size-xl .price { font-size: 72px; }
-        .size-xxl .price { font-size: 96px; }
+        .size-xs .price { font-size: 16px; }
+        .size-s .price { font-size: 20px; }
+        .size-m .price { font-size: 28px; }
+        .size-l .price { font-size: 36px; }
+        .size-xl .price { font-size: 44px; }
+        .size-xxl .price { font-size: 56px; }
         
         .loading {
             animation: pulse 1.5s infinite;
@@ -374,6 +374,25 @@
             }
             return encoded;
         }
+
+        function formatPriceWithLow(currentPrice, low24h) {
+            const diff = currentPrice - low24h;
+            
+            // Format numbers with commas for thousands
+            const formatNumber = (num) => {
+                return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            };
+            
+            const currentFormatted = formatPrice(currentPrice);
+            const lowFormatted = formatPrice(low24h);
+            
+            // For difference, apply green color and format with commas
+            const diffFormatted = formatNumber(diff);
+            const diffColor = diff >= 0 ? '#4caf50' : '#f44336'; // Green for positive, red for negative
+            
+            // Return formatted string with current - low = difference
+            return `${currentFormatted} <span style="color: #444;">-</span> ${lowFormatted} <span style="color: #444;">=</span> <span style="color: ${diffColor};">${diffFormatted}</span>`;
+        }
         
         function toggleSecurity() {
             isSecureMode = !isSecureMode;
@@ -405,15 +424,15 @@
         
         function updateAllPrices() {
             // Update displayed prices with current values
-            if (window.lastPrices) {
-                if (window.lastPrices.btc) {
-                    document.getElementById('btc-price').innerHTML = formatPrice(window.lastPrices.btc);
+            if (window.lastPrices && window.low24hPrices) {
+                if (window.lastPrices.btc && window.low24hPrices.btc && !hiddenCoins.btc) {
+                    document.getElementById('btc-price').innerHTML = formatPriceWithLow(window.lastPrices.btc, window.low24hPrices.btc);
                 }
-                if (window.lastPrices.eth) {
-                    document.getElementById('eth-price').innerHTML = formatPrice(window.lastPrices.eth);
+                if (window.lastPrices.eth && window.low24hPrices.eth && !hiddenCoins.eth) {
+                    document.getElementById('eth-price').innerHTML = formatPriceWithLow(window.lastPrices.eth, window.low24hPrices.eth);
                 }
-                if (window.lastPrices.sol) {
-                    document.getElementById('sol-price').innerHTML = formatPrice(window.lastPrices.sol);
+                if (window.lastPrices.sol && window.low24hPrices.sol && !hiddenCoins.sol) {
+                    document.getElementById('sol-price').innerHTML = formatPriceWithLow(window.lastPrices.sol, window.low24hPrices.sol);
                 }
             }
         }
@@ -429,13 +448,16 @@
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 const price = parseFloat(data.c); // Current price
+                const low24h = parseFloat(data.l); // 24h low price
                 
-                // Store price for later updates
+                // Store prices for later updates
                 if (!window.lastPrices) window.lastPrices = {};
+                if (!window.low24hPrices) window.low24hPrices = {};
                 const coinType = symbol.replace('USDT', '').toLowerCase();
                 window.lastPrices[coinType] = price;
+                window.low24hPrices[coinType] = low24h;
                 
-                document.getElementById(elementId).innerHTML = formatPrice(price);
+                document.getElementById(elementId).innerHTML = formatPriceWithLow(price, low24h);
             };
             
             ws.onerror = function(error) {
@@ -472,23 +494,30 @@
                 
                 // Store prices
                 if (!window.lastPrices) window.lastPrices = {};
+                if (!window.low24hPrices) window.low24hPrices = {};
                 
                 if (results[0]) {
                     const btcPrice = parseFloat(results[0].lastPrice);
+                    const btcLow = parseFloat(results[0].lowPrice);
                     window.lastPrices.btc = btcPrice;
-                    document.getElementById('btc-price').innerHTML = formatPrice(btcPrice);
+                    window.low24hPrices.btc = btcLow;
+                    document.getElementById('btc-price').innerHTML = formatPriceWithLow(btcPrice, btcLow);
                     document.getElementById('btc-price').classList.remove('loading');
                 }
                 if (results[1]) {
                     const ethPrice = parseFloat(results[1].lastPrice);
+                    const ethLow = parseFloat(results[1].lowPrice);
                     window.lastPrices.eth = ethPrice;
-                    document.getElementById('eth-price').innerHTML = formatPrice(ethPrice);
+                    window.low24hPrices.eth = ethLow;
+                    document.getElementById('eth-price').innerHTML = formatPriceWithLow(ethPrice, ethLow);
                     document.getElementById('eth-price').classList.remove('loading');
                 }
                 if (results[2]) {
                     const solPrice = parseFloat(results[2].lastPrice);
+                    const solLow = parseFloat(results[2].lowPrice);
                     window.lastPrices.sol = solPrice;
-                    document.getElementById('sol-price').innerHTML = formatPrice(solPrice);
+                    window.low24hPrices.sol = solLow;
+                    document.getElementById('sol-price').innerHTML = formatPriceWithLow(solPrice, solLow);
                     document.getElementById('sol-price').classList.remove('loading');
                 }
             } catch (error) {
