@@ -217,6 +217,21 @@
             <h1>📊 암호화폐 가격 기록</h1>
             <a href="index.html" class="back-btn">← 돌아가기</a>
         </div>
+        
+        <!-- 디버그 정보 패널 -->
+        <div id="debug-panel" style="
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+            display: none;
+        ">
+            <h3 style="color: #4caf50; margin-bottom: 10px;">🔍 디버그 정보</h3>
+            <div id="debug-content"></div>
+        </div>
 
         <div class="date-filter">
             <button onclick="loadHistory(10)" class="active" id="btn-10">최근 10일</button>
@@ -359,8 +374,35 @@
             }
             database = firebase.database();
             console.log('🔥 Firebase 연결 성공');
+            
+            // 디버그 정보 표시
+            showDebugInfo('Firebase 연결 성공!', 'success');
         } catch (error) {
             console.error('Firebase 초기화 오류:', error);
+            showDebugInfo('Firebase 초기화 오류: ' + error.message, 'error');
+        }
+        
+        // 디버그 정보 표시 함수
+        function showDebugInfo(message, type = 'info') {
+            const debugDiv = document.createElement('div');
+            debugDiv.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3'};
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                z-index: 10000;
+                font-size: 14px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            `;
+            debugDiv.textContent = message;
+            document.body.appendChild(debugDiv);
+            
+            setTimeout(() => {
+                debugDiv.remove();
+            }, 5000);
         }
 
         let currentDays = 10;
@@ -432,17 +474,35 @@
         async function loadPriceHistory(symbol, tbodyId, days = 10) {
             if (!database) {
                 console.error('Firebase가 초기화되지 않았습니다');
+                showDebugInfo('Firebase가 초기화되지 않았습니다', 'error');
                 return;
             }
+            
+            // 디버그 패널 표시
+            document.getElementById('debug-panel').style.display = 'block';
+            const debugContent = document.getElementById('debug-content');
+            debugContent.innerHTML = `<div style="color: #2196f3;">데이터 로드 중... (${symbol})</div>`;
             
             try {
                 const snapshot = await database.ref('prices').once('value');
                 const allData = snapshot.val();
                 
+                debugContent.innerHTML += `<div style="color: #4caf50;">✅ 데이터 로드 성공</div>`;
+                
                 if (!allData) {
                     document.getElementById(tbodyId).innerHTML = '<tr><td colspan="5" class="loading">데이터가 없습니다</td></tr>';
+                    debugContent.innerHTML += `<div style="color: #f44336;">❌ 데이터가 없습니다</div>`;
                     return;
                 }
+                
+                debugContent.innerHTML += `<div>총 ${Object.keys(allData).length}개 날짜 데이터 발견</div>`;
+                
+                // 첫 번째 데이터 샘플 표시
+                const firstKey = Object.keys(allData)[0];
+                debugContent.innerHTML += `<div style="margin-top: 10px; padding: 10px; background: #0a0a0a; border-radius: 5px;">
+                    <strong>데이터 구조 샘플 (${firstKey}):</strong><br>
+                    <pre style="color: #888; font-size: 11px;">${JSON.stringify(allData[firstKey], null, 2)}</pre>
+                </div>`;
                 
                 // 날짜별로 해당 심볼 데이터 추출
                 const priceData = [];

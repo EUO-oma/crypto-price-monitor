@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가격 기록 디버그</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .status {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #333;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        .info { color: #2196f3; }
+        button {
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        pre {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            overflow: auto;
+            font-size: 12px;
+            border: 1px solid #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #2a2a2a;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #0a0a0a;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 가격 기록 디버그 페이지</h1>
+    <p>Firebase 연결과 데이터를 단계별로 확인합니다.</p>
+    
+    <div class="status">
+        <h2>상태 확인</h2>
+        <div id="status-log"></div>
+    </div>
+    
+    <button onclick="runFullTest()">전체 테스트 실행</button>
+    <button onclick="window.location.reload()">페이지 새로고침</button>
+    <a href="price-history.html"><button>원래 페이지로 이동</button></a>
+    
+    <div class="status">
+        <h2>데이터 미리보기</h2>
+        <div id="data-preview"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        const statusLog = document.getElementById('status-log');
+        const dataPreview = document.getElementById('data-preview');
+        let database;
+        
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            statusLog.innerHTML += `<div class="step ${type}">[${time}] ${message}</div>`;
+        }
+        
+        async function runFullTest() {
+            statusLog.innerHTML = '';
+            dataPreview.innerHTML = '';
+            
+            // Step 1: Firebase 초기화
+            log('Step 1: Firebase 초기화 시도...');
+            
+            const firebaseConfig = {
+                apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+                authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+                databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+                projectId: "crypto-monitor-84bdb",
+                storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+                messagingSenderId: "146592267275",
+                appId: "1:146592267275:web:916c54658889be5dab9b0e",
+                measurementId: "G-TTGCF3YWWJ"
+            };
+            
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                database = firebase.database();
+                log('✅ Firebase 초기화 성공!', 'success');
+            } catch (error) {
+                log('❌ Firebase 초기화 실패: ' + error.message, 'error');
+                return;
+            }
+            
+            // Step 2: 연결 테스트
+            log('Step 2: Firebase 연결 테스트...');
+            try {
+                const connRef = database.ref('.info/connected');
+                const snapshot = await connRef.once('value');
+                if (snapshot.val() === true) {
+                    log('✅ Firebase 연결 확인!', 'success');
+                } else {
+                    log('⚠️ Firebase 연결 상태 불명확', 'warning');
+                }
+            } catch (error) {
+                log('❌ 연결 테스트 실패: ' + error.message, 'error');
+            }
+            
+            // Step 3: 데이터 로드
+            log('Step 3: 가격 데이터 로드 시도...');
+            try {
+                const snapshot = await database.ref('prices').once('value');
+                const allData = snapshot.val();
+                
+                if (!allData) {
+                    log('❌ 데이터가 없습니다!', 'error');
+                    dataPreview.innerHTML = '<p class="error">Firebase에 데이터가 없습니다.</p>';
+                    return;
+                }
+                
+                const dates = Object.keys(allData);
+                log(`✅ ${dates.length}개의 날짜 데이터 발견!`, 'success');
+                
+                // Step 4: 데이터 구조 분석
+                log('Step 4: 데이터 구조 분석...');
+                const sampleDate = dates.sort().reverse()[0];
+                const sampleData = allData[sampleDate];
+                
+                log('최신 날짜: ' + sampleDate, 'info');
+                log('데이터 구조: ' + JSON.stringify(sampleData, null, 2), 'info');
+                
+                // 데이터 미리보기 테이블 생성
+                let tableHtml = '<h3>최근 5일 데이터</h3><table><tr><th>날짜</th><th>BTC</th><th>ETH</th><th>SOL</th></tr>';
+                
+                const recentDates = dates.sort().reverse().slice(0, 5);
+                recentDates.forEach(date => {
+                    const data = allData[date];
+                    tableHtml += `<tr>
+                        <td>${date}</td>
+                        <td>$${data.btc?.toLocaleString() || '-'}<br>
+                            <small>고: $${data.btc_high?.toLocaleString() || '-'}</small><br>
+                            <small>저: $${data.btc_low?.toLocaleString() || '-'}</small>
+                        </td>
+                        <td>$${data.eth?.toLocaleString() || '-'}<br>
+                            <small>고: $${data.eth_high?.toLocaleString() || '-'}</small><br>
+                            <small>저: $${data.eth_low?.toLocaleString() || '-'}</small>
+                        </td>
+                        <td>$${data.sol?.toLocaleString() || '-'}<br>
+                            <small>고: $${data.sol_high?.toLocaleString() || '-'}</small><br>
+                            <small>저: $${data.sol_low?.toLocaleString() || '-'}</small>
+                        </td>
+                    </tr>`;
+                });
+                tableHtml += '</table>';
+                
+                dataPreview.innerHTML = tableHtml;
+                
+                // 전체 데이터 구조 표시
+                dataPreview.innerHTML += '<h3>전체 데이터 구조 (접기/펼치기)</h3>';
+                dataPreview.innerHTML += `<details>
+                    <summary>클릭하여 전체 데이터 보기</summary>
+                    <pre>${JSON.stringify(allData, null, 2)}</pre>
+                </details>`;
+                
+                log('✅ 테스트 완료! 데이터가 정상적으로 로드되었습니다.', 'success');
+                
+            } catch (error) {
+                log('❌ 데이터 로드 실패: ' + error.message, 'error');
+                log('오류 스택: ' + error.stack, 'error');
+            }
+        }
+        
+        // 페이지 로드시 자동 실행
+        window.onload = () => {
+            log('페이지 로드 완료. 테스트 버튼을 클릭하세요.', 'info');
+        };
+    </script>
+</body>
+</html>
