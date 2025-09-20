@@ -302,10 +302,15 @@
                     throw new Error('Supabase 클라이언트를 초기화할 수 없습니다.');
                 }
                 
+                // 원래 목적지를 세션에 저장
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirectTo = urlParams.get('redirect') || 'admin-v3.html';
+                sessionStorage.setItem('adminRedirectTo', redirectTo);
+                
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/admin-v3.html'
+                        redirectTo: window.location.origin + '/auth-callback.html'
                     }
                 });
 
