@@ -515,6 +515,14 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Price Comparison Section -->
+            <div style=\"margin-top: 30px;\">
+                <h3 style=\"margin-bottom: 15px; font-weight: 600; color: #fff; font-size: 1.2em;\">📊 Exchange Price Comparison</h3>
+                <div id=\"comparison-cards\" style=\"display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;\">
+                    <!-- Comparison cards will be generated here -->
+                </div>
+            </div>
         </div>
         <!-- ============================================ -->
         <!-- 💰 SECTION 2 END: 코인 가격 카드 섹션 -->
@@ -704,6 +712,178 @@
         let binanceXrpWs = null;
         let binanceSolWs = null;
         let binanceAvaxWs = null;
+        
+        // Exchange price comparison
+        const exchangePrices = {
+            binance: { btc: null, eth: null, sol: null },
+            bybit: { btc: null, eth: null, sol: null }
+        };
+        
+        // Create comparison card HTML
+        function createComparisonCard(symbol) {
+            const symbolName = symbol.toUpperCase();
+            const colors = {
+                btc: '#f7931a',
+                eth: '#9a8ff8', 
+                sol: '#00FFA3'
+            };
+            
+            return `
+                <div style=\"background: #0d0d0d; border-radius: 12px; padding: 15px; border: 1px solid #222;\">
+                    <div style=\"display: flex; align-items: center; gap: 10px; margin-bottom: 15px;\">
+                        <span style=\"font-size: 24px; color: ${colors[symbol]};\">
+                            ${symbol === 'btc' ? '₿' : symbol === 'eth' ? 'Ξ' : '◎'}
+                        </span>
+                        <span style=\"font-weight: 600; color: #fff; font-size: 1.1em;\">${symbolName}/USDT</span>
+                    </div>
+                    
+                    <!-- Binance Card -->
+                    <div id=\"${symbol}-binance-card\" style=\"
+                        background: #1a1a1a;
+                        border: 2px solid #333;
+                        border-radius: 8px;
+                        padding: 12px;
+                        margin-bottom: 10px;
+                        transition: all 0.3s ease;
+                    \">
+                        <div style=\"display: flex; justify-content: space-between; align-items: center;\">
+                            <div style=\"display: flex; align-items: center; gap: 8px;\">
+                                <span style=\"font-size: 16px; font-weight: 600; color: #fff;\">Binance</span>
+                                <div id=\"${symbol}-binance-indicator\" style=\"
+                                    width: 8px;
+                                    height: 8px;
+                                    border-radius: 50%;
+                                    background: #333;
+                                    transition: all 0.3s ease;
+                                \"></div>
+                            </div>
+                            <div class=\"mono\" style=\"font-size: 18px; font-weight: 600; color: ${colors[symbol]};\" id=\"${symbol}-binance-price\">
+                                Loading...
+                            </div>
+                        </div>
+                        <div style=\"margin-top: 5px; font-size: 12px; color: #666;\" id=\"${symbol}-binance-change\">-</div>
+                    </div>
+                    
+                    <!-- Bybit Card -->
+                    <div id=\"${symbol}-bybit-card\" style=\"
+                        background: #1a1a1a;
+                        border: 2px solid #333;
+                        border-radius: 8px;
+                        padding: 12px;
+                        transition: all 0.3s ease;
+                    \">
+                        <div style=\"display: flex; justify-content: space-between; align-items: center;\">
+                            <div style=\"display: flex; align-items: center; gap: 8px;\">
+                                <span style=\"font-size: 16px; font-weight: 600; color: #fff;\">Bybit</span>
+                                <div id=\"${symbol}-bybit-indicator\" style=\"
+                                    width: 8px;
+                                    height: 8px;
+                                    border-radius: 50%;
+                                    background: #333;
+                                    transition: all 0.3s ease;
+                                \"></div>
+                            </div>
+                            <div class=\"mono\" style=\"font-size: 18px; font-weight: 600; color: ${colors[symbol]};\" id=\"${symbol}-bybit-price\">
+                                Loading...
+                            </div>
+                        </div>
+                        <div style=\"margin-top: 5px; font-size: 12px; color: #666;\" id=\"${symbol}-bybit-change\">-</div>
+                    </div>
+                    
+                    <!-- Price Difference -->
+                    <div style=\"margin-top: 10px; text-align: center; padding: 8px; background: #0a0a0a; border-radius: 6px;\">
+                        <div style=\"font-size: 11px; color: #666; margin-bottom: 2px;\">Price Difference</div>
+                        <div class=\"mono\" style=\"font-size: 14px; font-weight: 600;\" id=\"${symbol}-price-diff\">-</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Initialize comparison cards
+        function initComparisonCards() {
+            const container = document.getElementById('comparison-cards');
+            if (container) {
+                container.innerHTML = ['btc', 'eth', 'sol'].map(symbol => createComparisonCard(symbol)).join('');
+            }
+        }
+        
+        // Update price comparison
+        function updatePriceComparison(symbol, exchange, price, change) {
+            if (!exchangePrices[exchange] || !exchangePrices[exchange][symbol]) {
+                exchangePrices[exchange][symbol] = {};
+            }
+            
+            exchangePrices[exchange][symbol].price = parseFloat(price);
+            exchangePrices[exchange][symbol].change = parseFloat(change || 0);
+            
+            // Update UI
+            const priceElement = document.getElementById(`${symbol}-${exchange}-price`);
+            const changeElement = document.getElementById(`${symbol}-${exchange}-change`);
+            
+            if (priceElement) {
+                priceElement.textContent = '$' + parseFloat(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            
+            if (changeElement) {
+                const changeValue = parseFloat(change || 0);
+                const sign = changeValue >= 0 ? '+' : '';
+                changeElement.textContent = `${sign}${changeValue.toFixed(2)}%`;
+                changeElement.style.color = changeValue >= 0 ? '#4caf50' : '#f44336';
+            }
+            
+            // Compare prices and highlight winner
+            comparePrices(symbol);
+        }
+        
+        // Compare prices between exchanges
+        function comparePrices(symbol) {
+            const binancePrice = exchangePrices.binance[symbol]?.price;
+            const bybitPrice = exchangePrices.bybit[symbol]?.price;
+            
+            if (!binancePrice || !bybitPrice) return;
+            
+            const binanceCard = document.getElementById(`${symbol}-binance-card`);
+            const bybitCard = document.getElementById(`${symbol}-bybit-card`);
+            const binanceIndicator = document.getElementById(`${symbol}-binance-indicator`);
+            const bybitIndicator = document.getElementById(`${symbol}-bybit-indicator`);
+            const diffElement = document.getElementById(`${symbol}-price-diff`);
+            
+            // Calculate difference
+            const diff = binancePrice - bybitPrice;
+            const diffPercent = ((Math.abs(diff) / Math.min(binancePrice, bybitPrice)) * 100).toFixed(4);
+            
+            // Reset styles
+            binanceCard.style.borderColor = '#333';
+            bybitCard.style.borderColor = '#333';
+            binanceIndicator.style.background = '#333';
+            bybitIndicator.style.background = '#333';
+            
+            // Highlight higher price
+            if (Math.abs(diff) > 0.01) { // Only highlight if difference > $0.01
+                if (binancePrice > bybitPrice) {
+                    binanceCard.style.borderColor = '#4caf50';
+                    binanceIndicator.style.background = '#4caf50';
+                    binanceIndicator.style.boxShadow = '0 0 8px rgba(76, 175, 80, 0.5)';
+                } else {
+                    bybitCard.style.borderColor = '#4caf50';
+                    bybitIndicator.style.background = '#4caf50';
+                    bybitIndicator.style.boxShadow = '0 0 8px rgba(76, 175, 80, 0.5)';
+                }
+            }
+            
+            // Update difference display
+            if (diffElement) {
+                const higherExchange = binancePrice > bybitPrice ? 'Binance' : 'Bybit';
+                diffElement.innerHTML = `
+                    <span style=\"color: ${Math.abs(diff) > 0.01 ? '#4caf50' : '#666'};\">
+                        $${Math.abs(diff).toFixed(2)} (${diffPercent}%)
+                    </span><br>
+                    <span style=\"font-size: 10px; color: #888;\">
+                        ${Math.abs(diff) > 0.01 ? `${higherExchange} higher` : 'Similar prices'}
+                    </span>
+                `;
+            }
+        }
 
         function formatPrice(price) {
             // null, undefined, 빈 문자열 처리
@@ -1082,6 +1262,36 @@
             }
         }
 
+        // Connect to Bybit WebSocket
+        function connectBybit() {
+            const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
+            
+            ws.onopen = function() {
+                const subscribeMsg = {
+                    op: 'subscribe',
+                    args: ['tickers.BTCUSDT', 'tickers.ETHUSDT', 'tickers.SOLUSDT']
+                };
+                ws.send(JSON.stringify(subscribeMsg));
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.topic && data.topic.startsWith('tickers.') && data.data) {
+                    const tickerData = data.data;
+                    const symbol = tickerData.symbol.toLowerCase().replace('usdt', '');
+                    const price = tickerData.lastPrice;
+                    const change = tickerData.price24hPcnt ? (parseFloat(tickerData.price24hPcnt) * 100) : 0;
+                    
+                    // Update comparison
+                    updatePriceComparison(symbol, 'bybit', price, change);
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error('Bybit WebSocket error:', error);
+            };
+        }
+
         // Binance WebSocket for custom price cards
         function connectBinance() {
             const symbols = ['btcusdt', 'ethusdt', 'solusdt'];
@@ -1100,6 +1310,12 @@
                         // 심볼 이름 추출 (btc, eth, xrp 등)
                         const coinName = symbol.replace('usdt', '');
                         const fullSymbol = symbol.toUpperCase() + 'USDT';
+                        
+                        // Update comparison for BTC, ETH, SOL
+                        if (['btc', 'eth', 'sol'].includes(coinName)) {
+                            const change = parseFloat(data.P || 0); // 24h 변화율 %
+                            updatePriceComparison(coinName, 'binance', price, change);
+                        }
                         
                         // 가격 기록 업데이트 (BTC, ETH, SOL만)
                         if (fullSymbol === 'BTCUSDT' || fullSymbol === 'ETHUSDT' || fullSymbol === 'SOLUSDT') {
@@ -1194,12 +1410,16 @@
             el.classList.add('loading');
         });
 
+        // Initialize comparison cards
+        initComparisonCards();
+
         // WebSocket 연결 시작 - Re-enabled for custom price cards
         // First test if Binance is accessible
         testBinanceConnection().then(isAccessible => {
             if (isAccessible) {
                 console.log('Binance is accessible, using WebSocket');
                 connectBinance();
+                connectBybit(); // Also connect to Bybit for comparison
             } else {
                 console.log('Binance is blocked, using fallback APIs');
                 window.binanceFallbackTriggered = true;
