@@ -53,6 +53,19 @@
             color: #fff;
             border-color: #555;
         }
+        
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-buttons .back-btn {
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
 
         /* 컨트롤 패널 */
         .control-panel {
@@ -383,7 +396,12 @@
     <div class="container">
         <div class="header">
             <h1>📊 암호화폐 가격 기록</h1>
-            <a href="index.html" class="back-btn">← 돌아가기</a>
+            <div class="header-buttons">
+                <button class="back-btn" onclick="window.location.href='high-low-range.html'" style="background: #ff5722; margin-right: 10px;">
+                    📊 High-Low Range
+                </button>
+                <a href="index.html" class="back-btn">← 돌아가기</a>
+            </div>
         </div>
         
         <!-- 차트 영역 -->
@@ -470,9 +488,6 @@
                 </div>
             </div>
             
-            <button class="download-btn" onclick="window.location.href='high-low-range.html'" style="background: #ff5722;">
-                📊 상한가/하한가 범위 보기
-            </button>
             
             <button class="download-btn" onclick="downloadChart()">📥 차트 다운로드</button>
         </div>

@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BW Calculator - 정규화 가격 비교</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4caf50;
+        }
+        
+        .header p {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .section {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: #4caf50;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .price-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .coin-data {
+            background: #151515;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        
+        .coin-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .btc-color { color: #f7931a; }
+        .eth-color { color: #9a8ff8; }
+        .sol-color { color: #00FFA3; }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .price-value {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-weight: bold;
+        }
+        
+        .calculation-section {
+            background: #0f0f0f;
+            border: 2px solid #4caf50;
+        }
+        
+        .ratio-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .ratio-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .eth-ratio { border-left-color: #9a8ff8; }
+        .sol-ratio { border-left-color: #00FFA3; }
+        
+        .normalized-prices {
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #666;
+        }
+        
+        .normalized-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+        
+        .normalized-item {
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        
+        .change-display {
+            margin-top: 15px;
+            padding: 15px;
+            background: #0a0a0a;
+            border-radius: 8px;
+        }
+        
+        .change-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        .positive { color: #4caf50; }
+        .negative { color: #f44336; }
+        .neutral { color: #888; }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .arbitrage-opportunity {
+            background: #1a0a0a;
+            border: 2px solid #ff9800;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .opportunity-title {
+            color: #ff9800;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn" onclick="toggleCalculation()">🔄</button>
+        <button class="control-btn" onclick="resetBaseline()">⚡</button>
+    </div>
+
+    <div class="header">
+        <h1>BW Calculator - 정규화 가격 비교 시스템</h1>
+        <p>비트코인 기준 정규화를 통한 상대적 가격 비교 및 차익거래 기회 탐지</p>
+    </div>
+
+    <div class="container">
+        <!-- 현재 가격 표시 -->
+        <div class="section">
+            <div class="section-title">📈 현재 가격 데이터</div>
+            <div class="price-display">
+                <div class="coin-data">
+                    <div class="coin-name btc-color">BTC (기준)</div>
+                    <div class="price-row">
+                        <span>현재가:</span>
+                        <span class="price-value" id="btc-price">------</span>
+                    </div>
+                    <div class="price-row">
+                        <span>24h 변화:</span>
+                        <span class="price-value" id="btc-change">------</span>
+                    </div>
+                </div>
+                
+                <div class="coin-data">
+                    <div class="coin-name eth-color">ETH</div>
+                    <div class="price-row">
+                        <span>현재가:</span>
+                        <span class="price-value" id="eth-price">------</span>
+                    </div>
+                    <div class="price-row">
+                        <span>24h 변화:</span>
+                        <span class="price-value" id="eth-change">------</span>
+                    </div>
+                </div>
+                
+                <div class="coin-data">
+                    <div class="coin-name sol-color">SOL</div>
+                    <div class="price-row">
+                        <span>현재가:</span>
+                        <span class="price-value" id="sol-price">------</span>
+                    </div>
+                    <div class="price-row">
+                        <span>24h 변화:</span>
+                        <span class="price-value" id="sol-change">------</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 정규화 계산 -->
+        <div class="section calculation-section">
+            <div class="section-title">🧮 정규화 비율 계산</div>
+            
+            <div class="ratio-display">
+                <div class="ratio-card eth-ratio">
+                    <div style="font-size: 14px; margin-bottom: 10px; color: #9a8ff8;">ETH → BTC 정규화</div>
+                    <div class="price-row">
+                        <span>기준 비율:</span>
+                        <span id="eth-ratio">------</span>
+                    </div>
+                    <div class="price-row">
+                        <span>정규화 배수:</span>
+                        <span id="eth-multiplier">------</span>
+                    </div>
+                </div>
+                
+                <div class="ratio-card sol-ratio">
+                    <div style="font-size: 14px; margin-bottom: 10px; color: #00FFA3;">SOL → BTC 정규화</div>
+                    <div class="price-row">
+                        <span>기준 비율:</span>
+                        <span id="sol-ratio">------</span>
+                    </div>
+                    <div class="price-row">
+                        <span>정규화 배수:</span>
+                        <span id="sol-multiplier">------</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="normalized-prices">
+                <div style="text-align: center; margin-bottom: 15px; font-size: 16px; color: #4caf50;">
+                    정규화된 가격 (BTC 범주로 조정)
+                </div>
+                <div class="normalized-grid">
+                    <div class="normalized-item">
+                        <div style="color: #f7931a; margin-bottom: 5px;">BTC</div>
+                        <div class="price-value" id="normalized-btc">------</div>
+                    </div>
+                    <div class="normalized-item">
+                        <div style="color: #9a8ff8; margin-bottom: 5px;">ETH (×<span id="eth-mult-display">--</span>)</div>
+                        <div class="price-value" id="normalized-eth">------</div>
+                    </div>
+                    <div class="normalized-item">
+                        <div style="color: #00FFA3; margin-bottom: 5px;">SOL (×<span id="sol-mult-display">--</span>)</div>
+                        <div class="price-value" id="normalized-sol">------</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="change-display">
+                <div style="text-align: center; margin-bottom: 10px; font-size: 14px; color: #888;">
+                    정규화된 가격 변화율 비교
+                </div>
+                <div class="change-row">
+                    <span>BTC 변화:</span>
+                    <span id="btc-norm-change" class="neutral">------</span>
+                </div>
+                <div class="change-row">
+                    <span>ETH 변화 (정규화):</span>
+                    <span id="eth-norm-change" class="neutral">------</span>
+                </div>
+                <div class="change-row">
+                    <span>SOL 변화 (정규화):</span>
+                    <span id="sol-norm-change" class="neutral">------</span>
+                </div>
+            </div>
+
+            <!-- 전일 최고가 대비 현재가 비율 -->
+            <div class="change-display">
+                <div style="text-align: center; margin-bottom: 10px; font-size: 14px; color: #888;">
+                    24h 최고가 대비 현재가 비율 (최고가=100%)
+                </div>
+                <div class="change-row">
+                    <span>BTC 현재 위치:</span>
+                    <span id="btc-high-ratio" class="neutral">------</span>
+                </div>
+                <div class="change-row">
+                    <span>ETH 현재 위치:</span>
+                    <span id="eth-high-ratio" class="neutral">------</span>
+                </div>
+                <div class="change-row">
+                    <span>SOL 현재 위치:</span>
+                    <span id="sol-high-ratio" class="neutral">------</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 차익거래 기회 -->
+        <div class="arbitrage-opportunity">
+            <div class="opportunity-title">⚡ 차익거래 기회 분석</div>
+            <div id="arbitrage-analysis">
+                실시간 데이터 분석 중...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let baselinePrices = {};
+        let currentPrices = {};
+        let normalizationRatios = {};
+        let isCalculating = true;
+        let dailyHighPrices = {}; // 24시간 최고가 저장
+
+        // 초기 기준점 설정
+        function setBaseline() {
+            if (currentPrices.btc && currentPrices.eth && currentPrices.sol) {
+                baselinePrices = { ...currentPrices };
+                
+                // BTC 기준으로 정규화 비율 계산
+                normalizationRatios.eth = baselinePrices.btc / baselinePrices.eth;
+                normalizationRatios.sol = baselinePrices.btc / baselinePrices.sol;
+                
+                console.log('Baseline set:', baselinePrices);
+                console.log('Normalization ratios:', normalizationRatios);
+                
+                updateRatioDisplay();
+            }
+        }
+
+        // 비율 표시 업데이트
+        function updateRatioDisplay() {
+            if (baselinePrices.btc && baselinePrices.eth && baselinePrices.sol) {
+                document.getElementById('eth-ratio').textContent = 
+                    `1 ETH = ${(baselinePrices.eth / baselinePrices.btc).toFixed(4)} BTC`;
+                document.getElementById('eth-multiplier').textContent = 
+                    `×${normalizationRatios.eth.toFixed(2)}`;
+                
+                document.getElementById('sol-ratio').textContent = 
+                    `1 SOL = ${(baselinePrices.sol / baselinePrices.btc).toFixed(6)} BTC`;
+                document.getElementById('sol-multiplier').textContent = 
+                    `×${normalizationRatios.sol.toFixed(2)}`;
+                
+                document.getElementById('eth-mult-display').textContent = 
+                    normalizationRatios.eth.toFixed(1);
+                document.getElementById('sol-mult-display').textContent = 
+                    normalizationRatios.sol.toFixed(1);
+            }
+        }
+
+        // 정규화된 가격 계산 및 표시
+        function updateNormalizedPrices() {
+            if (!normalizationRatios.eth || !normalizationRatios.sol) return;
+            
+            const normalizedETH = currentPrices.eth * normalizationRatios.eth;
+            const normalizedSOL = currentPrices.sol * normalizationRatios.sol;
+            
+            // 정규화된 가격 표시
+            document.getElementById('normalized-btc').textContent = formatPrice(currentPrices.btc);
+            document.getElementById('normalized-eth').textContent = formatPrice(normalizedETH);
+            document.getElementById('normalized-sol').textContent = formatPrice(normalizedSOL);
+            
+            // 변화율 계산 (기준점 대비)
+            if (baselinePrices.btc) {
+                const btcChange = ((currentPrices.btc - baselinePrices.btc) / baselinePrices.btc) * 100;
+                const ethNormChange = ((normalizedETH - baselinePrices.btc) / baselinePrices.btc) * 100;
+                const solNormChange = ((normalizedSOL - baselinePrices.btc) / baselinePrices.btc) * 100;
+                
+                updateChangeDisplay('btc-norm-change', btcChange);
+                updateChangeDisplay('eth-norm-change', ethNormChange);
+                updateChangeDisplay('sol-norm-change', solNormChange);
+                
+                // 차익거래 기회 분석
+                analyzeArbitrageOpportunity(btcChange, ethNormChange, solNormChange);
+            }
+        }
+
+        // 변화율 표시 업데이트
+        function updateChangeDisplay(elementId, change) {
+            const element = document.getElementById(elementId);
+            const changeStr = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+            element.textContent = changeStr;
+            
+            if (change > 0.5) {
+                element.className = 'positive';
+            } else if (change < -0.5) {
+                element.className = 'negative';
+            } else {
+                element.className = 'neutral';
+            }
+        }
+
+        // 차익거래 기회 분석
+        function analyzeArbitrageOpportunity(btcChange, ethChange, solChange) {
+            const analysisDiv = document.getElementById('arbitrage-analysis');
+            let analysis = '';
+            
+            const threshold = 1.0; // 1% 이상 차이
+            
+            // BTC vs ETH 비교
+            const btcEthDiff = Math.abs(btcChange - ethChange);
+            if (btcEthDiff > threshold) {
+                const stronger = btcChange > ethChange ? 'BTC' : 'ETH';
+                const weaker = btcChange > ethChange ? 'ETH' : 'BTC';
+                analysis += `🔥 BTC-ETH 차익기회: ${stronger} 상승세 강함 (차이: ${btcEthDiff.toFixed(2)}%)\n`;
+            }
+            
+            // BTC vs SOL 비교
+            const btcSolDiff = Math.abs(btcChange - solChange);
+            if (btcSolDiff > threshold) {
+                const stronger = btcChange > solChange ? 'BTC' : 'SOL';
+                const weaker = btcChange > solChange ? 'SOL' : 'BTC';
+                analysis += `🔥 BTC-SOL 차익기회: ${stronger} 상승세 강함 (차이: ${btcSolDiff.toFixed(2)}%)\n`;
+            }
+            
+            // ETH vs SOL 비교
+            const ethSolDiff = Math.abs(ethChange - solChange);
+            if (ethSolDiff > threshold) {
+                const stronger = ethChange > solChange ? 'ETH' : 'SOL';
+                const weaker = ethChange > solChange ? 'SOL' : 'ETH';
+                analysis += `🔥 ETH-SOL 차익기회: ${stronger} 상승세 강함 (차이: ${ethSolDiff.toFixed(2)}%)\n`;
+            }
+            
+            if (analysis === '') {
+                analysis = '현재 차익거래 기회 없음 (모든 코인이 유사한 움직임)';
+            }
+            
+            analysisDiv.style.whiteSpace = 'pre-line';
+            analysisDiv.textContent = analysis;
+        }
+
+        // 24시간 최고가 대비 현재가 비율 업데이트
+        function updateHighRatio(coinType, currentPrice, highPrice) {
+            if (!currentPrice || !highPrice || highPrice === 0) return;
+            
+            const ratio = (currentPrice / highPrice) * 100;
+            const elementId = `${coinType}-high-ratio`;
+            const element = document.getElementById(elementId);
+            
+            if (element) {
+                element.textContent = `${ratio.toFixed(1)}%`;
+                
+                // 색상 지정: 90% 이상 = 녹색, 80% 이상 = 노란색, 그 외 = 빨간색
+                if (ratio >= 90) {
+                    element.className = 'positive';
+                } else if (ratio >= 80) {
+                    element.className = 'neutral';
+                    element.style.color = '#ffa726'; // 오렌지색
+                } else {
+                    element.className = 'negative';
+                }
+            }
+        }
+
+        // 가격 포맷팅
+        function formatPrice(price) {
+            if (price >= 1000) {
+                return price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            } else {
+                return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+        }
+
+        // Binance WebSocket 연결
+        function connectWebSocket(symbol, priceId, changeId, coinType) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c);
+                const change24h = parseFloat(data.P);
+                const high24h = parseFloat(data.h); // 24시간 최고가
+                
+                currentPrices[coinType] = price;
+                dailyHighPrices[coinType] = high24h; // 24시간 최고가 저장
+                
+                document.getElementById(priceId).textContent = formatPrice(price);
+                document.getElementById(changeId).textContent = `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`;
+                document.getElementById(changeId).className = change24h >= 0 ? 'positive' : 'negative';
+                
+                // 24시간 최고가 대비 현재가 비율 계산 및 표시
+                updateHighRatio(coinType, price, high24h);
+                
+                // 기준점이 설정되지 않았으면 설정
+                if (!baselinePrices.btc && currentPrices.btc && currentPrices.eth && currentPrices.sol) {
+                    setBaseline();
+                }
+                
+                // 정규화된 가격 업데이트
+                if (isCalculating && normalizationRatios.eth && normalizationRatios.sol) {
+                    updateNormalizedPrices();
+                }
+            };
+            
+            return ws;
+        }
+
+        // 컨트롤 함수들
+        function toggleCalculation() {
+            isCalculating = !isCalculating;
+            console.log('Calculation mode:', isCalculating ? 'ON' : 'OFF');
+        }
+
+        function resetBaseline() {
+            if (currentPrices.btc && currentPrices.eth && currentPrices.sol) {
+                setBaseline();
+                console.log('Baseline reset');
+            }
+        }
+
+        // 초기화
+        window.addEventListener('load', () => {
+            // WebSocket 연결
+            connectWebSocket('BTCUSDT', 'btc-price', 'btc-change', 'btc');
+            connectWebSocket('ETHUSDT', 'eth-price', 'eth-change', 'eth');
+            connectWebSocket('SOLUSDT', 'sol-price', 'sol-change', 'sol');
+            
+            console.log('BW Calculator initialized');
+        });
+    </script>
+</body>
+</html>

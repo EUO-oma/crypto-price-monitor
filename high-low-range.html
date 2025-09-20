@@ -148,53 +148,54 @@
             border-color: #4caf50;
         }
         
-        /* Stats Cards */
+        /* Stats Cards - 더 컴팩트하게 */
         .stats-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
         }
         
         .stat-card {
             background: #0a0a0a;
             border: 1px solid #333;
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 8px;
+            padding: 12px 15px;
             text-align: center;
         }
         
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         
         .stat-value {
-            font-size: 28px;
+            font-size: 20px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             font-family: 'SF Mono', 'Monaco', monospace;
         }
         
         .stat-change {
-            font-size: 14px;
+            font-size: 12px;
             color: #888;
         }
         
         .positive { color: #4caf50; }
         .negative { color: #f44336; }
         
-        /* Chart container */
+        /* Chart container - 높이 10% 축소 */
         .chart-container {
             background: #0a0a0a;
             border-radius: 15px;
             padding: 20px;
             border: 1px solid #333;
-            height: 600px;
+            height: 450px;
             position: relative;
+            margin-bottom: 20px;
         }
         
         .chart-loading {
@@ -209,7 +210,7 @@
         
         #priceChart {
             width: 100% !important;
-            height: 560px !important;
+            height: 410px !important;
             display: block;
         }
         
@@ -284,7 +285,13 @@
             <button class="back-btn" onclick="downloadChart()">📥 차트 다운로드</button>
         </div>
         
-        <!-- Stats Cards -->
+        <!-- Chart (차트를 먼저 표시) -->
+        <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+            <div class="chart-loading" id="chart-loading">차트 로딩 중...</div>
+        </div>
+        
+        <!-- Stats Cards (차트 아래로 이동) -->
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-label">현재 가격</div>
@@ -309,12 +316,6 @@
                 <div class="stat-value" id="avg-volatility">-</div>
                 <div class="stat-change">일일 평균</div>
             </div>
-        </div>
-        
-        <!-- Chart -->
-        <div class="chart-container">
-            <canvas id="priceChart"></canvas>
-            <div class="chart-loading" id="chart-loading">차트 로딩 중...</div>
         </div>
         
         <!-- Info Section -->

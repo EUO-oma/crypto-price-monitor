@@ -4,20 +4,29 @@
 """
 
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import ttk, scrolledtext
 import subprocess
 import threading
 from datetime import datetime
 import os
 import webbrowser
 import time
+import platform
 
 class DeployGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("🚀 Netlify Ultra Deploy")
-        self.root.geometry("800x600")
+        self.root.geometry("900x700")
         self.root.configure(bg='#0a0a0a')
+        
+        # 다크모드 설정
+        if platform.system() == "Darwin":  # macOS
+            os.system("defaults write -g NSRequiresAquaSystemAppearance -bool No")
+            self.root.update()
+        
+        # 창을 화면 중앙에 위치
+        self.center_window()
         
         # 프로젝트 디렉토리
         self.project_dir = "/Users/iuo/Documents/EUOvaultSYNC/1 Project/privacy/crypto-price-monitor"
@@ -31,17 +40,27 @@ class DeployGUI:
         # 초기 디렉토리 이동
         self.change_to_project_dir()
         
+    def center_window(self):
+        """창을 화면 중앙에 위치시킴"""
+        self.root.update_idletasks()
+        width = self.root.winfo_width()
+        height = self.root.winfo_height()
+        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
+        
     def setup_styles(self):
         """스타일 설정"""
         style = ttk.Style()
         style.theme_use('default')
         
-        # 다크 테마 색상
+        # 다크 테마 색상 (더 나은 가독성)
         bg_color = '#0a0a0a'
         fg_color = '#ffffff'
         button_bg = '#1a1a1a'
-        accent_color = '#4caf50'
-        danger_color = '#f44336'
+        accent_color = '#00e676'  # 더 밝은 녹색
+        hover_color = '#69f0ae'   # 호버시 색상
+        danger_color = '#ff5252'
         
         # 버튼 스타일
         style.configure('Deploy.TButton',
@@ -119,22 +138,28 @@ class DeployGUI:
         inner_frame = tk.Frame(deploy_frame, bg='#1a1a1a')
         inner_frame.pack(fill='both', expand=True, padx=20, pady=20)
         
-        # 배포 버튼
+        # 배포 버튼 (크고 눈에 띄게)
         self.deploy_button = tk.Button(
             inner_frame,
-            text="🚀 원클릭 자동 배포",
+            text="🚀  원클릭 자동 배포",
             command=self.auto_deploy,
-            bg='#4caf50',
-            fg='white',
-            font=('SF Pro Display', 18, 'bold'),
+            bg='#00e676',
+            fg='#000000',  # 검정색 텍스트로 가독성 향상
+            font=('SF Pro Display', 20, 'bold'),
             bd=0,
-            padx=40,
-            pady=15,
+            padx=50,
+            pady=20,
             cursor='hand2',
-            activebackground='#45a049',
-            activeforeground='white'
+            activebackground='#69f0ae',
+            activeforeground='#000000',
+            relief='flat',
+            highlightthickness=0
         )
-        self.deploy_button.pack(pady=10)
+        self.deploy_button.pack(pady=20)
+        
+        # 버튼에 그림자 효과 추가
+        shadow_frame = tk.Frame(inner_frame, bg='#000000', height=5)
+        shadow_frame.pack(fill='x', pady=(0, 20))
         
         # 상태 표시
         self.status_label = ttk.Label(inner_frame, text="대기 중...", style='Status.TLabel')
@@ -154,25 +179,28 @@ class DeployGUI:
                             font=('SF Pro Display', 14, 'bold'))
         log_title.pack(anchor='w', padx=20, pady=(15, 10))
         
-        # 로그 텍스트 영역
+        # 로그 텍스트 영역 (더 나은 가독성)
         self.log_text = scrolledtext.ScrolledText(
             log_frame,
             wrap='word',
             width=80,
             height=15,
-            bg='#0a0a0a',
-            fg='#00ff00',
-            font=('SF Mono', 11),
+            bg='#151515',  # 약간 밝은 배경
+            fg='#e0e0e0',  # 밝은 회색 텍스트
+            font=('SF Mono', 12),  # 더 큰 폰트
             insertbackground='#00ff00',
-            bd=0
+            bd=0,
+            padx=10,
+            pady=10
         )
         self.log_text.pack(fill='both', expand=True, padx=20, pady=(0, 20))
         
-        # 태그 설정
-        self.log_text.tag_config('info', foreground='#4caf50')
-        self.log_text.tag_config('warning', foreground='#ff9800')
-        self.log_text.tag_config('error', foreground='#f44336')
-        self.log_text.tag_config('success', foreground='#00ff00')
+        # 태그 설정 (더 선명한 색상)
+        self.log_text.tag_config('info', foreground='#64b5f6', font=('SF Mono', 12, 'bold'))
+        self.log_text.tag_config('warning', foreground='#ffb74d', font=('SF Mono', 12, 'bold'))
+        self.log_text.tag_config('error', foreground='#ef5350', font=('SF Mono', 12, 'bold'))
+        self.log_text.tag_config('success', foreground='#81c784', font=('SF Mono', 12, 'bold'))
+        self.log_text.tag_config('timestamp', foreground='#9e9e9e')
         
     def create_bottom_buttons(self, parent):
         """하단 버튼들"""
@@ -184,13 +212,14 @@ class DeployGUI:
             button_frame,
             text="🌐 웹사이트 열기",
             command=self.open_website,
-            bg='#2196f3',
+            bg='#2979ff',
             fg='white',
-            font=('SF Pro Display', 12),
+            font=('SF Pro Display', 13, 'bold'),
             bd=0,
-            padx=20,
-            pady=8,
-            cursor='hand2'
+            padx=25,
+            pady=10,
+            cursor='hand2',
+            activebackground='#448aff'
         )
         web_button.pack(side='left', padx=(0, 10))
         
@@ -199,13 +228,14 @@ class DeployGUI:
             button_frame,
             text="🧹 로그 지우기",
             command=self.clear_log,
-            bg='#ff5722',
+            bg='#ff6f00',
             fg='white',
-            font=('SF Pro Display', 12),
+            font=('SF Pro Display', 13, 'bold'),
             bd=0,
-            padx=20,
-            pady=8,
-            cursor='hand2'
+            padx=25,
+            pady=10,
+            cursor='hand2',
+            activebackground='#ffa000'
         )
         clear_button.pack(side='left', padx=(0, 10))
         
@@ -214,20 +244,22 @@ class DeployGUI:
             button_frame,
             text="🚪 종료",
             command=self.root.quit,
-            bg='#666666',
+            bg='#424242',
             fg='white',
-            font=('SF Pro Display', 12),
+            font=('SF Pro Display', 13, 'bold'),
             bd=0,
-            padx=20,
-            pady=8,
-            cursor='hand2'
+            padx=25,
+            pady=10,
+            cursor='hand2',
+            activebackground='#616161'
         )
         exit_button.pack(side='right')
         
     def log(self, message, tag='info'):
         """로그 메시지 추가"""
         timestamp = datetime.now().strftime("%H:%M:%S")
-        self.log_text.insert('end', f"[{timestamp}] {message}\n", tag)
+        self.log_text.insert('end', f"[{timestamp}] ", 'timestamp')
+        self.log_text.insert('end', f"{message}\n", tag)
         self.log_text.see('end')
         self.root.update()
         
@@ -264,8 +296,13 @@ class DeployGUI:
             
     def auto_deploy(self):
         """원클릭 자동 배포"""
-        # 버튼 비활성화
-        self.deploy_button.config(state='disabled', text='🔄 배포 중...')
+        # 버튼 비활성화 (색상 변경)
+        self.deploy_button.config(
+            state='disabled', 
+            text='🔄 배포 중...',
+            bg='#757575',
+            fg='#ffffff'
+        )
         self.progress.start(10)
         
         # 별도 스레드에서 실행
@@ -338,7 +375,12 @@ class DeployGUI:
         finally:
             # UI 복원
             self.progress.stop()
-            self.deploy_button.config(state='normal', text='🚀 원클릭 자동 배포')
+            self.deploy_button.config(
+                state='normal', 
+                text='🚀  원클릭 자동 배포',
+                bg='#00e676',
+                fg='#000000'
+            )
             
     def open_website(self):
         """웹사이트 열기"""
