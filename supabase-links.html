@@ -289,6 +289,20 @@
             color: #888;
         }
         
+        .list-item .metadata {
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .list-item .metadata span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
         /* Grid View */
         #fun-youtube-links-grid {
             display: none;
@@ -348,6 +362,21 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        
+        .grid-item .metadata {
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .grid-item .metadata span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         
         /* Custom Category Sections */
@@ -593,7 +622,37 @@
             return 'YouTube';
         }
         
-        // Fetch YouTube video title using noembed service
+        // Format number with K/M suffix
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+        
+        // Format date to relative time
+        function formatRelativeTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            const months = Math.floor(diff / 2592000000);
+            const years = Math.floor(diff / 31536000000);
+            
+            if (years > 0) return years + '년 전';
+            if (months > 0) return months + '개월 전';
+            if (days > 0) return days + '일 전';
+            if (hours > 0) return hours + '시간 전';
+            if (minutes > 0) return minutes + '분 전';
+            return '방금 전';
+        }
+        
+        // Fetch YouTube video metadata using noembed service
         async function fetchYouTubeTitle(videoId, videoUrl) {
             try {
                 // Use noembed service to get video metadata without API key
@@ -612,10 +671,61 @@
                         if (channelElement && data.author_name) {
                             channelElement.textContent = data.author_name;
                         }
+                        
+                        // Add metadata if available
+                        const metadataElement = element.querySelector('.metadata');
+                        if (metadataElement) {
+                            let metadataHTML = '';
+                            
+                            // Upload date (noembed provides this sometimes)
+                            if (data.upload_date) {
+                                metadataHTML += `<span>📅 ${formatRelativeTime(data.upload_date)}</span>`;
+                            }
+                            
+                            // Duration (if available)
+                            if (data.duration) {
+                                const minutes = Math.floor(data.duration / 60);
+                                const seconds = data.duration % 60;
+                                metadataHTML += `<span>⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}</span>`;
+                            }
+                            
+                            // Note: View count and likes are not available through noembed
+                            // You would need YouTube Data API for that
+                            metadataHTML += `<span>👁️ 조회수 확인 중...</span>`;
+                            
+                            metadataElement.innerHTML = metadataHTML;
+                        }
                     });
                 }
+                
+                // Try alternative method to get more metadata
+                await fetchYouTubeMetadataAlternative(videoId);
+                
             } catch (error) {
-                console.log('Could not fetch YouTube title:', error);
+                console.log('Could not fetch YouTube metadata:', error);
+            }
+        }
+        
+        // Alternative method to fetch YouTube metadata (limited without API key)
+        async function fetchYouTubeMetadataAlternative(videoId) {
+            try {
+                // This is a placeholder - in reality, you would need YouTube Data API
+                // for accurate view counts, likes, and upload dates
+                
+                // Update metadata with placeholder or cached data
+                const elements = document.querySelectorAll(`[data-video-id="${videoId}"]`);
+                elements.forEach(element => {
+                    const metadataElement = element.querySelector('.metadata');
+                    if (metadataElement && !metadataElement.innerHTML.includes('조회수')) {
+                        // If noembed didn't provide data, show placeholders
+                        metadataElement.innerHTML = `
+                            <span>📅 날짜 확인 중</span>
+                            <span>👁️ 조회수 확인 중</span>
+                        `;
+                    }
+                });
+            } catch (error) {
+                console.log('Metadata fetch error:', error);
             }
         }
         
@@ -634,6 +744,7 @@
                     <div class="content">
                         <div class="title">${link.name}</div>
                         <div class="channel">${channelName}</div>
+                        <div class="metadata"></div>
                     </div>
                 </a>
             `;
@@ -654,6 +765,7 @@
                     <div class="content">
                         <div class="title">${link.name}</div>
                         <div class="channel">${channelName}</div>
+                        <div class="metadata"></div>
                     </div>
                 </a>
             `;
