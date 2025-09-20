@@ -394,30 +394,6 @@
 <body>
     <div class="container">
         <!-- ============================================ -->
-        <!-- 📅 SECTION 1: 시계 섹션 -->
-        <!-- 현재 시간, 사이트 제목, 날씨 정보 표시 -->
-        <!-- ============================================ -->
-        <div class="header-card" style="
-            background: #1a1a1a;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #333;
-            width: 100%;
-            box-sizing: border-box;
-        ">
-            <div style="text-align: center;">
-                
-                <!-- 실시간 시계 표시 영역 -->
-                <div id="header-update-time" style="margin: 15px 0;"></div>
-                
-            </div>
-        </div>
-        <!-- ============================================ -->
-        <!-- 📅 SECTION 1 END: 시계 섹션 -->
-        <!-- ============================================ -->
-        
-        <!-- ============================================ -->
         <!-- 💰 SECTION 2: 코인 가격 카드 섹션 -->
         <!-- TradingView Widget을 통한 실시간 가격 표시 -->
         <!-- BTC, ETH, SOL, XRP 등 주요 코인 가격 -->
@@ -425,7 +401,7 @@
         <div class="exchange-section">
             <!-- 섹션 헤더 (차트 페이지 링크 포함) -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div>
+                <div style="padding-left: 15px;">
                     <h2 style="margin: 0; font-weight: 600; font-size: 0.75em;"><a href="triple-chart.html" style="color: inherit; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='inherit'">📈 Crypto Prices</a></h2>
                     <p style="margin: 5px 0 0 0; font-size: 12px; color: #666; font-weight: 300;">
                         <span id="market-date"></span>
@@ -523,7 +499,7 @@
                 <!-- NASDAQ (NDX) Price Card -->
                 <div style="background: #0d0d0d; border-radius: 10px; padding: 8px; border: 1px solid #222;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                        <span class="coin-symbol" style="color: #4facfe; font-size: 1.2em; font-weight: bold;">📊 NDX</span>
+                        <span class="coin-symbol" style="color: #4facfe; font-size: 1.2em; font-weight: bold;">NDX</span>
                         <span style="color: #666; font-size: 0.9em;">NASDAQ-100</span>
                     </div>
                     <div id="nasdaq-price" class="crypto-price mono" style="font-size: 2.5em; font-weight: 600; color: #4facfe; margin-bottom: 5px; text-align: right;">Loading...</div>
@@ -3136,38 +3112,94 @@
     
     
     
-    <!-- 링크 모음 버튼 -->
-    <a href="links.html" class="links-btn" title="링크 모음" style="
+    <!-- Navigation Buttons Container -->
+    <div class="nav-buttons-container" style="
         position: fixed;
         bottom: 30px;
         right: 30px;
-        width: 60px;
-        height: 60px;
-        background: #0a0a0a;
-        border: 2px solid #333;
-        border-radius: 50%;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #888;
-        text-decoration: none;
-        transition: all 0.3s ease;
+        flex-direction: column;
+        gap: 15px;
         z-index: 1000;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        font-size: 24px;
-    " onmouseover="this.style.borderColor='#666'; this.style.color='#fff'; this.style.background='#1a1a1a'; this.style.transform='scale(1.1)';" onmouseout="this.style.borderColor='#333'; this.style.color='#888'; this.style.background='#0a0a0a'; this.style.transform='scale(1)';">
-        🔗
-    </a>
-    
-    <!-- 관리자 설정 버튼 -->
-    <a href="admin-v3.html" class="settings-btn" title="관리자 설정">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24M22 12h-6m-6 0H1"></path>
-        </svg>
-    </a>
+    ">
+        <!-- 차트 버튼 -->
+        <a href="triple-chart.html" class="nav-btn" title="차트">
+            <span style="font-size: 24px;">📊</span>
+        </a>
+        
+        <!-- 링크 모음 버튼 -->
+        <a href="links.html" class="nav-btn" title="링크 모음">
+            <span style="font-size: 24px;">🔗</span>
+        </a>
+        
+        <!-- 로그인 버튼 -->
+        <a href="login.html" class="nav-btn" title="로그인">
+            <span style="font-size: 24px;">🔐</span>
+        </a>
+        
+        <!-- 관리자 설정 버튼 -->
+        <a href="admin-v3.html" class="nav-btn" title="관리자 설정">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24M22 12h-6m-6 0H1"></path>
+            </svg>
+        </a>
+    </div>
     
     <style>
+        /* Unified Navigation Buttons Style */
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            background: #0a0a0a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: #1a1a1a;
+            border-color: #666;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+        }
+        
+        .nav-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Tooltip for navigation buttons */
+        .nav-btn::after {
+            content: attr(title);
+            position: absolute;
+            right: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1a1a1a;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            border: 1px solid #333;
+        }
+        
+        .nav-btn:hover::after {
+            opacity: 1;
+        }
+        
         .settings-btn {
             position: fixed;
             bottom: 30px;
