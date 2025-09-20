@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 버전 - 암호화폐 가격 모니터</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .status {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #333;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .firebase-btn {
+            background: #ff9800;
+        }
+        .firebase-btn:hover {
+            background: #f57c00;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        pre {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        #log {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase 대안 솔루션</h1>
+        <p>Supabase 대신 Firebase를 사용하거나, 다른 방법을 시도해보세요.</p>
+        
+        <div class="status">
+            <h2>1. Firebase 설정 방법</h2>
+            <ol>
+                <li>
+                    <a href="https://console.firebase.google.com/" target="_blank" style="color: #4caf50;">
+                        Firebase Console 접속
+                    </a>
+                </li>
+                <li>새 프로젝트 생성 (이름: crypto-monitor)</li>
+                <li>Realtime Database 생성 (테스트 모드)</li>
+                <li>프로젝트 설정에서 웹 앱 추가</li>
+                <li>설정 코드 복사해서 아래에 붙여넣기</li>
+            </ol>
+            
+            <h3>Firebase 설정 코드 입력:</h3>
+            <textarea id="firebase-config" rows="10" style="width: 100%; background: #0a0a0a; color: #0f0; border: 1px solid #333; padding: 10px;" placeholder="const firebaseConfig = {
+  apiKey: 'your-api-key',
+  authDomain: 'your-auth-domain',
+  databaseURL: 'your-database-url',
+  projectId: 'your-project-id',
+  storageBucket: 'your-storage-bucket',
+  messagingSenderId: 'your-sender-id',
+  appId: 'your-app-id'
+};"></textarea>
+            
+            <button onclick="setupFirebase()" class="firebase-btn">Firebase 연결</button>
+        </div>
+        
+        <div class="status">
+            <h2>2. 로컬 JSON 서버 방법</h2>
+            <pre>
+# 터미널에서 실행:
+npm install -g json-server
+
+# db.json 파일 생성 후:
+json-server --watch db.json --port 3001
+
+# 그러면 http://localhost:3001 에서 REST API 사용 가능
+            </pre>
+            <button onclick="testJsonServer()">JSON Server 테스트</button>
+        </div>
+        
+        <div class="status">
+            <h2>3. GitHub Gist 방법</h2>
+            <p>GitHub Gist를 데이터베이스로 사용 (무료, 안정적)</p>
+            <ol>
+                <li><a href="https://gist.github.com" target="_blank" style="color: #4caf50;">GitHub Gist 생성</a></li>
+                <li>파일명: crypto-data.json</li>
+                <li>내용: <code>{}</code></li>
+                <li>Gist ID와 토큰 입력:</li>
+            </ol>
+            
+            <input type="text" id="gist-id" placeholder="Gist ID" style="width: 300px; padding: 10px; margin: 5px; background: #0a0a0a; color: #0f0; border: 1px solid #333;">
+            <input type="password" id="github-token" placeholder="GitHub Token (선택사항)" style="width: 300px; padding: 10px; margin: 5px; background: #0a0a0a; color: #0f0; border: 1px solid #333;">
+            <button onclick="testGist()">Gist 테스트</button>
+        </div>
+        
+        <div class="status">
+            <h2>4. 현재 LocalStorage 데이터 내보내기</h2>
+            <p>다른 서비스로 마이그레이션할 데이터:</p>
+            <button onclick="showCurrentData()">현재 데이터 보기</button>
+            <button onclick="copyDataForMigration()">마이그레이션용 복사</button>
+        </div>
+        
+        <div id="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logEl.innerHTML = `<div class="${type}">[${time}] ${message}</div>` + logEl.innerHTML;
+        }
+        
+        // Firebase 설정
+        function setupFirebase() {
+            const configText = document.getElementById('firebase-config').value;
+            
+            if (!configText.includes('apiKey')) {
+                log('Firebase 설정 코드를 입력하세요', 'error');
+                return;
+            }
+            
+            try {
+                // eval을 안전하게 사용하기 위해 Function 생성자 사용
+                const configFunc = new Function(configText + '; return firebaseConfig;');
+                const firebaseConfig = configFunc();
+                
+                // Firebase 초기화
+                firebase.initializeApp(firebaseConfig);
+                const database = firebase.database();
+                
+                // 테스트 쓰기
+                database.ref('test').set({
+                    timestamp: new Date().toISOString(),
+                    message: '연결 테스트'
+                }).then(() => {
+                    log('Firebase 연결 성공!', 'success');
+                    
+                    // LocalStorage 데이터 마이그레이션 제안
+                    const data = localStorage.getItem('crypto_price_history_hybrid');
+                    if (data) {
+                        const parsed = JSON.parse(data);
+                        log(`${parsed.length}개 데이터를 Firebase로 마이그레이션할 수 있습니다`, 'info');
+                    }
+                }).catch(error => {
+                    log('Firebase 연결 실패: ' + error.message, 'error');
+                });
+                
+            } catch (error) {
+                log('설정 파싱 오류: ' + error.message, 'error');
+            }
+        }
+        
+        // JSON Server 테스트
+        async function testJsonServer() {
+            log('JSON Server 테스트 중...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:3001/prices');
+                if (response.ok) {
+                    log('JSON Server 연결 성공!', 'success');
+                } else {
+                    throw new Error('서버가 실행중이 아님');
+                }
+            } catch (error) {
+                log('JSON Server 연결 실패. 먼저 json-server를 실행하세요.', 'error');
+                log('npm install -g json-server', 'warning');
+                log('json-server --watch db.json --port 3001', 'warning');
+            }
+        }
+        
+        // GitHub Gist 테스트
+        async function testGist() {
+            const gistId = document.getElementById('gist-id').value;
+            const token = document.getElementById('github-token').value;
+            
+            if (!gistId) {
+                log('Gist ID를 입력하세요', 'error');
+                return;
+            }
+            
+            log('Gist 테스트 중...', 'info');
+            
+            try {
+                // Gist 읽기 (공개 Gist는 토큰 불필요)
+                const response = await fetch(`https://api.github.com/gists/${gistId}`);
+                const gist = await response.json();
+                
+                if (gist.files && gist.files['crypto-data.json']) {
+                    log('Gist 연결 성공!', 'success');
+                    log('현재 데이터: ' + gist.files['crypto-data.json'].content, 'info');
+                    
+                    // 쓰기 테스트 (토큰 필요)
+                    if (token) {
+                        const testData = { test: new Date().toISOString() };
+                        const updateResponse = await fetch(`https://api.github.com/gists/${gistId}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `token ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                files: {
+                                    'crypto-data.json': {
+                                        content: JSON.stringify(testData, null, 2)
+                                    }
+                                }
+                            })
+                        });
+                        
+                        if (updateResponse.ok) {
+                            log('Gist 쓰기 테스트 성공!', 'success');
+                        }
+                    }
+                } else {
+                    log('crypto-data.json 파일을 찾을 수 없습니다', 'error');
+                }
+            } catch (error) {
+                log('Gist 테스트 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 현재 데이터 보기
+        function showCurrentData() {
+            const data = localStorage.getItem('crypto_price_history_hybrid');
+            if (data) {
+                const parsed = JSON.parse(data);
+                log(`총 ${parsed.length}개 데이터`, 'info');
+                log('최근 5개:', 'info');
+                parsed.slice(0, 5).forEach(item => {
+                    log(`${item.date}: BTC=$${item.btc}, ETH=$${item.eth}, SOL=$${item.sol}`, 'info');
+                });
+            } else {
+                log('저장된 데이터가 없습니다', 'warning');
+            }
+        }
+        
+        // 마이그레이션용 데이터 복사
+        function copyDataForMigration() {
+            const data = localStorage.getItem('crypto_price_history_hybrid');
+            if (data) {
+                navigator.clipboard.writeText(data).then(() => {
+                    log('데이터가 클립보드에 복사되었습니다!', 'success');
+                    log('Firebase나 다른 서비스에 붙여넣기할 수 있습니다', 'info');
+                });
+            }
+        }
+        
+        // 페이지 로드시
+        window.addEventListener('DOMContentLoaded', () => {
+            log('대안 솔루션 준비 완료', 'success');
+            showCurrentData();
+        });
+    </script>
+</body>
+</html>

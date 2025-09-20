@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>암호화폐 가격 기록</title>
+    <title>암호화폐 가격 기록 - 차트 뷰</title>
     <style>
         * {
             margin: 0;
@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -54,21 +54,45 @@
             border-color: #555;
         }
 
-        .date-filter {
+        /* 컨트롤 패널 */
+        .control-panel {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
             margin-bottom: 30px;
             display: flex;
-            gap: 10px;
             flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-group label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 5px;
         }
 
         .date-filter button {
             padding: 8px 16px;
-            background: #1a1a1a;
+            background: #0a0a0a;
             color: #888;
             border: 1px solid #333;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-size: 14px;
         }
 
         .date-filter button.active {
@@ -82,89 +106,93 @@
             color: #fff;
         }
 
-        .price-section {
-            background: #0a0a0a;
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid #333;
-            margin-bottom: 20px;
-        }
-
-        .section-header {
+        .custom-date-input {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .section-title {
-            font-size: 1.2em;
-            color: #aaa;
-            display: flex;
-            align-items: center;
             gap: 10px;
+            align-items: center;
         }
 
-        .refresh-btn {
-            padding: 5px 10px;
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 5px;
-            color: #aaa;
+        .custom-date-input input {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .custom-date-input input:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+        }
+
+        .view-toggle button {
+            padding: 8px 16px;
+            background: #0a0a0a;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
             transition: all 0.3s ease;
+            font-size: 14px;
         }
 
-        .refresh-btn:hover {
-            background: #333;
+        .view-toggle button.active {
+            background: #4caf50;
+            color: #fff;
+            border-color: #4caf50;
+        }
+
+        .view-toggle button:hover {
+            background: #2a2a2a;
             color: #fff;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        /* 차트 옵션 */
+        .chart-options {
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
 
-        th {
-            padding: 10px;
-            text-align: left;
-            color: #888;
-            border-bottom: 2px solid #333;
+        .chart-options select {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
         }
 
-        td {
-            padding: 10px;
-            border-bottom: 1px solid #222;
+        .chart-options select:focus {
+            outline: none;
+            border-color: #4caf50;
         }
 
-        tr:hover {
-            background: #1a1a1a;
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .today-row {
-            background: #1a1a1a !important;
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
-        .price-change {
-            font-size: 0.8em;
-            margin-left: 5px;
+        .checkbox-group label {
+            cursor: pointer;
+            user-select: none;
         }
 
-        .price-up {
-            color: #4caf50;
-        }
-
-        .price-down {
-            color: #f44336;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-
+        /* 통계 카드 */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -192,23 +220,150 @@
             color: #fff;
         }
 
+        .stat-change {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .positive { color: #4caf50; }
+        .negative { color: #f44336; }
+
+        /* 차트 컨테이너 */
         .chart-container {
             background: #0a0a0a;
             border-radius: 15px;
             padding: 20px;
             border: 1px solid #333;
-            margin-bottom: 20px;
-            height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            margin-bottom: 30px;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .chart-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             color: #666;
         }
+
+        .chart-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .chart-tab {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chart-tab.active {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+
+        /* 테이블 뷰 */
+        .price-section {
+            background: #0a0a0a;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 10px;
+            text-align: left;
+            color: #888;
+            border-bottom: 2px solid #333;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #222;
+        }
+
+        tr:hover {
+            background: #1a1a1a;
+        }
+
+        .price-change {
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+
+        .price-up { color: #4caf50; }
+        .price-down { color: #f44336; }
 
         /* 심볼별 색상 */
         .btc-color { color: #f7931a; }
         .eth-color { color: #9a8ff8; }
         .sol-color { color: #00FFA3; }
+
+        /* 로딩 상태 */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                flex-wrap: wrap;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* 다운로드 버튼 */
+        .download-btn {
+            padding: 8px 16px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #1976d2;
+        }
     </style>
 </head>
 <body>
@@ -218,133 +373,201 @@
             <a href="index.html" class="back-btn">← 돌아가기</a>
         </div>
         
-        <!-- 디버그 정보 패널 -->
-        <div id="debug-panel" style="
-            background: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            font-family: monospace;
-            font-size: 12px;
-            display: none;
-        ">
-            <h3 style="color: #4caf50; margin-bottom: 10px;">🔍 디버그 정보</h3>
-            <div id="debug-content"></div>
+        <!-- 컨트롤 패널 -->
+        <div class="control-panel">
+            <!-- 기간 선택 -->
+            <div class="control-group">
+                <label>기간:</label>
+                <div class="date-filter">
+                    <button onclick="setDateRange(7)" id="btn-7">7일</button>
+                    <button onclick="setDateRange(30)" class="active" id="btn-30">30일</button>
+                    <button onclick="setDateRange(90)" id="btn-90">90일</button>
+                    <button onclick="setDateRange(180)" id="btn-180">6개월</button>
+                    <button onclick="setDateRange(365)" id="btn-365">1년</button>
+                    <button onclick="setDateRange(0)" id="btn-all">전체</button>
+                </div>
+            </div>
+            
+            <!-- 사용자 지정 날짜 -->
+            <div class="control-group custom-date-input">
+                <input type="date" id="start-date" onchange="customDateRange()">
+                <span>~</span>
+                <input type="date" id="end-date" onchange="customDateRange()">
+            </div>
+            
+            <!-- 뷰 전환 -->
+            <div class="control-group">
+                <label>보기:</label>
+                <div class="view-toggle">
+                    <button onclick="switchView('chart')" class="active" id="view-chart">차트</button>
+                    <button onclick="switchView('table')" id="view-table">테이블</button>
+                    <button onclick="switchView('both')" id="view-both">둘 다</button>
+                </div>
+            </div>
         </div>
 
-        <div class="date-filter">
-            <button onclick="loadHistory(10)" class="active" id="btn-10">최근 10일</button>
-            <button onclick="loadHistory(30)" id="btn-30">최근 30일</button>
-            <button onclick="loadHistory(90)" id="btn-90">최근 90일</button>
-            <button onclick="loadHistory(365)" id="btn-365">최근 1년</button>
-            <button onclick="loadHistory(0)" id="btn-all">전체</button>
+        <!-- 차트 옵션 -->
+        <div class="control-panel" id="chart-options-panel">
+            <div class="control-group">
+                <label>차트 타입:</label>
+                <select id="chart-type" onchange="updateChartType()">
+                    <option value="line">라인 차트</option>
+                    <option value="candlestick">캔들스틱</option>
+                    <option value="area">영역 차트</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>표시 데이터:</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-btc" checked onchange="updateChartData()">
+                    <label for="show-btc" class="btc-color">BTC</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-eth" checked onchange="updateChartData()">
+                    <label for="show-eth" class="eth-color">ETH</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-sol" checked onchange="updateChartData()">
+                    <label for="show-sol" class="sol-color">SOL</label>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>이동평균선:</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-ma7" onchange="updateChartData()">
+                    <label for="show-ma7">MA7</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-ma30" onchange="updateChartData()">
+                    <label for="show-ma30">MA30</label>
+                </div>
+            </div>
+            
+            <button class="download-btn" onclick="downloadChart()">📥 차트 다운로드</button>
         </div>
 
         <!-- 통계 카드 -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">BTC 역대 최고가</div>
-                <div class="stat-value btc-color" id="btc-ath">-</div>
+                <div class="stat-label">BTC 현재가</div>
+                <div class="stat-value btc-color" id="btc-current">-</div>
+                <div class="stat-change" id="btc-change">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">ETH 역대 최고가</div>
-                <div class="stat-value eth-color" id="eth-ath">-</div>
+                <div class="stat-label">ETH 현재가</div>
+                <div class="stat-value eth-color" id="eth-current">-</div>
+                <div class="stat-change" id="eth-change">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">SOL 역대 최고가</div>
-                <div class="stat-value sol-color" id="sol-ath">-</div>
+                <div class="stat-label">SOL 현재가</div>
+                <div class="stat-value sol-color" id="sol-current">-</div>
+                <div class="stat-change" id="sol-change">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">데이터 수집 일수</div>
-                <div class="stat-value" id="data-days">-</div>
+                <div class="stat-label">데이터 기간</div>
+                <div class="stat-value" id="data-period">-</div>
+                <div class="stat-change" id="data-count">-</div>
             </div>
         </div>
 
-        <!-- 차트 영역 (추후 구현) -->
-        <div class="chart-container">
-            <p>차트 기능은 추후 구현 예정입니다</p>
+        <!-- 차트 영역 -->
+        <div class="chart-container" id="chart-container">
+            <div class="chart-tabs">
+                <div class="chart-tab active" onclick="selectChartTab('combined')">통합 차트</div>
+                <div class="chart-tab" onclick="selectChartTab('btc')">BTC</div>
+                <div class="chart-tab" onclick="selectChartTab('eth')">ETH</div>
+                <div class="chart-tab" onclick="selectChartTab('sol')">SOL</div>
+            </div>
+            <canvas id="priceChart"></canvas>
+            <div class="chart-loading" id="chart-loading">차트 로딩 중...</div>
         </div>
 
-        <!-- BTC 가격 기록 -->
-        <div class="price-section">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <span class="btc-color">₿</span> BTC 가격 기록
-                </h3>
-                <button onclick="refreshHistory()" class="refresh-btn">🔄 새로고침</button>
+        <!-- 테이블 뷰 -->
+        <div id="table-container" style="display: none;">
+            <!-- BTC 가격 기록 -->
+            <div class="price-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span class="btc-color">₿</span> BTC 가격 기록
+                    </h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>날짜</th>
+                                <th style="text-align: right;">시가</th>
+                                <th style="text-align: right;">고가</th>
+                                <th style="text-align: right;">저가</th>
+                                <th style="text-align: right;">종가</th>
+                                <th style="text-align: right;">변동률</th>
+                            </tr>
+                        </thead>
+                        <tbody id="btc-history-tbody">
+                            <tr>
+                                <td colspan="6" class="loading">데이터 로딩 중...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>날짜</th>
-                            <th style="text-align: right;">최고가</th>
-                            <th style="text-align: right;">최저가</th>
-                            <th style="text-align: right;">종가</th>
-                            <th style="text-align: right;">변동폭</th>
-                        </tr>
-                    </thead>
-                    <tbody id="btc-history-tbody">
-                        <tr>
-                            <td colspan="5" class="loading">데이터 로딩 중...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
-        <!-- ETH 가격 기록 -->
-        <div class="price-section">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <span class="eth-color">Ξ</span> ETH 가격 기록
-                </h3>
+            <!-- ETH 가격 기록 -->
+            <div class="price-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span class="eth-color">Ξ</span> ETH 가격 기록
+                    </h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>날짜</th>
+                                <th style="text-align: right;">시가</th>
+                                <th style="text-align: right;">고가</th>
+                                <th style="text-align: right;">저가</th>
+                                <th style="text-align: right;">종가</th>
+                                <th style="text-align: right;">변동률</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eth-history-tbody">
+                            <tr>
+                                <td colspan="6" class="loading">데이터 로딩 중...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>날짜</th>
-                            <th style="text-align: right;">최고가</th>
-                            <th style="text-align: right;">최저가</th>
-                            <th style="text-align: right;">종가</th>
-                            <th style="text-align: right;">변동폭</th>
-                        </tr>
-                    </thead>
-                    <tbody id="eth-history-tbody">
-                        <tr>
-                            <td colspan="5" class="loading">데이터 로딩 중...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
-        <!-- SOL 가격 기록 -->
-        <div class="price-section">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <span class="sol-color">◎</span> SOL 가격 기록
-                </h3>
-            </div>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>날짜</th>
-                            <th style="text-align: right;">최고가</th>
-                            <th style="text-align: right;">최저가</th>
-                            <th style="text-align: right;">종가</th>
-                            <th style="text-align: right;">변동폭</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sol-history-tbody">
-                        <tr>
-                            <td colspan="5" class="loading">데이터 로딩 중...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- SOL 가격 기록 -->
+            <div class="price-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <span class="sol-color">◎</span> SOL 가격 기록
+                    </h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>날짜</th>
+                                <th style="text-align: right;">시가</th>
+                                <th style="text-align: right;">고가</th>
+                                <th style="text-align: right;">저가</th>
+                                <th style="text-align: right;">종가</th>
+                                <th style="text-align: right;">변동률</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sol-history-tbody">
+                            <tr>
+                                <td colspan="6" class="loading">데이터 로딩 중...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -353,7 +576,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     
-    <script type="module">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    
+    <script>
         // Firebase 설정
         const firebaseConfig = {
             apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
@@ -368,299 +596,536 @@
         
         // Firebase 초기화
         let database;
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            database = firebase.database();
-            console.log('🔥 Firebase 연결 성공');
-            
-            // 디버그 정보 표시
-            showDebugInfo('Firebase 연결 성공!', 'success');
-        } catch (error) {
-            console.error('Firebase 초기화 오류:', error);
-            showDebugInfo('Firebase 초기화 오류: ' + error.message, 'error');
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
-        
-        // 디버그 정보 표시 함수
-        function showDebugInfo(message, type = 'info') {
-            const debugDiv = document.createElement('div');
-            debugDiv.style.cssText = `
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3'};
-                color: white;
-                padding: 10px 20px;
-                border-radius: 5px;
-                z-index: 10000;
-                font-size: 14px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            `;
-            debugDiv.textContent = message;
-            document.body.appendChild(debugDiv);
-            
-            setTimeout(() => {
-                debugDiv.remove();
-            }, 5000);
-        }
+        database = firebase.database();
 
-        let currentDays = 10;
+        // 전역 변수
+        let allData = {};
+        let filteredData = [];
+        let currentDays = 30;
+        let currentView = 'chart';
+        let currentChartTab = 'combined';
+        let priceChart = null;
 
-        // 가격 포맷 함수
-        function formatPrice(price) {
-            if (price === null || price === undefined || price === '') return '-';
-            const num = parseFloat(price);
-            if (isNaN(num)) return '-';
-            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
+        // 차트 색상
+        const chartColors = {
+            btc: '#f7931a',
+            eth: '#9a8ff8',
+            sol: '#00FFA3'
+        };
 
         // 날짜 포맷 함수
         function formatDate(dateStr) {
             const date = new Date(dateStr + 'T00:00:00');
-            const month = date.getMonth() + 1;
-            const day = date.getDate();
-            const weekday = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
-            return `${month}/${day} (${weekday})`;
+            return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
         }
 
-        // 역대 최고가 로드
-        async function loadAllTimeHighs() {
-            if (!database) {
-                console.error('Firebase가 초기화되지 않았습니다');
-                return;
-            }
-            
-            try {
-                const snapshot = await database.ref('prices').once('value');
-                const allData = snapshot.val();
-                
-                if (!allData) return;
-                
-                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
-                const maxPrices = {
-                    BTCUSDT: 0,
-                    ETHUSDT: 0,
-                    SOLUSDT: 0
-                };
-                
-                // 모든 날짜의 데이터를 순회하며 최고가 찾기
-                Object.values(allData).forEach(dateData => {
-                    symbols.forEach(symbol => {
-                        if (dateData[symbol] && dateData[symbol].high_price) {
-                            maxPrices[symbol] = Math.max(maxPrices[symbol], dateData[symbol].high_price);
-                        }
-                    });
-                });
-                
-                // UI 업데이트
-                Object.entries(maxPrices).forEach(([symbol, price]) => {
-                    if (price > 0) {
-                        const elementId = symbol.replace('USDT', '').toLowerCase() + '-ath';
-                        document.getElementById(elementId).textContent = formatPrice(price);
-                    }
-                });
-                
-                // 데이터 수집 일수
-                const uniqueDates = Object.keys(allData).length;
-                document.getElementById('data-days').textContent = uniqueDates + '일';
-                
-            } catch (error) {
-                console.error('통계 로드 실패:', error);
-            }
+        // 가격 포맷 함수
+        function formatPrice(price) {
+            if (price === null || price === undefined) return '-';
+            return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        // 가격 기록 로드
-        async function loadPriceHistory(symbol, tbodyId, days = 10) {
-            if (!database) {
-                console.error('Firebase가 초기화되지 않았습니다');
-                showDebugInfo('Firebase가 초기화되지 않았습니다', 'error');
-                return;
-            }
-            
-            // 디버그 패널 표시
-            document.getElementById('debug-panel').style.display = 'block';
-            const debugContent = document.getElementById('debug-content');
-            debugContent.innerHTML = `<div style="color: #2196f3;">데이터 로드 중... (${symbol})</div>`;
-            
-            try {
-                const snapshot = await database.ref('prices').once('value');
-                const allData = snapshot.val();
-                
-                debugContent.innerHTML += `<div style="color: #4caf50;">✅ 데이터 로드 성공</div>`;
-                
-                if (!allData) {
-                    document.getElementById(tbodyId).innerHTML = '<tr><td colspan="5" class="loading">데이터가 없습니다</td></tr>';
-                    debugContent.innerHTML += `<div style="color: #f44336;">❌ 데이터가 없습니다</div>`;
-                    return;
-                }
-                
-                debugContent.innerHTML += `<div>총 ${Object.keys(allData).length}개 날짜 데이터 발견</div>`;
-                
-                // 첫 번째 데이터 샘플 표시
-                const firstKey = Object.keys(allData)[0];
-                debugContent.innerHTML += `<div style="margin-top: 10px; padding: 10px; background: #0a0a0a; border-radius: 5px;">
-                    <strong>데이터 구조 샘플 (${firstKey}):</strong><br>
-                    <pre style="color: #888; font-size: 11px;">${JSON.stringify(allData[firstKey], null, 2)}</pre>
-                </div>`;
-                
-                // 날짜별로 해당 심볼 데이터 추출
-                const priceData = [];
-                Object.entries(allData).forEach(([date, dateData]) => {
-                    // 새로운 구조: dateData가 직접 가격 데이터를 포함
-                    if (dateData.btc !== undefined || dateData.eth !== undefined || dateData.sol !== undefined) {
-                        // 심볼에 따라 데이터 추출
-                        if (symbol === 'BTCUSDT' && dateData.btc !== undefined) {
-                            priceData.push({
-                                date: date,
-                                symbol: 'BTCUSDT',
-                                high_price: dateData.btc_high || dateData.btc,
-                                low_price: dateData.btc_low || dateData.btc,
-                                price: dateData.btc,
-                                updated_at: dateData.collected_at || dateData.updated_at
-                            });
-                        } else if (symbol === 'ETHUSDT' && dateData.eth !== undefined) {
-                            priceData.push({
-                                date: date,
-                                symbol: 'ETHUSDT',
-                                high_price: dateData.eth_high || dateData.eth,
-                                low_price: dateData.eth_low || dateData.eth,
-                                price: dateData.eth,
-                                updated_at: dateData.collected_at || dateData.updated_at
-                            });
-                        } else if (symbol === 'SOLUSDT' && dateData.sol !== undefined) {
-                            priceData.push({
-                                date: date,
-                                symbol: 'SOLUSDT',
-                                high_price: dateData.sol_high || dateData.sol,
-                                low_price: dateData.sol_low || dateData.sol,
-                                price: dateData.sol,
-                                updated_at: dateData.collected_at || dateData.updated_at
-                            });
-                        }
-                    }
-                    // 기존 구조도 지원 (하위 호환성)
-                    else if (dateData[symbol]) {
-                        priceData.push({
-                            date: date,
-                            ...dateData[symbol]
-                        });
-                    }
-                });
-                
-                // 날짜순 정렬 (최신순)
-                priceData.sort((a, b) => b.date.localeCompare(a.date));
-                
-                // 날짜 필터링
-                let filteredData = priceData;
-                if (days > 0) {
-                    const today = new Date();
-                    const startDate = new Date(today);
-                    startDate.setDate(startDate.getDate() - days);
-                    const startDateStr = startDate.toISOString().split('T')[0];
-                    filteredData = priceData.filter(d => d.date >= startDateStr);
-                }
-                
-                const tbody = document.getElementById(tbodyId);
-                if (!tbody) return;
-                
-                const today = new Date().toISOString().split('T')[0];
-                
-                if (filteredData.length > 0) {
-                    tbody.innerHTML = filteredData.map((record, index) => {
-                        const isToday = record.date === today;
-                        const rowClass = isToday ? 'today-row' : '';
-                        
-                        // 변동폭 계산 (고가 - 저가)
-                        const range = record.high_price - record.low_price;
-                        const rangePercent = record.low_price > 0 ? ((range / record.low_price) * 100).toFixed(2) : '0.00';
-                        
-                        // 전일 대비 변화
-                        let changeHtml = '';
-                        if (index < filteredData.length - 1) {
-                            const prevClose = filteredData[index + 1].price;
-                            if (prevClose && prevClose > 0) {
-                                const change = ((record.price - prevClose) / prevClose * 100);
-                                const changeClass = change >= 0 ? 'price-up' : 'price-down';
-                                const changeSymbol = change >= 0 ? '+' : '';
-                                changeHtml = `<span class="price-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</span>`;
-                            }
-                        }
-                        
-                        return `
-                        <tr class="${rowClass}">
-                            <td style="color: ${isToday ? getSymbolColor(symbol) : '#888'};">
-                                ${isToday ? '오늘' : formatDate(record.date)}
-                            </td>
-                            <td style="text-align: right; color: #fff;">${formatPrice(record.high_price)}</td>
-                            <td style="text-align: right; color: #fff;">${formatPrice(record.low_price)}</td>
-                            <td style="text-align: right; color: #fff;">
-                                ${formatPrice(record.price)}${changeHtml}
-                            </td>
-                            <td style="text-align: right; color: #888;">${rangePercent}%</td>
-                        </tr>`;
-                    }).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="5" class="loading">데이터가 없습니다</td></tr>';
-                }
-            } catch (error) {
-                console.error(`${symbol} 기록 로드 실패:`, error);
-                const tbody = document.getElementById(tbodyId);
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="loading" style="color: #f44336;">데이터 로드 실패</td></tr>';
-                }
-            }
-        }
-
-        // 심볼별 색상
-        function getSymbolColor(symbol) {
-            switch(symbol) {
-                case 'BTCUSDT': return '#f7931a';
-                case 'ETHUSDT': return '#9a8ff8';
-                case 'SOLUSDT': return '#00FFA3';
-                default: return '#888';
-            }
-        }
-
-        // 전체 기록 로드
-        function loadHistory(days) {
+        // 기간 설정
+        function setDateRange(days) {
             currentDays = days;
             
             // 버튼 활성화 상태 변경
             document.querySelectorAll('.date-filter button').forEach(btn => {
                 btn.classList.remove('active');
             });
+            document.getElementById(`btn-${days || 'all'}`).classList.add('active');
             
-            if (days === 0) {
-                document.getElementById('btn-all').classList.add('active');
+            // 날짜 입력 필드 업데이트
+            const endDate = new Date();
+            document.getElementById('end-date').value = endDate.toISOString().split('T')[0];
+            
+            if (days > 0) {
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - days);
+                document.getElementById('start-date').value = startDate.toISOString().split('T')[0];
             } else {
-                document.getElementById(`btn-${days}`).classList.add('active');
+                document.getElementById('start-date').value = '';
             }
             
-            // 데이터 로드
-            loadPriceHistory('BTCUSDT', 'btc-history-tbody', days);
-            loadPriceHistory('ETHUSDT', 'eth-history-tbody', days);
-            loadPriceHistory('SOLUSDT', 'sol-history-tbody', days);
+            loadData();
         }
 
-        // 새로고침
-        function refreshHistory() {
-            loadHistory(currentDays);
-            loadAllTimeHighs();
-        }
-
-        // 초기 로드
-        document.addEventListener('DOMContentLoaded', () => {
-            loadHistory(10);
-            loadAllTimeHighs();
+        // 사용자 지정 날짜 범위
+        function customDateRange() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
             
-            // 1분마다 자동 새로고침
-            setInterval(refreshHistory, 60000);
-        });
+            if (startDate && endDate) {
+                // 버튼 비활성화
+                document.querySelectorAll('.date-filter button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                currentDays = -1; // 사용자 지정
+                loadData();
+            }
+        }
 
-        // 전역 함수로 노출
-        window.loadHistory = loadHistory;
-        window.refreshHistory = refreshHistory;
+        // 뷰 전환
+        function switchView(view) {
+            currentView = view;
+            
+            // 버튼 활성화 상태
+            document.querySelectorAll('.view-toggle button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`view-${view}`).classList.add('active');
+            
+            // 뷰 표시/숨김
+            const chartContainer = document.getElementById('chart-container');
+            const chartOptions = document.getElementById('chart-options-panel');
+            const tableContainer = document.getElementById('table-container');
+            
+            if (view === 'chart') {
+                chartContainer.style.display = 'block';
+                chartOptions.style.display = 'flex';
+                tableContainer.style.display = 'none';
+            } else if (view === 'table') {
+                chartContainer.style.display = 'none';
+                chartOptions.style.display = 'none';
+                tableContainer.style.display = 'block';
+            } else { // both
+                chartContainer.style.display = 'block';
+                chartOptions.style.display = 'flex';
+                tableContainer.style.display = 'block';
+            }
+            
+            // 차트 업데이트
+            if (view !== 'table') {
+                updateChart();
+            }
+        }
+
+        // 차트 탭 선택
+        function selectChartTab(tab) {
+            currentChartTab = tab;
+            
+            // 탭 활성화 상태
+            document.querySelectorAll('.chart-tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updateChart();
+        }
+
+        // 데이터 로드
+        async function loadData() {
+            document.getElementById('chart-loading').style.display = 'block';
+            
+            try {
+                const snapshot = await database.ref('prices').once('value');
+                allData = snapshot.val() || {};
+                
+                // 데이터를 배열로 변환
+                const dataArray = Object.entries(allData).map(([date, data]) => ({
+                    date,
+                    ...data
+                }));
+                
+                // 날짜순 정렬
+                dataArray.sort((a, b) => a.date.localeCompare(b.date));
+                
+                // 기간 필터링
+                if (currentDays > 0) {
+                    const cutoffDate = new Date();
+                    cutoffDate.setDate(cutoffDate.getDate() - currentDays);
+                    filteredData = dataArray.filter(d => new Date(d.date) >= cutoffDate);
+                } else if (currentDays === -1) { // 사용자 지정
+                    const startDate = document.getElementById('start-date').value;
+                    const endDate = document.getElementById('end-date').value;
+                    filteredData = dataArray.filter(d => {
+                        return d.date >= startDate && d.date <= endDate;
+                    });
+                } else { // 전체
+                    filteredData = dataArray;
+                }
+                
+                // 통계 업데이트
+                updateStats();
+                
+                // 차트 업데이트
+                if (currentView !== 'table') {
+                    updateChart();
+                }
+                
+                // 테이블 업데이트
+                if (currentView !== 'chart') {
+                    updateTables();
+                }
+                
+            } catch (error) {
+                console.error('데이터 로드 실패:', error);
+            } finally {
+                document.getElementById('chart-loading').style.display = 'none';
+            }
+        }
+
+        // 통계 업데이트
+        function updateStats() {
+            if (filteredData.length === 0) return;
+            
+            const latest = filteredData[filteredData.length - 1];
+            const previous = filteredData[filteredData.length - 2];
+            
+            // BTC
+            if (latest.btc) {
+                document.getElementById('btc-current').textContent = formatPrice(latest.btc);
+                if (previous && previous.btc) {
+                    const change = ((latest.btc - previous.btc) / previous.btc * 100).toFixed(2);
+                    const changeEl = document.getElementById('btc-change');
+                    changeEl.textContent = `${change > 0 ? '+' : ''}${change}%`;
+                    changeEl.className = `stat-change ${change > 0 ? 'positive' : 'negative'}`;
+                }
+            }
+            
+            // ETH
+            if (latest.eth) {
+                document.getElementById('eth-current').textContent = formatPrice(latest.eth);
+                if (previous && previous.eth) {
+                    const change = ((latest.eth - previous.eth) / previous.eth * 100).toFixed(2);
+                    const changeEl = document.getElementById('eth-change');
+                    changeEl.textContent = `${change > 0 ? '+' : ''}${change}%`;
+                    changeEl.className = `stat-change ${change > 0 ? 'positive' : 'negative'}`;
+                }
+            }
+            
+            // SOL
+            if (latest.sol) {
+                document.getElementById('sol-current').textContent = formatPrice(latest.sol);
+                if (previous && previous.sol) {
+                    const change = ((latest.sol - previous.sol) / previous.sol * 100).toFixed(2);
+                    const changeEl = document.getElementById('sol-change');
+                    changeEl.textContent = `${change > 0 ? '+' : ''}${change}%`;
+                    changeEl.className = `stat-change ${change > 0 ? 'positive' : 'negative'}`;
+                }
+            }
+            
+            // 기간
+            if (filteredData.length > 0) {
+                const startDate = new Date(filteredData[0].date);
+                const endDate = new Date(filteredData[filteredData.length - 1].date);
+                document.getElementById('data-period').textContent = 
+                    `${startDate.toLocaleDateString('ko-KR')} ~ ${endDate.toLocaleDateString('ko-KR')}`;
+                document.getElementById('data-count').textContent = `${filteredData.length}일 데이터`;
+            }
+        }
+
+        // 이동평균 계산
+        function calculateMA(data, period) {
+            const ma = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    ma.push(null);
+                } else {
+                    const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+                    ma.push(sum / period);
+                }
+            }
+            return ma;
+        }
+
+        // 차트 업데이트
+        function updateChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            const chartType = document.getElementById('chart-type').value;
+            
+            // 기존 차트 제거
+            if (priceChart) {
+                priceChart.destroy();
+            }
+            
+            // 데이터셋 준비
+            const datasets = [];
+            const labels = filteredData.map(d => d.date);
+            
+            // BTC 데이터
+            if (document.getElementById('show-btc').checked && 
+                (currentChartTab === 'combined' || currentChartTab === 'btc')) {
+                const btcPrices = filteredData.map(d => d.btc || null);
+                
+                if (chartType === 'candlestick') {
+                    // 캔들스틱 데이터
+                    datasets.push({
+                        label: 'BTC',
+                        data: filteredData.map(d => ({
+                            x: d.date,
+                            o: d.btc_open || d.btc,
+                            h: d.btc_high || d.btc,
+                            l: d.btc_low || d.btc,
+                            c: d.btc || 0
+                        })),
+                        borderColor: chartColors.btc,
+                        backgroundColor: chartColors.btc + '40',
+                        type: 'candlestick'
+                    });
+                } else {
+                    // 라인/영역 차트
+                    datasets.push({
+                        label: 'BTC',
+                        data: btcPrices,
+                        borderColor: chartColors.btc,
+                        backgroundColor: chartType === 'area' ? chartColors.btc + '20' : 'transparent',
+                        tension: 0.1,
+                        fill: chartType === 'area',
+                        yAxisID: 'y-btc'
+                    });
+                }
+                
+                // 이동평균선
+                if (document.getElementById('show-ma7').checked) {
+                    datasets.push({
+                        label: 'BTC MA7',
+                        data: calculateMA(btcPrices, 7),
+                        borderColor: chartColors.btc + '80',
+                        borderDash: [5, 5],
+                        tension: 0.1,
+                        fill: false,
+                        yAxisID: 'y-btc'
+                    });
+                }
+                if (document.getElementById('show-ma30').checked) {
+                    datasets.push({
+                        label: 'BTC MA30',
+                        data: calculateMA(btcPrices, 30),
+                        borderColor: chartColors.btc + '60',
+                        borderDash: [10, 5],
+                        tension: 0.1,
+                        fill: false,
+                        yAxisID: 'y-btc'
+                    });
+                }
+            }
+            
+            // ETH 데이터
+            if (document.getElementById('show-eth').checked && 
+                (currentChartTab === 'combined' || currentChartTab === 'eth')) {
+                const ethPrices = filteredData.map(d => d.eth || null);
+                
+                datasets.push({
+                    label: 'ETH',
+                    data: ethPrices,
+                    borderColor: chartColors.eth,
+                    backgroundColor: chartType === 'area' ? chartColors.eth + '20' : 'transparent',
+                    tension: 0.1,
+                    fill: chartType === 'area',
+                    yAxisID: currentChartTab === 'combined' ? 'y-eth' : 'y'
+                });
+            }
+            
+            // SOL 데이터
+            if (document.getElementById('show-sol').checked && 
+                (currentChartTab === 'combined' || currentChartTab === 'sol')) {
+                const solPrices = filteredData.map(d => d.sol || null);
+                
+                datasets.push({
+                    label: 'SOL',
+                    data: solPrices,
+                    borderColor: chartColors.sol,
+                    backgroundColor: chartType === 'area' ? chartColors.sol + '20' : 'transparent',
+                    tension: 0.1,
+                    fill: chartType === 'area',
+                    yAxisID: currentChartTab === 'combined' ? 'y-sol' : 'y'
+                });
+            }
+            
+            // 차트 옵션
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#fff'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#333',
+                        borderWidth: 1
+                    },
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x'
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'x',
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day',
+                            displayFormats: {
+                                day: 'MM/dd'
+                            }
+                        },
+                        grid: {
+                            color: '#333'
+                        },
+                        ticks: {
+                            color: '#888'
+                        }
+                    },
+                    y: {
+                        position: 'left',
+                        grid: {
+                            color: '#333'
+                        },
+                        ticks: {
+                            color: '#888',
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            };
+            
+            // 통합 차트의 경우 다중 Y축
+            if (currentChartTab === 'combined') {
+                options.scales['y-btc'] = {
+                    type: 'linear',
+                    position: 'left',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        color: chartColors.btc
+                    }
+                };
+                options.scales['y-eth'] = {
+                    type: 'linear',
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        color: chartColors.eth
+                    }
+                };
+                options.scales['y-sol'] = {
+                    type: 'linear',
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        color: chartColors.sol
+                    }
+                };
+            }
+            
+            // 차트 생성
+            priceChart = new Chart(ctx, {
+                type: chartType === 'candlestick' ? 'candlestick' : 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: options
+            });
+        }
+
+        // 차트 타입 변경
+        function updateChartType() {
+            updateChart();
+        }
+
+        // 차트 데이터 업데이트
+        function updateChartData() {
+            updateChart();
+        }
+
+        // 차트 다운로드
+        function downloadChart() {
+            const canvas = document.getElementById('priceChart');
+            const url = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.download = `crypto-chart-${new Date().toISOString().split('T')[0]}.png`;
+            a.href = url;
+            a.click();
+        }
+
+        // 테이블 업데이트
+        function updateTables() {
+            // 각 코인별로 테이블 업데이트
+            ['btc', 'eth', 'sol'].forEach(coin => {
+                updateCoinTable(coin);
+            });
+        }
+
+        // 코인별 테이블 업데이트
+        function updateCoinTable(coin) {
+            const tbody = document.getElementById(`${coin}-history-tbody`);
+            
+            // 해당 코인 데이터만 필터링
+            const coinData = filteredData.filter(d => d[coin] !== undefined && d[coin] !== null);
+            
+            if (coinData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">데이터가 없습니다</td></tr>';
+                return;
+            }
+            
+            // 최신 데이터부터 표시
+            const reversedData = [...coinData].reverse();
+            
+            tbody.innerHTML = reversedData.map((record, index) => {
+                const prevRecord = reversedData[index + 1];
+                let changeHtml = '';
+                
+                if (prevRecord && prevRecord[coin]) {
+                    const change = ((record[coin] - prevRecord[coin]) / prevRecord[coin] * 100);
+                    const changeClass = change >= 0 ? 'price-up' : 'price-down';
+                    const changeSymbol = change >= 0 ? '+' : '';
+                    changeHtml = `<span class="price-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</span>`;
+                }
+                
+                return `
+                    <tr>
+                        <td>${formatDate(record.date)}</td>
+                        <td style="text-align: right;">${formatPrice(record[`${coin}_open`] || record[coin])}</td>
+                        <td style="text-align: right;">${formatPrice(record[`${coin}_high`] || record[coin])}</td>
+                        <td style="text-align: right;">${formatPrice(record[`${coin}_low`] || record[coin])}</td>
+                        <td style="text-align: right;">${formatPrice(record[coin])}</td>
+                        <td style="text-align: right;">${changeHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 초기화
+        window.onload = () => {
+            // 날짜 입력 최대값 설정
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('start-date').max = today;
+            document.getElementById('end-date').max = today;
+            
+            // 초기 데이터 로드
+            setDateRange(30);
+        };
     </script>
 </body>
 </html>

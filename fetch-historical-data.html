@@ -92,19 +92,23 @@
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        import { DebugLogger } from './debug-logger.js';
 
         const supabaseUrl = 'https://intyabzhvtkxgldmvpvr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
         const supabase = createClient(supabaseUrl, supabaseKey);
         
         window.supabaseClient = supabase;
+        
+        // 디버그 로거 초기화
+        const debugLogger = new DebugLogger(supabase, 'fetch-historical');
 
         // 어제 날짜 표시
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         document.getElementById('end-date').textContent = yesterday.toISOString().split('T')[0];
 
-        function log(message, type = 'info') {
+        async function log(message, type = 'info') {
             const logDiv = document.getElementById('log');
             const time = new Date().toLocaleTimeString();
             const entry = document.createElement('div');
@@ -112,6 +116,21 @@
             entry.textContent = `[${time}] ${message}`;
             logDiv.appendChild(entry);
             logDiv.scrollTop = logDiv.scrollHeight;
+            
+            // 디버그 로거에도 기록
+            try {
+                if (type === 'error') {
+                    await debugLogger.error(message);
+                } else if (type === 'success') {
+                    await debugLogger.success(message);
+                } else if (type === 'warning') {
+                    await debugLogger.warning(message);
+                } else {
+                    await debugLogger.info(message);
+                }
+            } catch (e) {
+                console.error('디버그 로그 저장 실패:', e);
+            }
         }
 
         function updateProgress(current, total) {
@@ -134,7 +153,7 @@
                 }
                 
                 const data = await response.json();
-                return data.map(kline => ({
+                const processedData = data.map(kline => ({
                     date: new Date(kline[0]).toISOString().split('T')[0],
                     open: parseFloat(kline[1]),
                     high: parseFloat(kline[2]),
@@ -142,6 +161,9 @@
                     close: parseFloat(kline[4]),
                     volume: parseFloat(kline[5])
                 }));
+                
+                await debugLogger.info(`${symbol} 데이터 가져오기 성공`, { count: processedData.length, startDate, endDate });
+                return processedData;
             } catch (error) {
                 log(`${symbol} 데이터 가져오기 실패: ${error.message}`, 'error');
                 return [];

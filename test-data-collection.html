@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 수집 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+        }
+        .test-section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .log {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        pre {
+            background: #0a0a0a;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>📊 데이터 수집 테스트</h1>
+    
+    <div class="test-section">
+        <h2>1. Binance API 테스트</h2>
+        <button onclick="testBinanceAPI()">Binance API 테스트</button>
+        <div id="binance-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Supabase 연결 테스트</h2>
+        <button onclick="testSupabase()">Supabase 연결 테스트</button>
+        <div id="supabase-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 데이터 저장 테스트</h2>
+        <button onclick="testDataSave()">테스트 데이터 저장</button>
+        <div id="save-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 기존 데이터 조회</h2>
+        <button onclick="checkExistingData()">기존 데이터 조회</button>
+        <div id="query-log" class="log"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const supabaseUrl = 'https://intyabzhvtkxgldmvpvr.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        window.supabaseClient = supabase;
+
+        function log(targetId, message, type = 'info') {
+            const logDiv = document.getElementById(targetId);
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.innerHTML = `<strong>[${time}]</strong> ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // 1. Binance API 테스트
+        window.testBinanceAPI = async function() {
+            const logId = 'binance-log';
+            log(logId, 'Binance API 테스트 시작...', 'info');
+            
+            try {
+                // 오늘 데이터 테스트
+                const url = 'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT';
+                log(logId, `API URL: ${url}`, 'info');
+                
+                const response = await fetch(url);
+                log(logId, `Response status: ${response.status}`, 'info');
+                
+                const data = await response.json();
+                log(logId, 'API 응답 데이터:', 'success');
+                log(logId, `<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                
+                // Klines 데이터 테스트
+                const klineUrl = 'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=5';
+                const klineResponse = await fetch(klineUrl);
+                const klineData = await klineResponse.json();
+                
+                log(logId, 'Klines 데이터 (최근 5일):', 'success');
+                log(logId, `<pre>${JSON.stringify(klineData, null, 2)}</pre>`, 'info');
+                
+            } catch (error) {
+                log(logId, `에러: ${error.message}`, 'error');
+                log(logId, `<pre>${error.stack}</pre>`, 'error');
+            }
+        };
+
+        // 2. Supabase 연결 테스트
+        window.testSupabase = async function() {
+            const logId = 'supabase-log';
+            log(logId, 'Supabase 연결 테스트 시작...', 'info');
+            
+            try {
+                // 간단한 쿼리로 연결 테스트
+                const { data, error } = await supabase
+                    .from('price_history')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) {
+                    log(logId, `Supabase 에러: ${error.message}`, 'error');
+                    log(logId, `<pre>${JSON.stringify(error, null, 2)}</pre>`, 'error');
+                } else {
+                    log(logId, 'Supabase 연결 성공!', 'success');
+                    log(logId, `테스트 데이터: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                }
+                
+            } catch (error) {
+                log(logId, `예외 발생: ${error.message}`, 'error');
+                log(logId, `<pre>${error.stack}</pre>`, 'error');
+            }
+        };
+
+        // 3. 데이터 저장 테스트
+        window.testDataSave = async function() {
+            const logId = 'save-log';
+            log(logId, '데이터 저장 테스트 시작...', 'info');
+            
+            try {
+                const testData = {
+                    symbol: 'BTCUSDT',
+                    date: '2025-01-01',
+                    high_price: 95000,
+                    low_price: 93000,
+                    price: 94000,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                
+                log(logId, `저장할 데이터: <pre>${JSON.stringify(testData, null, 2)}</pre>`, 'info');
+                
+                const { data, error } = await supabase
+                    .from('price_history')
+                    .upsert(testData, { onConflict: 'symbol,date' });
+                
+                if (error) {
+                    log(logId, `저장 실패: ${error.message}`, 'error');
+                    log(logId, `<pre>${JSON.stringify(error, null, 2)}</pre>`, 'error');
+                } else {
+                    log(logId, '데이터 저장 성공!', 'success');
+                    if (data) {
+                        log(logId, `저장된 데이터: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                    }
+                }
+                
+            } catch (error) {
+                log(logId, `예외 발생: ${error.message}`, 'error');
+                log(logId, `<pre>${error.stack}</pre>`, 'error');
+            }
+        };
+
+        // 4. 기존 데이터 조회
+        window.checkExistingData = async function() {
+            const logId = 'query-log';
+            log(logId, '기존 데이터 조회 중...', 'info');
+            
+            try {
+                // 각 심볼별 데이터 개수 확인
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                
+                for (const symbol of symbols) {
+                    const { data, error, count } = await supabase
+                        .from('price_history')
+                        .select('*', { count: 'exact' })
+                        .eq('symbol', symbol)
+                        .order('date', { ascending: false })
+                        .limit(5);
+                    
+                    if (error) {
+                        log(logId, `${symbol} 조회 실패: ${error.message}`, 'error');
+                    } else {
+                        log(logId, `${symbol}: 총 ${count || 0}개 데이터`, 'success');
+                        if (data && data.length > 0) {
+                            log(logId, `최근 데이터: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                log(logId, `예외 발생: ${error.message}`, 'error');
+                log(logId, `<pre>${error.stack}</pre>`, 'error');
+            }
+        };
+
+        // 페이지 로드시 자동 테스트
+        window.addEventListener('DOMContentLoaded', () => {
+            log('binance-log', '페이지 로드 완료. 테스트 버튼을 클릭하세요.', 'info');
+        });
+    </script>
+</body>
+</html>
