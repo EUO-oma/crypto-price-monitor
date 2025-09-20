@@ -86,13 +86,26 @@
                         window.location.href = 'index.html';
                     }
                 } else {
-                    // 세션이 없으면 로그인 페이지로
-                    window.location.href = 'admin-links.html';
+                    // 세션이 없으면 다시 시도 (OAuth 콜백이 늦을 수 있음)
+                    console.log('세션 없음, 재시도...');
+                    setTimeout(async () => {
+                        const retry = await supabaseClient.auth.getSession();
+                        if (retry.data.session) {
+                            window.location.reload();
+                        } else {
+                            document.querySelector('.message').textContent = '로그인 실패. 메인 페이지로 이동합니다...';
+                            setTimeout(() => {
+                                window.location.replace('index.html');
+                            }, 2000);
+                        }
+                    }, 1000);
                 }
             } catch (error) {
                 console.error('인증 처리 중 오류:', error);
-                alert('인증 처리 중 오류가 발생했습니다: ' + error.message);
-                window.location.href = 'admin-links.html';
+                document.querySelector('.message').textContent = '오류: ' + error.message;
+                setTimeout(() => {
+                    window.location.replace('index.html');
+                }, 3000);
             }
         }
         
