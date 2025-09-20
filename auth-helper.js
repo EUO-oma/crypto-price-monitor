@@ -83,6 +83,12 @@ async function checkAdminAccess() {
         allowedEmails = ['icandoit13579@gmail.com'];
     }
     
+    // 추가 fallback: ENV_CONFIG 확인
+    if (allowedEmails.length === 0 && window.ENV_CONFIG?.ADMIN?.ALLOWED_EMAILS) {
+        console.warn('⚠️ Using ENV_CONFIG fallback');
+        allowedEmails = window.ENV_CONFIG.ADMIN.ALLOWED_EMAILS;
+    }
+    
     // 개발 모드면 모든 사용자 허용
     if (devMode) {
         window.debugLog('🔧 개발 모드 활성화 - 모든 사용자 허용');

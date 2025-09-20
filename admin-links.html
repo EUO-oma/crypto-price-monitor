@@ -193,6 +193,15 @@
                     // 관리자 권한 확인
                     const isAdmin = await checkAdminAccess();
                     
+                    // 디버그: 권한 확인 상세 정보
+                    console.log('🔍 Admin check debug:', {
+                        userEmail: session.user.email,
+                        isAdmin: isAdmin,
+                        allowedEmails: window.getConfig('ADMIN.ALLOWED_EMAILS'),
+                        devMode: window.getConfig('ADMIN.DEV_MODE'),
+                        configLoaded: !!window.APP_CONFIG
+                    });
+                    
                     if (isAdmin) {
                         // 관리자인 경우 원하는 페이지로 리다이렉트
                         authMessage.textContent = '관리자 인증 성공! 리다이렉트 중...';
