@@ -553,20 +553,27 @@
             </a>
         </div>
         
-        <!-- ============================================ -->
-        <!-- 🌍 SECTION 5: World Clock -->
-        <!-- ============================================ -->
-        <div class="exchange-section" style="margin-top: 40px;">
-            <h2 style="text-align: center; color: #aaa; margin-bottom: 20px;">🌍 World Clock</h2>
-            <div id="clock-container" style="
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                gap: 15px;
-                max-width: 800px;
-                margin: 0 auto;
-            ">
-                <!-- Clocks will be inserted here by JavaScript -->
-            </div>
+        <!-- World Clock Link -->
+        <div style="text-align: center; margin: 40px 0;">
+            <a href="world-clock.html" style="
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                background: #1a1a1a;
+                color: #4facfe;
+                padding: 15px 30px;
+                border-radius: 10px;
+                text-decoration: none;
+                border: 1px solid #333;
+                transition: all 0.3s ease;
+                font-size: 1.1em;
+                font-weight: 500;
+            "
+            onmouseover="this.style.background='#2a2a2a'; this.style.borderColor='#555'"
+            onmouseout="this.style.background='#1a1a1a'; this.style.borderColor='#333'">
+                🌍 View World Clock
+            </a>
         </div>
         
         <!-- 채팅 버튼 섹션 -->
@@ -614,19 +621,6 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Clock toggle function
-        function toggleClockSection() {
-            const clockSection = document.getElementById('clock-section');
-            const toggleIcon = document.getElementById('clock-toggle-icon');
-            
-            if (clockSection.style.display === 'none') {
-                clockSection.style.display = 'block';
-                toggleIcon.textContent = '▲';
-            } else {
-                clockSection.style.display = 'none';
-                toggleIcon.textContent = '▼';
-            }
-        }
 
         // Price size adjustment
         let priceScale = 1;
@@ -739,201 +733,32 @@
             const seconds = now.getSeconds().toString().padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             const displayHours = hours % 12 || 12;
-            // 영어식 서수 날짜 형식 (예: 18th September)
-            const englishMonths = ['January', 'February', 'March', 'April', 'May', 'June', 
-                                  'July', 'August', 'September', 'October', 'November', 'December'];
-            
-            function getOrdinalSuffix(day) {
-                if (day >= 11 && day <= 13) return 'th';
-                const lastDigit = day % 10;
-                switch (lastDigit) {
-                    case 1: return 'st';
-                    case 2: return 'nd';
-                    case 3: return 'rd';
-                    default: return 'th';
-                }
-            }
             
             const day = now.getDate();
-            const month = englishMonths[now.getMonth()];
-            const dateString = `${day}${getOrdinalSuffix(day)} ${month}`;
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = monthNames[now.getMonth()];
             
-            // Header update time with multiple timezones
+            // Header update time - simplified version
             const headerTimeElement = document.getElementById('header-update-time');
             if (headerTimeElement) {
-                // Calculate different timezones (East to West order)
-                const korTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-                const sydTime = new Date(now.toLocaleString("en-US", {timeZone: "Australia/Sydney"}));
-                const dubaiTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Dubai"}));
-                const euTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/London"}));
                 const usTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-                
-                // Format times (24-hour format)
-                const formatTime = (date) => {
-                    const h = date.getHours().toString().padStart(2, '0');
-                    const m = date.getMinutes().toString().padStart(2, '0');
-                    const s = date.getSeconds().toString().padStart(2, '0');
-                    return {hours: h, minutes: m, seconds: s};
-                };
-                
-                const kor = formatTime(korTime);
-                const syd = formatTime(sydTime);
-                const dubai = formatTime(dubaiTime);
-                const eu = formatTime(euTime);
-                const us = formatTime(usTime);
-                
-                // US Market hours (9:30 AM - 4:00 PM ET)
                 const marketHour = usTime.getHours();
                 const marketMin = usTime.getMinutes();
                 let marketStatus = '';
                 
                 if ((marketHour === 9 && marketMin >= 30) || (marketHour > 9 && marketHour < 16)) {
                     marketStatus = '<span style="color: #4caf50;">🟢 Market Open</span>';
-                } else if (marketHour < 9 || (marketHour === 9 && marketMin < 30)) {
-                    const openTime = new Date(usTime);
-                    openTime.setHours(9, 30, 0);
-                    const diff = Math.floor((openTime - usTime) / 60000);
-                    if (diff > 0) {
-                        marketStatus = `<span style="color: #ff9800;">⏰ Opens in ${Math.floor(diff/60)}h ${diff%60}m</span>`;
-                    }
                 } else {
                     marketStatus = '<span style="color: #f44336;">🔴 Market Closed</span>';
                 }
                 
                 headerTimeElement.innerHTML = `
                     <div style="text-align: center;">
-                        <div style="
-                            font-size: 1.2em;
-                            font-weight: bold;
-                            margin-bottom: 15px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            gap: 20px;
-                            cursor: pointer;
-                            user-select: none;
-                        " onclick="toggleClockSection()">
-                            ${marketStatus}
+                        <div style="font-size: 2em; font-weight: 600; color: #fff; margin-bottom: 5px;">
+                            ${displayHours}:${minutes}:${seconds} ${ampm}
                         </div>
-                        
-                        <!-- Clock section removed - moved to bottom -->
-                        <div id="clock-section" style="display: none;">
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin: 0 auto 10px;">
-                            <!-- KOR: UTC+9 -->
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Seoul', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/kr.png" alt="South Korea" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">KOR</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${kor.hours}:${kor.minutes}<span style="font-size: 0.6em; color: #666;">:${kor.seconds}</span>
-                                </div>
-                            </div>
-                            
-                            <!-- SYD: UTC+10/+11 -->
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Australia/Sydney', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/au.png" alt="Australia" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">SYD</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${syd.hours}:${syd.minutes}<span style="font-size: 0.6em; color: #666;">:${syd.seconds}</span>
-                                </div>
-                            </div>
-
-                            <!-- DXB: UTC+4 -->
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Dubai', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/ae.png" alt="UAE" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">DXB</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${dubai.hours}:${dubai.minutes}<span style="font-size: 0.6em; color: #666;">:${dubai.seconds}</span>
-                                </div>
-                            </div>
-                            
-                            <!-- LON: UTC+0/+1 -->
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=Europe/London', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/gb.png" alt="United Kingdom" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">LON</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${eu.hours}:${eu.minutes}<span style="font-size: 0.6em; color: #666;">:${eu.seconds}</span>
-                                </div>
-                            </div>
-                            
-                            <!-- NYC: UTC-5/-4 -->
-                            <div style="
-                                background: #0a0a0a;
-                                color: white;
-                                padding: 15px 10px;
-                                border-radius: 10px;
-                                text-align: center;
-                                border: 1px solid #333;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                            " onclick="window.open('fullscreen-clock.html?tz=America/New_York', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                                    <img src="https://flagcdn.com/24x18/us.png" alt="United States" style="width: 24px; height: 18px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
-                                    <span style="color: #888; font-size: 0.9em; font-weight: bold;">NYC</span>
-                                </div>
-                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
-                                    ${us.hours}:${us.minutes}<span style="font-size: 0.6em; color: #666;">:${us.seconds}</span>
-                                </div>
-                            </div>
-                        </div>
+                        <div style="font-size: 1em; color: #888;">
+                            ${month} ${day} • ${marketStatus}
                         </div>
                     </div>
                 `;
@@ -948,7 +773,134 @@
 
         // Binance WebSocket for custom price cards
         function connectBinance() {
-            console.log('connectBinance 함수 호출됨');
+            console.log('🚀 connectBinance 함수 호출됨');
+            
+            // 간단한 테스트로 단일 연결 시도
+            console.log('📡 BTC WebSocket 연결 시도...');
+            const btcWs = new WebSocket('wss://stream.binance.com/ws/btcusdt@ticker');
+            
+            btcWs.onopen = function() {
+                console.log('✅ BTC WebSocket 연결 성공!');
+                document.getElementById('btc-price-custom').textContent = 'Connected...';
+            };
+            
+            btcWs.onmessage = function(event) {
+                console.log('📊 BTC 데이터 수신:', event.data);
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data && data.c) {
+                        const price = parseFloat(data.c);
+                        const change = parseFloat(data.P || 0);
+                        
+                        // 가격 업데이트
+                        const priceElement = document.getElementById('btc-price-custom');
+                        if (priceElement) {
+                            const parts = price.toFixed(2).split('.');
+                            const integerPart = parseInt(parts[0]).toLocaleString('en-US');
+                            priceElement.innerHTML = `<span style="color: #000;">$</span>${integerPart}<span style="font-size: 0.7em;">.${parts[1]}</span>`;
+                            console.log('✅ BTC 가격 업데이트 완료:', price);
+                        } else {
+                            console.error('❌ btc-price-custom 요소를 찾을 수 없음');
+                        }
+                        
+                        // 변화율 업데이트
+                        const changeElement = document.getElementById('btc-change-custom');
+                        if (changeElement) {
+                            changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                            changeElement.style.color = change >= 0 ? '#4caf50' : '#f44336';
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ 데이터 파싱 에러:', error);
+                }
+            };
+            
+            btcWs.onerror = function(error) {
+                console.error('❌ BTC WebSocket 에러:', error);
+                document.getElementById('btc-price-custom').textContent = 'Connection Error';
+            };
+            
+            btcWs.onclose = function(event) {
+                console.log('🔌 BTC WebSocket 종료:', event.code, event.reason);
+                document.getElementById('btc-price-custom').textContent = 'Reconnecting...';
+                
+                // 5초 후 재연결
+                setTimeout(() => {
+                    console.log('🔄 재연결 시도...');
+                    connectBinance();
+                }, 5000);
+            };
+            
+            // ETH WebSocket 연결
+            console.log('📡 ETH WebSocket 연결 시도...');
+            const ethWs = new WebSocket('wss://stream.binance.com/ws/ethusdt@ticker');
+            
+            ethWs.onopen = function() {
+                console.log('✅ ETH WebSocket 연결 성공!');
+                document.getElementById('eth-price-custom').textContent = 'Connected...';
+            };
+            
+            ethWs.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data && data.c) {
+                        const price = parseFloat(data.c);
+                        const change = parseFloat(data.P || 0);
+                        
+                        const priceElement = document.getElementById('eth-price-custom');
+                        if (priceElement) {
+                            const parts = price.toFixed(2).split('.');
+                            const integerPart = parseInt(parts[0]).toLocaleString('en-US');
+                            priceElement.innerHTML = `<span style="color: #000;">$</span>${integerPart}<span style="font-size: 0.7em;">.${parts[1]}</span>`;
+                        }
+                        
+                        const changeElement = document.getElementById('eth-change-custom');
+                        if (changeElement) {
+                            changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                            changeElement.style.color = change >= 0 ? '#4caf50' : '#f44336';
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ ETH 데이터 파싱 에러:', error);
+                }
+            };
+            
+            // SOL WebSocket 연결
+            console.log('📡 SOL WebSocket 연결 시도...');
+            const solWs = new WebSocket('wss://stream.binance.com/ws/solusdt@ticker');
+            
+            solWs.onopen = function() {
+                console.log('✅ SOL WebSocket 연결 성공!');
+                document.getElementById('sol-price-custom').textContent = 'Connected...';
+            };
+            
+            solWs.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data && data.c) {
+                        const price = parseFloat(data.c);
+                        const change = parseFloat(data.P || 0);
+                        
+                        const priceElement = document.getElementById('sol-price-custom');
+                        if (priceElement) {
+                            const parts = price.toFixed(2).split('.');
+                            const integerPart = parseInt(parts[0]).toLocaleString('en-US');
+                            priceElement.innerHTML = `<span style="color: #000;">$</span>${integerPart}<span style="font-size: 0.7em;">.${parts[1]}</span>`;
+                        }
+                        
+                        const changeElement = document.getElementById('sol-change-custom');
+                        if (changeElement) {
+                            changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                            changeElement.style.color = change >= 0 ? '#4caf50' : '#f44336';
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ SOL 데이터 파싱 에러:', error);
+                }
+            };
+            
+            return; // 나머지 코드 무시
+            
             const symbols = ['btcusdt', 'ethusdt', 'solusdt'];
             
             symbols.forEach(symbol => {
@@ -3039,56 +2991,6 @@
 
         // 전역 스코프에 노출
         window.refreshPriceHistory = refreshPriceHistory;
-        
-        // World clock update function for bottom clock
-        function updateWorldClock() {
-            const clockContainer = document.getElementById('clock-container');
-            if (!clockContainer) return;
-            
-            const timezones = [
-                { name: 'KOR', tz: 'Asia/Seoul', flag: 'kr' },
-                { name: 'SYD', tz: 'Australia/Sydney', flag: 'au' },
-                { name: 'DXB', tz: 'Asia/Dubai', flag: 'ae' },
-                { name: 'LON', tz: 'Europe/London', flag: 'gb' },
-                { name: 'NYC', tz: 'America/New_York', flag: 'us' }
-            ];
-
-            clockContainer.innerHTML = timezones.map(zone => {
-                const now = new Date();
-                const time = new Date(now.toLocaleString("en-US", { timeZone: zone.tz }));
-                const hours = time.getHours().toString().padStart(2, '0');
-                const minutes = time.getMinutes().toString().padStart(2, '0');
-                const seconds = time.getSeconds().toString().padStart(2, '0');
-                
-                return `
-                    <div style="
-                        background: #1a1a1a;
-                        border: 1px solid #333;
-                        border-radius: 10px;
-                        padding: 15px;
-                        text-align: center;
-                        transition: all 0.3s ease;
-                        cursor: pointer;
-                    " onclick="window.open('fullscreen-clock.html?tz=${zone.tz}', '_blank')"
-                       onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'"
-                       onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
-                            <img src="https://flagcdn.com/24x18/${zone.flag}.png" 
-                                 alt="${zone.name}"
-                                 style="width: 24px; height: 18px; border-radius: 2px;">
-                            <span style="color: #888; font-size: 0.9em; font-weight: bold;">${zone.name}</span>
-                        </div>
-                        <div style="font-size: 1.2em; font-weight: bold; color: #fff;">
-                            ${hours}:${minutes}<span style="font-size: 0.7em; color: #666;">:${seconds}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // Update world clock every second
-        setInterval(updateWorldClock, 1000);
-        updateWorldClock(); // Initial call
         
         // 페이지 로드시 초기화
         document.addEventListener('DOMContentLoaded', async () => {
