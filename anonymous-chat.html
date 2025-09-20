@@ -484,6 +484,7 @@
         <div class="header-left">
             <button class="back-button" onclick="window.close()">←</button>
             <h1 class="chat-title">익명 채팅방</h1>
+            <button class="back-button" onclick="location.reload()" title="새로고침" style="margin-left: 10px;">🔄</button>
         </div>
         <div class="online-indicator">
             <div class="online-dot"></div>
@@ -564,7 +565,7 @@
         const userAvatars = new Map();
         
         // Join chat
-        function joinChat() {
+        async function joinChat() {
             const username = document.getElementById('usernameInput').value.trim();
             if (!username) {
                 alert('닉네임을 입력해주세요!');
@@ -572,10 +573,12 @@
             }
             
             currentUser = {
-                id: Date.now().toString(),
+                id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9),
                 username: username,
                 avatar: avatarEmojis[Math.floor(Math.random() * avatarEmojis.length)]
             };
+            
+            console.log('User created:', currentUser);
             
             // Hide welcome screen
             document.getElementById('welcomeScreen').style.opacity = '0';
@@ -584,63 +587,86 @@
             }, 300);
             
             // Initialize chat
-            initializeChat();
+            await initializeChat();
         }
         
         // Initialize chat
-        function initializeChat() {
-            // Set user online
-            const userRef = database.ref(`users/${currentUser.id}`);
-            userRef.set({
-                username: currentUser.username,
-                avatar: currentUser.avatar,
-                lastSeen: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            // Remove user on disconnect
-            userRef.onDisconnect().remove();
-            
-            // Listen for messages
-            database.ref('messages').limitToLast(50).on('child_added', (snapshot) => {
-                const message = snapshot.val();
-                displayMessage(message);
-            });
-            
-            // Listen for online users
-            database.ref('users').on('value', (snapshot) => {
-                onlineUsers.clear();
-                snapshot.forEach((childSnapshot) => {
-                    const user = childSnapshot.val();
-                    onlineUsers.set(childSnapshot.key, user);
+        async function initializeChat() {
+            try {
+                console.log('Initializing chat for user:', currentUser);
+                
+                // Set user online
+                const userRef = database.ref(`users/${currentUser.id}`);
+                await userRef.set({
+                    username: currentUser.username,
+                    avatar: currentUser.avatar,
+                    lastSeen: firebase.database.ServerValue.TIMESTAMP
                 });
-                updateOnlineCount();
-            });
-            
-            // Listen for typing indicators
-            database.ref('typing').on('value', (snapshot) => {
-                const typingUsers = [];
-                snapshot.forEach((childSnapshot) => {
-                    const userId = childSnapshot.key;
-                    if (userId !== currentUser.id && childSnapshot.val()) {
-                        const user = onlineUsers.get(userId);
-                        if (user) {
-                            typingUsers.push(user.username);
+                
+                console.log('User set online');
+                
+                // Remove user on disconnect
+                userRef.onDisconnect().remove();
+                
+                // Listen for messages
+                database.ref('messages').limitToLast(50).on('child_added', (snapshot) => {
+                    const message = snapshot.val();
+                    console.log('New message received:', message);
+                    displayMessage(message);
+                }, (error) => {
+                    console.error('Error listening for messages:', error);
+                });
+                
+                // Listen for online users
+                database.ref('users').on('value', (snapshot) => {
+                    onlineUsers.clear();
+                    snapshot.forEach((childSnapshot) => {
+                        const user = childSnapshot.val();
+                        onlineUsers.set(childSnapshot.key, user);
+                    });
+                    updateOnlineCount();
+                });
+                
+                // Listen for typing indicators
+                database.ref('typing').on('value', (snapshot) => {
+                    const typingUsers = [];
+                    snapshot.forEach((childSnapshot) => {
+                        const userId = childSnapshot.key;
+                        if (userId !== currentUser.id && childSnapshot.val()) {
+                            const user = onlineUsers.get(userId);
+                            if (user) {
+                                typingUsers.push(user.username);
+                            }
                         }
-                    }
+                    });
+                    updateTypingIndicator(typingUsers);
                 });
-                updateTypingIndicator(typingUsers);
-            });
-            
-            // Add system message
-            displaySystemMessage(`${currentUser.username}님이 입장하셨습니다.`);
+                
+                // Add system message
+                displaySystemMessage(`${currentUser.username}님이 입장하셨습니다.`);
+                
+                console.log('Chat initialized successfully');
+            } catch (error) {
+                console.error('Error initializing chat:', error);
+                alert('Failed to connect to chat. Please refresh and try again.');
+            }
         }
         
         // Send message
-        function sendMessage() {
+        async function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const text = messageInput.value.trim();
             
-            if (!text || !currentUser) return;
+            if (!text) {
+                console.log('No text to send');
+                return;
+            }
+            
+            if (!currentUser) {
+                console.log('No current user');
+                alert('Please join the chat first!');
+                return;
+            }
             
             const message = {
                 userId: currentUser.id,
@@ -650,15 +676,23 @@
                 timestamp: Date.now()
             };
             
-            // Save to Firebase
-            database.ref('messages').push(message);
+            console.log('Sending message:', message);
             
-            // Clear input
-            messageInput.value = '';
-            messageInput.style.height = 'auto';
-            
-            // Stop typing indicator
-            setTyping(false);
+            try {
+                // Save to Firebase
+                await database.ref('messages').push(message);
+                console.log('Message sent successfully');
+                
+                // Clear input
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                
+                // Stop typing indicator
+                setTyping(false);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            }
         }
         
         // Display message
@@ -786,6 +820,25 @@
         // Focus input on load
         window.addEventListener('load', () => {
             document.getElementById('usernameInput').focus();
+            
+            // Check Firebase connection
+            database.ref('.info/connected').on('value', (snapshot) => {
+                const connected = snapshot.val();
+                console.log('Firebase connection status:', connected);
+                if (!connected) {
+                    console.warn('Not connected to Firebase');
+                }
+            });
+        });
+        
+        // Debug: Log all Firebase errors
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e);
+        });
+        
+        // Debug: Log unhandled promise rejections
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e);
         });
     </script>
 </body>
