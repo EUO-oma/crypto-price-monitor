@@ -1264,6 +1264,20 @@
             const userSession = await checkAuth();
             console.log('5. User session:', userSession ? 'authenticated' : 'not authenticated');
             
+            // 로그인 안 되어 있으면 바로 로그인 처리
+            if (!userSession) {
+                console.log('로그인 필요 - Google OAuth 시작');
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href
+                    }
+                });
+                if (!error) {
+                    return; // OAuth 페이지로 이동
+                }
+            }
+            
             // 사용자 정보 표시
             displayAdminInfo(userSession);
             

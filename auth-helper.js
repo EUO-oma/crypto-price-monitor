@@ -66,10 +66,19 @@ async function checkAdminAccess() {
     const session = await checkAuth();
     
     if (!session) {
-        // 로그인 안됨 - admin-links.html에서는 리다이렉트하지 않음
+        // 로그인 안됨 - 로그인 페이지로 리다이렉트
         const currentPath = window.location.pathname;
-        if (!currentPath.includes('admin-links.html') && !currentPath.includes('auth-callback.html')) {
-            window.location.href = 'admin-links.html?redirect=' + encodeURIComponent(window.location.pathname);
+        if (!currentPath.includes('auth-callback.html')) {
+            // Google 로그인 직접 처리
+            const supabase = getSupabaseClient();
+            if (supabase) {
+                supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/auth-callback.html'
+                    }
+                });
+            }
         }
         return false;
     }

@@ -15,7 +15,7 @@
 # 리다이렉트 규칙
 [[redirects]]
   from = "/admin"
-  to = "/admin-links.html?redirect=admin-v3.html"
+  to = "/admin-v3.html"
   status = 302
 
 [[redirects]]
