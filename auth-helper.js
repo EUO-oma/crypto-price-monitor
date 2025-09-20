@@ -34,6 +34,9 @@ function getSupabaseClient() {
 
 // window에 전역으로 노출
 window.getSupabaseClient = getSupabaseClient;
+window.checkAuth = checkAuth;
+window.signOut = signOut;
+window.checkAdminAccess = checkAdminAccess;
 
 // 로그인 상태 확인
 async function checkAuth() {
@@ -51,7 +54,7 @@ async function signOut() {
     
     const { error } = await supabase.auth.signOut();
     if (!error) {
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     }
     return error;
 }
@@ -61,8 +64,11 @@ async function checkAdminAccess() {
     const session = await checkAuth();
     
     if (!session) {
-        // 로그인 안됨
-        window.location.href = 'login.html';
+        // 로그인 안됨 - admin-links.html에서는 리다이렉트하지 않음
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('admin-links.html') && !currentPath.includes('auth-callback.html')) {
+            window.location.href = 'admin-links.html?redirect=' + encodeURIComponent(window.location.pathname);
+        }
         return false;
     }
 
@@ -89,8 +95,12 @@ async function checkAdminAccess() {
         return true;
     } else {
         console.warn('❌ 접근 거부:', session.user.email);
-        alert(`접근 권한이 없습니다.\n\n현재 로그인: ${session.user.email}\n관리자에게 문의하세요.`);
-        await signOut();
+        // admin-links.html에서는 alert을 표시하지 않음 (페이지에서 처리)
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('admin-links.html')) {
+            alert(`접근 권한이 없습니다.\n\n현재 로그인: ${session.user.email}\n관리자에게 문의하세요.`);
+            await signOut();
+        }
         return false;
     }
 }
@@ -103,8 +113,8 @@ if (document.readyState === 'loading') {
             supabase.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_OUT') {
                     // 로그아웃됨
-                    if (window.location.pathname.includes('admin')) {
-                        window.location.href = 'login.html';
+                    if (window.location.pathname.includes('admin') && !window.location.pathname.includes('admin-links.html')) {
+                        window.location.href = 'admin-links.html';
                     }
                 }
             });
@@ -118,8 +128,8 @@ if (document.readyState === 'loading') {
             supabase.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_OUT') {
                     // 로그아웃됨
-                    if (window.location.pathname.includes('admin')) {
-                        window.location.href = 'login.html';
+                    if (window.location.pathname.includes('admin') && !window.location.pathname.includes('admin-links.html')) {
+                        window.location.href = 'admin-links.html';
                     }
                 }
             });
