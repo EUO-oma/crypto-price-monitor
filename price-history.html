@@ -386,6 +386,18 @@
             <a href="index.html" class="back-btn">← 돌아가기</a>
         </div>
         
+        <!-- 차트 영역 -->
+        <div class="chart-container" id="chart-container">
+            <div class="chart-tabs">
+                <div class="chart-tab active" onclick="selectChartTab('combined')">통합 차트</div>
+                <div class="chart-tab" onclick="selectChartTab('btc')">BTC</div>
+                <div class="chart-tab" onclick="selectChartTab('eth')">ETH</div>
+                <div class="chart-tab" onclick="selectChartTab('sol')">SOL</div>
+            </div>
+            <canvas id="priceChart"></canvas>
+            <div class="chart-loading" id="chart-loading">차트 로딩 중...</div>
+        </div>
+        
         <!-- 컨트롤 패널 -->
         <div class="control-panel">
             <!-- 기간 선택 -->
@@ -459,18 +471,6 @@
             </div>
             
             <button class="download-btn" onclick="downloadChart()">📥 차트 다운로드</button>
-        </div>
-
-        <!-- 차트 영역 -->
-        <div class="chart-container" id="chart-container">
-            <div class="chart-tabs">
-                <div class="chart-tab active" onclick="selectChartTab('combined')">통합 차트</div>
-                <div class="chart-tab" onclick="selectChartTab('btc')">BTC</div>
-                <div class="chart-tab" onclick="selectChartTab('eth')">ETH</div>
-                <div class="chart-tab" onclick="selectChartTab('sol')">SOL</div>
-            </div>
-            <canvas id="priceChart"></canvas>
-            <div class="chart-loading" id="chart-loading">차트 로딩 중...</div>
         </div>
 
         <!-- 통계 카드 -->
