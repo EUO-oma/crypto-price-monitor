@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BW Mode 1 - Simple</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .mode-number {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 10px;
+            color: #444;
+        }
+        
+        .price-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .price-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 15px;
+            width: 100%;
+        }
+        
+        .price {
+            font-size: 48px;
+            font-weight: 300;
+            transition: font-size 0.3s ease;
+            display: flex;
+            align-items: baseline;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .price-part {
+            display: inline-block;
+        }
+        
+        /* Rainbow colors for digits */
+        .digit-0 { color: #ff0000; } /* 빨강 */
+        .digit-1 { color: #ff8c00; } /* 주황 */
+        .digit-2 { color: #ffd700; } /* 노랑 */
+        .digit-3 { color: #00ff00; } /* 초록 */
+        .digit-4 { color: #0000ff; } /* 파랑 */
+        .digit-5 { color: #4b0082; } /* 남색 */
+        .digit-6 { color: #9400d3; } /* 보라 */
+        
+        .price-decimal {
+            font-size: 0.7em;
+            color: #666;
+        }
+        
+        /* Size variations */
+        .size-xs .price { font-size: 24px; }
+        .size-s .price { font-size: 36px; }
+        .size-m .price { font-size: 48px; }
+        .size-l .price { font-size: 60px; }
+        .size-xl .price { font-size: 72px; }
+        .size-xxl .price { font-size: 96px; }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Encoder mode styles */
+        .encoded-mode .price {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 3px;
+        }
+        
+        /* CSS로 만든 눈 아이콘 */
+        .eye-icon {
+            width: 16px;
+            height: 10px;
+            position: relative;
+            display: block;
+        }
+        
+        .eye-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 16px;
+            height: 10px;
+            border: 1.5px solid currentColor;
+            border-radius: 50px;
+            transform: translateY(-50%);
+        }
+        
+        .eye-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: currentColor;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* 보안 모드일 때 눈에 사선 추가 */
+        .control-btn.security-active .eye-icon .slash {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 1.5px;
+            background: currentColor;
+            transform: translate(-50%, -50%) rotate(45deg);
+            z-index: 1;
+        }
+        
+        .control-btn.security-active {
+            color: #4caf50;
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        
+        .price.secure {
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        
+        /* Individual hide buttons */
+        .hide-btn {
+            background: transparent;
+            border: 1px solid #222;
+            color: #444;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            padding: 0;
+            position: relative;
+        }
+        
+        .hide-btn:hover {
+            border-color: #444;
+            color: #666;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .hide-btn.hidden {
+            color: #222;
+        }
+        
+        /* Simple dot icon */
+        .dot-icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+        
+        .price.hidden span {
+            color: #000 !important;
+        }
+        
+        @media (max-width: 768px) {
+            .price-container {
+                gap: 30px;
+            }
+            
+            .controls {
+                top: 10px;
+                right: 10px;
+            }
+            
+            .control-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body class="size-m">
+    <div class="controls">
+        <button class="control-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
+            <span class="eye-icon"></span>
+        </button>
+        <button class="control-btn" onclick="openCalculator()" title="계산기 모드">÷</button>
+        <button class="control-btn" onclick="location.href='bw-mode2.html'" title="다음 모드">
+            →<span class="mode-number">2</span>
+        </button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+    </div>
+    
+    <div class="price-container">
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('btc')" id="btc-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="btc-price">------</div>
+        </div>
+        
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('eth')" id="eth-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="eth-price">------</div>
+        </div>
+        
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('sol')" id="sol-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="sol-price">------</div>
+        </div>
+    </div>
+    
+    <script>
+        // Size control
+        const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
+        let currentSizeIndex = 2; // Start with 'm'
+        
+        // Security mode
+        let isSecureMode = false;
+        const numberMap = {
+            '1': 'T', '2': 'N', '3': 'M', '4': 'R', '5': 'L',
+            '6': 'S', '7': 'G', '8': 'F', '9': 'P', '0': '*'
+        };
+        
+        // Hidden coins tracker
+        const hiddenCoins = {
+            btc: false,
+            eth: false,
+            sol: false
+        };
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            // Remove all size classes
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            
+            // Add current size class
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            // Save preference
+            localStorage.setItem('bwMode1Size', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwMode1Size');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-m');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        // Binance WebSocket connections
+        let btcWs, ethWs, solWs;
+        
+        function formatPrice(price) {
+            // Format price WITHOUT commas
+            const parts = price.toFixed(2).split('.');
+            const integerPart = parts[0];
+            const formattedPrice = `${integerPart}.${parts[1]}`;
+            
+            // Apply security encoding if enabled
+            if (isSecureMode) {
+                return `<span class="price-part">${encodePrice(formattedPrice)}</span>`;
+            }
+            
+            // Rainbow colors array
+            const rainbowColors = ['digit-0', 'digit-1', 'digit-2', 'digit-3', 'digit-4', 'digit-5', 'digit-6'];
+            
+            // Process all characters with rainbow colors
+            let styledPrice = '';
+            let digitIndex = 0;
+            
+            // Process the entire price string
+            const fullPrice = `${integerPart}.${parts[1]}`;
+            
+            for (let i = 0; i < fullPrice.length; i++) {
+                const char = fullPrice[i];
+                
+                if (char === '.' || char === ',') {
+                    styledPrice += `<span class="price-decimal">${char}</span>`;
+                } else {
+                    const colorClass = rainbowColors[digitIndex % rainbowColors.length];
+                    styledPrice += `<span class="price-part ${colorClass}">${char}</span>`;
+                    digitIndex++;
+                }
+            }
+            
+            return styledPrice;
+        }
+        
+        function encodePrice(priceStr) {
+            let encoded = '';
+            for (let char of priceStr) {
+                if (numberMap[char]) {
+                    encoded += numberMap[char];
+                } else {
+                    encoded += char;
+                }
+            }
+            return encoded;
+        }
+        
+        function toggleSecurity() {
+            isSecureMode = !isSecureMode;
+            const btn = document.getElementById('securityToggle');
+            const eyeIcon = btn.querySelector('.eye-icon');
+            
+            if (isSecureMode) {
+                btn.classList.add('security-active');
+                if (!eyeIcon.querySelector('.slash')) {
+                    const slash = document.createElement('span');
+                    slash.className = 'slash';
+                    eyeIcon.appendChild(slash);
+                }
+                document.querySelectorAll('.price').forEach(el => el.classList.add('secure'));
+            } else {
+                btn.classList.remove('security-active');
+                const slash = eyeIcon.querySelector('.slash');
+                if (slash) {
+                    slash.remove();
+                }
+                document.querySelectorAll('.price').forEach(el => el.classList.remove('secure'));
+            }
+            
+            updateAllPrices();
+        }
+        
+        function updateAllPrices() {
+            if (window.lastPrices) {
+                ['btc', 'eth', 'sol'].forEach(coin => {
+                    if (window.lastPrices[coin] && !hiddenCoins[coin]) {
+                        document.getElementById(`${coin}-price`).innerHTML = formatPrice(window.lastPrices[coin]);
+                    }
+                });
+            }
+        }
+        
+        function connectBinanceWebSocket(symbol, elementId) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+                document.getElementById(elementId).classList.remove('loading');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c);
+                
+                if (!window.lastPrices) window.lastPrices = {};
+                const coinType = symbol.replace('USDT', '').toLowerCase();
+                window.lastPrices[coinType] = price;
+                
+                if (!hiddenCoins[coinType]) {
+                    document.getElementById(elementId).innerHTML = formatPrice(price);
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, elementId);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        function initializeWebSockets() {
+            btcWs = connectBinanceWebSocket('BTCUSDT', 'btc-price');
+            ethWs = connectBinanceWebSocket('ETHUSDT', 'eth-price');
+            solWs = connectBinanceWebSocket('SOLUSDT', 'sol-price');
+        }
+        
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                if (!window.lastPrices) window.lastPrices = {};
+                
+                if (results[0]) {
+                    const btcPrice = parseFloat(results[0].lastPrice);
+                    window.lastPrices.btc = btcPrice;
+                    if (!hiddenCoins.btc) {
+                        document.getElementById('btc-price').innerHTML = formatPrice(btcPrice);
+                        document.getElementById('btc-price').classList.remove('loading');
+                    }
+                }
+                if (results[1]) {
+                    const ethPrice = parseFloat(results[1].lastPrice);
+                    window.lastPrices.eth = ethPrice;
+                    if (!hiddenCoins.eth) {
+                        document.getElementById('eth-price').innerHTML = formatPrice(ethPrice);
+                        document.getElementById('eth-price').classList.remove('loading');
+                    }
+                }
+                if (results[2]) {
+                    const solPrice = parseFloat(results[2].lastPrice);
+                    window.lastPrices.sol = solPrice;
+                    if (!hiddenCoins.sol) {
+                        document.getElementById('sol-price').innerHTML = formatPrice(solPrice);
+                        document.getElementById('sol-price').classList.remove('loading');
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        function toggleHide(coin) {
+            hiddenCoins[coin] = !hiddenCoins[coin];
+            const priceEl = document.getElementById(`${coin}-price`);
+            const hideBtn = document.getElementById(`${coin}-hide`);
+            
+            if (hiddenCoins[coin]) {
+                priceEl.classList.add('hidden');
+                hideBtn.classList.add('hidden');
+            } else {
+                priceEl.classList.remove('hidden');
+                hideBtn.classList.remove('hidden');
+                if (window.lastPrices && window.lastPrices[coin]) {
+                    priceEl.innerHTML = formatPrice(window.lastPrices[coin]);
+                }
+            }
+            
+            localStorage.setItem(`bwMode1Hidden_${coin}`, hiddenCoins[coin]);
+        }
+        
+        // Restore hidden states
+        ['btc', 'eth', 'sol'].forEach(coin => {
+            const hidden = localStorage.getItem(`bwMode1Hidden_${coin}`) === 'true';
+            if (hidden) {
+                hiddenCoins[coin] = true;
+                document.getElementById(`${coin}-price`).classList.add('hidden');
+                document.getElementById(`${coin}-hide`).classList.add('hidden');
+            }
+        });
+        
+        function openCalculator() {
+            window.open('BW_cal.html', 'calculator', 'width=400,height=600,resizable=yes');
+        }
+        
+        // Initialize
+        initializeWebSockets();
+        
+        // Fallback API call
+        setTimeout(() => {
+            fetchPricesAPI();
+        }, 2000);
+        
+        // Periodic API updates every 30 seconds as backup
+        setInterval(fetchPricesAPI, 30000);
+    </script>
+</body>
+</html>
