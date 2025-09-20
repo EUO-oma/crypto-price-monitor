@@ -587,10 +587,27 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Firebase SDK scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="links-module.js"></script>
-    <script src="supabase-config.js"></script>
     <script>
+        // Firebase 초기화
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+
+        // Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         // Clock toggle function
         function toggleClockSection() {
             const clockSection = document.getElementById('clock-section');
@@ -1094,62 +1111,36 @@
             }
         }
 
-        // Supabase에서 링크 데이터 로드 (안전한 버전)
+        // Firebase에서 링크 데이터 로드 (안전한 버전)
         async function loadLinksFromSupabase() {
-            console.log('🗄️ === SECTION 3: Supabase DB 추출 시작 ===');
+            console.log('🗄️ === SECTION 3: Firebase DB 추출 시작 ===');
             
             try {
-                // Supabase 라이브러리가 로드될 때까지 대기
-                let attempts = 0;
-                while (!window.supabase && attempts < 20) {
-                    console.log(`Waiting for Supabase library... attempt ${attempts + 1}/20`);
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                    attempts++;
-                }
-                
-                if (!window.supabase) {
-                    console.error('Supabase library failed to load after 4 seconds');
-                    // 기본 안전 메시지 표시
+                // Firebase 데이터베이스가 초기화되었는지 확인
+                if (!database) {
+                    console.error('Firebase database가 아직 초기화되지 않았습니다');
                     showSafeErrorMessage();
                     return;
                 }
                 
-                console.log('✅ Supabase 라이브러리 로드 완료');
-            } catch (error) {
-                console.error('초기 Supabase 체크 오류:', error);
-                showSafeErrorMessage();
-                return;
-            }
+                console.log('✅ Firebase 데이터베이스 연결 확인');
 
-            // Supabase 클라이언트 초기화
-            if (!window.supabaseClient) {
-                try {
-                    const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
-                    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
-                    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    console.log('✓ Supabase client initialized successfully');
-                } catch (error) {
-                    console.error('Failed to initialize Supabase:', error);
-                    return;
-                }
-            }
-            
-            const supabase = window.supabaseClient;
-
-            try {
-                const { data: links, error } = await supabase
-                    .from('links')
-                    .select('*')
-                    .order('position', { ascending: true });
+                // Firebase에서 링크 데이터 로드
+                const snapshot = await database.ref('links').orderByChild('position').once('value');
+                const links = [];
+                snapshot.forEach((childSnapshot) => {
+                    links.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
                 
-                if (error) {
-                    console.error('Supabase error:', error);
-                    console.error('Error details:', error.message, error.code);
-                    throw error;
-                }
+                // position 순으로 정렬
+                links.sort((a, b) => (a.position || 0) - (b.position || 0));
                 
-                console.log('Links loaded:', links);
-                console.log('Total links count:', links ? links.length : 0);
+                console.log('Firebase에서 로드된 링크 수:', links.length);
+                
+                console.log('Links loaded from Firebase:', links);
                 
                 // 카테고리별로 링크 분류
                 const gptLinks = links ? links.filter(link => link.category === 'gpt') : [];
@@ -1760,44 +1751,45 @@
             SOLUSDT: { high: 0, low: 999999999, current: 0 }
         };
         
-        // 공통 Supabase 저장 함수
+        // 공통 Firebase 저장 함수
         // 재시도 카운터를 위한 전역 객체
         const retryCounters = {};
         
         async function saveToSupabase(symbol, date, high, low, close, retryCount = 0) {
             const MAX_RETRIES = 10;
             
-            // window.supabaseClient 확인
-            if (!window.supabaseClient) {
+            // Firebase 데이터베이스 확인
+            if (!database) {
                 if (retryCount >= MAX_RETRIES) {
-                    console.error(`Supabase 초기화 실패 (${MAX_RETRIES}회 재시도 후)`);
+                    console.error(`Firebase 초기화 실패 (${MAX_RETRIES}회 재시도 후)`);
                     return;
                 }
-                console.log(`Supabase 초기화 대기 중... (${retryCount + 1}/${MAX_RETRIES})`);
+                console.log(`Firebase 초기화 대기 중... (${retryCount + 1}/${MAX_RETRIES})`);
                 setTimeout(() => saveToSupabase(symbol, date, high, low, close, retryCount + 1), 500);
                 return;
             }
             
             try {
-                const { error } = await window.supabaseClient
-                    .from('price_history')
-                    .upsert({
-                        symbol: symbol,
-                        date: date,
-                        high_price: parseFloat(high),
-                        low_price: parseFloat(low),
-                        price: parseFloat(close)  // close_price -> price로 수정
-                    }, {
-                        onConflict: 'symbol,date'
-                    });
+                // Firebase에 데이터 저장 (symbol과 date를 키로 사용)
+                const key = `${symbol}_${date}`;
+                await database.ref(`price_history/${key}`).set({
+                    symbol: symbol,
+                    date: date,
+                    high_price: parseFloat(high),
+                    low_price: parseFloat(low),
+                    price: parseFloat(close),
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
+                });
                 
-                if (!error) {
-                    if (symbol === 'BTCUSDT') loadBTCHistory();
-                    else if (symbol === 'ETHUSDT') loadETHHistory();
-                    else if (symbol === 'SOLUSDT') loadSOLHistory();
-                }
+                console.log(`✅ ${symbol} 가격 데이터 Firebase에 저장 완료`);
+                
+                // 데이터 저장 후 히스토리 업데이트
+                if (symbol === 'BTCUSDT') loadBTCHistory();
+                else if (symbol === 'ETHUSDT') loadETHHistory();
+                else if (symbol === 'SOLUSDT') loadSOLHistory();
+                
             } catch (err) {
-                console.error(`${symbol} 가격 저장 실패:`, err);
+                console.error(`${symbol} Firebase 저장 실패:`, err);
             }
         }
         
@@ -1805,9 +1797,9 @@
         async function loadBTCHistory() {
             console.log('BTC 기록 로드 시작');
             
-            // window.supabaseClient 확인
-            if (!window.supabaseClient) {
-                console.error('Supabase client가 아직 초기화되지 않았습니다');
+            // Firebase 데이터베이스 확인
+            if (!database) {
+                console.error('Firebase가 아직 초기화되지 않았습니다');
                 setTimeout(loadBTCHistory, 100);
                 return;
             }
@@ -1822,16 +1814,23 @@
                     dates.push(date.toISOString().split('T')[0]);
                 }
                 
-                const { data, error } = await window.supabaseClient
-                    .from('price_history')
-                    .select('*')
-                    .eq('symbol', 'BTCUSDT')
-                    .in('date', dates)
-                    .order('date', { ascending: false });
+                // Firebase에서 BTCUSDT 데이터 가져오기
+                const snapshot = await database.ref('price_history')
+                    .orderByChild('symbol')
+                    .equalTo('BTCUSDT')
+                    .once('value');
                 
+                const allPriceData = [];
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    if (dates.includes(data.date)) {
+                        allPriceData.push(data);
+                    }
+                });
+                
+                // 날짜순으로 정렬 (최신 순)
+                const data = allPriceData.sort((a, b) => new Date(b.date) - new Date(a.date));
                 console.log('BTC 데이터:', data);
-                
-                if (error) throw error;
                 
                 const tbody = document.getElementById('btc-history-tbody');
                 if (!tbody) {
@@ -1913,9 +1912,9 @@
         async function loadETHHistory() {
             console.log('ETH 기록 로드 시작');
             
-            // window.supabaseClient 확인
-            if (!window.supabaseClient) {
-                console.error('Supabase client가 아직 초기화되지 않았습니다');
+            // Firebase 데이터베이스 확인
+            if (!database) {
+                console.error('Firebase가 아직 초기화되지 않았습니다');
                 setTimeout(loadETHHistory, 100);
                 return;
             }
@@ -1930,14 +1929,22 @@
                     dates.push(date.toISOString().split('T')[0]);
                 }
                 
-                const { data, error } = await window.supabaseClient
-                    .from('price_history')
-                    .select('*')
-                    .eq('symbol', 'ETHUSDT')
-                    .in('date', dates)
-                    .order('date', { ascending: false });
+                // Firebase에서 ETHUSDT 데이터 가져오기
+                const snapshot = await database.ref('price_history')
+                    .orderByChild('symbol')
+                    .equalTo('ETHUSDT')
+                    .once('value');
                 
-                if (error) throw error;
+                const allPriceData = [];
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    if (dates.includes(data.date)) {
+                        allPriceData.push(data);
+                    }
+                });
+                
+                // 날짜순으로 정렬 (최신 순)
+                const data = allPriceData.sort((a, b) => new Date(b.date) - new Date(a.date));
                 
                 const tbody = document.getElementById('eth-history-tbody');
                 if (!tbody) return;
@@ -2016,9 +2023,9 @@
         async function loadSOLHistory() {
             console.log('SOL 기록 로드 시작');
             
-            // window.supabaseClient 확인
-            if (!window.supabaseClient) {
-                console.error('Supabase client가 아직 초기화되지 않았습니다');
+            // Firebase 데이터베이스 확인
+            if (!database) {
+                console.error('Firebase가 아직 초기화되지 않았습니다');
                 setTimeout(loadSOLHistory, 100);
                 return;
             }
@@ -2033,14 +2040,22 @@
                     dates.push(date.toISOString().split('T')[0]);
                 }
                 
-                const { data, error } = await window.supabaseClient
-                    .from('price_history')
-                    .select('*')
-                    .eq('symbol', 'SOLUSDT')
-                    .in('date', dates)
-                    .order('date', { ascending: false });
+                // Firebase에서 SOLUSDT 데이터 가져오기
+                const snapshot = await database.ref('price_history')
+                    .orderByChild('symbol')
+                    .equalTo('SOLUSDT')
+                    .once('value');
                 
-                if (error) throw error;
+                const allPriceData = [];
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    if (dates.includes(data.date)) {
+                        allPriceData.push(data);
+                    }
+                });
+                
+                // 날짜순으로 정렬 (최신 순)
+                const data = allPriceData.sort((a, b) => new Date(b.date) - new Date(a.date));
                 
                 const tbody = document.getElementById('sol-history-tbody');
                 if (!tbody) return;
@@ -2794,36 +2809,27 @@
         // 실시간 구독 설정
         function setupRealtimeSubscription() {
             setTimeout(() => {
-                if (window.supabaseClient) {
-                    console.log('🔄 Supabase 실시간 구독 설정 중...');
+                if (database) {
+                    console.log('🔄 Firebase 실시간 구독 설정 중...');
                     
-                    // 실시간 업데이트 구독 (선택사항)
-                    const subscription = window.supabaseClient
-                        .channel('links-channel')
-                        .on('postgres_changes', 
-                            { event: '*', schema: 'public', table: 'links' }, 
-                            () => {
-                                loadLinksFromSupabase(); // 변경사항 발생시 자동 새로고침
-                            }
-                        )
-                        .subscribe();
+                    // 링크 데이터 실시간 업데이트
+                    database.ref('links').on('value', (snapshot) => {
+                        console.log('링크 데이터 업데이트 감지');
+                        loadLinksFromSupabase(); // 변경사항 발생시 자동 새로고침
+                    });
                     
                     // 가격 기록 실시간 업데이트
-                    const priceHistorySubscription = window.supabaseClient
-                        .channel('price-history-channel')
-                        .on('postgres_changes',
-                            { event: '*', schema: 'public', table: 'price_history' },
-                            (payload) => {
-                                if (payload.new && payload.new.symbol === 'BTCUSDT') loadBTCHistory();
-                                if (payload.new && payload.new.symbol === 'ETHUSDT') loadETHHistory();
-                                if (payload.new && payload.new.symbol === 'SOLUSDT') loadSOLHistory();
-                            }
-                        )
-                        .subscribe();
+                    database.ref('price_history').on('child_added', (snapshot) => {
+                        const data = snapshot.val();
+                        console.log('가격 기록 업데이트 감지:', data);
+                        if (data.symbol === 'BTCUSDT') loadBTCHistory();
+                        if (data.symbol === 'ETHUSDT') loadETHHistory();
+                        if (data.symbol === 'SOLUSDT') loadSOLHistory();
+                    });
                     
-                    console.log('✅ Supabase 실시간 구독 설정 완료');
+                    console.log('✅ Firebase 실시간 구독 설정 완료');
                 } else {
-                    console.log('⚠️ Supabase 실시간 구독 건너뜀 (클라이언트 없음)');
+                    console.log('⚠️ Firebase 실시간 구독 건너뜀 (database 없음)');
                 }
             }, 2000);
         }
@@ -2871,22 +2877,29 @@
                     }
                 }
                 
-                // 간단한 GPT 링크 조회
-                const { data: gptLinks, error } = await window.supabaseClient
-                    .from('links')
-                    .select('*')
-                    .eq('category', 'gpt')
-                    .order('position', { ascending: true });
+                // Firebase에서 GPT 링크 조회
+                try {
+                    const snapshot = await database.ref('links')
+                        .orderByChild('category')
+                        .equalTo('gpt')
+                        .once('value');
+                    
+                    const gptLinks = [];
+                    snapshot.forEach((childSnapshot) => {
+                        gptLinks.push(childSnapshot.val());
+                    });
+                    
+                    // position 순으로 정렬
+                    gptLinks.sort((a, b) => (a.position || 0) - (b.position || 0));
                 
-                if (error) {
-                    testArea.innerHTML = `<div style="color: #f44336;">❌ 오류: ${error.message}</div>`;
-                    return;
-                }
-                
-                console.log('🔍 테스트 영역 GPT 링크:', gptLinks);
-                
-                if (!gptLinks || gptLinks.length === 0) {
-                    testArea.innerHTML = '<div style="color: #fbbf24;">⚠️ GPT 링크가 없습니다</div>';
+                    console.log('🔍 테스트 영역 GPT 링크:', gptLinks);
+                    
+                    if (!gptLinks || gptLinks.length === 0) {
+                        testArea.innerHTML = '<div style="color: #fbbf24;">⚠️ GPT 링크가 없습니다</div>';
+                        return;
+                    }
+                } catch (error) {
+                    testArea.innerHTML = `<div style="color: #f44336;">❌ Firebase 조회 오류: ${error.message}</div>`;
                     return;
                 }
                 
@@ -3133,17 +3146,18 @@
                         yesterday.setDate(yesterday.getDate() - 1);
                         const yesterdayStr = yesterday.toISOString().split('T')[0];
                         
-                        await window.supabaseClient
-                            .from('price_history')
-                            .upsert({
-                                symbol: symbol,
-                                date: yesterdayStr,
-                                high_price: parseFloat(data.highPrice),
-                                low_price: parseFloat(data.lowPrice),
-                                price: parseFloat(data.lastPrice),
-                                created_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString()
-                            }, { onConflict: 'symbol,date' });
+                        // Firebase에 일일 데이터 저장
+                        const key = `${symbol}_${yesterdayStr}`;
+                        await database.ref(`price_history/${key}`).set({
+                            symbol: symbol,
+                            date: yesterdayStr,
+                            high_price: parseFloat(data.highPrice),
+                            low_price: parseFloat(data.lowPrice),
+                            price: parseFloat(data.lastPrice),
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                            updatedAt: firebase.database.ServerValue.TIMESTAMP
+                        });
                         
                         console.log(`${symbol} 일일 데이터 저장 완료`);
                     } catch (error) {
@@ -3279,7 +3293,7 @@
             // Supabase 초기화 대기
             setTimeout(async () => {
                 // 일일 데이터 수집 체크
-                if (window.supabaseClient) {
+                if (database) {
                     await checkAndCollectDailyData();
                 }
             }, 2000);
@@ -3293,6 +3307,31 @@
             }
         }, 60000); // 1분마다 체크
     </script>
+    
+    <!-- 디버그 뷰어 버튼 -->
+    <a href="debug-viewer.html" class="debug-btn" title="디버그 로그" style="
+        position: fixed;
+        bottom: 200px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        background: #0a0a0a;
+        border: 2px solid #333;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #888;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    " onmouseover="this.style.borderColor='#666'; this.style.color='#fff';" onmouseout="this.style.borderColor='#333'; this.style.color='#888';">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+        </svg>
+    </a>
     
     <!-- 가격 기록 버튼 -->
     <a href="price-history.html" class="history-btn" title="가격 기록" style="
@@ -3401,5 +3440,97 @@
             }
         }
     </style>
+    
+    <!-- Firebase SDK (가격 기록용) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase 설정 (가격 기록 전용)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+        
+        // Firebase 초기화
+        let firebaseApp;
+        let firebaseDatabase;
+        try {
+            if (!firebase.apps.length) {
+                firebaseApp = firebase.initializeApp(firebaseConfig);
+                firebaseDatabase = firebase.database();
+                console.log('🔥 Firebase 가격 기록 시스템 초기화 완료');
+            }
+        } catch (error) {
+            console.error('Firebase 초기화 오류:', error);
+        }
+        
+        // Firebase에 가격 저장 함수
+        async function saveToFirebase(symbol, date, high, low, close) {
+            if (!firebaseDatabase) {
+                console.error('Firebase가 초기화되지 않았습니다');
+                return;
+            }
+            
+            try {
+                const priceData = {
+                    symbol: symbol,
+                    date: date,
+                    high_price: high,
+                    low_price: low,
+                    price: close,
+                    updated_at: new Date().toISOString()
+                };
+                
+                // Firebase에 저장 (날짜를 키로 사용)
+                await firebaseDatabase.ref(`prices/${date}/${symbol}`).set(priceData);
+                console.log(`✅ Firebase 저장 완료: ${symbol} - ${date}`);
+            } catch (error) {
+                console.error(`Firebase 저장 실패 ${symbol}:`, error);
+            }
+        }
+        
+        // 기존 savePriceHistory 함수 수정
+        const originalSavePriceHistory = savePriceHistory;
+        savePriceHistory = async function() {
+            const today = new Date().toISOString().split('T')[0];
+            console.log('가격 기록 자동 저장 (Firebase):', today, currentPrices);
+            
+            // BTC 저장
+            if (currentPrices.BTCUSDT && currentPrices.BTCUSDT.current > 0) {
+                console.log('BTC 가격 저장:', currentPrices.BTCUSDT);
+                await saveToFirebase('BTCUSDT', today,
+                    currentPrices.BTCUSDT.high || currentPrices.BTCUSDT.current,
+                    currentPrices.BTCUSDT.low || currentPrices.BTCUSDT.current,
+                    currentPrices.BTCUSDT.current);
+            }
+            
+            // ETH 저장
+            if (currentPrices.ETHUSDT && currentPrices.ETHUSDT.current > 0) {
+                console.log('ETH 가격 저장:', currentPrices.ETHUSDT);
+                await saveToFirebase('ETHUSDT', today,
+                    currentPrices.ETHUSDT.high || currentPrices.ETHUSDT.current,
+                    currentPrices.ETHUSDT.low || currentPrices.ETHUSDT.current,
+                    currentPrices.ETHUSDT.current);
+            }
+            
+            // SOL 저장
+            if (currentPrices.SOLUSDT && currentPrices.SOLUSDT.current > 0) {
+                console.log('SOL 가격 저장:', currentPrices.SOLUSDT);
+                await saveToFirebase('SOLUSDT', today,
+                    currentPrices.SOLUSDT.high || currentPrices.SOLUSDT.current,
+                    currentPrices.SOLUSDT.low || currentPrices.SOLUSDT.current,
+                    currentPrices.SOLUSDT.current);
+            }
+            
+            console.log('가격 기록 Firebase 저장 완료:', today);
+        }
+    </script>
 </body>
 </html>

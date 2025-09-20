@@ -334,15 +334,34 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
     <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-        // Supabase 설정
-        const supabaseUrl = 'https://intyabzhvtkxgldmvpvr.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
         
-        window.supabaseClient = supabase;
+        // Firebase 초기화
+        let database;
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            database = firebase.database();
+            console.log('🔥 Firebase 연결 성공');
+        } catch (error) {
+            console.error('Firebase 초기화 오류:', error);
+        }
 
         let currentDays = 10;
 
@@ -365,33 +384,45 @@
 
         // 역대 최고가 로드
         async function loadAllTimeHighs() {
+            if (!database) {
+                console.error('Firebase가 초기화되지 않았습니다');
+                return;
+            }
+            
             try {
+                const snapshot = await database.ref('prices').once('value');
+                const allData = snapshot.val();
+                
+                if (!allData) return;
+                
                 const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const maxPrices = {
+                    BTCUSDT: 0,
+                    ETHUSDT: 0,
+                    SOLUSDT: 0
+                };
                 
-                for (const symbol of symbols) {
-                    const { data, error } = await supabase
-                        .from('price_history')
-                        .select('high_price')
-                        .eq('symbol', symbol)
-                        .order('high_price', { ascending: false })
-                        .limit(1);
-                    
-                    if (data && data.length > 0) {
+                // 모든 날짜의 데이터를 순회하며 최고가 찾기
+                Object.values(allData).forEach(dateData => {
+                    symbols.forEach(symbol => {
+                        if (dateData[symbol] && dateData[symbol].high_price) {
+                            maxPrices[symbol] = Math.max(maxPrices[symbol], dateData[symbol].high_price);
+                        }
+                    });
+                });
+                
+                // UI 업데이트
+                Object.entries(maxPrices).forEach(([symbol, price]) => {
+                    if (price > 0) {
                         const elementId = symbol.replace('USDT', '').toLowerCase() + '-ath';
-                        document.getElementById(elementId).textContent = formatPrice(data[0].high_price);
+                        document.getElementById(elementId).textContent = formatPrice(price);
                     }
-                }
-
-                // 데이터 수집 일수
-                const { data: countData } = await supabase
-                    .from('price_history')
-                    .select('date')
-                    .eq('symbol', 'BTCUSDT');
+                });
                 
-                if (countData) {
-                    const uniqueDates = new Set(countData.map(d => d.date));
-                    document.getElementById('data-days').textContent = uniqueDates.size + '일';
-                }
+                // 데이터 수집 일수
+                const uniqueDates = Object.keys(allData).length;
+                document.getElementById('data-days').textContent = uniqueDates + '일';
+                
             } catch (error) {
                 console.error('통계 로드 실패:', error);
             }
@@ -399,43 +430,96 @@
 
         // 가격 기록 로드
         async function loadPriceHistory(symbol, tbodyId, days = 10) {
+            if (!database) {
+                console.error('Firebase가 초기화되지 않았습니다');
+                return;
+            }
+            
             try {
-                const query = supabase
-                    .from('price_history')
-                    .select('*')
-                    .eq('symbol', symbol)
-                    .order('date', { ascending: false });
+                const snapshot = await database.ref('prices').once('value');
+                const allData = snapshot.val();
                 
+                if (!allData) {
+                    document.getElementById(tbodyId).innerHTML = '<tr><td colspan="5" class="loading">데이터가 없습니다</td></tr>';
+                    return;
+                }
+                
+                // 날짜별로 해당 심볼 데이터 추출
+                const priceData = [];
+                Object.entries(allData).forEach(([date, dateData]) => {
+                    // 새로운 구조: dateData가 직접 가격 데이터를 포함
+                    if (dateData.btc !== undefined || dateData.eth !== undefined || dateData.sol !== undefined) {
+                        // 심볼에 따라 데이터 추출
+                        if (symbol === 'BTCUSDT' && dateData.btc !== undefined) {
+                            priceData.push({
+                                date: date,
+                                symbol: 'BTCUSDT',
+                                high_price: dateData.btc_high || dateData.btc,
+                                low_price: dateData.btc_low || dateData.btc,
+                                price: dateData.btc,
+                                updated_at: dateData.collected_at || dateData.updated_at
+                            });
+                        } else if (symbol === 'ETHUSDT' && dateData.eth !== undefined) {
+                            priceData.push({
+                                date: date,
+                                symbol: 'ETHUSDT',
+                                high_price: dateData.eth_high || dateData.eth,
+                                low_price: dateData.eth_low || dateData.eth,
+                                price: dateData.eth,
+                                updated_at: dateData.collected_at || dateData.updated_at
+                            });
+                        } else if (symbol === 'SOLUSDT' && dateData.sol !== undefined) {
+                            priceData.push({
+                                date: date,
+                                symbol: 'SOLUSDT',
+                                high_price: dateData.sol_high || dateData.sol,
+                                low_price: dateData.sol_low || dateData.sol,
+                                price: dateData.sol,
+                                updated_at: dateData.collected_at || dateData.updated_at
+                            });
+                        }
+                    }
+                    // 기존 구조도 지원 (하위 호환성)
+                    else if (dateData[symbol]) {
+                        priceData.push({
+                            date: date,
+                            ...dateData[symbol]
+                        });
+                    }
+                });
+                
+                // 날짜순 정렬 (최신순)
+                priceData.sort((a, b) => b.date.localeCompare(a.date));
+                
+                // 날짜 필터링
+                let filteredData = priceData;
                 if (days > 0) {
                     const today = new Date();
                     const startDate = new Date(today);
                     startDate.setDate(startDate.getDate() - days);
-                    query.gte('date', startDate.toISOString().split('T')[0]);
+                    const startDateStr = startDate.toISOString().split('T')[0];
+                    filteredData = priceData.filter(d => d.date >= startDateStr);
                 }
-                
-                const { data, error } = await query;
-                
-                if (error) throw error;
                 
                 const tbody = document.getElementById(tbodyId);
                 if (!tbody) return;
                 
                 const today = new Date().toISOString().split('T')[0];
                 
-                if (data && data.length > 0) {
-                    tbody.innerHTML = data.map((record, index) => {
+                if (filteredData.length > 0) {
+                    tbody.innerHTML = filteredData.map((record, index) => {
                         const isToday = record.date === today;
                         const rowClass = isToday ? 'today-row' : '';
                         
                         // 변동폭 계산 (고가 - 저가)
                         const range = record.high_price - record.low_price;
-                        const rangePercent = ((range / record.low_price) * 100).toFixed(2);
+                        const rangePercent = record.low_price > 0 ? ((range / record.low_price) * 100).toFixed(2) : '0.00';
                         
                         // 전일 대비 변화
                         let changeHtml = '';
-                        if (index < data.length - 1) {
-                            const prevClose = data[index + 1].price;
-                            if (prevClose) {
+                        if (index < filteredData.length - 1) {
+                            const prevClose = filteredData[index + 1].price;
+                            if (prevClose && prevClose > 0) {
                                 const change = ((record.price - prevClose) / prevClose * 100);
                                 const changeClass = change >= 0 ? 'price-up' : 'price-down';
                                 const changeSymbol = change >= 0 ? '+' : '';
