@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 전용 링크 페이지</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 15px;
+            border: 1px solid #333;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .auth-container h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #f7931a;
+        }
+        
+        .auth-container p {
+            margin-bottom: 30px;
+            color: #888;
+            line-height: 1.6;
+        }
+        
+        .login-btn {
+            background: #f7931a;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .login-btn:hover {
+            background: #f9a33a;
+            transform: translateY(-2px);
+        }
+        
+        .home-btn {
+            margin-top: 20px;
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .home-btn:hover {
+            background: #444;
+        }
+        
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .error {
+            color: #f44336;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(244, 67, 54, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>🔐 관리자 전용 페이지</h1>
+        <p>이 페이지는 관리자만 접근할 수 있습니다.<br>로그인 후 이용해주세요.</p>
+        
+        <div class="loading" id="loading">확인 중...</div>
+        <div class="error" id="error"></div>
+        
+        <a href="login.html" class="login-btn" id="loginBtn">관리자 로그인</a>
+        <br>
+        <a href="index.html" class="home-btn">홈으로 돌아가기</a>
+    </div>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-helper.js"></script>
+    
+    <script>
+        // 페이지 로드 시 인증 확인
+        async function checkAuth() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            loading.classList.add('show');
+            loginBtn.style.display = 'none';
+            
+            try {
+                const isAdmin = await checkAdminAccess();
+                
+                if (isAdmin) {
+                    // 관리자인 경우 원하는 링크 페이지로 리다이렉트
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirectTo = urlParams.get('redirect') || 'links.html';
+                    window.location.href = redirectTo;
+                } else {
+                    // 관리자가 아닌 경우
+                    loading.classList.remove('show');
+                    loginBtn.style.display = 'inline-block';
+                }
+            } catch (err) {
+                loading.classList.remove('show');
+                loginBtn.style.display = 'inline-block';
+                error.textContent = '인증 확인 중 오류가 발생했습니다.';
+                error.classList.add('show');
+                console.error('Auth check error:', err);
+            }
+        }
+        
+        // 페이지 로드 시 인증 확인
+        window.addEventListener('load', checkAuth);
+    </script>
+</body>
+</html>

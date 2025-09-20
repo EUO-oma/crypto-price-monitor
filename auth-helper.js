@@ -27,20 +27,29 @@ async function checkAdminAccess() {
 
     // 허용된 이메일 목록 (여기에 본인 이메일 추가)
     const allowedEmails = [
-        // 'your-email@gmail.com', // 여기에 본인 Google 이메일 추가
+        // 'your-email@gmail.com', // 여기에 관리자 Google 이메일을 추가하세요
     ];
 
     // 모든 사용자 허용하려면 아래 줄 주석 해제
-    return true;
+    // return true;
 
-    // 특정 이메일만 허용하려면 아래 사용
-    // if (allowedEmails.includes(session.user.email)) {
-    //     return true;
-    // } else {
-    //     alert('접근 권한이 없습니다.');
-    //     await signOut();
-    //     return false;
-    // }
+    // 특정 이메일만 허용 (기본 설정)
+    if (allowedEmails.length === 0) {
+        console.error('⚠️ 허용된 이메일이 설정되지 않았습니다. auth-helper.js 파일의 allowedEmails 배열에 관리자 이메일을 추가하세요.');
+        alert('관리자 이메일이 설정되지 않았습니다.\n\nauth-helper.js 파일을 수정하여 관리자 이메일을 추가하세요.');
+        await signOut();
+        return false;
+    }
+    
+    if (allowedEmails.includes(session.user.email)) {
+        console.log('✅ 인증된 관리자:', session.user.email);
+        return true;
+    } else {
+        console.warn('❌ 접근 거부:', session.user.email);
+        alert(`접근 권한이 없습니다.\n\n현재 로그인: ${session.user.email}\n관리자에게 문의하세요.`);
+        await signOut();
+        return false;
+    }
 }
 
 // 세션 변경 감지
