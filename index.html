@@ -1225,15 +1225,6 @@
             updateLastUpdate();
         }
 
-        // Test Binance connectivity
-        async function testBinanceConnection() {
-            try {
-                const response = await fetch('https://api.binance.com/api/v3/ping');
-                return response.ok;
-            } catch (error) {
-                return false;
-            }
-        }
 
         // Use fallback APIs
         async function useFallbackAPIs() {
@@ -1414,18 +1405,8 @@
         initComparisonCards();
 
         // WebSocket 연결 시작 - Re-enabled for custom price cards
-        // First test if Binance is accessible
-        testBinanceConnection().then(isAccessible => {
-            if (isAccessible) {
-                console.log('Binance is accessible, using WebSocket');
-                connectBinance();
-                connectBybit(); // Also connect to Bybit for comparison
-            } else {
-                console.log('Binance is blocked, using fallback APIs');
-                window.binanceFallbackTriggered = true;
-                useFallbackAPIs();
-            }
-        });
+        connectBinance();
+        connectBybit(); // Also connect to Bybit for comparison
         
         // Fun YouTube view toggle function
         function toggleFunYoutubeView(view) {
