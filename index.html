@@ -572,26 +572,23 @@
             </a>
         </div>
         
-        <!-- World Clock Link -->
-        <div style="text-align: center; margin: 40px 0;">
-            <a href="world-clock.html" style="
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                background: #1a1a1a;
-                color: #4facfe;
-                padding: 15px 30px;
-                border-radius: 10px;
+        <!-- Mini Clock Link -->
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="world-clock.html" id="mini-clock" style="
+                display: inline-block;
+                background: #0a0a0a;
+                color: #888;
+                padding: 8px 16px;
+                border-radius: 20px;
                 text-decoration: none;
-                border: 1px solid #333;
+                border: 1px solid #222;
                 transition: all 0.3s ease;
-                font-size: 1.1em;
-                font-weight: 500;
+                font-size: 0.9em;
+                font-family: 'JetBrains Mono', monospace;
             "
-            onmouseover="this.style.background='#2a2a2a'; this.style.borderColor='#555'"
-            onmouseout="this.style.background='#1a1a1a'; this.style.borderColor='#333'">
-                🌍 View World Clock
+            onmouseover="this.style.background='#1a1a1a'; this.style.borderColor='#444'; this.style.color='#aaa'"
+            onmouseout="this.style.background='#0a0a0a'; this.style.borderColor='#222'; this.style.color='#888'">
+                <span id="mini-clock-time">--:--:--</span>
             </a>
         </div>
         
@@ -770,6 +767,12 @@
                         </div>
                     </div>
                 `;
+            }
+            
+            // Mini clock update (24시간 형식)
+            const miniClockElement = document.getElementById('mini-clock-time');
+            if (miniClockElement) {
+                miniClockElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds}`;
             }
         }
 
