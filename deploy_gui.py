@@ -341,12 +341,13 @@ class DeployGUI:
             success, output = self.run_command(f'git commit -m "{commit_message}"')
             if not success:
                 if "nothing to commit" in str(output):
-                    self.log("ℹ️ 변경사항이 없습니다.", 'warning')
-                    return
+                    self.log("ℹ️ 변경사항이 없습니다. 기존 커밋을 푸시합니다.", 'warning')
+                    # 변경사항이 없어도 푸시는 계속 진행
                 else:
                     self.log(f"❌ 커밋 실패: {output}", 'error')
                     return
-            self.log("✓ 커밋 완료", 'success')
+            else:
+                self.log("✓ 커밋 완료", 'success')
             
             # 푸시
             self.update_status("원격 저장소로 푸시 중...")
