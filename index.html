@@ -204,6 +204,25 @@
             animation: pulse 1.5s infinite;
         }
         
+        /* 코인 심볼 디밍 애니메이션 */
+        @keyframes dimToBlack {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.3;
+                color: #000;
+            }
+        }
+        
+        .coin-symbol {
+            transition: all 2s ease;
+        }
+        
+        .coin-symbol.dimmed {
+            animation: dimToBlack 2s ease forwards;
+        }
+        
         /* YouTube 라이브 인디케이터 애니메이션 */
         @keyframes livePulse {
             0% {
@@ -465,7 +484,7 @@
                      onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#444';" 
                      onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#222';">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                        <span style="color: #f7931a; font-size: 1.2em; font-weight: bold;">₿ BTC</span>
+                        <span class="coin-symbol" style="color: #f7931a; font-size: 1.2em; font-weight: bold;">₿ BTC</span>
                         <span style="color: #666; font-size: 0.9em;">USDT</span>
                     </div>
                     <div id="btc-price-custom" class="crypto-price mono" style="font-size: 2.5em; font-weight: 600; color: #f7931a; margin-bottom: 5px; text-align: right;">Loading...</div>
