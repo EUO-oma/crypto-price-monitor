@@ -66,20 +66,48 @@
             align-items: center;
             gap: 40px;
             padding: 20px;
+            width: 100%;
+            max-width: 800px;
         }
         
         .price-item {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            gap: 10px;
+            justify-content: flex-end;
+            gap: 15px;
+            width: 100%;
         }
         
         .price {
             font-size: 48px;
             font-weight: 300;
-            letter-spacing: 1px;
             transition: font-size 0.3s ease;
+            display: flex;
+            align-items: baseline;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .price-part {
+            display: inline-block;
+        }
+        
+        .price-first {
+            color: #333;
+        }
+        
+        .price-middle {
+            color: #666;
+        }
+        
+        .price-third {
+            color: #4caf50;
+            font-weight: 400;
+        }
+        
+        .price-decimal {
+            font-size: 0.7em;
+            color: #666;
         }
         
         /* Size variations */
@@ -138,6 +166,37 @@
             letter-spacing: 2px;
         }
         
+        /* Individual hide buttons */
+        .hide-btn {
+            background: transparent;
+            border: 1px solid #222;
+            color: #444;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+        
+        .hide-btn:hover {
+            border-color: #444;
+            color: #666;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .hide-btn.hidden {
+            color: #222;
+        }
+        
+        .price.hidden span {
+            color: #000 !important;
+        }
+        
         @media (max-width: 768px) {
             .price-container {
                 gap: 30px;
@@ -170,14 +229,17 @@
     
     <div class="price-container">
         <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('btc')" id="btc-hide">👁</button>
             <div class="price loading" id="btc-price">------</div>
         </div>
         
         <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('eth')" id="eth-hide">👁</button>
             <div class="price loading" id="eth-price">------</div>
         </div>
         
         <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('sol')" id="sol-hide">👁</button>
             <div class="price loading" id="sol-price">------</div>
         </div>
     </div>
@@ -192,6 +254,13 @@
         const numberMap = {
             '1': 'T', '2': 'N', '3': 'M', '4': 'R', '5': 'L',
             '6': 'S', '7': 'G', '8': 'F', '9': 'P', '0': '*'
+        };
+        
+        // Hidden coins tracker
+        const hiddenCoins = {
+            btc: false,
+            eth: false,
+            sol: false
         };
         
         function adjustSize(action) {
@@ -234,10 +303,39 @@
             
             // Apply security encoding if enabled
             if (isSecureMode) {
-                return encodePrice(formattedPrice);
+                return `<span class="price-part">${encodePrice(formattedPrice)}</span>`;
             }
             
-            return formattedPrice;
+            // Split the integer part for styling
+            const integerDigits = integerPart.replace(/,/g, '');
+            let styledPrice = '';
+            let digitCount = 0;
+            
+            // Process each character including commas
+            for (let i = 0; i < integerPart.length; i++) {
+                const char = integerPart[i];
+                
+                if (char === ',') {
+                    styledPrice += '<span class="price-part price-middle">,</span>';
+                } else {
+                    digitCount++;
+                    if (digitCount <= 2) {
+                        // First two digits (darkest)
+                        styledPrice += `<span class="price-part price-first">${char}</span>`;
+                    } else if (digitCount === 3) {
+                        // Third digit (bright green)
+                        styledPrice += `<span class="price-part price-third">${char}</span>`;
+                    } else {
+                        // Remaining digits (medium dark)
+                        styledPrice += `<span class="price-part price-middle">${char}</span>`;
+                    }
+                }
+            }
+            
+            // Decimal part (smaller and lighter)
+            styledPrice += `<span class="price-part price-decimal">.${parts[1]}</span>`;
+            
+            return styledPrice;
         }
         
         function encodePrice(priceStr) {
@@ -274,13 +372,13 @@
             // Update displayed prices with current values
             if (window.lastPrices) {
                 if (window.lastPrices.btc) {
-                    document.getElementById('btc-price').textContent = formatPrice(window.lastPrices.btc);
+                    document.getElementById('btc-price').innerHTML = formatPrice(window.lastPrices.btc);
                 }
                 if (window.lastPrices.eth) {
-                    document.getElementById('eth-price').textContent = formatPrice(window.lastPrices.eth);
+                    document.getElementById('eth-price').innerHTML = formatPrice(window.lastPrices.eth);
                 }
                 if (window.lastPrices.sol) {
-                    document.getElementById('sol-price').textContent = formatPrice(window.lastPrices.sol);
+                    document.getElementById('sol-price').innerHTML = formatPrice(window.lastPrices.sol);
                 }
             }
         }
@@ -302,7 +400,7 @@
                 const coinType = symbol.replace('USDT', '').toLowerCase();
                 window.lastPrices[coinType] = price;
                 
-                document.getElementById(elementId).textContent = formatPrice(price);
+                document.getElementById(elementId).innerHTML = formatPrice(price);
             };
             
             ws.onerror = function(error) {
@@ -343,19 +441,19 @@
                 if (results[0]) {
                     const btcPrice = parseFloat(results[0].lastPrice);
                     window.lastPrices.btc = btcPrice;
-                    document.getElementById('btc-price').textContent = formatPrice(btcPrice);
+                    document.getElementById('btc-price').innerHTML = formatPrice(btcPrice);
                     document.getElementById('btc-price').classList.remove('loading');
                 }
                 if (results[1]) {
                     const ethPrice = parseFloat(results[1].lastPrice);
                     window.lastPrices.eth = ethPrice;
-                    document.getElementById('eth-price').textContent = formatPrice(ethPrice);
+                    document.getElementById('eth-price').innerHTML = formatPrice(ethPrice);
                     document.getElementById('eth-price').classList.remove('loading');
                 }
                 if (results[2]) {
                     const solPrice = parseFloat(results[2].lastPrice);
                     window.lastPrices.sol = solPrice;
-                    document.getElementById('sol-price').textContent = formatPrice(solPrice);
+                    document.getElementById('sol-price').innerHTML = formatPrice(solPrice);
                     document.getElementById('sol-price').classList.remove('loading');
                 }
             } catch (error) {
@@ -374,6 +472,23 @@
             // Update API prices every 10 seconds as fallback
             setInterval(fetchPricesAPI, 10000);
         });
+        
+        // Toggle hide for individual coins
+        function toggleHide(coin) {
+            hiddenCoins[coin] = !hiddenCoins[coin];
+            const priceEl = document.getElementById(`${coin}-price`);
+            const btnEl = document.getElementById(`${coin}-hide`);
+            
+            if (hiddenCoins[coin]) {
+                priceEl.classList.add('hidden');
+                btnEl.classList.add('hidden');
+                btnEl.innerHTML = '👁‍🗨';
+            } else {
+                priceEl.classList.remove('hidden');
+                btnEl.classList.remove('hidden');
+                btnEl.innerHTML = '👁';
+            }
+        }
         
         // Clean up on page unload
         window.addEventListener('beforeunload', () => {
