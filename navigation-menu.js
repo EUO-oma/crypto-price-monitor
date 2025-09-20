@@ -70,12 +70,6 @@ const NAVIGATION_CONFIG = {
             id: "nav-chat",
             isButton: true,
             onClick: "openChatPopup()"
-        },
-        {
-            href: "login.html",
-            title: "로그인",
-            icon: "🔐",
-            id: "nav-login"
         }
     ]
 };
