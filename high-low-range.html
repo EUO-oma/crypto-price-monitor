@@ -398,13 +398,18 @@
         // Load data from Firebase
         async function loadPriceData() {
             try {
-                const snapshot = await database.ref('daily-prices').once('value');
+                // price-history.html과 동일하게 'prices' 경로 사용
+                const snapshot = await database.ref('prices').once('value');
                 const data = snapshot.val() || {};
+                
+                console.log('Raw data from Firebase:', Object.keys(data).length, 'entries');
                 
                 // Convert to array and sort by date
                 allPriceData = Object.entries(data).map(([date, prices]) => ({
                     date: date,
-                    ...prices
+                    btc: prices.btc || null,
+                    eth: prices.eth || null,
+                    sol: prices.sol || null
                 })).sort((a, b) => new Date(a.date) - new Date(b.date));
                 
                 console.log('Loaded price data:', allPriceData.length, 'days');
@@ -434,6 +439,8 @@
                         }
                         return item;
                     });
+                    
+                    console.log('Data after processing:', allPriceData[allPriceData.length - 1]);
                 }
                 
                 // Initial update
@@ -443,6 +450,7 @@
                 
             } catch (error) {
                 console.error('Error loading data:', error);
+                document.getElementById('chart-loading').textContent = '데이터 로드 실패';
             }
         }
         
@@ -553,6 +561,13 @@
         
         // Update chart
         function updateChart() {
+            // allPriceData가 비어있는지 확인
+            if (!allPriceData || allPriceData.length === 0) {
+                console.warn('No price data available yet');
+                document.getElementById('chart-loading').textContent = '데이터를 불러오는 중...';
+                return;
+            }
+            
             const canvas = document.getElementById('priceChart');
             if (!canvas) {
                 console.error('Canvas element not found!');
@@ -574,6 +589,7 @@
             console.log('Filtered data:', filteredData.length, 'items for', currentCoin);
             if (filteredData.length === 0) {
                 console.warn('No data available for the selected period');
+                document.getElementById('chart-loading').textContent = '선택한 기간에 데이터가 없습니다';
                 return;
             }
             
@@ -582,6 +598,13 @@
             const highPrices = filteredData.map(d => d[`${currentCoin}_high`] || d[currentCoin] || null);
             const lowPrices = filteredData.map(d => d[`${currentCoin}_low`] || d[currentCoin] || null);
             const closePrices = filteredData.map(d => d[currentCoin] || null);
+            
+            console.log('Chart data prepared:', {
+                labels: labels.length,
+                highPrices: highPrices.filter(p => p !== null).length,
+                lowPrices: lowPrices.filter(p => p !== null).length,
+                closePrices: closePrices.filter(p => p !== null).length
+            });
             
             // Hide loading
             document.getElementById('chart-loading').style.display = 'none';
