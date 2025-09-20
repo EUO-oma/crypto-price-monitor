@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>링크 모음 - CRYPTO × LIVE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 800px;
+            width: 100%;
+            border: 1px solid #1a1a1a;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 40px;
+            font-size: 2em;
+        }
+
+        .links-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #888;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .link-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .link-card:hover {
+            background: #2a2a2a;
+            border-color: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .link-icon {
+            font-size: 24px;
+            width: 40px;
+            text-align: center;
+        }
+
+        .link-content {
+            flex: 1;
+        }
+
+        .link-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .link-desc {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #1a1a1a;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+            border-color: #555;
+        }
+
+        /* 카테고리별 색상 */
+        .crypto { border-left: 4px solid #f7931a; }
+        .tool { border-left: 4px solid #4caf50; }
+        .api { border-left: 4px solid #2196f3; }
+        .debug { border-left: 4px solid #ff9800; }
+        .external { border-left: 4px solid #9c27b0; }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .links-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .back-btn {
+                position: static;
+                display: block;
+                width: 100%;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">← 메인으로</a>
+    
+    <div class="container">
+        <h1>🔗 링크 모음</h1>
+        
+        <!-- 암호화폐 관련 -->
+        <div class="links-section">
+            <h2 class="section-title">📊 암호화폐 데이터</h2>
+            <div class="links-grid">
+                <a href="price-history.html" class="link-card crypto">
+                    <div class="link-icon">📈</div>
+                    <div class="link-content">
+                        <div class="link-title">가격 기록</div>
+                        <div class="link-desc">일별 가격 히스토리</div>
+                    </div>
+                </a>
+                
+                <a href="fetch-historical-data.html" class="link-card crypto">
+                    <div class="link-icon">📥</div>
+                    <div class="link-content">
+                        <div class="link-title">과거 데이터 수집</div>
+                        <div class="link-desc">30일 데이터 가져오기</div>
+                    </div>
+                </a>
+                
+                <a href="smart-data-filler.html" class="link-card crypto">
+                    <div class="link-icon">🧩</div>
+                    <div class="link-content">
+                        <div class="link-title">스마트 데이터 채우기</div>
+                        <div class="link-desc">누락 데이터 자동 수집</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 도구 -->
+        <div class="links-section">
+            <h2 class="section-title">🛠️ 도구 모음</h2>
+            <div class="links-grid">
+                <a href="auto-collector.html" class="link-card tool">
+                    <div class="link-icon">🤖</div>
+                    <div class="link-content">
+                        <div class="link-title">자동 수집기</div>
+                        <div class="link-desc">웹 기반 자동 수집</div>
+                    </div>
+                </a>
+                
+                <a href="daily-price-collector.html" class="link-card tool">
+                    <div class="link-icon">📅</div>
+                    <div class="link-content">
+                        <div class="link-title">일별 수집기</div>
+                        <div class="link-desc">정확한 일봉 데이터</div>
+                    </div>
+                </a>
+                
+                <a href="firebase-integrated.html" class="link-card tool">
+                    <div class="link-icon">🔥</div>
+                    <div class="link-content">
+                        <div class="link-title">Firebase 통합</div>
+                        <div class="link-desc">데이터 동기화 관리</div>
+                    </div>
+                </a>
+                
+                <a href="fullscreen-clock.html" class="link-card tool">
+                    <div class="link-icon">🕐</div>
+                    <div class="link-content">
+                        <div class="link-title">전체화면 시계</div>
+                        <div class="link-desc">세계 시간 표시</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- API 테스트 -->
+        <div class="links-section">
+            <h2 class="section-title">🔍 API 테스트</h2>
+            <div class="links-grid">
+                <a href="test-binance-24hr.html" class="link-card api">
+                    <div class="link-icon">📊</div>
+                    <div class="link-content">
+                        <div class="link-title">Binance API 분석</div>
+                        <div class="link-desc">24시간 vs 일봉 데이터</div>
+                    </div>
+                </a>
+                
+                <a href="test-firebase-connection.html" class="link-card api">
+                    <div class="link-icon">🔌</div>
+                    <div class="link-content">
+                        <div class="link-title">Firebase 연결 테스트</div>
+                        <div class="link-desc">연결 상태 확인</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 디버그 -->
+        <div class="links-section">
+            <h2 class="section-title">🐛 디버그 도구</h2>
+            <div class="links-grid">
+                <a href="debug-viewer.html" class="link-card debug">
+                    <div class="link-icon">📝</div>
+                    <div class="link-content">
+                        <div class="link-title">디버그 뷰어</div>
+                        <div class="link-desc">로그 확인</div>
+                    </div>
+                </a>
+                
+                <a href="price-history-debug.html" class="link-card debug">
+                    <div class="link-icon">🔍</div>
+                    <div class="link-content">
+                        <div class="link-title">가격 기록 디버그</div>
+                        <div class="link-desc">데이터 로드 테스트</div>
+                    </div>
+                </a>
+                
+                <a href="check-firebase-data.html" class="link-card debug">
+                    <div class="link-icon">🗄️</div>
+                    <div class="link-content">
+                        <div class="link-title">Firebase 데이터 확인</div>
+                        <div class="link-desc">저장된 데이터 조회</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 외부 링크 -->
+        <div class="links-section">
+            <h2 class="section-title">🌐 외부 링크</h2>
+            <div class="links-grid">
+                <a href="https://www.binance.com/en/trade/BTC_USDT" target="_blank" class="link-card external">
+                    <div class="link-icon">🏦</div>
+                    <div class="link-content">
+                        <div class="link-title">Binance</div>
+                        <div class="link-desc">거래소 바로가기</div>
+                    </div>
+                </a>
+                
+                <a href="https://coinmarketcap.com/" target="_blank" class="link-card external">
+                    <div class="link-icon">📊</div>
+                    <div class="link-content">
+                        <div class="link-title">CoinMarketCap</div>
+                        <div class="link-desc">시장 정보</div>
+                    </div>
+                </a>
+                
+                <a href="https://github.com/EUO-oma/crypto-price-monitor" target="_blank" class="link-card external">
+                    <div class="link-icon">💻</div>
+                    <div class="link-content">
+                        <div class="link-title">GitHub</div>
+                        <div class="link-desc">소스 코드</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
