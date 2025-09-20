@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 연결 테스트</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase 연결 및 데이터 테스트</h1>
+    
+    <div id="results"></div>
+    
+    <button onclick="testConnection()">연결 테스트</button>
+    <button onclick="checkData()">데이터 확인</button>
+    <button onclick="addTestData()">테스트 데이터 추가</button>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            resultsDiv.appendChild(div);
+        }
+        
+        function showData(data) {
+            const pre = document.createElement('pre');
+            pre.textContent = JSON.stringify(data, null, 2);
+            resultsDiv.appendChild(pre);
+        }
+        
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+        
+        let database;
+        
+        async function testConnection() {
+            resultsDiv.innerHTML = '';
+            log('Firebase 연결 테스트 시작...');
+            
+            try {
+                // Firebase 초기화
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    log('Firebase 앱 초기화 완료');
+                }
+                
+                database = firebase.database();
+                log('Database 인스턴스 생성 완료');
+                
+                // 연결 테스트
+                const connectedRef = database.ref('.info/connected');
+                const snapshot = await connectedRef.once('value');
+                
+                if (snapshot.val() === true) {
+                    log('✅ Firebase 연결 성공!', 'success');
+                } else {
+                    log('❌ Firebase 연결 실패', 'error');
+                }
+                
+            } catch (error) {
+                log(`오류 발생: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+        
+        async function checkData() {
+            if (!database) {
+                log('먼저 연결 테스트를 실행하세요', 'error');
+                return;
+            }
+            
+            log('데이터 확인 중...');
+            
+            try {
+                const snapshot = await database.ref('prices').once('value');
+                const data = snapshot.val();
+                
+                if (data) {
+                    const keys = Object.keys(data);
+                    log(`총 ${keys.length}개의 데이터 발견`, 'success');
+                    
+                    // 최근 5개 데이터만 표시
+                    const recentKeys = keys.sort().reverse().slice(0, 5);
+                    const recentData = {};
+                    recentKeys.forEach(key => {
+                        recentData[key] = data[key];
+                    });
+                    
+                    log('최근 5개 데이터:');
+                    showData(recentData);
+                } else {
+                    log('데이터가 없습니다', 'info');
+                }
+                
+            } catch (error) {
+                log(`데이터 읽기 오류: ${error.message}`, 'error');
+            }
+        }
+        
+        async function addTestData() {
+            if (!database) {
+                log('먼저 연결 테스트를 실행하세요', 'error');
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            const testData = {
+                date: today,
+                btc: 95000 + Math.random() * 5000,
+                btc_high: 97000 + Math.random() * 3000,
+                btc_low: 93000 + Math.random() * 2000,
+                eth: 3200 + Math.random() * 300,
+                eth_high: 3300 + Math.random() * 200,
+                eth_low: 3100 + Math.random() * 100,
+                sol: 140 + Math.random() * 20,
+                sol_high: 145 + Math.random() * 15,
+                sol_low: 135 + Math.random() * 10,
+                collected_at: new Date().toISOString()
+            };
+            
+            try {
+                await database.ref(`prices/${today}-test`).set(testData);
+                log('테스트 데이터 추가 완료', 'success');
+                showData(testData);
+            } catch (error) {
+                log(`데이터 추가 실패: ${error.message}`, 'error');
+            }
+        }
+        
+        // 페이지 로드시 자동 실행
+        window.onload = () => {
+            testConnection();
+        };
+    </script>
+</body>
+</html>

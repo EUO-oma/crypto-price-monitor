@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일별 가격 수집기 (정확한 일봉 데이터)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .status-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #333;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .log {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        .info { color: #2196f3; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #2a2a2a;
+        }
+        .highlight {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 정확한 일별 가격 수집기</h1>
+        
+        <div class="status-card">
+            <h3>수집 방식</h3>
+            <p>✅ Binance Kline API 사용 (UTC 0시 기준 정확한 일봉 데이터)</p>
+            <p>🕐 매일 한국시간 오전 9시 1분 (UTC 0시 1분) 실행 권장</p>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="collectYesterdayData()">어제 데이터 수집</button>
+            <button onclick="collectLastNDays(7)">최근 7일 수집</button>
+            <button onclick="collectLastNDays(30)">최근 30일 수집</button>
+            <button onclick="collectLastNDays(90)">최근 90일 수집</button>
+            <button onclick="setupDailyCron()">자동 수집 설정 보기</button>
+        </div>
+        
+        <div class="log" id="log"></div>
+        
+        <div class="status-card" id="results" style="display: none;">
+            <h3>수집 결과</h3>
+            <div id="results-content"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+        
+        // Firebase 초기화
+        let database;
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        database = firebase.database();
+        
+        const logDiv = document.getElementById('log');
+        const resultsDiv = document.getElementById('results');
+        const resultsContent = document.getElementById('results-content');
+        
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('ko-KR');
+            logDiv.innerHTML += `<div class="${type}">[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // UTC 기준으로 날짜 문자열 생성 (YYYY-MM-DD)
+        function getUTCDateString(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        // 어제 데이터 수집
+        async function collectYesterdayData() {
+            log('어제 일봉 데이터 수집 시작...', 'info');
+            
+            // UTC 기준 어제 날짜 계산
+            const today = new Date();
+            const yesterday = new Date(Date.UTC(
+                today.getUTCFullYear(),
+                today.getUTCMonth(),
+                today.getUTCDate() - 1,
+                0, 0, 0, 0
+            ));
+            
+            await collectDataForDate(yesterday);
+        }
+        
+        // 특정 날짜의 데이터 수집
+        async function collectDataForDate(date) {
+            const dateStr = getUTCDateString(date);
+            log(`${dateStr} 데이터 수집 중...`);
+            
+            // UTC 0시 기준으로 시작/종료 시간 설정
+            const startTime = date.getTime();
+            const endTime = startTime + (24 * 60 * 60 * 1000) - 1;
+            
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const dayData = {
+                    date: dateStr,
+                    collected_at: new Date().toISOString(),
+                    source: 'kline_daily'
+                };
+                
+                for (const symbol of symbols) {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=1`;
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API 요청 실패: ${response.status}`);
+                    }
+                    
+                    const klines = await response.json();
+                    
+                    if (klines.length > 0) {
+                        const kline = klines[0];
+                        // [timestamp, open, high, low, close, volume, ...]
+                        
+                        const prefix = symbol.replace('USDT', '').toLowerCase();
+                        dayData[prefix] = parseFloat(kline[4]); // 종가
+                        dayData[`${prefix}_open`] = parseFloat(kline[1]); // 시가
+                        dayData[`${prefix}_high`] = parseFloat(kline[2]); // 고가
+                        dayData[`${prefix}_low`] = parseFloat(kline[3]); // 저가
+                        dayData[`${prefix}_volume`] = parseFloat(kline[5]); // 거래량
+                        
+                        log(`✅ ${symbol}: 종가 $${dayData[prefix].toLocaleString()}`, 'success');
+                    }
+                }
+                
+                // Firebase에 저장
+                await database.ref(`prices/${dateStr}`).set(dayData);
+                log(`🔥 Firebase에 ${dateStr} 데이터 저장 완료`, 'success');
+                
+                // 결과 표시
+                showResult(dayData);
+                
+                return dayData;
+                
+            } catch (error) {
+                log(`❌ ${dateStr} 데이터 수집 실패: ${error.message}`, 'error');
+                return null;
+            }
+        }
+        
+        // 최근 N일 데이터 수집
+        async function collectLastNDays(days) {
+            log(`최근 ${days}일 데이터 수집 시작...`, 'info');
+            resultsContent.innerHTML = '';
+            resultsDiv.style.display = 'block';
+            
+            const results = [];
+            const today = new Date();
+            
+            for (let i = 1; i <= days; i++) {
+                const targetDate = new Date(Date.UTC(
+                    today.getUTCFullYear(),
+                    today.getUTCMonth(),
+                    today.getUTCDate() - i,
+                    0, 0, 0, 0
+                ));
+                
+                const data = await collectDataForDate(targetDate);
+                if (data) {
+                    results.push(data);
+                }
+                
+                // API 제한 방지를 위한 딜레이
+                if (i < days) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+            
+            log(`✅ 총 ${results.length}/${days}일 데이터 수집 완료`, 'success');
+        }
+        
+        // 결과 표시
+        function showResult(data) {
+            if (!data) return;
+            
+            const html = `
+                <div class="highlight">
+                    <h4>${data.date}</h4>
+                    <table>
+                        <tr>
+                            <th>종목</th>
+                            <th>시가</th>
+                            <th>고가</th>
+                            <th>저가</th>
+                            <th>종가</th>
+                            <th>변동률</th>
+                        </tr>
+                        <tr>
+                            <td>BTC</td>
+                            <td>$${data.btc_open?.toLocaleString() || '-'}</td>
+                            <td>$${data.btc_high?.toLocaleString() || '-'}</td>
+                            <td>$${data.btc_low?.toLocaleString() || '-'}</td>
+                            <td>$${data.btc?.toLocaleString() || '-'}</td>
+                            <td>${data.btc_open ? ((data.btc - data.btc_open) / data.btc_open * 100).toFixed(2) : '-'}%</td>
+                        </tr>
+                        <tr>
+                            <td>ETH</td>
+                            <td>$${data.eth_open?.toLocaleString() || '-'}</td>
+                            <td>$${data.eth_high?.toLocaleString() || '-'}</td>
+                            <td>$${data.eth_low?.toLocaleString() || '-'}</td>
+                            <td>$${data.eth?.toLocaleString() || '-'}</td>
+                            <td>${data.eth_open ? ((data.eth - data.eth_open) / data.eth_open * 100).toFixed(2) : '-'}%</td>
+                        </tr>
+                        <tr>
+                            <td>SOL</td>
+                            <td>$${data.sol_open?.toLocaleString() || '-'}</td>
+                            <td>$${data.sol_high?.toLocaleString() || '-'}</td>
+                            <td>$${data.sol_low?.toLocaleString() || '-'}</td>
+                            <td>$${data.sol?.toLocaleString() || '-'}</td>
+                            <td>${data.sol_open ? ((data.sol - data.sol_open) / data.sol_open * 100).toFixed(2) : '-'}%</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+            
+            resultsContent.innerHTML = html + resultsContent.innerHTML;
+            resultsDiv.style.display = 'block';
+        }
+        
+        // 자동 수집 설정 가이드
+        function setupDailyCron() {
+            const html = `
+                <div class="highlight">
+                    <h3>⏰ 매일 자동 수집 설정 방법</h3>
+                    
+                    <h4>방법 1: GitHub Actions (추천)</h4>
+                    <pre style="background: #0a0a0a; padding: 10px;">
+# .github/workflows/daily-price-collection.yml
+name: Daily Price Collection
+
+on:
+  schedule:
+    - cron: '1 0 * * *'  # UTC 00:01 (한국시간 09:01)
+  workflow_dispatch:  # 수동 실행 가능
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Collect Yesterday's Prices
+        run: |
+          node collect-daily-prices.js
+        env:
+          FIREBASE_CONFIG: \${{ secrets.FIREBASE_CONFIG }}
+</pre>
+                    
+                    <h4>방법 2: Vercel Cron Jobs</h4>
+                    <pre style="background: #0a0a0a; padding: 10px;">
+// vercel.json
+{
+  "crons": [{
+    "path": "/api/collect-prices",
+    "schedule": "1 0 * * *"
+  }]
+}
+</pre>
+                    
+                    <h4>방법 3: 로컬 Node.js 스크립트</h4>
+                    <p>collect-daily-prices.js 파일을 생성하고 cron이나 Task Scheduler로 실행</p>
+                </div>
+            `;
+            
+            resultsContent.innerHTML = html;
+            resultsDiv.style.display = 'block';
+            log('자동 수집 설정 가이드 표시', 'info');
+        }
+        
+        // 초기화
+        window.onload = () => {
+            log('일별 가격 수집기 준비 완료', 'success');
+            log('UTC 기준 정확한 일봉 데이터를 수집합니다', 'info');
+        };
+    </script>
+</body>
+</html>

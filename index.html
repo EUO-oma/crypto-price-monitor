@@ -3290,14 +3290,116 @@
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('📊 페이지 초기화 시작...');
             
-            // Supabase 초기화 대기
+            // Firebase 초기화 대기
             setTimeout(async () => {
                 // 일일 데이터 수집 체크
                 if (database) {
                     await checkAndCollectDailyData();
+                    
+                    // 누락된 데이터 자동 채우기 (백그라운드 실행)
+                    autoFillMissingData();
                 }
             }, 2000);
         });
+        
+        // 누락된 데이터 자동 채우기
+        async function autoFillMissingData() {
+            console.log('[자동 채우기] 누락된 데이터 확인 중...');
+            
+            try {
+                // Firebase에서 기존 데이터 확인
+                const snapshot = await database.ref('prices').once('value');
+                const existingData = snapshot.val() || {};
+                const existingDates = new Set(Object.keys(existingData));
+                
+                // 최근 30일 확인
+                const today = new Date();
+                const missingDates = [];
+                
+                for (let i = 1; i <= 30; i++) {
+                    const date = new Date(Date.UTC(
+                        today.getUTCFullYear(),
+                        today.getUTCMonth(),
+                        today.getUTCDate() - i
+                    ));
+                    const dateStr = date.toISOString().split('T')[0];
+                    
+                    if (!existingDates.has(dateStr)) {
+                        missingDates.push({ dateStr, date });
+                    }
+                }
+                
+                if (missingDates.length > 0) {
+                    console.log(`[자동 채우기] ${missingDates.length}개의 누락된 날짜 발견`);
+                    
+                    // 백그라운드에서 데이터 수집 (UI를 차단하지 않음)
+                    for (const dateInfo of missingDates) {
+                        setTimeout(async () => {
+                            await collectHistoricalDataForDate(dateInfo.date);
+                        }, 1000);
+                        
+                        // API 제한 방지를 위한 지연
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                    
+                    console.log('[자동 채우기] 백그라운드에서 데이터 수집 진행 중...');
+                } else {
+                    console.log('[자동 채우기] 모든 데이터가 완벽합니다!');
+                }
+            } catch (error) {
+                console.error('[자동 채우기] 오류:', error);
+            }
+        }
+        
+        // 특정 날짜의 과거 데이터 수집
+        async function collectHistoricalDataForDate(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            const startTime = date.getTime();
+            const endTime = startTime + (24 * 60 * 60 * 1000) - 1;
+            
+            try {
+                const dayData = {
+                    date: dateStr,
+                    collected_at: new Date().toISOString()
+                };
+                
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                
+                for (const symbol of symbols) {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=1`;
+                    
+                    try {
+                        const response = await fetch(url);
+                        
+                        if (response.ok) {
+                            const klines = await response.json();
+                            if (klines.length > 0) {
+                                const kline = klines[0];
+                                const prefix = symbol.replace('USDT', '').toLowerCase();
+                                
+                                dayData[prefix] = parseFloat(kline[4]); // 종가
+                                dayData[`${prefix}_high`] = parseFloat(kline[2]); // 고가
+                                dayData[`${prefix}_low`] = parseFloat(kline[3]); // 저가
+                            }
+                        }
+                    } catch (fetchError) {
+                        console.error(`[자동 채우기] ${symbol} 데이터 가져오기 실패:`, fetchError);
+                    }
+                    
+                    // API 제한 방지
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // Firebase에 저장
+                if (dayData.btc || dayData.eth || dayData.sol) {
+                    await database.ref(`prices/${dateStr}`).set(dayData);
+                    console.log(`[자동 채우기] ✅ ${dateStr} 데이터 저장 완료`);
+                }
+                
+            } catch (error) {
+                console.error(`[자동 채우기] ${dateStr} 수집 실패:`, error);
+            }
+        }
         
         // 매시간마다 일일 데이터 체크 (자정을 놓칠 수 있으므로)
         setInterval(() => {

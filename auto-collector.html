@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자동 가격 수집기 - 웹 버전</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .status-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #333;
+        }
+        .online { border-left: 5px solid #4caf50; }
+        .offline { border-left: 5px solid #f44336; }
+        .collecting { border-left: 5px solid #ff9800; }
+        
+        button {
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .stop-btn {
+            background: #f44336;
+        }
+        .stop-btn:hover {
+            background: #da190b;
+        }
+        
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4caf50;
+            margin: 10px 0;
+        }
+        
+        .log {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            border: 1px solid #333;
+        }
+        
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        .info { color: #2196f3; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #2a2a2a;
+        }
+        
+        .settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        select {
+            padding: 5px 10px;
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 웹 기반 자동 가격 수집기</h1>
+        
+        <!-- 상태 표시 -->
+        <div class="status-card" id="status-card">
+            <h3>수집기 상태</h3>
+            <p>현재 상태: <span id="status">대기 중</span></p>
+            <p>다음 수집까지: <span id="next-collection" class="timer">-</span></p>
+            <p>총 수집 횟수: <span id="collection-count">0</span></p>
+            <p>마지막 수집: <span id="last-collection">없음</span></p>
+        </div>
+        
+        <!-- 설정 -->
+        <div class="status-card">
+            <h3>⚙️ 수집 설정</h3>
+            <div class="settings">
+                <div class="setting-item">
+                    <label for="collection-time">수집 시간:</label>
+                    <select id="collection-time">
+                        <option value="09:01">매일 오전 9시 1분 (권장)</option>
+                        <option value="00:01">매일 자정 1분</option>
+                        <option value="12:01">매일 낮 12시 1분</option>
+                        <option value="18:01">매일 오후 6시 1분</option>
+                        <option value="test">테스트 (1분마다)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <input type="checkbox" id="enable-notification" checked>
+                    <label for="enable-notification">브라우저 알림 활성화</label>
+                </div>
+                <div class="setting-item">
+                    <input type="checkbox" id="collect-on-start" checked>
+                    <label for="collect-on-start">시작 시 즉시 수집</label>
+                </div>
+                <div class="setting-item">
+                    <input type="checkbox" id="auto-retry" checked>
+                    <label for="auto-retry">실패 시 자동 재시도</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 컨트롤 -->
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="startAutoCollection()" id="start-btn">🚀 자동 수집 시작</button>
+            <button onclick="stopAutoCollection()" id="stop-btn" class="stop-btn" disabled>⏹ 중지</button>
+            <button onclick="collectNow()">📊 지금 수집</button>
+            <button onclick="checkMissingDates()">🔍 누락된 날짜 확인</button>
+        </div>
+        
+        <!-- 로그 -->
+        <div class="status-card">
+            <h3>📝 수집 로그</h3>
+            <div class="log" id="log"></div>
+        </div>
+        
+        <!-- 최근 수집 데이터 -->
+        <div class="status-card">
+            <h3>📈 최근 수집 데이터</h3>
+            <table id="recent-data">
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        <th>BTC</th>
+                        <th>ETH</th>
+                        <th>SOL</th>
+                        <th>수집 시간</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="5" style="text-align: center;">데이터 없음</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 알림 -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+        
+        // Firebase 초기화
+        let database;
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        database = firebase.database();
+        
+        // 전역 변수
+        let collectionInterval = null;
+        let countdownInterval = null;
+        let collectionCount = 0;
+        let isCollecting = false;
+        
+        // DOM 요소
+        const logDiv = document.getElementById('log');
+        const statusSpan = document.getElementById('status');
+        const statusCard = document.getElementById('status-card');
+        const nextCollectionSpan = document.getElementById('next-collection');
+        const collectionCountSpan = document.getElementById('collection-count');
+        const lastCollectionSpan = document.getElementById('last-collection');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        
+        // 로그 함수
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('ko-KR');
+            logDiv.innerHTML = `<div class="${type}">[${time}] ${message}</div>` + logDiv.innerHTML;
+            
+            // 로그 제한
+            const logs = logDiv.children;
+            if (logs.length > 100) {
+                logDiv.removeChild(logs[logs.length - 1]);
+            }
+        }
+        
+        // 알림 표시
+        function showNotification(message, duration = 3000) {
+            const notificationDiv = document.getElementById('notification');
+            notificationDiv.textContent = message;
+            notificationDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                notificationDiv.style.display = 'none';
+            }, duration);
+            
+            // 브라우저 알림
+            if (document.getElementById('enable-notification').checked && Notification.permission === 'granted') {
+                new Notification('암호화폐 가격 수집기', {
+                    body: message,
+                    icon: '/favicon.svg'
+                });
+            }
+        }
+        
+        // UTC 날짜 문자열
+        function getUTCDateString(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        // 어제 날짜 가져오기
+        function getYesterday() {
+            const today = new Date();
+            return new Date(Date.UTC(
+                today.getUTCFullYear(),
+                today.getUTCMonth(),
+                today.getUTCDate() - 1,
+                0, 0, 0, 0
+            ));
+        }
+        
+        // 특정 날짜 데이터 수집
+        async function collectDataForDate(date) {
+            const dateStr = getUTCDateString(date);
+            log(`${dateStr} 데이터 수집 중...`);
+            
+            const startTime = date.getTime();
+            const endTime = startTime + (24 * 60 * 60 * 1000) - 1;
+            
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const dayData = {
+                    date: dateStr,
+                    collected_at: new Date().toISOString(),
+                    source: 'web_auto_collector'
+                };
+                
+                for (const symbol of symbols) {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=1`;
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API 요청 실패: ${response.status}`);
+                    }
+                    
+                    const klines = await response.json();
+                    
+                    if (klines.length > 0) {
+                        const kline = klines[0];
+                        const prefix = symbol.replace('USDT', '').toLowerCase();
+                        
+                        dayData[prefix] = parseFloat(kline[4]);
+                        dayData[`${prefix}_open`] = parseFloat(kline[1]);
+                        dayData[`${prefix}_high`] = parseFloat(kline[2]);
+                        dayData[`${prefix}_low`] = parseFloat(kline[3]);
+                        dayData[`${prefix}_volume`] = parseFloat(kline[5]);
+                    }
+                    
+                    // API 제한 방지
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // Firebase에 저장
+                await database.ref(`prices/${dateStr}`).set(dayData);
+                log(`✅ ${dateStr} 수집 완료`, 'success');
+                
+                return dayData;
+                
+            } catch (error) {
+                log(`❌ ${dateStr} 수집 실패: ${error.message}`, 'error');
+                
+                // 자동 재시도
+                if (document.getElementById('auto-retry').checked) {
+                    log('30초 후 재시도...', 'warning');
+                    setTimeout(() => collectDataForDate(date), 30000);
+                }
+                
+                return null;
+            }
+        }
+        
+        // 지금 수집
+        async function collectNow() {
+            if (isCollecting) {
+                log('이미 수집 중입니다', 'warning');
+                return;
+            }
+            
+            isCollecting = true;
+            statusSpan.textContent = '수집 중...';
+            statusCard.className = 'status-card collecting';
+            
+            try {
+                const yesterday = getYesterday();
+                const data = await collectDataForDate(yesterday);
+                
+                if (data) {
+                    collectionCount++;
+                    collectionCountSpan.textContent = collectionCount;
+                    lastCollectionSpan.textContent = new Date().toLocaleString('ko-KR');
+                    
+                    updateRecentData();
+                    showNotification('✅ 가격 수집 완료!');
+                }
+            } finally {
+                isCollecting = false;
+                statusSpan.textContent = '대기 중';
+                statusCard.className = 'status-card online';
+            }
+        }
+        
+        // 최근 데이터 업데이트
+        async function updateRecentData() {
+            try {
+                const snapshot = await database.ref('prices').orderByChild('date').limitToLast(5).once('value');
+                const data = snapshot.val();
+                
+                if (!data) return;
+                
+                const tbody = document.querySelector('#recent-data tbody');
+                const sortedData = Object.values(data).sort((a, b) => b.date.localeCompare(a.date));
+                
+                tbody.innerHTML = sortedData.map(d => `
+                    <tr>
+                        <td>${d.date}</td>
+                        <td>$${d.btc?.toLocaleString() || '-'}</td>
+                        <td>$${d.eth?.toLocaleString() || '-'}</td>
+                        <td>$${d.sol?.toLocaleString() || '-'}</td>
+                        <td>${new Date(d.collected_at).toLocaleTimeString('ko-KR')}</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                log('데이터 업데이트 실패', 'error');
+            }
+        }
+        
+        // 다음 수집 시간 계산
+        function getNextCollectionTime() {
+            const now = new Date();
+            const selectedTime = document.getElementById('collection-time').value;
+            
+            if (selectedTime === 'test') {
+                // 테스트 모드: 1분 후
+                const next = new Date(now);
+                next.setMinutes(next.getMinutes() + 1);
+                return next;
+            }
+            
+            // 선택된 시간으로 다음 수집 시간 설정
+            const [hours, minutes] = selectedTime.split(':').map(Number);
+            const next = new Date(now);
+            next.setHours(hours, minutes, 0, 0);
+            
+            // 이미 지난 시간이면 내일로 설정
+            if (next <= now) {
+                next.setDate(next.getDate() + 1);
+            }
+            
+            return next;
+        }
+        
+        // 카운트다운 업데이트
+        function updateCountdown() {
+            const now = new Date();
+            const next = getNextCollectionTime();
+            const diff = next - now;
+            
+            if (diff <= 0) {
+                collectNow();
+                return;
+            }
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            nextCollectionSpan.textContent = `${hours}시간 ${minutes}분 ${seconds}초`;
+        }
+        
+        // 자동 수집 시작
+        function startAutoCollection() {
+            if (collectionInterval) {
+                log('이미 자동 수집이 실행 중입니다', 'warning');
+                return;
+            }
+            
+            log('🚀 자동 수집 시작', 'success');
+            statusSpan.textContent = '자동 수집 활성화';
+            statusCard.className = 'status-card online';
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            // 시작 시 즉시 수집
+            if (document.getElementById('collect-on-start').checked) {
+                collectNow();
+            }
+            
+            // 카운트다운 시작
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+            
+            // 수집 간격 설정
+            const checkInterval = document.getElementById('collection-time').value === 'test' 
+                ? 60000  // 테스트: 1분
+                : 60000; // 일반: 1분마다 시간 체크
+                
+            collectionInterval = setInterval(() => {
+                const now = new Date();
+                const next = getNextCollectionTime();
+                
+                if (Math.abs(now - next) < 30000) { // 30초 이내면 실행
+                    collectNow();
+                }
+            }, checkInterval);
+            
+            // 로컬 스토리지에 상태 저장
+            localStorage.setItem('auto_collector_active', 'true');
+            localStorage.setItem('auto_collector_started', new Date().toISOString());
+        }
+        
+        // 자동 수집 중지
+        function stopAutoCollection() {
+            if (collectionInterval) {
+                clearInterval(collectionInterval);
+                collectionInterval = null;
+            }
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            log('⏹ 자동 수집 중지', 'warning');
+            statusSpan.textContent = '중지됨';
+            statusCard.className = 'status-card offline';
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            nextCollectionSpan.textContent = '-';
+            
+            localStorage.removeItem('auto_collector_active');
+        }
+        
+        // 누락된 날짜 확인
+        async function checkMissingDates() {
+            log('누락된 날짜 확인 중...');
+            
+            try {
+                const snapshot = await database.ref('prices').once('value');
+                const data = snapshot.val() || {};
+                const existingDates = new Set(Object.keys(data));
+                
+                // 최근 30일 확인
+                const missingDates = [];
+                const today = new Date();
+                
+                for (let i = 1; i <= 30; i++) {
+                    const date = new Date(Date.UTC(
+                        today.getUTCFullYear(),
+                        today.getUTCMonth(),
+                        today.getUTCDate() - i
+                    ));
+                    const dateStr = getUTCDateString(date);
+                    
+                    if (!existingDates.has(dateStr)) {
+                        missingDates.push(dateStr);
+                    }
+                }
+                
+                if (missingDates.length > 0) {
+                    log(`📋 누락된 날짜 ${missingDates.length}개 발견:`, 'warning');
+                    log(missingDates.slice(0, 10).join(', ') + (missingDates.length > 10 ? '...' : ''));
+                    
+                    if (confirm(`${missingDates.length}개의 누락된 날짜를 수집하시겠습니까?`)) {
+                        for (const dateStr of missingDates) {
+                            const date = new Date(dateStr + 'T00:00:00Z');
+                            await collectDataForDate(date);
+                            await new Promise(resolve => setTimeout(resolve, 200));
+                        }
+                    }
+                } else {
+                    log('✅ 최근 30일 데이터가 모두 있습니다', 'success');
+                }
+                
+            } catch (error) {
+                log('누락 확인 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 초기화
+        window.onload = async () => {
+            // 브라우저 알림 권한 요청
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            
+            // 최근 데이터 로드
+            updateRecentData();
+            
+            // 이전 상태 복원
+            if (localStorage.getItem('auto_collector_active') === 'true') {
+                const started = localStorage.getItem('auto_collector_started');
+                log(`이전 세션 복원 (시작: ${new Date(started).toLocaleString('ko-KR')})`, 'info');
+                startAutoCollection();
+            }
+            
+            log('웹 기반 자동 수집기 준비 완료', 'success');
+            log('이 페이지를 열어두면 설정된 시간에 자동으로 수집합니다', 'info');
+        };
+        
+        // 페이지 닫기 전 경고
+        window.onbeforeunload = function(e) {
+            if (collectionInterval) {
+                return '자동 수집이 실행 중입니다. 페이지를 닫으시겠습니까?';
+            }
+        };
+    </script>
+</body>
+</html>

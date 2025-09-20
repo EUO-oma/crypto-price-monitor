@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance 24시간 데이터 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            overflow: auto;
+            border: 1px solid #333;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .info {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .success {
+            background: #1a3a1a;
+            border-left-color: #4caf50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #2a2a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Binance API 24시간 데이터 분석</h1>
+        
+        <button onclick="test24hrTicker()">24hr Ticker 데이터 가져오기</button>
+        <button onclick="testKlineData()">Kline(일봉) 데이터 가져오기</button>
+        <button onclick="compareData()">두 데이터 비교</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        async function test24hrTicker() {
+            resultsDiv.innerHTML = '<div class="info">24시간 티커 데이터 가져오는 중...</div>';
+            
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                let html = '<h2>24시간 티커 데이터 (ticker/24hr)</h2>';
+                
+                for (const symbol of symbols) {
+                    const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+                    const data = await response.json();
+                    
+                    // 시간 변환
+                    const openTime = new Date(data.openTime);
+                    const closeTime = new Date(data.closeTime);
+                    
+                    html += `
+                    <div class="info">
+                        <h3>${symbol}</h3>
+                        <table>
+                            <tr><th>필드</th><th>값</th><th>설명</th></tr>
+                            <tr><td>openPrice</td><td>$${parseFloat(data.openPrice).toLocaleString()}</td><td>24시간 전 시가</td></tr>
+                            <tr><td>highPrice</td><td>$${parseFloat(data.highPrice).toLocaleString()}</td><td>24시간 최고가</td></tr>
+                            <tr><td>lowPrice</td><td>$${parseFloat(data.lowPrice).toLocaleString()}</td><td>24시간 최저가</td></tr>
+                            <tr><td>lastPrice</td><td>$${parseFloat(data.lastPrice).toLocaleString()}</td><td>현재가 (종가)</td></tr>
+                            <tr><td>prevClosePrice</td><td>$${parseFloat(data.prevClosePrice).toLocaleString()}</td><td>이전 종가</td></tr>
+                            <tr><td>openTime</td><td>${openTime.toLocaleString('ko-KR')}</td><td>시작 시간</td></tr>
+                            <tr><td>closeTime</td><td>${closeTime.toLocaleString('ko-KR')}</td><td>종료 시간</td></tr>
+                        </table>
+                        <details>
+                            <summary>전체 응답 데이터 보기</summary>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    </div>`;
+                }
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="info" style="border-left-color: #f44336;">오류: ${error.message}</div>`;
+            }
+        }
+        
+        async function testKlineData() {
+            resultsDiv.innerHTML = '<div class="info">Kline(일봉) 데이터 가져오는 중...</div>';
+            
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                let html = '<h2>Kline 일봉 데이터</h2>';
+                
+                // 어제와 오늘 데이터만 가져오기
+                const endTime = new Date().getTime();
+                const startTime = endTime - (2 * 24 * 60 * 60 * 1000); // 2일 전
+                
+                for (const symbol of symbols) {
+                    const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=2`);
+                    const klines = await response.json();
+                    
+                    html += `<div class="info"><h3>${symbol} - 최근 2일</h3><table>`;
+                    html += '<tr><th>날짜</th><th>시가</th><th>고가</th><th>저가</th><th>종가</th></tr>';
+                    
+                    klines.forEach(kline => {
+                        const date = new Date(kline[0]).toLocaleDateString('ko-KR');
+                        html += `<tr>
+                            <td>${date}</td>
+                            <td>$${parseFloat(kline[1]).toLocaleString()}</td>
+                            <td>$${parseFloat(kline[2]).toLocaleString()}</td>
+                            <td>$${parseFloat(kline[3]).toLocaleString()}</td>
+                            <td>$${parseFloat(kline[4]).toLocaleString()}</td>
+                        </tr>`;
+                    });
+                    
+                    html += '</table></div>';
+                }
+                
+                resultsDiv.innerHTML = html;
+                
+                // 중요 정보 추가
+                html += `
+                <div class="info success">
+                    <h3>📌 중요 발견사항</h3>
+                    <p>1. <strong>ticker/24hr API</strong>: 지난 24시간 동안의 데이터 (rolling window)</p>
+                    <p>2. <strong>klines API</strong>: 특정 날짜의 일봉 데이터 (UTC 0시 기준)</p>
+                    <p>3. 매일 자정(UTC)에 klines API로 전일 데이터를 가져와 저장하는 것이 정확합니다!</p>
+                    <p>4. 한국 시간 오전 9시 = UTC 0시 (전일 마감)</p>
+                </div>`;
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="info" style="border-left-color: #f44336;">오류: ${error.message}</div>`;
+            }
+        }
+        
+        async function compareData() {
+            resultsDiv.innerHTML = '<div class="info">데이터 비교 중...</div>';
+            
+            try {
+                const symbol = 'BTCUSDT';
+                
+                // 24hr 티커 데이터
+                const tickerResp = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+                const ticker = await tickerResp.json();
+                
+                // 어제 일봉 데이터
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                yesterday.setHours(0, 0, 0, 0);
+                const startTime = yesterday.getTime();
+                const endTime = startTime + (24 * 60 * 60 * 1000);
+                
+                const klineResp = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=1`);
+                const klines = await klineResp.json();
+                
+                let html = `
+                <h2>데이터 비교: ${symbol}</h2>
+                <div class="info">
+                    <h3>24hr Ticker vs 어제 일봉</h3>
+                    <table>
+                        <tr>
+                            <th>항목</th>
+                            <th>24hr Ticker</th>
+                            <th>어제 일봉</th>
+                            <th>설명</th>
+                        </tr>
+                        <tr>
+                            <td>시가</td>
+                            <td>$${parseFloat(ticker.openPrice).toLocaleString()}</td>
+                            <td>${klines[0] ? '$' + parseFloat(klines[0][1]).toLocaleString() : 'N/A'}</td>
+                            <td>24hr ticker는 24시간 전 가격</td>
+                        </tr>
+                        <tr>
+                            <td>고가</td>
+                            <td>$${parseFloat(ticker.highPrice).toLocaleString()}</td>
+                            <td>${klines[0] ? '$' + parseFloat(klines[0][2]).toLocaleString() : 'N/A'}</td>
+                            <td>기간 내 최고가</td>
+                        </tr>
+                        <tr>
+                            <td>저가</td>
+                            <td>$${parseFloat(ticker.lowPrice).toLocaleString()}</td>
+                            <td>${klines[0] ? '$' + parseFloat(klines[0][3]).toLocaleString() : 'N/A'}</td>
+                            <td>기간 내 최저가</td>
+                        </tr>
+                        <tr>
+                            <td>종가</td>
+                            <td>$${parseFloat(ticker.lastPrice).toLocaleString()} (현재가)</td>
+                            <td>${klines[0] ? '$' + parseFloat(klines[0][4]).toLocaleString() : 'N/A'}</td>
+                            <td>ticker는 현재가, 일봉은 해당일 종가</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="info success">
+                    <h3>✅ 결론 및 구현 방안</h3>
+                    <p><strong>매일 자정(UTC 0시, 한국시간 오전 9시)에 실행:</strong></p>
+                    <ol>
+                        <li>어제 날짜 계산</li>
+                        <li>Kline API로 어제 일봉 데이터 가져오기</li>
+                        <li>Firebase/Supabase에 저장:
+                            <ul>
+                                <li>date: 어제 날짜 (YYYY-MM-DD)</li>
+                                <li>open: 시가</li>
+                                <li>high: 고가</li>
+                                <li>low: 저가</li>
+                                <li>close: 종가</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <p>이렇게 하면 정확한 일별 데이터를 저장할 수 있습니다!</p>
+                </div>`;
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="info" style="border-left-color: #f44336;">오류: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
