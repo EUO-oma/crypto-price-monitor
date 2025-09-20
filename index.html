@@ -637,6 +637,12 @@
             bwMode = !bwMode;
             const priceElements = document.querySelectorAll('.crypto-price');
             const symbolElements = document.querySelectorAll('.coin-symbol');
+            const percentageElements = [
+                document.getElementById('btc-change-custom'),
+                document.getElementById('eth-change-custom'),
+                document.getElementById('sol-change-custom'),
+                document.getElementById('nasdaq-percent')
+            ];
             
             if (bwMode) {
                 // Make all prices white
@@ -645,6 +651,14 @@
                 });
                 symbolElements.forEach(el => {
                     el.style.color = '#ffffff';
+                    el.classList.remove('dimmed'); // Remove dimming in BW mode
+                    el.style.animation = 'none';
+                });
+                // Hide percentage changes by making them black
+                percentageElements.forEach(el => {
+                    if (el) {
+                        el.style.color = '#000000';
+                    }
                 });
             } else {
                 // Restore original colors
@@ -660,11 +674,29 @@
                 if (btcSymbol) btcSymbol.style.color = '#f7931a';
                 if (ethSymbol) ethSymbol.style.color = '#627eea';
                 if (solSymbol) solSymbol.style.color = '#00ffa3';
+                
+                // Restore percentage colors based on value
+                percentageElements.forEach(el => {
+                    if (el && el.textContent) {
+                        const value = parseFloat(el.textContent);
+                        if (!isNaN(value)) {
+                            el.style.color = value >= 0 ? '#4caf50' : '#f44336';
+                        }
+                    }
+                });
+                
+                // Re-enable dimming if it was previously active
+                symbolElements.forEach(el => {
+                    el.style.animation = '';
+                });
             }
         }
         
         // Hide percentage changes function
         function hidePercentageChanges() {
+            // Don't hide if in BW mode (already hidden)
+            if (bwMode) return;
+            
             const percentageElements = [
                 document.getElementById('btc-change-custom'),
                 document.getElementById('eth-change-custom'),
@@ -1005,11 +1037,13 @@
             updateLastUpdate();
             setInterval(updateLastUpdate, 1000);
             
-            // 페이지 로드 2초 후 코인 심볼 디밍 효과 적용
+            // 페이지 로드 2초 후 코인 심볼 디밍 효과 적용 (BW 모드가 아닐 때만)
             setTimeout(() => {
-                document.querySelectorAll('.coin-symbol').forEach(symbol => {
-                    symbol.classList.add('dimmed');
-                });
+                if (!bwMode) {
+                    document.querySelectorAll('.coin-symbol').forEach(symbol => {
+                        symbol.classList.add('dimmed');
+                    });
+                }
             }, 2000);
         });
 
@@ -2865,16 +2899,22 @@
                     }
                     
                     if (changeElement) {
-                        const changeColor = priceChange >= 0 ? '#4caf50' : '#f44336';
                         const changeSymbol = priceChange >= 0 ? '+' : '';
                         changeElement.innerHTML = `${changeSymbol}${priceChangePercent.toFixed(2)}%`;
-                        changeElement.style.color = changeColor;
                         
-                        // Apply black color if already past 10 seconds
-                        const now = Date.now();
-                        const pageLoadTime = window.pageLoadTime || now;
-                        if (now - pageLoadTime > 10000) {
+                        // Check BW mode first
+                        if (bwMode) {
                             changeElement.style.color = '#000000';
+                        } else {
+                            const changeColor = priceChange >= 0 ? '#4caf50' : '#f44336';
+                            changeElement.style.color = changeColor;
+                            
+                            // Apply black color if already past 10 seconds
+                            const now = Date.now();
+                            const pageLoadTime = window.pageLoadTime || now;
+                            if (now - pageLoadTime > 10000) {
+                                changeElement.style.color = '#000000';
+                            }
                         }
                     }
                 });
