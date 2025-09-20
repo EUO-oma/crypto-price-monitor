@@ -242,9 +242,9 @@
         
         <!-- 로그인 사용자 정보 표시 -->
         <div class="config-section" style="margin-bottom: 20px;">
-            <h3>👤 관리자 정보</h3>
+            <h3>👤 사용자 정보</h3>
             <div id="admin-info">
-                <div id="admin-email" style="color: #4caf50; font-weight: 500;">로그인 정보 확인 중...</div>
+                <div id="admin-email" style="color: #4caf50; font-weight: 500;">정보 확인 중...</div>
                 <div id="admin-session" style="font-size: 0.9em; color: #888; margin-top: 5px;"></div>
             </div>
         </div>
@@ -641,7 +641,7 @@
         }
     </script>
 
-    <!-- 인증 헬퍼만 로드 -->
+    <!-- 헬퍼 함수 로드 -->
     <script src="auth-helper.js"></script>
     <script>
         // 전역 변수들
@@ -1151,7 +1151,7 @@
             });
         }
 
-        // Google 로그인 함수
+        // 로그인 함수
         async function loginWithGoogle() {
             try {
                 sessionStorage.setItem('adminRedirectTo', 'admin-v3.html');
@@ -1174,7 +1174,7 @@
         // 전역으로 노출
         window.loginWithGoogle = loginWithGoogle;
 
-        // 관리자 정보 표시 함수
+        // 사용자 정보 표시 함수
         function displayAdminInfo(session) {
             const adminEmailEl = document.getElementById('admin-email');
             const adminSessionEl = document.getElementById('admin-session');
@@ -1209,7 +1209,7 @@
                     provider: provider
                 };
                 
-                console.log('👤 관리자 정보:', {
+                console.log('👤 사용자 정보:', {
                     email: email,
                     provider: provider,
                     userId: user.id
@@ -1250,7 +1250,7 @@
             // checkAuth 함수 확인
             if (typeof checkAuth !== 'function') {
                 console.error('[admin-v3] checkAuth function not found');
-                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 인증 함수 없음</span>';
+                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 함수 없음</span>';
                 return;
             }
             
@@ -1263,7 +1263,7 @@
                 // 로그인 UI 표시
                 document.getElementById('connection-status').innerHTML = `
                     <div style="text-align: center; padding: 20px;">
-                        <p style="color: #ff9800; margin-bottom: 20px;">로그인이 필요합니다</p>
+                        <p style="color: #ff9800; margin-bottom: 20px;">링크 관리 페이지</p>
                         <button onclick="loginWithGoogle()" style="background: #4285F4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px;">
                             <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px;" viewBox="0 0 24 24">
                                 <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1281,19 +1281,7 @@
             // 사용자 정보 표시
             displayAdminInfo(userSession);
             
-            // 인증 확인
-            if (typeof checkAdminAccess !== 'function') {
-                console.error('[admin-v3] checkAdminAccess function not found');
-                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 관리자 인증 함수 없음</span>';
-                return;
-            }
-            
-            // 관리자 체크 - 이제 로그인만 하면 통과
-            const hasAccess = await checkAdminAccess();
-            if (!hasAccess) {
-                console.error('Admin access denied');
-                return; // 이제 이 코드는 실행 안됨 (checkAdminAccess가 항상 true)
-            }
+            // 로그인 상태 확인 완료
 
             restoreGuideState(); // 가이드 상태 복원
             // restoreDesignSettingsState(); // 디자인 설정 페이지로 이동됨
@@ -1313,7 +1301,7 @@
             // 환영 메시지 표시
             if (window.currentAdminUser?.email) {
                 setTimeout(() => {
-                    showStatus(`${window.currentAdminUser.email}님, 환영합니다! 관리자 모드가 활성화되었습니다.`, 'success');
+                    showStatus(`${window.currentAdminUser.email}님 환영합니다!`, 'success');
                 }, 1000);
             }
         }
