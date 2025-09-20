@@ -304,6 +304,11 @@
                 // Supabase 초기화 확인
                 await waitForSupabase();
                 
+                ensureSupabase();
+                if (!supabase) {
+                    throw new Error('Supabase 클라이언트를 초기화할 수 없습니다.');
+                }
+                
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
