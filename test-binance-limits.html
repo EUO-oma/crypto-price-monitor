@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance API 제한사항 테스트</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-card {
+            background: #111;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #0f0;
+            border-radius: 10px;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0a0;
+        }
+        .info { color: #2196f3; }
+        .success { color: #4caf50; }
+        .warning { color: #ff9800; }
+        .error { color: #f44336; }
+        pre {
+            background: #0a0a0a;
+            padding: 10px;
+            overflow: auto;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #1a1a1a;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Binance API 제한사항 및 데이터 가용성 테스트</h1>
+    
+    <div class="test-card">
+        <h2>API 제한사항</h2>
+        <p class="info">Binance Kline API 제한:</p>
+        <ul>
+            <li>최대 1000개의 캔들 데이터를 한 번에 가져올 수 있음</li>
+            <li>일봉(1d) 기준으로 약 2.7년 데이터를 한 번에 가져올 수 있음</li>
+            <li>API 요청 제한: 1200 요청/분 (가중치 기준)</li>
+            <li>Kline 요청 가중치: 1</li>
+        </ul>
+    </div>
+    
+    <div class="test-card">
+        <h2>데이터 가용성 테스트</h2>
+        <button onclick="testDataAvailability('BTCUSDT')">BTC 데이터 범위 확인</button>
+        <button onclick="testDataAvailability('ETHUSDT')">ETH 데이터 범위 확인</button>
+        <button onclick="testDataAvailability('SOLUSDT')">SOL 데이터 범위 확인</button>
+        <button onclick="testHistoricalLimit()">역사적 데이터 한계 테스트</button>
+        
+        <div id="results"></div>
+    </div>
+    
+    <div class="test-card">
+        <h2>장기 데이터 수집 전략</h2>
+        <div id="strategy"></div>
+    </div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+        const strategyDiv = document.getElementById('strategy');
+        
+        // 코인별 상장 날짜
+        const listingDates = {
+            'BTCUSDT': '2017-08-17', // Binance BTC/USDT 거래 시작
+            'ETHUSDT': '2017-08-17', // Binance ETH/USDT 거래 시작
+            'SOLUSDT': '2020-08-11'  // SOL/USDT 거래 시작 (대략)
+        };
+        
+        async function testDataAvailability(symbol) {
+            resultsDiv.innerHTML = `<p class="info">🔄 ${symbol} 데이터 범위 확인 중...</p>`;
+            
+            try {
+                // 현재 시간
+                const now = new Date();
+                
+                // 과거 데이터 확인 (10년 전부터 시도)
+                const testYears = [10, 7, 5, 3, 2, 1];
+                let oldestAvailable = null;
+                
+                for (const years of testYears) {
+                    const testDate = new Date(now);
+                    testDate.setFullYear(testDate.getFullYear() - years);
+                    
+                    const startTime = testDate.getTime();
+                    const endTime = startTime + (24 * 60 * 60 * 1000);
+                    
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=1`;
+                    
+                    try {
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        
+                        if (data && data.length > 0) {
+                            oldestAvailable = new Date(data[0][0]);
+                            resultsDiv.innerHTML += `<p class="success">✅ ${years}년 전 데이터 존재</p>`;
+                        } else {
+                            resultsDiv.innerHTML += `<p class="warning">❌ ${years}년 전 데이터 없음</p>`;
+                        }
+                    } catch (error) {
+                        resultsDiv.innerHTML += `<p class="error">오류: ${error.message}</p>`;
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                
+                // 정확한 시작점 찾기
+                if (oldestAvailable) {
+                    resultsDiv.innerHTML += await findExactStartDate(symbol, oldestAvailable);
+                }
+                
+                // 전체 데이터 개수 추정
+                const listing = new Date(listingDates[symbol]);
+                const totalDays = Math.floor((now - listing) / (1000 * 60 * 60 * 24));
+                
+                resultsDiv.innerHTML += `
+                    <div style="margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 5px;">
+                        <h3>${symbol} 데이터 요약</h3>
+                        <p>📅 예상 상장일: ${listingDates[symbol]}</p>
+                        <p>📊 예상 총 데이터: 약 ${totalDays.toLocaleString()}일 (${(totalDays/365).toFixed(1)}년)</p>
+                        <p>💾 필요한 저장 공간: 약 ${(totalDays * 0.5).toFixed(0)}KB</p>
+                        <p>⏱️ 전체 수집 예상 시간: 약 ${Math.ceil(totalDays / 500)}분 (API 제한 고려)</p>
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `<p class="error">테스트 실패: ${error.message}</p>`;
+            }
+        }
+        
+        async function findExactStartDate(symbol, approximateDate) {
+            let result = '<h4>정확한 시작 날짜 찾기</h4>';
+            
+            // 이진 탐색으로 정확한 시작일 찾기
+            let left = new Date(listingDates[symbol]);
+            let right = approximateDate;
+            let oldestFound = null;
+            
+            while (left <= right) {
+                const mid = new Date((left.getTime() + right.getTime()) / 2);
+                const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${mid.getTime()}&limit=1`;
+                
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (data && data.length > 0) {
+                        oldestFound = new Date(data[0][0]);
+                        right = new Date(mid.getTime() - 24*60*60*1000);
+                    } else {
+                        left = new Date(mid.getTime() + 24*60*60*1000);
+                    }
+                } catch (error) {
+                    break;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            if (oldestFound) {
+                result += `<p class="success">🎯 가장 오래된 데이터: ${oldestFound.toISOString().split('T')[0]}</p>`;
+            }
+            
+            return result;
+        }
+        
+        async function testHistoricalLimit() {
+            resultsDiv.innerHTML = '<h3>역사적 데이터 한계 테스트</h3>';
+            
+            const tests = [
+                { period: '1일', startOffset: 1, interval: '1h', limit: 24 },
+                { period: '1주일', startOffset: 7, interval: '1h', limit: 168 },
+                { period: '1개월', startOffset: 30, interval: '4h', limit: 180 },
+                { period: '1년', startOffset: 365, interval: '1d', limit: 365 },
+                { period: '3년', startOffset: 1095, interval: '1d', limit: 1000 },
+                { period: '5년', startOffset: 1825, interval: '1d', limit: 1000 },
+            ];
+            
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <tr>
+                    <th>기간</th>
+                    <th>간격</th>
+                    <th>요청 수</th>
+                    <th>소요 시간</th>
+                    <th>데이터 크기</th>
+                </tr>
+            `;
+            
+            for (const test of tests) {
+                const requests = Math.ceil(test.startOffset * 24 / (test.interval === '1d' ? 24 : parseInt(test.interval)) / test.limit);
+                const time = requests * 0.2; // 200ms per request
+                const dataSize = test.startOffset * 0.5; // ~0.5KB per day
+                
+                table.innerHTML += `
+                    <tr>
+                        <td>${test.period}</td>
+                        <td>${test.interval}</td>
+                        <td>${requests}</td>
+                        <td>${time.toFixed(1)}초</td>
+                        <td>${dataSize.toFixed(1)}KB</td>
+                    </tr>
+                `;
+            }
+            
+            resultsDiv.appendChild(table);
+            
+            // 수집 전략 표시
+            showCollectionStrategy();
+        }
+        
+        function showCollectionStrategy() {
+            strategyDiv.innerHTML = `
+                <h3>🎯 효율적인 장기 데이터 수집 전략</h3>
+                
+                <h4>1. 단계별 수집 접근법</h4>
+                <ul>
+                    <li><strong>1단계 (최근 90일)</strong>: 일일 데이터 - 매일 자동 업데이트</li>
+                    <li><strong>2단계 (90일~1년)</strong>: 일일 데이터 - 주 1회 확인</li>
+                    <li><strong>3단계 (1~3년)</strong>: 일일 데이터 - 월 1회 확인</li>
+                    <li><strong>4단계 (3년 이상)</strong>: 주간 데이터로 압축 저장</li>
+                </ul>
+                
+                <h4>2. 최적화 방법</h4>
+                <ul>
+                    <li>한 번에 1000개씩 배치 요청 (최대 2.7년 데이터)</li>
+                    <li>각 요청 간 200ms 지연 (API 제한 준수)</li>
+                    <li>병렬 처리 대신 순차 처리 (안정성 우선)</li>
+                    <li>실패 시 자동 재시도 (최대 3회)</li>
+                </ul>
+                
+                <h4>3. 저장 구조 제안</h4>
+                <pre>
+prices/
+  daily/
+    2025/
+      01/
+        2025-01-01.json
+        2025-01-02.json
+        ...
+  weekly/
+    2022/
+      week-01.json
+      ...
+  monthly/
+    2020/
+      2020-01.json
+      ...
+                </pre>
+                
+                <h4>4. 예상 리소스</h4>
+                <ul>
+                    <li><strong>BTC (2017~현재)</strong>: ~${Math.floor((new Date() - new Date('2017-08-17')) / (1000*60*60*24*365))}년, ~3MB</li>
+                    <li><strong>ETH (2017~현재)</strong>: ~${Math.floor((new Date() - new Date('2017-08-17')) / (1000*60*60*24*365))}년, ~3MB</li>
+                    <li><strong>SOL (2020~현재)</strong>: ~${Math.floor((new Date() - new Date('2020-08-11')) / (1000*60*60*24*365))}년, ~2MB</li>
+                    <li><strong>총 예상 크기</strong>: ~8-10MB</li>
+                </ul>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #1a3a1a; border: 1px solid #4caf50; border-radius: 5px;">
+                    <h4>✅ 권장 구현 순서</h4>
+                    <ol>
+                        <li>최근 1년 데이터 완전 수집</li>
+                        <li>일일 자동 업데이트 시스템 구축</li>
+                        <li>과거 데이터 점진적 수집 (1년씩 확장)</li>
+                        <li>데이터 압축 및 아카이빙 시스템</li>
+                        <li>데이터 무결성 검증 도구</li>
+                    </ol>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
