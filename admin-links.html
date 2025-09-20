@@ -165,7 +165,16 @@
             
             // URL에서 리다이렉트 정보 가져오기
             const urlParams = new URLSearchParams(window.location.search);
-            currentRedirectTo = urlParams.get('redirect') || 'admin-v3.html';
+            const redirectParam = urlParams.get('redirect');
+            
+            // 자기 자신으로 리다이렉트하는 것을 방지
+            if (redirectParam && !redirectParam.includes('admin-links.html')) {
+                currentRedirectTo = redirectParam;
+            } else {
+                currentRedirectTo = 'admin-v3.html';
+            }
+            
+            console.log('Redirect target:', currentRedirectTo);
             
             try {
                 // 세션 확인 (auth-helper.js의 checkAuth 함수 사용)
@@ -182,9 +191,9 @@
                     if (isAdmin) {
                         // 관리자인 경우 원하는 페이지로 리다이렉트
                         authMessage.textContent = '관리자 인증 성공! 리다이렉트 중...';
-                        setTimeout(() => {
-                            window.location.href = currentRedirectTo;
-                        }, 1000);
+                        // 즉시 리다이렉트 (타이머 제거)
+                        window.location.replace(currentRedirectTo);
+                        return; // 추가 처리 방지
                     } else {
                         // 로그인했지만 관리자가 아님
                         loading.classList.remove('show');
