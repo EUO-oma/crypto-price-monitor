@@ -36,19 +36,27 @@ window.ENV_CONFIG = ${JSON.stringify(config, null, 2)};
 fs.writeFileSync('config-env.js', configContent);
 console.log('✅ config-env.js generated from environment variables');
 
-// index.html 파일이 있으면 config-env.js 로드 스크립트 추가 확인
-if (fs.existsSync('index.html')) {
-    let html = fs.readFileSync('index.html', 'utf8');
-    
-    // config-env.js가 로드되지 않았다면 추가
-    if (!html.includes('config-env.js')) {
-        // config-loader.js 앞에 추가
-        html = html.replace(
-            '<script src="config-loader.js"></script>',
-            '<script src="config-env.js"></script>\n    <script src="config-loader.js"></script>'
-        );
+// 모든 HTML 파일에 config-env.js 로드 스크립트 추가
+const htmlFiles = fs.readdirSync('.').filter(file => file.endsWith('.html'));
+
+htmlFiles.forEach(file => {
+    try {
+        let html = fs.readFileSync(file, 'utf8');
         
-        fs.writeFileSync('index.html', html);
-        console.log('✅ Added config-env.js to index.html');
+        // config-loader.js를 사용하는 파일만 업데이트
+        if (html.includes('config-loader.js') && !html.includes('config-env.js')) {
+            // config-loader.js 앞에 config-env.js 추가
+            html = html.replace(
+                '<script src="config-loader.js"></script>',
+                '<script src="config-env.js"></script>\n    <script src="config-loader.js"></script>'
+            );
+            
+            fs.writeFileSync(file, html);
+            console.log(`✅ Added config-env.js to ${file}`);
+        }
+    } catch (error) {
+        console.error(`❌ Error processing ${file}:`, error.message);
     }
-}
+});
+
+console.log('✅ Build configuration complete');

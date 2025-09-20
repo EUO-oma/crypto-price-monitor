@@ -1,6 +1,7 @@
 # Configuration files with API keys
 config.js
 config.json
+config-env.js
 .env
 .env.*
 !.env.example
