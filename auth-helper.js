@@ -73,8 +73,14 @@ async function checkAdminAccess() {
     }
 
     // config.js에서 허용된 이메일 목록 가져오기
-    const allowedEmails = window.getConfig('ADMIN.ALLOWED_EMAILS') || [];
+    let allowedEmails = window.getConfig('ADMIN.ALLOWED_EMAILS') || [];
     const devMode = window.getConfig('ADMIN.DEV_MODE') || false;
+    
+    // Fallback: 환경변수가 비어있으면 하드코딩된 이메일 사용
+    if (allowedEmails.length === 0 && window.location.hostname.includes('netlify.app')) {
+        console.warn('⚠️ ADMIN.ALLOWED_EMAILS is empty, using fallback');
+        allowedEmails = ['icandoit13579@gmail.com'];
+    }
     
     // 개발 모드면 모든 사용자 허용
     if (devMode) {

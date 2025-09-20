@@ -36,6 +36,10 @@ requiredVars.forEach(varName => {
 });
 
 // Netlify 환경 변수에서 설정 읽기
+// 디버깅 출력
+console.log('🔧 Build Configuration Starting...');
+console.log('ADMIN_EMAILS from env:', process.env.ADMIN_EMAILS);
+
 const config = {
     SUPABASE: {
         URL: process.env.SUPABASE_URL || '',
@@ -57,6 +61,8 @@ const config = {
     }
 };
 
+console.log('📧 Processed ALLOWED_EMAILS:', config.ADMIN.ALLOWED_EMAILS);
+
 // 중요한 설정이 있는지 확인
 if (!config.SUPABASE.URL || !config.SUPABASE.ANON_KEY) {
     console.error('\n⚠️  CRITICAL WARNING: Supabase configuration is missing!');
@@ -76,6 +82,8 @@ window.ENV_CONFIG = ${JSON.stringify(config, null, 2)};
 
 fs.writeFileSync('config-env.js', configContent);
 console.log('✅ config-env.js generated from environment variables');
+console.log('📄 Generated config-env.js content preview:');
+console.log(configContent.substring(0, 500) + '...');
 
 // 모든 HTML 파일에 config-env.js 로드 스크립트 추가
 const htmlFiles = fs.readdirSync('.').filter(file => file.endsWith('.html'));

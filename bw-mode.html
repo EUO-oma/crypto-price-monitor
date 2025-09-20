@@ -32,13 +32,6 @@
             z-index: 100;
         }
         
-        .security-controls {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-        }
-        
         .control-btn {
             background: transparent;
             border: 1px solid #333;
@@ -49,6 +42,12 @@
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
         }
         
         .control-btn:hover {
@@ -92,18 +91,15 @@
             display: inline-block;
         }
         
-        .price-first {
-            color: #333;
-        }
-        
-        .price-middle {
-            color: #666;
-        }
-        
-        .price-fourth {
-            color: #ffffff;
-            font-weight: 400;
-        }
+        /* Rainbow colors for digits */
+        .digit-0 { color: #ff0000; } /* 빨강 */
+        .digit-1 { color: #ff8c00; } /* 주황 */
+        .digit-2 { color: #ffd700; } /* 노랑 */
+        .digit-3 { color: #00ff00; } /* 초록 */
+        .digit-4 { color: #0000ff; } /* 파랑 */
+        .digit-5 { color: #4b0082; } /* 남색 */
+        .digit-6 { color: #9400d3; } /* 보라 */
+        /* 7번째 이후는 다시 빨강부터 반복 */
         
         .price-decimal {
             font-size: 0.7em;
@@ -134,28 +130,12 @@
             letter-spacing: 3px;
         }
         
-        /* Security mode styles */
-        .security-btn {
-            background: transparent;
-            border: 1px solid #333;
-            color: #666;
-            width: 50px;
-            height: 40px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            position: relative;
-        }
-        
         /* CSS로 만든 눈 아이콘 */
         .eye-icon {
-            width: 20px;
-            height: 12px;
+            width: 16px;
+            height: 10px;
             position: relative;
-            display: inline-block;
+            display: block;
         }
         
         .eye-icon::before {
@@ -163,9 +143,9 @@
             position: absolute;
             top: 50%;
             left: 0;
-            width: 20px;
-            height: 12px;
-            border: 2px solid currentColor;
+            width: 16px;
+            height: 10px;
+            border: 1.5px solid currentColor;
             border-radius: 50px;
             transform: translateY(-50%);
         }
@@ -175,31 +155,26 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             background: currentColor;
             border-radius: 50%;
             transform: translate(-50%, -50%);
         }
         
         /* 보안 모드일 때 눈에 사선 추가 */
-        .security-btn.active .eye-icon .slash {
+        .control-btn.security-active .eye-icon .slash {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 24px;
-            height: 2px;
+            width: 20px;
+            height: 1.5px;
             background: currentColor;
             transform: translate(-50%, -50%) rotate(45deg);
             z-index: 1;
         }
         
-        .security-btn:hover {
-            border-color: #666;
-            color: #fff;
-        }
-        
-        .security-btn.active {
+        .control-btn.security-active {
             color: #4caf50;
             border-color: #4caf50;
             background: rgba(76, 175, 80, 0.1);
@@ -225,6 +200,7 @@
             font-size: 16px;
             transition: all 0.2s ease;
             padding: 0;
+            position: relative;
         }
         
         .hide-btn:hover {
@@ -235,6 +211,12 @@
         
         .hide-btn.hidden {
             color: #222;
+        }
+        
+        /* Simple dot icon */
+        .dot-icon {
+            font-size: 20px;
+            line-height: 1;
         }
         
         .price.hidden span {
@@ -260,31 +242,34 @@
     </style>
 </head>
 <body class="size-m">
-    <div class="security-controls">
-        <button class="security-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
+    <div class="controls">
+        <button class="control-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
             <span class="eye-icon"></span>
         </button>
-        <button class="control-btn" onclick="openCalculator()" title="계산기 모드" style="margin-left: 10px; font-size: 16px;">🧮</button>
-    </div>
-    
-    <div class="controls">
-        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+        <button class="control-btn" onclick="openCalculator()" title="계산기 모드">÷</button>
         <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
     </div>
     
     <div class="price-container">
         <div class="price-item">
-            <button class="hide-btn" onclick="toggleHide('btc')" id="btc-hide">👁</button>
+            <button class="hide-btn" onclick="toggleHide('btc')" id="btc-hide">
+                <span class="dot-icon">•</span>
+            </button>
             <div class="price loading" id="btc-price">------</div>
         </div>
         
         <div class="price-item">
-            <button class="hide-btn" onclick="toggleHide('eth')" id="eth-hide">👁</button>
+            <button class="hide-btn" onclick="toggleHide('eth')" id="eth-hide">
+                <span class="dot-icon">•</span>
+            </button>
             <div class="price loading" id="eth-price">------</div>
         </div>
         
         <div class="price-item">
-            <button class="hide-btn" onclick="toggleHide('sol')" id="sol-hide">👁</button>
+            <button class="hide-btn" onclick="toggleHide('sol')" id="sol-hide">
+                <span class="dot-icon">•</span>
+            </button>
             <div class="price loading" id="sol-price">------</div>
         </div>
     </div>
@@ -351,27 +336,29 @@
                 return `<span class="price-part">${encodePrice(formattedPrice)}</span>`;
             }
             
-            // Process digits without commas
-            let styledPrice = '';
+            // Rainbow colors array
+            const rainbowColors = ['digit-0', 'digit-1', 'digit-2', 'digit-3', 'digit-4', 'digit-5', 'digit-6'];
             
-            for (let i = 0; i < integerPart.length; i++) {
-                const char = integerPart[i];
-                const digitPosition = i + 1;
+            // Process all characters with rainbow colors
+            let styledPrice = '';
+            let digitIndex = 0; // Track position for rainbow colors
+            
+            // Process the entire price string
+            const fullPrice = `${integerPart}.${parts[1]}`;
+            
+            for (let i = 0; i < fullPrice.length; i++) {
+                const char = fullPrice[i];
                 
-                if (digitPosition <= 3) {
-                    // First three digits (darker)
-                    styledPrice += `<span class="price-part price-${digitPosition <= 2 ? 'first' : 'middle'}">${char}</span>`;
-                } else if (digitPosition === 4) {
-                    // Fourth digit (white)
-                    styledPrice += `<span class="price-part price-fourth">${char}</span>`;
+                if (char === '.' || char === ',') {
+                    // Keep dots and commas gray
+                    styledPrice += `<span class="price-decimal">${char}</span>`;
                 } else {
-                    // Remaining digits (medium dark)
-                    styledPrice += `<span class="price-part price-middle">${char}</span>`;
+                    // Apply rainbow color to digits
+                    const colorClass = rainbowColors[digitIndex % rainbowColors.length];
+                    styledPrice += `<span class="price-part ${colorClass}">${char}</span>`;
+                    digitIndex++;
                 }
             }
-            
-            // Decimal part (smaller and lighter)
-            styledPrice += `<span class="price-part price-decimal">.${parts[1]}</span>`;
             
             return styledPrice;
         }
@@ -394,7 +381,7 @@
             const eyeIcon = btn.querySelector('.eye-icon');
             
             if (isSecureMode) {
-                btn.classList.add('active');
+                btn.classList.add('security-active');
                 // 사선 추가
                 if (!eyeIcon.querySelector('.slash')) {
                     const slash = document.createElement('span');
@@ -403,7 +390,7 @@
                 }
                 document.querySelectorAll('.price').forEach(el => el.classList.add('secure'));
             } else {
-                btn.classList.remove('active');
+                btn.classList.remove('security-active');
                 // 사선 제거
                 const slash = eyeIcon.querySelector('.slash');
                 if (slash) {
@@ -530,11 +517,9 @@
             if (hiddenCoins[coin]) {
                 priceEl.classList.add('hidden');
                 btnEl.classList.add('hidden');
-                btnEl.innerHTML = '👁‍🗨';
             } else {
                 priceEl.classList.remove('hidden');
                 btnEl.classList.remove('hidden');
-                btnEl.innerHTML = '👁';
             }
         }
         

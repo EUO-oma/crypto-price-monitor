@@ -71,30 +71,35 @@
     // 설정 초기화
     window.APP_CONFIG = Object.assign({}, defaultConfig);
     
-    // 1. 먼저 ENV_CONFIG가 있으면 병합 (Netlify 빌드 시 생성)
+    // 1. ENV_CONFIG가 있으면 우선 사용 (Netlify 빌드 시 생성)
     if (window.ENV_CONFIG) {
         mergeConfig(window.APP_CONFIG, window.ENV_CONFIG);
         console.log('✅ Environment config loaded');
+        console.log('📧 ENV_CONFIG ADMIN:', window.ENV_CONFIG.ADMIN);
     }
-    
-    // 2. 로컬 config.js가 있으면 병합 (로컬 개발용)
-    if (!isNetlify && !window.ENV_CONFIG) {
-        const script = document.createElement('script');
-        script.src = 'config.js';
-        script.onload = function() {
-            // config.js의 APP_CONFIG를 현재 설정에 병합
-            if (window.APP_CONFIG) {
-                const localConfig = Object.assign({}, window.APP_CONFIG);
-                window.APP_CONFIG = Object.assign({}, defaultConfig);
-                mergeConfig(window.APP_CONFIG, localConfig);
-            }
-            console.log('✅ Local config.js loaded');
-        };
-        script.onerror = function() {
-            console.warn('⚠️ config.js not found, using default config');
-            console.log('💡 Copy config.example.js to config.js and add your API keys');
-        };
-        document.head.appendChild(script);
+    // 2. ENV_CONFIG가 없고 로컬 환경인 경우에만 config.js 사용
+    else if (!isNetlify) {
+        // 동기적으로 config.js 로드를 기다림
+        const loadLocalConfig = new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'config.js';
+            script.onload = function() {
+                // config.js의 APP_CONFIG를 현재 설정에 병합
+                if (window.APP_CONFIG) {
+                    const localConfig = Object.assign({}, window.APP_CONFIG);
+                    window.APP_CONFIG = Object.assign({}, defaultConfig);
+                    mergeConfig(window.APP_CONFIG, localConfig);
+                }
+                console.log('✅ Local config.js loaded');
+                resolve();
+            };
+            script.onerror = function() {
+                console.warn('⚠️ config.js not found, using default config');
+                console.log('💡 Copy config.example.js to config.js and add your API keys');
+                resolve();
+            };
+            document.head.appendChild(script);
+        });
     }
 
     // 전역 변수 설정 (하위 호환성) - 이미 존재하면 덮어쓰지 않음

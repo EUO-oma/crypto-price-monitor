@@ -1133,9 +1133,17 @@
 
             console.log('[admin-v3] Supabase client ready:', supabase);
 
+            // 디버깅: 환경변수 확인
+            console.log('=== Admin Auth Debug ===');
+            console.log('1. APP_CONFIG:', window.APP_CONFIG);
+            console.log('2. ENV_CONFIG:', window.ENV_CONFIG);
+            console.log('3. ALLOWED_EMAILS:', window.getConfig('ADMIN.ALLOWED_EMAILS'));
+            console.log('4. Current user session:', await checkAuth());
+            
             // 인증 확인
             const hasAccess = await checkAdminAccess();
             if (!hasAccess) {
+                console.error('Admin access denied');
                 return; // 인증 실패시 admin-links.html로 자동 리다이렉트됨
             }
 
