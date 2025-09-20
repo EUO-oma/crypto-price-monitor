@@ -1274,17 +1274,11 @@
                 return;
             }
             
-            // 임시로 관리자 체크 비활성화 (개발/테스트용)
-            const skipAdminCheck = true; // 나중에 false로 변경
-            
-            if (!skipAdminCheck) {
-                const hasAccess = await checkAdminAccess();
-                if (!hasAccess) {
-                    console.error('Admin access denied');
-                    return; // 인증 실패시 admin-links.html로 자동 리다이렉트됨
-                }
-            } else {
-                console.log('⚠️ 관리자 체크 건너뛰기 - 개발 모드');
+            // 관리자 체크 - 이제 로그인만 하면 통과
+            const hasAccess = await checkAdminAccess();
+            if (!hasAccess) {
+                console.error('Admin access denied');
+                return; // 이제 이 코드는 실행 안됨 (checkAdminAccess가 항상 true)
             }
 
             restoreGuideState(); // 가이드 상태 복원

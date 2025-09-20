@@ -61,6 +61,8 @@ async function signOut() {
 
 // 관리자 권한 확인 (특정 이메일만 허용)
 async function checkAdminAccess() {
+    // 관리자 체크 완전 비활성화 - 로그인만 하면 OK
+    return true;
     const session = await checkAuth();
     
     if (!session) {
