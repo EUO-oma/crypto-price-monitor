@@ -74,7 +74,7 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: flex-start;
             gap: 15px;
             width: 100%;
         }
@@ -100,8 +100,8 @@
             color: #666;
         }
         
-        .price-third {
-            color: #4caf50;
+        .price-fourth {
+            color: #ffffff;
             font-weight: 400;
         }
         
@@ -341,9 +341,9 @@
         let btcWs, ethWs, solWs;
         
         function formatPrice(price) {
-            // Format price with commas
+            // Format price WITHOUT commas
             const parts = price.toFixed(2).split('.');
-            const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const integerPart = parts[0]; // 콤마 제거
             const formattedPrice = `${integerPart}.${parts[1]}`;
             
             // Apply security encoding if enabled
@@ -351,29 +351,22 @@
                 return `<span class="price-part">${encodePrice(formattedPrice)}</span>`;
             }
             
-            // Split the integer part for styling
-            const integerDigits = integerPart.replace(/,/g, '');
+            // Process digits without commas
             let styledPrice = '';
-            let digitCount = 0;
             
-            // Process each character including commas
             for (let i = 0; i < integerPart.length; i++) {
                 const char = integerPart[i];
+                const digitPosition = i + 1;
                 
-                if (char === ',') {
-                    styledPrice += '<span class="price-part price-middle">,</span>';
+                if (digitPosition <= 3) {
+                    // First three digits (darker)
+                    styledPrice += `<span class="price-part price-${digitPosition <= 2 ? 'first' : 'middle'}">${char}</span>`;
+                } else if (digitPosition === 4) {
+                    // Fourth digit (white)
+                    styledPrice += `<span class="price-part price-fourth">${char}</span>`;
                 } else {
-                    digitCount++;
-                    if (digitCount <= 2) {
-                        // First two digits (darkest)
-                        styledPrice += `<span class="price-part price-first">${char}</span>`;
-                    } else if (digitCount === 3) {
-                        // Third digit (bright green)
-                        styledPrice += `<span class="price-part price-third">${char}</span>`;
-                    } else {
-                        // Remaining digits (medium dark)
-                        styledPrice += `<span class="price-part price-middle">${char}</span>`;
-                    }
+                    // Remaining digits (medium dark)
+                    styledPrice += `<span class="price-part price-middle">${char}</span>`;
                 }
             }
             
