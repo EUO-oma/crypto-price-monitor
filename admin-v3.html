@@ -451,59 +451,33 @@
         // 전역 supabase 클라이언트
         let supabase = null;
 
-        // config와 auth-helper가 모두 로드될 때까지 대기
+        // 페이지 로드 후 바로 초기화
         window.addEventListener('DOMContentLoaded', function() {
-            let configReady = false;
-            let authReady = false;
-            
-            // Config 로드 확인
-            if (window.APP_CONFIG && window.getConfig) {
-                configReady = true;
-            } else {
-                window.addEventListener('configLoaded', () => {
-                    configReady = true;
-                    checkReady();
-                });
-            }
-            
-            // 초기화 준비 확인
-            function checkReady() {
-                if (configReady && authReady) {
-                    // Supabase 클라이언트 가져오기
-                    try {
-                        supabase = window.getSupabaseClient();
-                        if (supabase) {
-                            console.log('[admin-v3] All dependencies loaded, initializing...');
+            // 1초 후 초기화 (모든 스크립트 로드 대기)
+            setTimeout(() => {
+                try {
+                    supabase = window.getSupabaseClient();
+                    if (supabase) {
+                        console.log('[admin-v3] Supabase client loaded');
+                        initializeAdmin();
+                    } else {
+                        // Supabase 클라이언트 직접 생성
+                        if (window.supabase && window.APP_CONFIG) {
+                            supabase = window.supabase.createClient(
+                                window.APP_CONFIG.SUPABASE.URL,
+                                window.APP_CONFIG.SUPABASE.ANON_KEY
+                            );
+                            console.log('[admin-v3] Supabase client created directly');
                             initializeAdmin();
                         } else {
-                            throw new Error('Supabase client is null');
+                            throw new Error('Supabase 또는 설정을 찾을 수 없습니다');
                         }
-                    } catch (error) {
-                        console.error('[admin-v3] Error initializing:', error);
-                        document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 초기화 실패: ' + error.message + '</span>';
                     }
+                } catch (error) {
+                    console.error('[admin-v3] 초기화 실패:', error);
+                    document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 초기화 실패: ' + error.message + '</span>';
                 }
-            }
-            
-            // Auth helper 로드 확인
-            const authInterval = setInterval(() => {
-                if (typeof window.getSupabaseClient === 'function' && 
-                    typeof window.checkAuth === 'function' && 
-                    typeof window.checkAdminAccess === 'function') {
-                    authReady = true;
-                    clearInterval(authInterval);
-                    checkReady();
-                }
-            }, 50);
-            
-            // 10초 타임아웃
-            setTimeout(() => {
-                clearInterval(authInterval);
-                if (!authReady || !configReady) {
-                    console.error('[admin-v3] Dependencies failed to load');
-                    document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 필수 모듈 로드 실패</span>';
-                }
-            }, 10000);
+            }, 1000);
         });
 
         // 링크 관련 함수들 직접 정의
@@ -1360,7 +1334,22 @@
             if (!supabase) {
                 console.error('Supabase client not initialized');
                 statusElement.innerHTML = '<span style="color: #f44336;">❌ Supabase 초기화 실패</span>';
-                return;
+                
+                // 재시도
+                if (window.supabase && window.APP_CONFIG) {
+                    try {
+                        supabase = window.supabase.createClient(
+                            window.APP_CONFIG.SUPABASE.URL,
+                            window.APP_CONFIG.SUPABASE.ANON_KEY
+                        );
+                        console.log('Supabase client created in checkConnection');
+                    } catch (e) {
+                        console.error('Failed to create Supabase client:', e);
+                        return;
+                    }
+                } else {
+                    return;
+                }
             }
 
             try {
