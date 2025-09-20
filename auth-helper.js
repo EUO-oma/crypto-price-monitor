@@ -2,31 +2,12 @@
 
 // Supabase 클라이언트 가져오기
 function getSupabaseClient() {
+    // supabase-init.js에서 이미 생성된 클라이언트 사용
     if (window.supabaseClient) {
         return window.supabaseClient;
     }
     
-    // config.js에서 설정 가져오기
-    const url = window.getConfig ? window.getConfig('SUPABASE.URL') : window.APP_CONFIG?.SUPABASE?.URL;
-    const key = window.getConfig ? window.getConfig('SUPABASE.ANON_KEY') : window.APP_CONFIG?.SUPABASE?.ANON_KEY;
-    
-    if (!url || !key) {
-        console.error('⚠️ Supabase 설정이 없습니다.');
-        return null;
-    }
-    
-    if (window.supabase && window.supabase.createClient) {
-        try {
-            window.supabaseClient = window.supabase.createClient(url, key);
-            console.log('✅ Supabase 클라이언트 생성됨');
-            return window.supabaseClient;
-        } catch (error) {
-            console.error('❌ Supabase 클라이언트 생성 실패:', error);
-            return null;
-        }
-    }
-    
-    console.error('⚠️ Supabase SDK가 로드되지 않았습니다.');
+    console.error('⚠️ Supabase 클라이언트가 초기화되지 않았습니다.');
     return null;
 }
 

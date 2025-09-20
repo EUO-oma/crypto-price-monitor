@@ -72,6 +72,9 @@ if (!config.SUPABASE.URL || !config.SUPABASE.ANON_KEY) {
     console.error('\n   Please add these in Netlify Dashboard:');
     console.error('   Site Settings → Environment Variables → Environment Variables');
     console.error('\n   Or use Netlify CLI: netlify env:set SUPABASE_URL "your-url"');
+    
+    // 빌드는 계속 진행 (supabase-init.js의 fallback이 처리함)
+    console.log('\n   ⚠️  Using fallback configuration from supabase-init.js');
 }
 
 // config-env.js 파일 생성

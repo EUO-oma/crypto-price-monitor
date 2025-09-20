@@ -443,6 +443,7 @@
     <!-- Supabase 라이브러리를 먼저 로드하고 초기화 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="supabase-init.js"></script>
     <script src="config-env.js"></script>
     <script src="config-loader.js"></script>
     
@@ -453,31 +454,26 @@
 
         // 페이지 로드 후 바로 초기화
         window.addEventListener('DOMContentLoaded', function() {
-            // 1초 후 초기화 (모든 스크립트 로드 대기)
+            // 짧은 대기 후 초기화
             setTimeout(() => {
                 try {
-                    supabase = window.getSupabaseClient();
+                    // supabaseClient는 supabase-init.js에서 생성됨
+                    supabase = window.supabaseClient;
+                    
                     if (supabase) {
-                        console.log('[admin-v3] Supabase client loaded');
+                        console.log('[admin-v3] Supabase client ready');
                         initializeAdmin();
                     } else {
-                        // Supabase 클라이언트 직접 생성
-                        if (window.supabase && window.APP_CONFIG) {
-                            supabase = window.supabase.createClient(
-                                window.APP_CONFIG.SUPABASE.URL,
-                                window.APP_CONFIG.SUPABASE.ANON_KEY
-                            );
-                            console.log('[admin-v3] Supabase client created directly');
-                            initializeAdmin();
-                        } else {
-                            throw new Error('Supabase 또는 설정을 찾을 수 없습니다');
-                        }
+                        console.error('[admin-v3] Supabase client not found');
+                        document.getElementById('connection-status').innerHTML = 
+                            '<span style="color: #f44336;">❌ Supabase에 연결할 수 없습니다.</span>';
                     }
                 } catch (error) {
-                    console.error('[admin-v3] 초기화 실패:', error);
-                    document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 초기화 실패: ' + error.message + '</span>';
+                    console.error('[admin-v3] 초기화 오류:', error);
+                    document.getElementById('connection-status').innerHTML = 
+                        '<span style="color: #f44336;">❌ 초기화 실패: ' + error.message + '</span>';
                 }
-            }, 1000);
+            }, 500);
         });
 
         // 링크 관련 함수들 직접 정의
