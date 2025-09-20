@@ -237,6 +237,19 @@
             margin-bottom: 30px;
             position: relative;
             height: 500px;
+            max-height: 500px;
+            overflow: hidden;
+        }
+        
+        #priceChart {
+            max-height: 460px !important;
+            height: 460px !important;
+            display: block;
+            width: 100% !important;
+        }
+        
+        .chart-container canvas {
+            position: relative !important;
         }
 
         .chart-loading {
@@ -448,6 +461,18 @@
             <button class="download-btn" onclick="downloadChart()">📥 차트 다운로드</button>
         </div>
 
+        <!-- 차트 영역 -->
+        <div class="chart-container" id="chart-container">
+            <div class="chart-tabs">
+                <div class="chart-tab active" onclick="selectChartTab('combined')">통합 차트</div>
+                <div class="chart-tab" onclick="selectChartTab('btc')">BTC</div>
+                <div class="chart-tab" onclick="selectChartTab('eth')">ETH</div>
+                <div class="chart-tab" onclick="selectChartTab('sol')">SOL</div>
+            </div>
+            <canvas id="priceChart"></canvas>
+            <div class="chart-loading" id="chart-loading">차트 로딩 중...</div>
+        </div>
+
         <!-- 통계 카드 -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -470,18 +495,6 @@
                 <div class="stat-value" id="data-period">-</div>
                 <div class="stat-change" id="data-count">-</div>
             </div>
-        </div>
-
-        <!-- 차트 영역 -->
-        <div class="chart-container" id="chart-container">
-            <div class="chart-tabs">
-                <div class="chart-tab active" onclick="selectChartTab('combined')">통합 차트</div>
-                <div class="chart-tab" onclick="selectChartTab('btc')">BTC</div>
-                <div class="chart-tab" onclick="selectChartTab('eth')">ETH</div>
-                <div class="chart-tab" onclick="selectChartTab('sol')">SOL</div>
-            </div>
-            <canvas id="priceChart"></canvas>
-            <div class="chart-loading" id="chart-loading">차트 로딩 중...</div>
         </div>
 
         <!-- 테이블 뷰 -->
@@ -941,6 +954,9 @@
             const options = {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {
+                    padding: 0
+                },
                 plugins: {
                     legend: {
                         position: 'top',
