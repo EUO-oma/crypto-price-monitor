@@ -23,7 +23,7 @@ def run_command(command):
             print(f"에러 메시지: {e.stderr}")
         return False
 
-def main():
+def deploy():
     print("="*40)
     print(" Netlify 자동 배포 스크립트")
     print("="*40)
@@ -104,14 +104,24 @@ def main():
     print(" 1-2분 후 https://euo.netlify.app 에서 확인하세요")
     print("="*40)
 
+def main():
+    while True:
+        try:
+            deploy()
+            print("\n" + "="*40)
+            response = input("\n다시 배포하려면 엔터를 누르세요 (종료: q + 엔터): ")
+            if response.lower() == 'q':
+                print("\n배포 스크립트를 종료합니다.")
+                break
+            print("\n")
+        except KeyboardInterrupt:
+            print("\n\n사용자에 의해 중단되었습니다.")
+            break
+        except Exception as e:
+            print(f"\n예상치 못한 오류 발생: {e}")
+            response = input("\n계속하려면 엔터를 누르세요 (종료: q + 엔터): ")
+            if response.lower() == 'q':
+                break
+
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\n사용자에 의해 중단되었습니다.")
-    except Exception as e:
-        print(f"\n예상치 못한 오류 발생: {e}")
-    
-    # 맥에서도 결과를 확인할 수 있도록
-    if sys.platform in ["darwin", "win32"]:  # darwin은 macOS
-        input("\n엔터를 눌러 종료...")
+    main()
