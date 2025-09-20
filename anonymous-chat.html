@@ -573,7 +573,11 @@
         <div class="welcome-content">
             <h1 class="welcome-title">🌐 익명 채팅방</h1>
             <p class="welcome-subtitle">자유롭게 대화를 나눠보세요</p>
-            <p style="color: #888; font-size: 14px; margin-bottom: 20px;">크립토 아바타를 선택하세요</p>
+            
+            <!-- 사용자 이름 입력 -->
+            <input type="text" class="username-input" id="usernameInput" placeholder="닉네임을 입력하세요" maxlength="20">
+            
+            <p style="color: #888; font-size: 14px; margin: 20px 0 10px 0;">크립토 아바타를 선택하세요</p>
             
             <!-- 코인 아바타 선택기 -->
             <div class="avatar-selector" id="avatarSelector">
@@ -672,6 +676,64 @@
         let isTyping = false;
         const avatarEmojis = ['🦊', '🐻', '🐼', '🦁', '🐯', '🐨', '🐵', '🦄', '🐸', '🐧', '🦋', '🐢'];
         const userAvatars = new Map();
+        let selectedAvatar = null;
+        let currentAvatars = [];
+        
+        // Initialize avatars on page load
+        function initializeAvatars() {
+            shuffleAvatars();
+            
+            // Enable username input
+            document.getElementById('usernameInput').addEventListener('input', checkFormValidity);
+        }
+        
+        // Shuffle and display new avatars
+        function shuffleAvatars() {
+            currentAvatars = getRandomCoins(6);
+            const avatarGrid = document.getElementById('avatarGrid');
+            avatarGrid.innerHTML = '';
+            
+            currentAvatars.forEach((coin, index) => {
+                const avatarEl = document.createElement('div');
+                avatarEl.className = 'avatar-option';
+                avatarEl.onclick = () => selectAvatar(coin);
+                
+                avatarEl.innerHTML = `
+                    <img class="avatar-image" src="${coin.image}" alt="${coin.name}" 
+                         onerror="this.src='https://via.placeholder.com/48?text=${coin.symbol}'">
+                    <div class="avatar-name">${coin.name}</div>
+                    <div class="avatar-symbol">${coin.symbol}</div>
+                `;
+                
+                avatarGrid.appendChild(avatarEl);
+            });
+        }
+        
+        // Select an avatar
+        function selectAvatar(coin) {
+            selectedAvatar = coin;
+            
+            // Update UI
+            document.querySelectorAll('.avatar-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Check if we can enable join button
+            checkFormValidity();
+        }
+        
+        // Check if form is valid
+        function checkFormValidity() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const joinButton = document.getElementById('joinButton');
+            
+            if (username && selectedAvatar) {
+                joinButton.disabled = false;
+            } else {
+                joinButton.disabled = true;
+            }
+        }
         
         // Join chat
         async function joinChat() {
@@ -681,10 +743,17 @@
                 return;
             }
             
+            if (!selectedAvatar) {
+                alert('아바타를 선택해주세요!');
+                return;
+            }
+            
             currentUser = {
                 id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9),
                 username: username,
-                avatar: avatarEmojis[Math.floor(Math.random() * avatarEmojis.length)]
+                avatar: selectedAvatar.symbol,
+                avatarImage: selectedAvatar.image,
+                avatarColor: selectedAvatar.color
             };
             
             console.log('User created:', currentUser);
@@ -709,6 +778,8 @@
                 await userRef.set({
                     username: currentUser.username,
                     avatar: currentUser.avatar,
+                    avatarImage: currentUser.avatarImage,
+                    avatarColor: currentUser.avatarColor,
                     lastSeen: firebase.database.ServerValue.TIMESTAMP
                 });
                 
@@ -923,11 +994,6 @@
             }, 2000);
         });
         
-        document.getElementById('usernameInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                joinChat();
-            }
-        });
         
         // Close emoji picker when clicking outside
         document.addEventListener('click', (e) => {
