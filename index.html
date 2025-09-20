@@ -525,71 +525,7 @@
         <!-- 🗄️ SECTION 3 END: Supabase DB 추출 섹션 -->
         <!-- ============================================ -->
         
-        <!-- Supabase 링크 페이지 버튼 -->
-        <div style="text-align: center; margin: 40px 0;">
-            <a href="supabase-links.html" style="
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 60px;
-                height: 60px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                text-decoration: none;
-                border-radius: 50%;
-                font-size: 28px;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            "
-            onmouseover="this.style.transform='translateY(-2px) scale(1.1)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)'"
-            onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.3)'"
-            title="즐겨찾기 모음">
-                ⭐
-            </a>
-        </div>
         
-        <!-- Mini Clock Link -->
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="world-clock.html" id="mini-clock" style="
-                display: inline-block;
-                background: #0a0a0a;
-                color: #888;
-                padding: 8px 16px;
-                border-radius: 20px;
-                text-decoration: none;
-                border: 1px solid #222;
-                transition: all 0.3s ease;
-                font-size: 0.9em;
-                font-family: 'JetBrains Mono', monospace;
-            "
-            onmouseover="this.style.background='#1a1a1a'; this.style.borderColor='#444'; this.style.color='#aaa'"
-            onmouseout="this.style.background='#0a0a0a'; this.style.borderColor='#222'; this.style.color='#888'">
-                <span id="mini-clock-time">--:--:--</span>
-            </a>
-        </div>
-        
-        <!-- 채팅 버튼 섹션 -->
-        <div style="margin-top: 30px; text-align: center; padding: 20px 0;">
-            <button onclick="openChatPopup()" style="
-                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-                color: white;
-                border: none;
-                padding: 15px 40px;
-                border-radius: 30px;
-                font-size: 16px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
-                display: inline-flex;
-                align-items: center;
-                gap: 10px;
-            "
-            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(79, 172, 254, 0.4)'"
-            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(79, 172, 254, 0.3)'">
-                💬 Anonymous Chat 열기
-            </button>
-        </div>
     </div>
 
     <!-- Firebase SDK scripts -->
@@ -3147,6 +3083,21 @@
         <!-- 로그인 버튼 -->
         <a href="login.html" class="nav-btn" title="로그인">
             <span style="font-size: 20px;">🔐</span>
+        </a>
+        
+        <!-- 채팅 버튼 -->
+        <button onclick="openChatPopup()" class="nav-btn" title="채팅">
+            <span style="font-size: 20px;">💬</span>
+        </button>
+        
+        <!-- 즐겨찾기 버튼 -->
+        <a href="supabase-links.html" class="nav-btn" title="즐겨찾기">
+            <span style="font-size: 20px;">⭐</span>
+        </a>
+        
+        <!-- 세계시계 버튼 -->
+        <a href="world-clock.html" class="nav-btn" title="세계시계">
+            <span style="font-size: 20px;">🕐</span>
         </a>
         
         <!-- 관리자 설정 버튼 -->
