@@ -1136,7 +1136,7 @@
             // 인증 확인
             const hasAccess = await checkAdminAccess();
             if (!hasAccess) {
-                return; // 인증 실패시 login.html로 자동 리다이렉트됨
+                return; // 인증 실패시 admin-links.html로 자동 리다이렉트됨
             }
 
             restoreGuideState(); // 가이드 상태 복원

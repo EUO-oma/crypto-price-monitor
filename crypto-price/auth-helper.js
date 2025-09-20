@@ -10,7 +10,7 @@ async function checkAuth() {
 async function signOut() {
     const { error } = await supabase.auth.signOut();
     if (!error) {
-        window.location.href = 'login.html';
+        window.location.href = '../admin-links.html';
     }
     return error;
 }
@@ -21,7 +21,7 @@ async function checkAdminAccess() {
     
     if (!session) {
         // 로그인 안됨
-        window.location.href = 'login.html';
+        window.location.href = '../admin-links.html';
         return false;
     }
 
@@ -48,7 +48,7 @@ supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
         // 로그아웃됨
         if (window.location.pathname.includes('admin')) {
-            window.location.href = 'login.html';
+            window.location.href = '../admin-links.html';
         }
     }
 });
