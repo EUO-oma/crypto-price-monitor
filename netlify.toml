@@ -1,9 +1,29 @@
+# Netlify 설정 파일
+
 [build]
+  # 빌드 명령어 - 환경 변수를 JavaScript 파일로 변환
+  command = "node build-config.js"
+  
+  # 배포 디렉토리
   publish = "."
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
+# 환경 변수 설정 힌트
+[build.environment]
+  # Node.js 버전 (선택사항)
+  NODE_VERSION = "18"
+
+# 리다이렉트 규칙
+[[redirects]]
+  from = "/admin"
+  to = "/admin-links.html?redirect=admin-v3.html"
+  status = 302
+
+[[redirects]]
+  from = "/links"
+  to = "/admin-links.html?redirect=links.html"
+  status = 302
+
+[[redirects]]
+  from = "/favorites"
+  to = "/admin-links.html?redirect=supabase-links.html"
+  status = 302
