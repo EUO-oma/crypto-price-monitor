@@ -50,7 +50,7 @@ const NAVIGATION_CONFIG = {
             requiresAuth: true
         },
         {
-            href: "admin-v3.html",
+            href: "admin-links.html?redirect=admin-v3.html",
             title: "설정",
             icon: null, // SVG 아이콘 사용
             id: "nav-settings",
