@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BW</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .price-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 20px;
+        }
+        
+        .price-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .price {
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            transition: font-size 0.3s ease;
+        }
+        
+        /* Size variations */
+        .size-xs .price { font-size: 24px; }
+        .size-s .price { font-size: 36px; }
+        .size-m .price { font-size: 48px; }
+        .size-l .price { font-size: 60px; }
+        .size-xl .price { font-size: 72px; }
+        .size-xxl .price { font-size: 96px; }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Encoder mode styles */
+        .encoded-mode .price {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 3px;
+        }
+        
+        @media (max-width: 768px) {
+            .price-container {
+                gap: 30px;
+            }
+            
+            .controls {
+                top: 10px;
+                right: 10px;
+            }
+            
+            .control-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body class="size-m">
+    <div class="controls">
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+    </div>
+    
+    <div class="price-container">
+        <div class="price-item">
+            <div class="price loading" id="btc-price">------</div>
+        </div>
+        
+        <div class="price-item">
+            <div class="price loading" id="eth-price">------</div>
+        </div>
+        
+        <div class="price-item">
+            <div class="price loading" id="sol-price">------</div>
+        </div>
+    </div>
+    
+    <script>
+        // Size control
+        const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
+        let currentSizeIndex = 2; // Start with 'm'
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            // Remove all size classes
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            
+            // Add current size class
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            // Save preference
+            localStorage.setItem('bwPriceSize', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwPriceSize');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-m');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        // Binance WebSocket connections
+        let btcWs, ethWs, solWs;
+        
+        function formatPrice(price) {
+            // Format price with commas
+            const parts = price.toFixed(2).split('.');
+            const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return `${integerPart}.${parts[1]}`;
+        }
+        
+        function connectBinanceWebSocket(symbol, elementId) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+                document.getElementById(elementId).classList.remove('loading');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c); // Current price
+                
+                document.getElementById(elementId).textContent = formatPrice(price);
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, elementId);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Initialize WebSocket connections
+        function initializeWebSockets() {
+            btcWs = connectBinanceWebSocket('BTCUSDT', 'btc-price');
+            ethWs = connectBinanceWebSocket('ETHUSDT', 'eth-price');
+            solWs = connectBinanceWebSocket('SOLUSDT', 'sol-price');
+        }
+        
+        // Fallback: Fetch prices via API
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                if (results[0]) {
+                    document.getElementById('btc-price').textContent = formatPrice(parseFloat(results[0].lastPrice));
+                    document.getElementById('btc-price').classList.remove('loading');
+                }
+                if (results[1]) {
+                    document.getElementById('eth-price').textContent = formatPrice(parseFloat(results[1].lastPrice));
+                    document.getElementById('eth-price').classList.remove('loading');
+                }
+                if (results[2]) {
+                    document.getElementById('sol-price').textContent = formatPrice(parseFloat(results[2].lastPrice));
+                    document.getElementById('sol-price').classList.remove('loading');
+                }
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            // Try WebSocket first
+            initializeWebSockets();
+            
+            // Also fetch via API as backup
+            fetchPricesAPI();
+            
+            // Update API prices every 10 seconds as fallback
+            setInterval(fetchPricesAPI, 10000);
+        });
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (btcWs) btcWs.close();
+            if (ethWs) ethWs.close();
+            if (solWs) solWs.close();
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === '=') {
+                adjustSize('increase');
+            } else if (e.key === '-' || e.key === '_') {
+                adjustSize('decrease');
+            }
+        });
+    </script>
+</body>
+</html>

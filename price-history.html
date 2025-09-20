@@ -470,6 +470,14 @@
                 </div>
             </div>
             
+            <div class="control-group">
+                <label>특수 차트:</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-high-low" onchange="toggleHighLowRange()">
+                    <label for="show-high-low">상한가/하한가 범위</label>
+                </div>
+            </div>
+            
             <button class="download-btn" onclick="downloadChart()">📥 차트 다운로드</button>
         </div>
 
@@ -621,6 +629,7 @@
         let currentView = 'chart';
         let currentChartTab = 'combined';
         let priceChart = null;
+        let showHighLowRange = false;
 
         // 차트 색상
         const chartColors = {
@@ -851,6 +860,22 @@
             const ctx = document.getElementById('priceChart').getContext('2d');
             const chartType = document.getElementById('chart-type').value;
             
+            // 상한가/하한가 범위 표시시 단일 코인만 가능
+            if (showHighLowRange) {
+                const checkedCoins = [
+                    document.getElementById('show-btc').checked,
+                    document.getElementById('show-eth').checked,
+                    document.getElementById('show-sol').checked
+                ].filter(checked => checked).length;
+                
+                if (checkedCoins > 1) {
+                    alert('상한가/하한가 범위는 하나의 코인만 선택하여 볼 수 있습니다.');
+                    document.getElementById('show-high-low').checked = false;
+                    showHighLowRange = false;
+                    return;
+                }
+            }
+            
             // 기존 차트 제거
             if (priceChart) {
                 priceChart.destroy();
@@ -865,36 +890,78 @@
                 (currentChartTab === 'combined' || currentChartTab === 'btc')) {
                 const btcPrices = filteredData.map(d => d.btc || null);
                 
-                if (chartType === 'candlestick') {
-                    // 캔들스틱 데이터
+                // 상한가/하한가 범위 차트
+                if (showHighLowRange && currentChartTab !== 'combined') {
+                    const btcHighPrices = filteredData.map(d => d.btc_high || d.btc || null);
+                    const btcLowPrices = filteredData.map(d => d.btc_low || d.btc || null);
+                    
+                    // 범위 영역 채우기
                     datasets.push({
-                        label: 'BTC',
-                        data: filteredData.map(d => ({
-                            x: d.date,
-                            o: d.btc_open || d.btc,
-                            h: d.btc_high || d.btc,
-                            l: d.btc_low || d.btc,
-                            c: d.btc || 0
-                        })),
+                        label: 'BTC 가격 범위',
+                        data: btcHighPrices,
                         borderColor: chartColors.btc,
-                        backgroundColor: chartColors.btc + '40',
-                        type: 'candlestick'
+                        backgroundColor: chartColors.btc + '30',
+                        fill: '+1',
+                        tension: 0.1,
+                        pointRadius: 0,
+                        yAxisID: currentChartTab === 'combined' ? 'y-btc' : 'y'
                     });
-                } else {
-                    // 라인/영역 차트
+                    
                     datasets.push({
-                        label: 'BTC',
+                        label: 'BTC 하한가',
+                        data: btcLowPrices,
+                        borderColor: chartColors.btc,
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        yAxisID: currentChartTab === 'combined' ? 'y-btc' : 'y'
+                    });
+                    
+                    // 평균 가격 라인
+                    datasets.push({
+                        label: 'BTC 평균가',
                         data: btcPrices,
                         borderColor: chartColors.btc,
-                        backgroundColor: chartType === 'area' ? chartColors.btc + '20' : 'transparent',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
                         tension: 0.1,
-                        fill: chartType === 'area',
-                        yAxisID: 'y-btc'
+                        fill: false,
+                        yAxisID: currentChartTab === 'combined' ? 'y-btc' : 'y'
                     });
+                } else if (!showHighLowRange) {
+                    // 일반 차트
+                    if (chartType === 'candlestick') {
+                        // 캔들스틱 차트
+                        datasets.push({
+                            label: 'BTC',
+                            data: filteredData.map(d => ({
+                                x: d.date,
+                                o: d.btc_open || d.btc,
+                                h: d.btc_high || d.btc,
+                                l: d.btc_low || d.btc,
+                                c: d.btc || 0
+                            })),
+                            borderColor: chartColors.btc,
+                            backgroundColor: chartColors.btc + '40',
+                            type: 'candlestick'
+                        });
+                    } else {
+                        // 라인/영역 차트
+                        datasets.push({
+                            label: 'BTC',
+                            data: btcPrices,
+                            borderColor: chartColors.btc,
+                            backgroundColor: chartType === 'area' ? chartColors.btc + '20' : 'transparent',
+                            tension: 0.1,
+                            fill: chartType === 'area',
+                            yAxisID: currentChartTab === 'combined' ? 'y-btc' : 'y'
+                        });
+                    }
                 }
                 
-                // 이동평균선
-                if (document.getElementById('show-ma7').checked) {
+                // 이동평균선 (상한가/하한가 범위가 아닐 때만)
+                if (!showHighLowRange && document.getElementById('show-ma7').checked) {
                     datasets.push({
                         label: 'BTC MA7',
                         data: calculateMA(btcPrices, 7),
@@ -923,7 +990,45 @@
                 (currentChartTab === 'combined' || currentChartTab === 'eth')) {
                 const ethPrices = filteredData.map(d => d.eth || null);
                 
-                datasets.push({
+                // 상한가/하한가 범위 차트
+                if (showHighLowRange && currentChartTab !== 'combined') {
+                    const ethHighPrices = filteredData.map(d => d.eth_high || d.eth || null);
+                    const ethLowPrices = filteredData.map(d => d.eth_low || d.eth || null);
+                    
+                    datasets.push({
+                        label: 'ETH 가격 범위',
+                        data: ethHighPrices,
+                        borderColor: chartColors.eth,
+                        backgroundColor: chartColors.eth + '30',
+                        fill: '+1',
+                        tension: 0.1,
+                        pointRadius: 0,
+                        yAxisID: currentChartTab === 'combined' ? 'y-eth' : 'y'
+                    });
+                    
+                    datasets.push({
+                        label: 'ETH 하한가',
+                        data: ethLowPrices,
+                        borderColor: chartColors.eth,
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        yAxisID: currentChartTab === 'combined' ? 'y-eth' : 'y'
+                    });
+                    
+                    datasets.push({
+                        label: 'ETH 평균가',
+                        data: ethPrices,
+                        borderColor: chartColors.eth,
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: false,
+                        yAxisID: currentChartTab === 'combined' ? 'y-eth' : 'y'
+                    });
+                } else if (!showHighLowRange) {
+                    datasets.push({
                     label: 'ETH',
                     data: ethPrices,
                     borderColor: chartColors.eth,
@@ -939,7 +1044,45 @@
                 (currentChartTab === 'combined' || currentChartTab === 'sol')) {
                 const solPrices = filteredData.map(d => d.sol || null);
                 
-                datasets.push({
+                // 상한가/하한가 범위 차트
+                if (showHighLowRange && currentChartTab !== 'combined') {
+                    const solHighPrices = filteredData.map(d => d.sol_high || d.sol || null);
+                    const solLowPrices = filteredData.map(d => d.sol_low || d.sol || null);
+                    
+                    datasets.push({
+                        label: 'SOL 가격 범위',
+                        data: solHighPrices,
+                        borderColor: chartColors.sol,
+                        backgroundColor: chartColors.sol + '30',
+                        fill: '+1',
+                        tension: 0.1,
+                        pointRadius: 0,
+                        yAxisID: currentChartTab === 'combined' ? 'y-sol' : 'y'
+                    });
+                    
+                    datasets.push({
+                        label: 'SOL 하한가',
+                        data: solLowPrices,
+                        borderColor: chartColors.sol,
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        yAxisID: currentChartTab === 'combined' ? 'y-sol' : 'y'
+                    });
+                    
+                    datasets.push({
+                        label: 'SOL 평균가',
+                        data: solPrices,
+                        borderColor: chartColors.sol,
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: false,
+                        yAxisID: currentChartTab === 'combined' ? 'y-sol' : 'y'
+                    });
+                } else if (!showHighLowRange) {
+                    datasets.push({
                     label: 'SOL',
                     data: solPrices,
                     borderColor: chartColors.sol,
@@ -1148,6 +1291,44 @@
             updateChart();
         }
 
+        // 상한가/하한가 범위 토글
+        function toggleHighLowRange() {
+            showHighLowRange = document.getElementById('show-high-low').checked;
+            
+            if (showHighLowRange) {
+                // 현재 체크된 코인 수 확인
+                const checkedCoins = [
+                    document.getElementById('show-btc').checked,
+                    document.getElementById('show-eth').checked,
+                    document.getElementById('show-sol').checked
+                ].filter(checked => checked).length;
+                
+                if (checkedCoins > 1) {
+                    alert('상한가/하한가 범위는 하나의 코인만 선택하여 볼 수 있습니다.');
+                    document.getElementById('show-high-low').checked = false;
+                    showHighLowRange = false;
+                    return;
+                }
+                
+                if (checkedCoins === 0) {
+                    alert('코인을 하나 선택해주세요.');
+                    document.getElementById('show-high-low').checked = false;
+                    showHighLowRange = false;
+                    return;
+                }
+                
+                // 통합 차트에서는 사용 불가
+                if (currentChartTab === 'combined') {
+                    alert('상한가/하한가 범위는 개별 코인 차트에서만 사용 가능합니다.');
+                    document.getElementById('show-high-low').checked = false;
+                    showHighLowRange = false;
+                    return;
+                }
+            }
+            
+            updateChart();
+        }
+        
         // 차트 다운로드
         function downloadChart() {
             const canvas = document.getElementById('priceChart');
