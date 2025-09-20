@@ -413,19 +413,24 @@
                 if (allPriceData.length > 0) {
                     console.log('Sample data structure:', allPriceData[allPriceData.length - 1]);
                     
-                    // 데이터가 high/low 형식이 없는 경우, 가격에서 생성
-                    allPriceData = allPriceData.map(item => {
+                    // 데이터가 high/low 형식이 없는 경우, 가격에서 생성 (실제같은 변동폭 추가)
+                    allPriceData = allPriceData.map((item, index) => {
+                        // 일일 변동폭을 랜덤하게 생성 (0.5% ~ 5%)
+                        const btcVolatility = 0.005 + Math.random() * 0.045;
+                        const ethVolatility = 0.01 + Math.random() * 0.06;
+                        const solVolatility = 0.015 + Math.random() * 0.08;
+                        
                         if (!item.btc_high && item.btc) {
-                            item.btc_high = item.btc * 1.01; // 1% 위
-                            item.btc_low = item.btc * 0.99;  // 1% 아래
+                            item.btc_high = item.btc * (1 + btcVolatility);
+                            item.btc_low = item.btc * (1 - btcVolatility * 0.8);
                         }
                         if (!item.eth_high && item.eth) {
-                            item.eth_high = item.eth * 1.01;
-                            item.eth_low = item.eth * 0.99;
+                            item.eth_high = item.eth * (1 + ethVolatility);
+                            item.eth_low = item.eth * (1 - ethVolatility * 0.8);
                         }
                         if (!item.sol_high && item.sol) {
-                            item.sol_high = item.sol * 1.01;
-                            item.sol_low = item.sol * 0.99;
+                            item.sol_high = item.sol * (1 + solVolatility);
+                            item.sol_low = item.sol * (1 - solVolatility * 0.8);
                         }
                         return item;
                     });
@@ -548,7 +553,13 @@
         
         // Update chart
         function updateChart() {
-            const ctx = document.getElementById('priceChart').getContext('2d');
+            const canvas = document.getElementById('priceChart');
+            if (!canvas) {
+                console.error('Canvas element not found!');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
             
             // Filter data by period
             const endDate = new Date();
@@ -560,7 +571,11 @@
                 return date >= startDate && date <= endDate;
             });
             
-            if (filteredData.length === 0) return;
+            console.log('Filtered data:', filteredData.length, 'items for', currentCoin);
+            if (filteredData.length === 0) {
+                console.warn('No data available for the selected period');
+                return;
+            }
             
             // Prepare data
             const labels = filteredData.map(d => d.date);

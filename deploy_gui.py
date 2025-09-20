@@ -1,294 +1,350 @@
 #!/usr/bin/env python3
 """
-Crypto Price Monitor - GUI 배포 도구
-Git 커밋과 Netlify 배포를 GUI로 쉽게 관리
+🚀 Netlify Ultra Deploy GUI - 원클릭 자동 배포 GUI 버전
 """
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 import subprocess
 import threading
-import os
 from datetime import datetime
+import os
+import webbrowser
+import time
 
 class DeployGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("🚀 Crypto Monitor - Deploy Tool")
+        self.root.title("🚀 Netlify Ultra Deploy")
         self.root.geometry("800x600")
-        self.root.resizable(True, True)
+        self.root.configure(bg='#0a0a0a')
         
-        # 프로젝트 경로
+        # 프로젝트 디렉토리
         self.project_dir = "/Users/iuo/Documents/EUOvaultSYNC/1 Project/privacy/crypto-price-monitor"
-        self.site_url = "https://euo.netlify.app"
         
-        # 다크 테마 스타일 설정
-        self.setup_dark_theme()
+        # 스타일 설정
+        self.setup_styles()
         
-        # GUI 구성
-        self.setup_gui()
+        # UI 구성
+        self.create_widgets()
         
-        # 초기 상태 확인
-        self.check_git_status()
+        # 초기 디렉토리 이동
+        self.change_to_project_dir()
         
-    def setup_dark_theme(self):
-        """다크 테마 스타일 설정"""
+    def setup_styles(self):
+        """스타일 설정"""
         style = ttk.Style()
+        style.theme_use('default')
         
-        # 다크 색상 팔레트
-        bg_color = "#1e1e1e"
-        fg_color = "#ffffff"
-        button_bg = "#0d7377"
-        button_hover = "#14ffec"
+        # 다크 테마 색상
+        bg_color = '#0a0a0a'
+        fg_color = '#ffffff'
+        button_bg = '#1a1a1a'
+        accent_color = '#4caf50'
+        danger_color = '#f44336'
         
-        self.root.configure(bg=bg_color)
+        # 버튼 스타일
+        style.configure('Deploy.TButton',
+                       background=accent_color,
+                       foreground='white',
+                       borderwidth=0,
+                       focuscolor='none',
+                       font=('SF Pro Display', 14, 'bold'))
+        style.map('Deploy.TButton',
+                 background=[('active', '#45a049')])
         
-        style.configure("Title.TLabel", 
-                       background=bg_color, 
-                       foreground=fg_color, 
-                       font=("Arial", 20, "bold"))
+        style.configure('Secondary.TButton',
+                       background=button_bg,
+                       foreground=fg_color,
+                       borderwidth=1,
+                       relief='solid',
+                       focuscolor='none',
+                       font=('SF Pro Display', 12))
+        style.map('Secondary.TButton',
+                 background=[('active', '#2a2a2a')])
         
-        style.configure("Info.TLabel", 
-                       background=bg_color, 
-                       foreground="#aaaaaa", 
-                       font=("Arial", 10))
+        # 레이블 스타일
+        style.configure('Title.TLabel',
+                       background=bg_color,
+                       foreground=fg_color,
+                       font=('SF Pro Display', 24, 'bold'))
         
-        style.configure("Deploy.TButton",
-                       font=("Arial", 14, "bold"))
+        style.configure('Status.TLabel',
+                       background=bg_color,
+                       foreground='#888888',
+                       font=('SF Pro Display', 11))
         
-    def setup_gui(self):
-        """GUI 레이아웃 구성"""
-        # 메인 프레임
-        main_frame = tk.Frame(self.root, bg="#1e1e1e")
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        # 프레임 스타일
+        style.configure('Card.TFrame',
+                       background='#1a1a1a',
+                       relief='flat',
+                       borderwidth=1)
+        
+    def create_widgets(self):
+        """위젯 생성"""
+        # 메인 컨테이너
+        main_container = tk.Frame(self.root, bg='#0a0a0a')
+        main_container.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # 헤더
+        self.create_header(main_container)
+        
+        # 원클릭 배포 섹션
+        self.create_deploy_section(main_container)
+        
+        # 로그 섹션
+        self.create_log_section(main_container)
+        
+        # 하단 버튼들
+        self.create_bottom_buttons(main_container)
+        
+    def create_header(self, parent):
+        """헤더 생성"""
+        header_frame = tk.Frame(parent, bg='#0a0a0a')
+        header_frame.pack(fill='x', pady=(0, 20))
         
         # 타이틀
-        title_frame = tk.Frame(main_frame, bg="#1e1e1e")
-        title_frame.pack(fill=tk.X, pady=(0, 20))
+        title_label = ttk.Label(header_frame, text="🚀 NETLIFY ULTRA DEPLOY", style='Title.TLabel')
+        title_label.pack()
         
-        title_label = ttk.Label(title_frame, text="🚀 Crypto Monitor Deploy", style="Title.TLabel")
-        title_label.pack(side=tk.LEFT)
+        # 서브타이틀
+        subtitle_label = ttk.Label(header_frame, text="원클릭 자동 배포 시스템 v2.0", style='Status.TLabel')
+        subtitle_label.pack(pady=(5, 0))
         
-        # 프로젝트 정보
-        info_label = ttk.Label(title_frame, 
-                              text=f"📁 {self.project_dir}\n🌐 {self.site_url}", 
-                              style="Info.TLabel")
-        info_label.pack(side=tk.RIGHT)
+    def create_deploy_section(self, parent):
+        """원클릭 배포 섹션"""
+        deploy_frame = ttk.Frame(parent, style='Card.TFrame')
+        deploy_frame.pack(fill='x', pady=(0, 20))
         
-        # Git 상태 표시
-        status_frame = tk.LabelFrame(main_frame, 
-                                   text="📊 Git Status", 
-                                   bg="#2a2a2a", 
-                                   fg="#ffffff",
-                                   font=("Arial", 12, "bold"))
-        status_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
-        
-        self.status_text = scrolledtext.ScrolledText(status_frame, 
-                                                    height=10, 
-                                                    bg="#000000", 
-                                                    fg="#00ff00",
-                                                    font=("Consolas", 10),
-                                                    wrap=tk.WORD)
-        self.status_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # 커밋 메시지 입력
-        commit_frame = tk.LabelFrame(main_frame, 
-                                   text="✏️ Commit Message", 
-                                   bg="#2a2a2a", 
-                                   fg="#ffffff",
-                                   font=("Arial", 12, "bold"))
-        commit_frame.pack(fill=tk.X, pady=(0, 20))
-        
-        self.commit_entry = tk.Entry(commit_frame, 
-                                    bg="#000000", 
-                                    fg="#ffffff", 
-                                    font=("Arial", 12),
-                                    insertbackground="white")
-        self.commit_entry.pack(fill=tk.X, padx=10, pady=10)
-        self.commit_entry.insert(0, f"Update: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        
-        # 버튼 프레임
-        button_frame = tk.Frame(main_frame, bg="#1e1e1e")
-        button_frame.pack(fill=tk.X)
-        
-        # 새로고침 버튼
-        self.refresh_btn = tk.Button(button_frame, 
-                                   text="🔄 Refresh Status",
-                                   bg="#444444",
-                                   fg="#ffffff",
-                                   font=("Arial", 12),
-                                   command=self.check_git_status,
-                                   relief=tk.FLAT,
-                                   padx=20,
-                                   pady=10)
-        self.refresh_btn.pack(side=tk.LEFT, padx=(0, 10))
+        inner_frame = tk.Frame(deploy_frame, bg='#1a1a1a')
+        inner_frame.pack(fill='both', expand=True, padx=20, pady=20)
         
         # 배포 버튼
-        self.deploy_btn = tk.Button(button_frame, 
-                                  text="🚀 Deploy to Netlify",
-                                  bg="#0d7377",
-                                  fg="#ffffff",
-                                  font=("Arial", 14, "bold"),
-                                  command=self.deploy,
-                                  relief=tk.FLAT,
-                                  padx=30,
-                                  pady=15)
-        self.deploy_btn.pack(side=tk.LEFT)
+        self.deploy_button = tk.Button(
+            inner_frame,
+            text="🚀 원클릭 자동 배포",
+            command=self.auto_deploy,
+            bg='#4caf50',
+            fg='white',
+            font=('SF Pro Display', 18, 'bold'),
+            bd=0,
+            padx=40,
+            pady=15,
+            cursor='hand2',
+            activebackground='#45a049',
+            activeforeground='white'
+        )
+        self.deploy_button.pack(pady=10)
         
-        # 사이트 열기 버튼
-        self.open_btn = tk.Button(button_frame, 
-                                text="🌐 Open Site",
-                                bg="#14ffec",
-                                fg="#000000",
-                                font=("Arial", 12),
-                                command=self.open_site,
-                                relief=tk.FLAT,
-                                padx=20,
-                                pady=10)
-        self.open_btn.pack(side=tk.RIGHT)
+        # 상태 표시
+        self.status_label = ttk.Label(inner_frame, text="대기 중...", style='Status.TLabel')
+        self.status_label.pack(pady=(10, 0))
         
-        # 진행 상태 표시
-        self.progress_label = tk.Label(main_frame, 
-                                     text="", 
-                                     bg="#1e1e1e", 
-                                     fg="#14ffec",
-                                     font=("Arial", 10))
-        self.progress_label.pack(fill=tk.X, pady=(10, 0))
+        # 프로그레스 바
+        self.progress = ttk.Progressbar(inner_frame, length=300, mode='indeterminate')
+        self.progress.pack(pady=(10, 0))
         
-        # 버튼 호버 효과
-        self.add_hover_effect(self.refresh_btn, "#444444", "#666666")
-        self.add_hover_effect(self.deploy_btn, "#0d7377", "#14ffec", fg_hover="#000000")
-        self.add_hover_effect(self.open_btn, "#14ffec", "#0d7377", fg_normal="#000000", fg_hover="#ffffff")
+    def create_log_section(self, parent):
+        """로그 섹션"""
+        log_frame = ttk.Frame(parent, style='Card.TFrame')
+        log_frame.pack(fill='both', expand=True, pady=(0, 20))
         
-    def add_hover_effect(self, button, bg_normal, bg_hover, fg_normal="#ffffff", fg_hover="#ffffff"):
-        """버튼 호버 효과 추가"""
-        def on_enter(e):
-            button.config(bg=bg_hover, fg=fg_hover)
-            
-        def on_leave(e):
-            button.config(bg=bg_normal, fg=fg_normal)
-            
-        button.bind("<Enter>", on_enter)
-        button.bind("<Leave>", on_leave)
+        # 로그 제목
+        log_title = tk.Label(log_frame, text="📋 실행 로그", bg='#1a1a1a', fg='#ffffff', 
+                            font=('SF Pro Display', 14, 'bold'))
+        log_title.pack(anchor='w', padx=20, pady=(15, 10))
         
-    def run_command(self, command):
-        """명령어 실행 및 결과 반환"""
+        # 로그 텍스트 영역
+        self.log_text = scrolledtext.ScrolledText(
+            log_frame,
+            wrap='word',
+            width=80,
+            height=15,
+            bg='#0a0a0a',
+            fg='#00ff00',
+            font=('SF Mono', 11),
+            insertbackground='#00ff00',
+            bd=0
+        )
+        self.log_text.pack(fill='both', expand=True, padx=20, pady=(0, 20))
+        
+        # 태그 설정
+        self.log_text.tag_config('info', foreground='#4caf50')
+        self.log_text.tag_config('warning', foreground='#ff9800')
+        self.log_text.tag_config('error', foreground='#f44336')
+        self.log_text.tag_config('success', foreground='#00ff00')
+        
+    def create_bottom_buttons(self, parent):
+        """하단 버튼들"""
+        button_frame = tk.Frame(parent, bg='#0a0a0a')
+        button_frame.pack(fill='x')
+        
+        # 웹사이트 열기 버튼
+        web_button = tk.Button(
+            button_frame,
+            text="🌐 웹사이트 열기",
+            command=self.open_website,
+            bg='#2196f3',
+            fg='white',
+            font=('SF Pro Display', 12),
+            bd=0,
+            padx=20,
+            pady=8,
+            cursor='hand2'
+        )
+        web_button.pack(side='left', padx=(0, 10))
+        
+        # 로그 지우기 버튼
+        clear_button = tk.Button(
+            button_frame,
+            text="🧹 로그 지우기",
+            command=self.clear_log,
+            bg='#ff5722',
+            fg='white',
+            font=('SF Pro Display', 12),
+            bd=0,
+            padx=20,
+            pady=8,
+            cursor='hand2'
+        )
+        clear_button.pack(side='left', padx=(0, 10))
+        
+        # 종료 버튼
+        exit_button = tk.Button(
+            button_frame,
+            text="🚪 종료",
+            command=self.root.quit,
+            bg='#666666',
+            fg='white',
+            font=('SF Pro Display', 12),
+            bd=0,
+            padx=20,
+            pady=8,
+            cursor='hand2'
+        )
+        exit_button.pack(side='right')
+        
+    def log(self, message, tag='info'):
+        """로그 메시지 추가"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        self.log_text.insert('end', f"[{timestamp}] {message}\n", tag)
+        self.log_text.see('end')
+        self.root.update()
+        
+    def clear_log(self):
+        """로그 지우기"""
+        self.log_text.delete('1.0', 'end')
+        
+    def update_status(self, message):
+        """상태 업데이트"""
+        self.status_label.config(text=message)
+        self.root.update()
+        
+    def change_to_project_dir(self):
+        """프로젝트 디렉토리로 이동"""
         try:
             os.chdir(self.project_dir)
-            result = subprocess.run(command, 
-                                  shell=True, 
-                                  check=True, 
-                                  capture_output=True, 
-                                  text=True)
-            return True, result.stdout or "명령이 성공적으로 실행되었습니다."
-        except subprocess.CalledProcessError as e:
-            return False, f"❌ 에러: {e.stderr or str(e)}"
+            self.log(f"✓ 프로젝트 디렉토리 설정: {self.project_dir}", 'success')
         except Exception as e:
-            return False, f"❌ 예상치 못한 오류: {str(e)}"
-    
-    def check_git_status(self):
-        """Git 상태 확인"""
-        self.status_text.delete('1.0', tk.END)
-        self.progress_label.config(text="📊 Git 상태 확인 중...")
-        
-        def check():
-            # git status
-            success, output = self.run_command("git status --short")
-            if success:
-                if not output.strip():
-                    self.status_text.insert(tk.END, "✅ 변경사항이 없습니다.\n\n")
-                    self.deploy_btn.config(state=tk.DISABLED)
-                else:
-                    self.status_text.insert(tk.END, "📝 변경된 파일:\n")
-                    self.status_text.insert(tk.END, output + "\n\n")
-                    self.deploy_btn.config(state=tk.NORMAL)
-                
-                # git diff --stat
-                success, diff_output = self.run_command("git diff --stat")
-                if success and diff_output.strip():
-                    self.status_text.insert(tk.END, "📊 변경 통계:\n")
-                    self.status_text.insert(tk.END, diff_output)
-            else:
-                self.status_text.insert(tk.END, output)
-                
-            self.progress_label.config(text="")
+            self.log(f"❌ 디렉토리 이동 실패: {e}", 'error')
             
+    def run_command(self, command):
+        """명령어 실행"""
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            return True, result.stdout
+        except subprocess.CalledProcessError as e:
+            return False, e.stderr
+            
+    def auto_deploy(self):
+        """원클릭 자동 배포"""
+        # 버튼 비활성화
+        self.deploy_button.config(state='disabled', text='🔄 배포 중...')
+        self.progress.start(10)
+        
         # 별도 스레드에서 실행
-        threading.Thread(target=check, daemon=True).start()
+        deploy_thread = threading.Thread(target=self._deploy_process)
+        deploy_thread.daemon = True
+        deploy_thread.start()
         
-    def deploy(self):
-        """배포 실행"""
-        commit_msg = self.commit_entry.get().strip()
-        if not commit_msg:
-            messagebox.showwarning("경고", "커밋 메시지를 입력해주세요.")
-            return
-            
-        # 확인 대화상자
-        if not messagebox.askyesno("배포 확인", 
-                                  f"다음 메시지로 배포하시겠습니까?\n\n{commit_msg}"):
-            return
-            
-        self.deploy_btn.config(state=tk.DISABLED)
-        self.refresh_btn.config(state=tk.DISABLED)
-        self.status_text.delete('1.0', tk.END)
-        
-        def deploy_thread():
-            commands = [
-                ("git add .", "📦 변경사항 스테이징..."),
-                (f'git commit -m "{commit_msg}"', "💾 커밋 생성..."),
-                ("git push origin main", "📤 원격 저장소로 푸시...")
-            ]
-            
-            all_success = True
-            
-            for cmd, desc in commands:
-                self.progress_label.config(text=desc)
-                self.status_text.insert(tk.END, f"\n{desc}\n")
-                self.status_text.see(tk.END)
-                self.root.update()
+    def _deploy_process(self):
+        """배포 프로세스"""
+        try:
+            # Git 상태 확인
+            self.update_status("Git 상태 확인 중...")
+            self.log("🔍 Git 상태 확인 중...", 'info')
+            success, _ = self.run_command("git status")
+            if not success:
+                self.log("❌ Git 저장소가 아니거나 Git이 설치되지 않았습니다.", 'error')
+                return
                 
-                success, output = self.run_command(cmd)
-                
-                if success:
-                    self.status_text.insert(tk.END, f"✅ {output}\n")
+            # 변경사항 스테이징
+            self.update_status("변경사항 스테이징 중...")
+            self.log("📦 변경사항 스테이징 중...", 'info')
+            time.sleep(0.5)
+            success, _ = self.run_command("git add .")
+            if not success:
+                self.log("❌ 스테이징 실패", 'error')
+                return
+            self.log("✓ 스테이징 완료", 'success')
+            
+            # 커밋 생성
+            now = datetime.now()
+            commit_message = f"🚀 Auto Deploy: {now.strftime('%Y-%m-%d %H:%M:%S')}"
+            self.update_status(f"커밋 생성 중: {commit_message}")
+            self.log(f"💾 커밋 생성 중: {commit_message}", 'info')
+            time.sleep(0.5)
+            
+            success, output = self.run_command(f'git commit -m "{commit_message}"')
+            if not success:
+                if "nothing to commit" in str(output):
+                    self.log("ℹ️ 변경사항이 없습니다.", 'warning')
+                    return
                 else:
-                    # main 브랜치 실패시 master 시도
-                    if "main" in cmd and "push" in cmd:
-                        self.status_text.insert(tk.END, "main 브랜치 실패, master 브랜치 시도...\n")
-                        success, output = self.run_command("git push origin master")
-                        
-                    if not success:
-                        self.status_text.insert(tk.END, output + "\n")
-                        all_success = False
-                        break
-                        
-                self.status_text.see(tk.END)
-                
-            if all_success:
-                self.progress_label.config(text="✅ 배포 완료! 1-2분 후 사이트에서 확인하세요.")
-                self.status_text.insert(tk.END, "\n" + "="*50 + "\n")
-                self.status_text.insert(tk.END, "✅ 배포가 성공적으로 완료되었습니다!\n")
-                self.status_text.insert(tk.END, f"🌐 {self.site_url}\n")
-                self.status_text.insert(tk.END, "="*50 + "\n")
-                
-                # 새 커밋 메시지 준비
-                self.commit_entry.delete(0, tk.END)
-                self.commit_entry.insert(0, f"Update: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-            else:
-                self.progress_label.config(text="❌ 배포 실패")
-                messagebox.showerror("배포 실패", "배포 중 오류가 발생했습니다.\n로그를 확인해주세요.")
-                
-            self.deploy_btn.config(state=tk.NORMAL)
-            self.refresh_btn.config(state=tk.NORMAL)
+                    self.log(f"❌ 커밋 실패: {output}", 'error')
+                    return
+            self.log("✓ 커밋 완료", 'success')
             
-            # 상태 새로고침
-            self.check_git_status()
+            # 푸시
+            self.update_status("원격 저장소로 푸시 중...")
+            self.log("📤 원격 저장소로 푸시 중...", 'info')
+            time.sleep(0.5)
             
-        threading.Thread(target=deploy_thread, daemon=True).start()
-        
-    def open_site(self):
-        """사이트 열기"""
-        subprocess.run(f"open {self.site_url}", shell=True)
+            success, _ = self.run_command("git push origin main")
+            if not success:
+                success, _ = self.run_command("git push origin master")
+                if not success:
+                    self.log("❌ 푸시 실패. 브랜치를 확인하세요.", 'error')
+                    return
+                    
+            self.log("✓ 푸시 완료", 'success')
+            self.log("🎉 배포 성공! 1-2분 후 사이트에 반영됩니다.", 'success')
+            
+            # 성공 알림
+            self.update_status("✅ 배포 완료!")
+            
+            # 자동으로 웹사이트 열기
+            self.root.after(1000, self.open_website)
+            
+        except Exception as e:
+            self.log(f"❌ 예상치 못한 오류: {e}", 'error')
+            
+        finally:
+            # UI 복원
+            self.progress.stop()
+            self.deploy_button.config(state='normal', text='🚀 원클릭 자동 배포')
+            
+    def open_website(self):
+        """웹사이트 열기"""
+        url = "https://euo.netlify.app"
+        self.log(f"🌐 웹사이트 열기: {url}", 'info')
+        webbrowser.open(url)
         
     def run(self):
         """GUI 실행"""
