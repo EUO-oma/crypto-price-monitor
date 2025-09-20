@@ -141,13 +141,57 @@
             color: #666;
             width: 50px;
             height: 40px;
-            font-size: 20px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 0;
+            position: relative;
+        }
+        
+        /* CSS로 만든 눈 아이콘 */
+        .eye-icon {
+            width: 20px;
+            height: 12px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .eye-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 20px;
+            height: 12px;
+            border: 2px solid currentColor;
+            border-radius: 50px;
+            transform: translateY(-50%);
+        }
+        
+        .eye-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* 보안 모드일 때 눈에 사선 추가 */
+        .security-btn.active .eye-icon .slash {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 24px;
+            height: 2px;
+            background: currentColor;
+            transform: translate(-50%, -50%) rotate(45deg);
+            z-index: 1;
         }
         
         .security-btn:hover {
@@ -218,7 +262,7 @@
 <body class="size-m">
     <div class="security-controls">
         <button class="security-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
-            👁️
+            <span class="eye-icon"></span>
         </button>
     </div>
     
@@ -353,14 +397,24 @@
         function toggleSecurity() {
             isSecureMode = !isSecureMode;
             const btn = document.getElementById('securityToggle');
+            const eyeIcon = btn.querySelector('.eye-icon');
             
             if (isSecureMode) {
                 btn.classList.add('active');
-                btn.innerHTML = '🔒';
+                // 사선 추가
+                if (!eyeIcon.querySelector('.slash')) {
+                    const slash = document.createElement('span');
+                    slash.className = 'slash';
+                    eyeIcon.appendChild(slash);
+                }
                 document.querySelectorAll('.price').forEach(el => el.classList.add('secure'));
             } else {
                 btn.classList.remove('active');
-                btn.innerHTML = '👁️';
+                // 사선 제거
+                const slash = eyeIcon.querySelector('.slash');
+                if (slash) {
+                    slash.remove();
+                }
                 document.querySelectorAll('.price').forEach(el => el.classList.remove('secure'));
             }
             
