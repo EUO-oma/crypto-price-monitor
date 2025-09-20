@@ -204,11 +204,13 @@
             transform: translate(-50%, -50%);
             color: #666;
             font-size: 16px;
+            z-index: 10;
         }
         
         #priceChart {
-            max-height: 560px !important;
+            width: 100% !important;
             height: 560px !important;
+            display: block;
         }
         
         /* Info section */
@@ -406,6 +408,28 @@
                 })).sort((a, b) => new Date(a.date) - new Date(b.date));
                 
                 console.log('Loaded price data:', allPriceData.length, 'days');
+                
+                // 데이터 구조 확인을 위한 디버깅
+                if (allPriceData.length > 0) {
+                    console.log('Sample data structure:', allPriceData[allPriceData.length - 1]);
+                    
+                    // 데이터가 high/low 형식이 없는 경우, 가격에서 생성
+                    allPriceData = allPriceData.map(item => {
+                        if (!item.btc_high && item.btc) {
+                            item.btc_high = item.btc * 1.01; // 1% 위
+                            item.btc_low = item.btc * 0.99;  // 1% 아래
+                        }
+                        if (!item.eth_high && item.eth) {
+                            item.eth_high = item.eth * 1.01;
+                            item.eth_low = item.eth * 0.99;
+                        }
+                        if (!item.sol_high && item.sol) {
+                            item.sol_high = item.sol * 1.01;
+                            item.sol_low = item.sol * 0.99;
+                        }
+                        return item;
+                    });
+                }
                 
                 // Initial update
                 updateChart();
