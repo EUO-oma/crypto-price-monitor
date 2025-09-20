@@ -5,6 +5,36 @@
 
 const fs = require('fs');
 
+console.log('🚀 Starting build configuration...');
+console.log('📍 Current directory:', process.cwd());
+console.log('🌍 NODE_ENV:', process.env.NODE_ENV);
+console.log('🏗️  Build context:', process.env.CONTEXT);
+
+// 디버깅: 사용 가능한 환경 변수 확인
+console.log('\n🔍 Checking for required environment variables:');
+
+const requiredVars = [
+    'SUPABASE_URL',
+    'SUPABASE_ANON_KEY',
+    'FIREBASE_API_KEY',
+    'FIREBASE_AUTH_DOMAIN',
+    'FIREBASE_DATABASE_URL',
+    'FIREBASE_PROJECT_ID',
+    'FIREBASE_STORAGE_BUCKET',
+    'FIREBASE_MESSAGING_SENDER_ID',
+    'FIREBASE_APP_ID',
+    'ADMIN_EMAILS'
+];
+
+requiredVars.forEach(varName => {
+    const value = process.env[varName];
+    if (value) {
+        console.log(`  ✅ ${varName}: Set (${value.substring(0, 10)}...)`);
+    } else {
+        console.log(`  ❌ ${varName}: NOT SET`);
+    }
+});
+
 // Netlify 환경 변수에서 설정 읽기
 const config = {
     SUPABASE: {
@@ -26,6 +56,17 @@ const config = {
         DEV_MODE: process.env.DEV_MODE === 'true'
     }
 };
+
+// 중요한 설정이 있는지 확인
+if (!config.SUPABASE.URL || !config.SUPABASE.ANON_KEY) {
+    console.error('\n⚠️  CRITICAL WARNING: Supabase configuration is missing!');
+    console.error('   The application will NOT work without these environment variables:');
+    console.error('   - SUPABASE_URL');
+    console.error('   - SUPABASE_ANON_KEY');
+    console.error('\n   Please add these in Netlify Dashboard:');
+    console.error('   Site Settings → Environment Variables → Environment Variables');
+    console.error('\n   Or use Netlify CLI: netlify env:set SUPABASE_URL "your-url"');
+}
 
 // config-env.js 파일 생성
 const configContent = `

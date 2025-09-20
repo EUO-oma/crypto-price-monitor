@@ -97,14 +97,20 @@
         document.head.appendChild(script);
     }
 
-    // 전역 변수 설정 (하위 호환성)
-    Object.defineProperty(window, 'SUPABASE_URL', {
-        get: function() { return window.APP_CONFIG?.SUPABASE?.URL || ''; }
-    });
+    // 전역 변수 설정 (하위 호환성) - 이미 존재하면 덮어쓰지 않음
+    if (!window.SUPABASE_URL) {
+        Object.defineProperty(window, 'SUPABASE_URL', {
+            get: function() { return window.APP_CONFIG?.SUPABASE?.URL || ''; },
+            configurable: true
+        });
+    }
     
-    Object.defineProperty(window, 'SUPABASE_ANON_KEY', {
-        get: function() { return window.APP_CONFIG?.SUPABASE?.ANON_KEY || ''; }
-    });
+    if (!window.SUPABASE_ANON_KEY) {
+        Object.defineProperty(window, 'SUPABASE_ANON_KEY', {
+            get: function() { return window.APP_CONFIG?.SUPABASE?.ANON_KEY || ''; },
+            configurable: true
+        });
+    }
 
     // 헬퍼 함수들
     window.debugLog = function(message, ...args) {

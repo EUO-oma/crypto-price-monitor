@@ -254,7 +254,17 @@
             let attempts = 0;
             const maxAttempts = 50; // 10초 대기
             
+            console.log('🔄 Supabase 초기화 시작...');
+            
             while (attempts < maxAttempts) {
+                // 설정이 로드되었는지 확인
+                const url = window.getConfig?.('SUPABASE.URL') || window.APP_CONFIG?.SUPABASE?.URL;
+                const key = window.getConfig?.('SUPABASE.ANON_KEY') || window.APP_CONFIG?.SUPABASE?.ANON_KEY;
+                
+                if (attempts === 0 || attempts === 10 || attempts === 25) {
+                    console.log(`⏳ 시도 ${attempts}/${maxAttempts}: URL=${url ? '있음' : '없음'}, KEY=${key ? '있음' : '없음'}`);
+                }
+                
                 // getSupabaseClient 함수가 준비될 때까지 대기
                 if (window.getSupabaseClient && typeof window.getSupabaseClient === 'function') {
                     const client = window.getSupabaseClient();
@@ -269,7 +279,15 @@
                 attempts++;
             }
             
-            throw new Error('Supabase 초기화 시간 초과');
+            // 타임아웃 시 디버깅 정보 출력
+            console.error('❌ Supabase 초기화 실패 - 디버깅 정보:');
+            console.error('   ENV_CONFIG:', window.ENV_CONFIG);
+            console.error('   APP_CONFIG:', window.APP_CONFIG);
+            console.error('   getSupabaseClient 함수:', typeof window.getSupabaseClient);
+            console.error('   현재 URL:', window.location.href);
+            console.error('   Netlify 환경:', window.location.hostname.includes('netlify'));
+            
+            throw new Error('Supabase 초기화 시간 초과 - 환경 변수를 확인하세요');
         }
 
         // Google 로그인

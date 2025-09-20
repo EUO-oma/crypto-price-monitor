@@ -7,17 +7,33 @@ function getSupabaseClient() {
     }
     
     // config.js에서 설정 가져오기
-    const url = window.getConfig('SUPABASE.URL');
-    const key = window.getConfig('SUPABASE.ANON_KEY');
+    const url = window.getConfig ? window.getConfig('SUPABASE.URL') : window.APP_CONFIG?.SUPABASE?.URL;
+    const key = window.getConfig ? window.getConfig('SUPABASE.ANON_KEY') : window.APP_CONFIG?.SUPABASE?.ANON_KEY;
     
-    if (window.supabase && window.supabase.createClient && url && key) {
-        window.supabaseClient = window.supabase.createClient(url, key);
-        return window.supabaseClient;
+    if (!url || !key) {
+        console.error('⚠️ Supabase 설정이 없습니다. 환경 변수를 확인하세요.');
+        console.error('   SUPABASE_URL:', url ? '설정됨' : '없음');
+        console.error('   SUPABASE_ANON_KEY:', key ? '설정됨' : '없음');
+        return null;
     }
     
-    console.error('⚠️ Supabase 클라이언트를 찾을 수 없습니다.');
+    if (window.supabase && window.supabase.createClient) {
+        try {
+            window.supabaseClient = window.supabase.createClient(url, key);
+            console.log('✅ Supabase 클라이언트 생성됨');
+            return window.supabaseClient;
+        } catch (error) {
+            console.error('❌ Supabase 클라이언트 생성 실패:', error);
+            return null;
+        }
+    }
+    
+    console.error('⚠️ Supabase SDK가 로드되지 않았습니다.');
     return null;
 }
+
+// window에 전역으로 노출
+window.getSupabaseClient = getSupabaseClient;
 
 // 로그인 상태 확인
 async function checkAuth() {
