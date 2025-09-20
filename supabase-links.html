@@ -433,7 +433,6 @@
     
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="links-module.js"></script>
     <script>
         // Toggle Fun YouTube view
         function toggleFunYoutubeView(view) {
@@ -459,22 +458,198 @@
             localStorage.setItem('funYoutubeView', view);
         }
         
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        let supabase = null;
+        
+        // Initialize Supabase
+        function initializeSupabase() {
+            if (!window.supabase) {
+                console.error('Supabase library not loaded');
+                return false;
+            }
+            
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase client initialized');
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize Supabase:', error);
+                return false;
+            }
+        }
+        
+        // Create link HTML for GPT/Favorite sections
+        function createLinkButton(link) {
+            return `
+                <a href="${link.url}" target="_blank" class="link-btn">
+                    <span>${link.icon || '🔗'}</span>
+                    <span>${link.name}</span>
+                </a>
+            `;
+        }
+        
+        // Create YouTube card HTML
+        function createYoutubeCard(link) {
+            const isLive = link.is_live || false;
+            return `
+                <a href="${link.url}" target="_blank" class="youtube-card">
+                    ${isLive ? '<div class="live-indicator">LIVE</div>' : ''}
+                    <h3>${link.icon || '📺'} ${link.name}</h3>
+                </a>
+            `;
+        }
+        
+        // Create Fun YouTube list item
+        function createFunYoutubeListItem(link) {
+            return `
+                <a href="${link.url}" target="_blank" class="list-item">
+                    <span style="font-size: 20px;">${link.icon || '🎮'}</span>
+                    <span>${link.name}</span>
+                </a>
+            `;
+        }
+        
+        // Create Fun YouTube grid item
+        function createFunYoutubeGridItem(link) {
+            return `
+                <a href="${link.url}" target="_blank" class="grid-item">
+                    <div class="icon">${link.icon || '🎮'}</div>
+                    <div>${link.name}</div>
+                </a>
+            `;
+        }
+        
+        // Load and display links
+        async function loadLinksFromSupabase() {
+            if (!supabase) {
+                if (!initializeSupabase()) {
+                    showError('Failed to initialize Supabase');
+                    return;
+                }
+            }
+            
+            try {
+                // Load all links
+                const { data: links, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) throw error;
+                
+                // Clear loading states
+                document.getElementById('gpt-links').classList.remove('loading');
+                document.getElementById('youtube-links').classList.remove('loading');
+                document.getElementById('favorite-links').classList.remove('loading');
+                document.getElementById('fun-youtube-links-list').classList.remove('loading');
+                
+                // Filter and display links by category
+                const gptLinks = links.filter(link => link.category === 'gpt');
+                const youtubeLinks = links.filter(link => link.category === 'youtube');
+                const favoriteLinks = links.filter(link => link.category === 'favorite');
+                const funYoutubeLinks = links.filter(link => link.category === 'fun-youtube');
+                
+                // Display GPT links
+                const gptContainer = document.getElementById('gpt-links');
+                if (gptLinks.length > 0) {
+                    gptContainer.innerHTML = gptLinks.map(link => createLinkButton(link)).join('');
+                } else {
+                    gptContainer.innerHTML = '<div class="empty-state">GPT 링크가 없습니다</div>';
+                }
+                
+                // Display YouTube links
+                const youtubeContainer = document.getElementById('youtube-links');
+                if (youtubeLinks.length > 0) {
+                    youtubeContainer.innerHTML = youtubeLinks.map(link => createYoutubeCard(link)).join('');
+                } else {
+                    youtubeContainer.innerHTML = '<div class="empty-state">YouTube 링크가 없습니다</div>';
+                }
+                
+                // Display Favorite links
+                const favoriteContainer = document.getElementById('favorite-links');
+                if (favoriteLinks.length > 0) {
+                    favoriteContainer.innerHTML = favoriteLinks.map(link => createLinkButton(link)).join('');
+                } else {
+                    favoriteContainer.innerHTML = '<div class="empty-state">즐겨찾기가 없습니다</div>';
+                }
+                
+                // Display Fun YouTube links
+                const funListContainer = document.getElementById('fun-youtube-links-list');
+                const funGridContainer = document.getElementById('fun-youtube-links-grid');
+                
+                if (funYoutubeLinks.length > 0) {
+                    funListContainer.innerHTML = funYoutubeLinks.map(link => createFunYoutubeListItem(link)).join('');
+                    funGridContainer.innerHTML = funYoutubeLinks.map(link => createFunYoutubeGridItem(link)).join('');
+                } else {
+                    const emptyMsg = '<div class="empty-state">Fun YouTube 링크가 없습니다</div>';
+                    funListContainer.innerHTML = emptyMsg;
+                    funGridContainer.innerHTML = emptyMsg;
+                }
+                
+                // Load custom categories
+                await loadCustomCategories(links);
+                
+            } catch (error) {
+                console.error('Error loading links:', error);
+                showError('링크를 불러오는 데 실패했습니다');
+            }
+        }
+        
+        // Load custom categories
+        async function loadCustomCategories(allLinks) {
+            const container = document.getElementById('custom-category-sections');
+            container.innerHTML = '';
+            
+            // Get unique custom categories
+            const customCategories = [...new Set(allLinks
+                .filter(link => link.category && !['gpt', 'youtube', 'favorite', 'fun-youtube'].includes(link.category))
+                .map(link => link.category))];
+            
+            customCategories.forEach(category => {
+                const categoryLinks = allLinks.filter(link => link.category === category);
+                
+                if (categoryLinks.length > 0) {
+                    const section = document.createElement('div');
+                    section.className = 'custom-category';
+                    section.innerHTML = `
+                        <h2>📁 ${category}</h2>
+                        <div class="custom-links">
+                            ${categoryLinks.map(link => createLinkButton(link)).join('')}
+                        </div>
+                    `;
+                    container.appendChild(section);
+                }
+            });
+        }
+        
+        // Show error message
+        function showError(message) {
+            const containers = ['gpt-links', 'youtube-links', 'favorite-links', 'fun-youtube-links-list'];
+            containers.forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.innerHTML = `<div class="empty-state">❌ ${message}</div>`;
+                }
+            });
+        }
+        
         // Initialize page
         async function initializePage() {
             // Load saved view preference
             const savedView = localStorage.getItem('funYoutubeView') || 'list';
             toggleFunYoutubeView(savedView);
             
-            // Load all links from Supabase
-            if (typeof loadLinksFromSupabase === 'function') {
+            // Wait for Supabase library and load links
+            if (window.supabase && window.supabase.createClient) {
                 await loadLinksFromSupabase();
             } else {
-                console.error('links-module.js not loaded properly');
-                // Show error message in each section
-                document.getElementById('gpt-links').innerHTML = '<div class="empty-state">링크 모듈을 로드할 수 없습니다.</div>';
-                document.getElementById('youtube-links').innerHTML = '<div class="empty-state">링크 모듈을 로드할 수 없습니다.</div>';
-                document.getElementById('favorite-links').innerHTML = '<div class="empty-state">링크 모듈을 로드할 수 없습니다.</div>';
-                document.getElementById('fun-youtube-links-list').innerHTML = '<div class="empty-state">링크 모듈을 로드할 수 없습니다.</div>';
+                // Wait for library to load
+                setTimeout(async () => {
+                    await loadLinksFromSupabase();
+                }, 1000);
             }
         }
         
