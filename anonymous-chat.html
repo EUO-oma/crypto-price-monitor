@@ -447,6 +447,91 @@
             cursor: not-allowed;
         }
         
+        /* 아바타 선택기 스타일 */
+        .avatar-selector {
+            margin: 20px 0;
+        }
+        
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .avatar-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 10px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .avatar-option:hover {
+            border-color: #555;
+            transform: translateY(-2px);
+        }
+        
+        .avatar-option.selected {
+            border-color: #4caf50;
+            background: #1a2e1a;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+        
+        .avatar-image {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin-bottom: 8px;
+            object-fit: cover;
+            background: #2a2a2a;
+        }
+        
+        .avatar-name {
+            font-size: 12px;
+            color: #888;
+            font-weight: 500;
+        }
+        
+        .avatar-symbol {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .shuffle-button {
+            background: #333;
+            border: 1px solid #555;
+            color: #ccc;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .shuffle-button:hover {
+            background: #444;
+            border-color: #666;
+        }
+        
+        /* 메시지에 아바타 표시 */
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 12px;
+            object-fit: cover;
+            background: #2a2a2a;
+            flex-shrink: 0;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .chat-header {
@@ -465,6 +550,20 @@
                 width: calc(100% - 40px);
                 grid-template-columns: repeat(6, 1fr);
             }
+            
+            .avatar-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            
+            .avatar-option {
+                padding: 12px 8px;
+            }
+            
+            .avatar-image {
+                width: 40px;
+                height: 40px;
+            }
         }
     </style>
 </head>
@@ -474,8 +573,17 @@
         <div class="welcome-content">
             <h1 class="welcome-title">🌐 익명 채팅방</h1>
             <p class="welcome-subtitle">자유롭게 대화를 나눠보세요</p>
-            <input type="text" class="username-input" id="usernameInput" placeholder="닉네임을 입력하세요" maxlength="20">
-            <button class="join-button" id="joinButton" onclick="joinChat()">채팅 참여하기</button>
+            <p style="color: #888; font-size: 14px; margin-bottom: 20px;">크립토 아바타를 선택하세요</p>
+            
+            <!-- 코인 아바타 선택기 -->
+            <div class="avatar-selector" id="avatarSelector">
+                <div class="avatar-grid" id="avatarGrid">
+                    <!-- 코인 아바타들이 여기에 동적으로 추가됨 -->
+                </div>
+                <button class="shuffle-button" onclick="shuffleAvatars()">🎲 다른 코인 보기</button>
+            </div>
+            
+            <button class="join-button" id="joinButton" onclick="joinChat()" disabled>채팅 참여하기</button>
         </div>
     </div>
 
@@ -538,6 +646,7 @@
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="coin-images-db.js"></script>
     
     <script>
         // Firebase configuration
@@ -672,6 +781,8 @@
                 userId: currentUser.id,
                 username: currentUser.username,
                 avatar: currentUser.avatar,
+                avatarImage: currentUser.avatarImage,
+                avatarColor: currentUser.avatarColor,
                 text: text,
                 timestamp: Date.now()
             };
@@ -706,8 +817,16 @@
                 minute: '2-digit'
             });
             
+            const avatarImage = message.avatarImage || 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png';
+            const avatarColor = message.avatarColor || '#f7931a';
+            
             messageEl.innerHTML = `
-                <div class="message-avatar">${message.avatar}</div>
+                <img class="message-avatar" src="${avatarImage}" alt="${message.username}" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                     onload="this.nextElementSibling.style.display='none'">
+                <div class="message-avatar" style="background: ${avatarColor}; color: white; font-weight: bold; font-size: 12px; display: none; align-items: center; justify-content: center;">
+                    ${message.username.charAt(0)}
+                </div>
                 <div class="message-content">
                     <div class="message-header">
                         <span class="message-username">${message.username}</span>
@@ -817,9 +936,10 @@
             }
         });
         
-        // Focus input on load
+        // Focus input on load  
         window.addEventListener('load', () => {
-            document.getElementById('usernameInput').focus();
+            // 코인 아바타 초기화
+            initializeAvatars();
             
             // Check Firebase connection
             database.ref('.info/connected').on('value', (snapshot) => {
