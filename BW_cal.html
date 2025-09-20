@@ -118,6 +118,72 @@
             border-left: 4px solid;
         }
         
+        .baseline-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .baseline-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        .baseline-btn.active {
+            background: #4caf50;
+            color: #000;
+            border-color: #4caf50;
+            font-weight: bold;
+        }
+        
+        /* 비교 테이블 스타일 */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #0a0a0a;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        
+        .comparison-table th {
+            background: #1a1a1a;
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .comparison-table td {
+            color: #e0e0e0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .coin-cell {
+            font-weight: bold;
+        }
+        
+        .btc-cell { color: #f7931a; }
+        .eth-cell { color: #9a8ff8; }
+        .sol-cell { color: #00FFA3; }
+        
         .eth-ratio { border-left-color: #9a8ff8; }
         .sol-ratio { border-left-color: #00FFA3; }
         
@@ -260,6 +326,21 @@
         <div class="section calculation-section">
             <div class="section-title">🧮 정규화 비율 계산</div>
             
+            <!-- 기준점 선택 -->
+            <div style="margin-bottom: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px;">
+                <div style="margin-bottom: 10px; color: #888; font-size: 14px;">정규화 기준점 선택:</div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="baseline-btn active" onclick="setBaselineMode('current')" id="current-btn">현재가</button>
+                    <button class="baseline-btn" onclick="setBaselineMode('24h-avg')" id="avg-btn">24h 평균</button>
+                    <button class="baseline-btn" onclick="setBaselineMode('24h-open')" id="open-btn">24h 시가</button>
+                    <button class="baseline-btn" onclick="setBaselineMode('24h-vwap')" id="vwap-btn">24h VWAP</button>
+                    <button class="baseline-btn" onclick="setBaselineMode('manual')" id="manual-btn">수동 설정</button>
+                </div>
+                <div style="margin-top: 10px; color: #666; font-size: 12px;" id="baseline-desc">
+                    현재가: 실시간 가격을 기준으로 정규화 (변동성 높음, 실시간 반영)
+                </div>
+            </div>
+            
             <div class="ratio-display">
                 <div class="ratio-card eth-ratio">
                     <div style="font-size: 14px; margin-bottom: 10px; color: #9a8ff8;">ETH → BTC 정규화</div>
@@ -342,6 +423,47 @@
                     <span id="sol-high-ratio" class="neutral">------</span>
                 </div>
             </div>
+            
+            <!-- 비교 테이블 -->
+            <div style="margin-top: 20px;">
+                <div style="text-align: center; margin-bottom: 15px; font-size: 16px; color: #4caf50;">
+                    정규화된 가격 비교 테이블
+                </div>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>코인명</th>
+                            <th>BTC가격 (A)</th>
+                            <th>정규화가격 (B)</th>
+                            <th>차액 (A-B)</th>
+                            <th>대상코인으로 변환</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="coin-cell btc-cell">BTC</td>
+                            <td id="table-btc-btc-price">------</td>
+                            <td id="table-btc-normalized">------</td>
+                            <td id="table-btc-diff-usd">기준</td>
+                            <td id="table-btc-diff-coin">기준</td>
+                        </tr>
+                        <tr>
+                            <td class="coin-cell eth-cell">ETH</td>
+                            <td id="table-eth-btc-price">------</td>
+                            <td id="table-eth-normalized">------</td>
+                            <td id="table-eth-diff-usd">------</td>
+                            <td id="table-eth-diff-coin">------</td>
+                        </tr>
+                        <tr>
+                            <td class="coin-cell sol-cell">SOL</td>
+                            <td id="table-sol-btc-price">------</td>
+                            <td id="table-sol-normalized">------</td>
+                            <td id="table-sol-diff-usd">------</td>
+                            <td id="table-sol-diff-coin">------</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- 차익거래 기회 -->
@@ -360,21 +482,83 @@
         let normalizationRatios = {};
         let isCalculating = true;
         let dailyHighPrices = {}; // 24시간 최고가 저장
+        let dailyLowPrices = {}; // 24시간 최저가 저장
+        let dailyOpenPrices = {}; // 24시간 시가 저장
+        let dailyVolumes = {}; // 24시간 거래량 저장
+        let baselineMode = 'current'; // 기준점 모드
 
+        // 기준점 모드 설정
+        function setBaselineMode(mode) {
+            baselineMode = mode;
+            
+            // 버튼 활성화 상태 업데이트
+            document.querySelectorAll('.baseline-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode + '-btn').classList.add('active');
+            
+            // 설명 업데이트
+            const descriptions = {
+                'current': '현재가: 실시간 가격을 기준으로 정규화 (변동성 높음, 실시간 반영)',
+                '24h-avg': '24h 평균: (고가+저가)/2 기준으로 정규화 (안정적, 중간값 반영)',
+                '24h-open': '24h 시가: 오늘 시작 가격 기준으로 정규화 (일일 시작점 기준)',
+                '24h-vwap': '24h VWAP: 거래량 가중 평균 가격 기준 (실제 거래 반영)',
+                'manual': '수동 설정: 사용자가 직접 기준점 설정 (고정된 기준점)'
+            };
+            document.getElementById('baseline-desc').textContent = descriptions[mode];
+            
+            // 새로운 기준으로 다시 계산
+            if (currentPrices.btc && currentPrices.eth && currentPrices.sol) {
+                setBaseline();
+            }
+        }
+        
         // 초기 기준점 설정
         function setBaseline() {
-            if (currentPrices.btc && currentPrices.eth && currentPrices.sol) {
-                baselinePrices = { ...currentPrices };
-                
-                // BTC 기준으로 정규화 비율 계산
-                normalizationRatios.eth = baselinePrices.btc / baselinePrices.eth;
-                normalizationRatios.sol = baselinePrices.btc / baselinePrices.sol;
-                
-                console.log('Baseline set:', baselinePrices);
-                console.log('Normalization ratios:', normalizationRatios);
-                
-                updateRatioDisplay();
+            if (!currentPrices.btc || !currentPrices.eth || !currentPrices.sol) return;
+            
+            let basePrices = {};
+            
+            switch(baselineMode) {
+                case 'current':
+                    basePrices = { ...currentPrices };
+                    break;
+                case '24h-avg':
+                    basePrices = {
+                        btc: (dailyHighPrices.btc + dailyLowPrices.btc) / 2,
+                        eth: (dailyHighPrices.eth + dailyLowPrices.eth) / 2,
+                        sol: (dailyHighPrices.sol + dailyLowPrices.sol) / 2
+                    };
+                    break;
+                case '24h-open':
+                    basePrices = { ...dailyOpenPrices };
+                    break;
+                case '24h-vwap':
+                    // 간단한 VWAP 근사치 (실제로는 더 복잡한 계산 필요)
+                    basePrices = {
+                        btc: (currentPrices.btc + dailyHighPrices.btc + dailyLowPrices.btc + dailyOpenPrices.btc) / 4,
+                        eth: (currentPrices.eth + dailyHighPrices.eth + dailyLowPrices.eth + dailyOpenPrices.eth) / 4,
+                        sol: (currentPrices.sol + dailyHighPrices.sol + dailyLowPrices.sol + dailyOpenPrices.sol) / 4
+                    };
+                    break;
+                case 'manual':
+                    // 수동 설정의 경우 기존 baselinePrices 유지
+                    if (!baselinePrices.btc) {
+                        basePrices = { ...currentPrices };
+                    } else {
+                        basePrices = { ...baselinePrices };
+                    }
+                    break;
             }
+            
+            baselinePrices = basePrices;
+            
+            // BTC 기준으로 정규화 비율 계산
+            normalizationRatios.eth = baselinePrices.btc / baselinePrices.eth;
+            normalizationRatios.sol = baselinePrices.btc / baselinePrices.sol;
+            
+            console.log(`Baseline set (${baselineMode}):`, baselinePrices);
+            console.log('Normalization ratios:', normalizationRatios);
+            
+            updateRatioDisplay();
         }
 
         // 비율 표시 업데이트
@@ -519,9 +703,15 @@
                 const price = parseFloat(data.c);
                 const change24h = parseFloat(data.P);
                 const high24h = parseFloat(data.h); // 24시간 최고가
+                const low24h = parseFloat(data.l); // 24시간 최저가
+                const open24h = parseFloat(data.o); // 24시간 시가
+                const volume24h = parseFloat(data.v); // 24시간 거래량
                 
                 currentPrices[coinType] = price;
-                dailyHighPrices[coinType] = high24h; // 24시간 최고가 저장
+                dailyHighPrices[coinType] = high24h;
+                dailyLowPrices[coinType] = low24h;
+                dailyOpenPrices[coinType] = open24h;
+                dailyVolumes[coinType] = volume24h;
                 
                 document.getElementById(priceId).textContent = formatPrice(price);
                 document.getElementById(changeId).textContent = `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`;
@@ -538,6 +728,7 @@
                 // 정규화된 가격 업데이트
                 if (isCalculating && normalizationRatios.eth && normalizationRatios.sol) {
                     updateNormalizedPrices();
+                    updateComparisonTable();
                 }
             };
             
@@ -557,6 +748,60 @@
             }
         }
 
+        // 비교 테이블 업데이트
+        function updateComparisonTable() {
+            if (!normalizationRatios.eth || !normalizationRatios.sol) return;
+            
+            const normalizedETH = currentPrices.eth * normalizationRatios.eth;
+            const normalizedSOL = currentPrices.sol * normalizationRatios.sol;
+            
+            // BTC (기준)
+            document.getElementById('table-btc-btc-price').textContent = '$' + formatPrice(currentPrices.btc);
+            document.getElementById('table-btc-normalized').textContent = '$' + formatPrice(currentPrices.btc);
+            document.getElementById('table-btc-diff-usd').textContent = '기준';
+            document.getElementById('table-btc-diff-coin').textContent = '기준';
+            
+            // ETH 계산
+            const ethDiffUSD = currentPrices.btc - normalizedETH; // BTC가격 - ETH정규화가격
+            const ethDiffCoin = ethDiffUSD / currentPrices.eth; // USD 차액을 ETH가격으로 나눠서 ETH 수량으로 변환
+            
+            document.getElementById('table-eth-btc-price').textContent = '$' + formatPrice(currentPrices.btc);
+            document.getElementById('table-eth-normalized').textContent = '$' + formatPrice(normalizedETH);
+            document.getElementById('table-eth-diff-usd').innerHTML = formatUSDDifference(ethDiffUSD);
+            document.getElementById('table-eth-diff-coin').innerHTML = formatCoinDifference(ethDiffCoin, 'ETH');
+            
+            // SOL 계산
+            const solDiffUSD = currentPrices.btc - normalizedSOL; // BTC가격 - SOL정규화가격
+            const solDiffCoin = solDiffUSD / currentPrices.sol; // USD 차액을 SOL가격으로 나눠서 SOL 수량으로 변환
+            
+            document.getElementById('table-sol-btc-price').textContent = '$' + formatPrice(currentPrices.btc);
+            document.getElementById('table-sol-normalized').textContent = '$' + formatPrice(normalizedSOL);
+            document.getElementById('table-sol-diff-usd').innerHTML = formatUSDDifference(solDiffUSD);
+            document.getElementById('table-sol-diff-coin').innerHTML = formatCoinDifference(solDiffCoin, 'SOL');
+        }
+        
+        // USD 차액 포맷팅
+        function formatUSDDifference(diff) {
+            const color = diff >= 0 ? '#4caf50' : '#f44336';
+            const sign = diff >= 0 ? '+' : '';
+            return `<span style="color: ${color}">${sign}$${Math.abs(diff).toFixed(2)}</span>`;
+        }
+        
+        // 코인 수량 차액 포맷팅
+        function formatCoinDifference(coinAmount, coinSymbol) {
+            const color = coinAmount >= 0 ? '#4caf50' : '#f44336';
+            const sign = coinAmount >= 0 ? '+' : '';
+            const absAmount = Math.abs(coinAmount);
+            
+            // 코인 수량에 따른 소수점 조정
+            let decimals = 4;
+            if (absAmount >= 1) decimals = 2;
+            if (absAmount >= 100) decimals = 1;
+            if (absAmount >= 1000) decimals = 0;
+            
+            return `<span style="color: ${color}">${sign}${absAmount.toFixed(decimals)} ${coinSymbol}</span>`;
+        }
+        
         // 초기화
         window.addEventListener('load', () => {
             // WebSocket 연결
