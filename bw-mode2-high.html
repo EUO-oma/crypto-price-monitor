@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BW Mode 2</title>
+    <title>BW Mode 2 - High</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +12,7 @@
         }
         
         body {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a0f1f 100%);
+            background: linear-gradient(135deg, #1a0a0a 0%, #1f0f0a 100%);
             color: #ffffff;
             font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
@@ -29,9 +29,9 @@
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 80%, rgba(76, 175, 80, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(33, 150, 243, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(156, 39, 176, 0.1) 0%, transparent 50%);
+                radial-gradient(circle at 20% 80%, rgba(244, 67, 54, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 152, 0, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 193, 7, 0.1) 0%, transparent 50%);
             pointer-events: none;
             animation: moveGradient 20s ease infinite;
         }
@@ -60,8 +60,8 @@
             gap: 8px;
             margin-top: 10px;
             padding: 8px 16px;
-            background: rgba(76, 175, 80, 0.2);
-            border: 1px solid #4caf50;
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
             border-radius: 20px;
             font-size: 0.9em;
         }
@@ -69,7 +69,7 @@
         .live-dot {
             width: 8px;
             height: 8px;
-            background: #4caf50;
+            background: #f44336;
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
@@ -111,11 +111,43 @@
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
         }
         
+        /* Toggle button for mode */
+        .mode-toggle {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 5px;
+            display: flex;
+            gap: 5px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .mode-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        
         /* Main container */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 30px 20px;
+            padding-bottom: 100px;
         }
         
         /* Coin cards */
@@ -144,12 +176,12 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #4caf50, #2196f3);
+            background: linear-gradient(90deg, #f44336, #ff9800);
             transform: scaleX(0);
             transition: transform 0.3s ease;
         }
         
-        .coin-card.buy-alert::before {
+        .coin-card.sell-alert::before {
             transform: scaleX(1);
         }
         
@@ -190,19 +222,19 @@
             font-size: 1.2em;
         }
         
-        .buy-signal {
+        .sell-signal {
             padding: 6px 16px;
-            background: rgba(76, 175, 80, 0.2);
-            border: 1px solid #4caf50;
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
             border-radius: 20px;
             font-size: 0.85em;
             font-weight: 600;
-            color: #4caf50;
+            color: #f44336;
             opacity: 0;
             transition: all 0.3s ease;
         }
         
-        .buy-signal.active {
+        .sell-signal.active {
             opacity: 1;
             animation: blink 2s infinite;
         }
@@ -240,7 +272,7 @@
         }
         
         .diff-value {
-            color: #4caf50;
+            color: #f44336;
             font-weight: 600;
         }
         
@@ -297,23 +329,23 @@
             transition: all 0.3s ease;
         }
         
-        .level-badge.active-buy {
-            background: rgba(76, 175, 80, 0.2);
-            border-color: #4caf50;
-            color: #4caf50;
+        .level-badge.active-sell {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: #f44336;
+            color: #f44336;
             font-weight: 600;
             animation: glow 2s infinite;
         }
         
         @keyframes glow {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
-            50% { box-shadow: 0 0 10px 2px rgba(76, 175, 80, 0.4); }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+            50% { box-shadow: 0 0 10px 2px rgba(244, 67, 54, 0.4); }
         }
         
-        .level-badge.active-sell {
-            background: rgba(244, 67, 54, 0.2);
-            border-color: #f44336;
-            color: #f44336;
+        .level-badge.active-buy {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4caf50;
+            color: #4caf50;
         }
         
         /* Footer */
@@ -368,7 +400,7 @@
             
             .controls {
                 top: auto;
-                bottom: 20px;
+                bottom: 100px;
                 right: 50%;
                 transform: translateX(50%);
                 gap: 8px;
@@ -393,9 +425,13 @@
                 font-size: 1.3em;
             }
             
-            .buy-signal {
+            .sell-signal {
                 padding: 4px 12px;
                 font-size: 0.8em;
+            }
+            
+            .mode-toggle {
+                bottom: 20px;
             }
         }
         
@@ -423,7 +459,7 @@
     <header class="header">
         <div class="live-indicator">
             <span class="live-dot"></span>
-            <span>Live</span>
+            <span>High Mode</span>
         </div>
     </header>
     
@@ -442,7 +478,7 @@
                         <div class="coin-icon">₿</div>
                         <span class="coin-symbol">BTC</span>
                     </div>
-                    <div class="buy-signal" id="btc-signal">●</div>
+                    <div class="sell-signal" id="btc-signal">●</div>
                 </div>
                 
                 <div class="price-display">
@@ -454,8 +490,8 @@
                 
                 <div class="analysis-grid">
                     <div class="stat-box">
-                        <div class="stat-label">24h Low</div>
-                        <div class="stat-value" id="btc-low">-</div>
+                        <div class="stat-label">24h High</div>
+                        <div class="stat-value" id="btc-high">-</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">Diff %</div>
@@ -478,7 +514,7 @@
                         <div class="coin-icon">Ξ</div>
                         <span class="coin-symbol">ETH</span>
                     </div>
-                    <div class="buy-signal" id="eth-signal">●</div>
+                    <div class="sell-signal" id="eth-signal">●</div>
                 </div>
                 
                 <div class="price-display">
@@ -490,8 +526,8 @@
                 
                 <div class="analysis-grid">
                     <div class="stat-box">
-                        <div class="stat-label">24h Low</div>
-                        <div class="stat-value" id="eth-low">-</div>
+                        <div class="stat-label">24h High</div>
+                        <div class="stat-value" id="eth-high">-</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">Diff %</div>
@@ -514,7 +550,7 @@
                         <div class="coin-icon">◉</div>
                         <span class="coin-symbol">SOL</span>
                     </div>
-                    <div class="buy-signal" id="sol-signal">●</div>
+                    <div class="sell-signal" id="sol-signal">●</div>
                 </div>
                 
                 <div class="price-display">
@@ -526,8 +562,8 @@
                 
                 <div class="analysis-grid">
                     <div class="stat-box">
-                        <div class="stat-label">24h Low</div>
-                        <div class="stat-value" id="sol-low">-</div>
+                        <div class="stat-label">24h High</div>
+                        <div class="stat-value" id="sol-high">-</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">Diff %</div>
@@ -546,9 +582,9 @@
     </div>
     
     <!-- Mode toggle -->
-    <div class="mode-toggle" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 30px; padding: 5px; display: flex; gap: 5px; backdrop-filter: blur(10px);">
-        <button class="mode-btn" style="padding: 10px 20px; border: none; background: rgba(255, 255, 255, 0.2); color: #fff; cursor: pointer; border-radius: 25px; transition: all 0.3s ease; font-size: 0.9em;">Low</button>
-        <button class="mode-btn" onclick="location.href='bw-mode2-high.html'" style="padding: 10px 20px; border: none; background: transparent; color: #888; cursor: pointer; border-radius: 25px; transition: all 0.3s ease; font-size: 0.9em;">High</button>
+    <div class="mode-toggle">
+        <button class="mode-btn" onclick="location.href='bw-mode2.html'">Low</button>
+        <button class="mode-btn active">High</button>
     </div>
     
     <footer class="footer">
@@ -565,56 +601,56 @@
             return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\\d))/g, ',');
         }
         
-        // Update coin data
+        // Update coin data (HIGH MODE)
         function updateCoinData(coin, data) {
             const currentPrice = parseFloat(data.c);
             const low24h = parseFloat(data.l);
             const high24h = parseFloat(data.h);
             
-            // Calculate difference
-            const diff = currentPrice - low24h;
-            const diffPercent = (diff / low24h * 100).toFixed(2);
+            // Calculate difference from HIGH
+            const diff = high24h - currentPrice;
+            const diffPercent = (diff / high24h * 100).toFixed(2);
             
             // Update price display
             document.getElementById(`${coin}-price`).textContent = `$${formatNumber(currentPrice)}`;
-            document.getElementById(`${coin}-low`).textContent = `$${formatNumber(low24h)}`;
-            document.getElementById(`${coin}-diff-percent`).textContent = `+${diffPercent}%`;
+            document.getElementById(`${coin}-high`).textContent = `$${formatNumber(high24h)}`;
+            document.getElementById(`${coin}-diff-percent`).textContent = `-${diffPercent}%`;
             
-            // Update formula
+            // Update formula (현재가 - 최고가)
             document.getElementById(`${coin}-formula`).innerHTML = 
-                `<span>$${formatNumber(currentPrice)}</span> - <span>$${formatNumber(low24h)}</span> = <span class="diff-value">$${formatNumber(diff)}</span>`;
+                `<span>$${formatNumber(high24h)}</span> - <span>$${formatNumber(currentPrice)}</span> = <span class="diff-value">$${formatNumber(diff)}</span>`;
             
-            // Calculate price levels
+            // Calculate price levels from HIGH
             const levels = [
-                { name: '-10%', value: low24h * 0.90, type: 'buy' },
-                { name: '-5%', value: low24h * 0.95, type: 'buy' },
-                { name: 'Low', value: low24h, type: 'neutral' },
-                { name: '+5%', value: low24h * 1.05, type: 'neutral' },
-                { name: '+10%', value: low24h * 1.10, type: 'sell' }
+                { name: 'High', value: high24h, type: 'sell' },
+                { name: '-2%', value: high24h * 0.98, type: 'sell' },
+                { name: '-5%', value: high24h * 0.95, type: 'neutral' },
+                { name: '-10%', value: high24h * 0.90, type: 'neutral' },
+                { name: '-15%', value: high24h * 0.85, type: 'buy' }
             ];
             
             // Update levels display
             const levelsHtml = levels.map(level => {
                 let className = 'level-badge';
-                if (currentPrice <= level.value && level.type === 'buy') {
-                    className += ' active-buy';
-                } else if (currentPrice >= level.value && level.type === 'sell') {
+                if (currentPrice >= level.value && level.type === 'sell') {
                     className += ' active-sell';
+                } else if (currentPrice <= level.value && level.type === 'buy') {
+                    className += ' active-buy';
                 }
                 return `<div class="${className}">${level.name}: $${formatNumber(level.value)}</div>`;
             }).join('');
             
             document.getElementById(`${coin}-levels`).innerHTML = levelsHtml;
             
-            // Update buy signal
+            // Update sell signal (when close to high)
             const card = document.getElementById(`${coin}-card`);
             const signal = document.getElementById(`${coin}-signal`);
             
-            if (currentPrice <= low24h * 0.95) { // -5% or lower
-                card.classList.add('buy-alert');
+            if (currentPrice >= high24h * 0.98) { // -2% or higher
+                card.classList.add('sell-alert');
                 signal.classList.add('active');
             } else {
-                card.classList.remove('buy-alert');
+                card.classList.remove('sell-alert');
                 signal.classList.remove('active');
             }
         }
