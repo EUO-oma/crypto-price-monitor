@@ -223,6 +223,8 @@
         let priceScale = 1;
         let bwMode = false;
         let combinedWs = null;
+        let bwClickCount = 0;
+        let bwClickTimer = null;
         
         // Format price
         function formatPrice(price) {
@@ -311,10 +313,30 @@
             });
         }
         
-        // BW Mode
+        // BW Mode with triple click navigation
         function toggleBW() {
+            // First click always toggles BW mode
             bwMode = !bwMode;
             document.body.classList.toggle('bw-mode');
+            
+            // Track clicks for triple click
+            bwClickCount++;
+            
+            // Clear previous timer
+            if (bwClickTimer) {
+                clearTimeout(bwClickTimer);
+            }
+            
+            // Check if 3 clicks
+            if (bwClickCount >= 3) {
+                // Navigate to bw-mode
+                window.location.href = 'bw-mode.html';
+            }
+            
+            // Reset counter after 1 second
+            bwClickTimer = setTimeout(() => {
+                bwClickCount = 0;
+            }, 1000);
         }
         
         // Initialize
