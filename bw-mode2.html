@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 초저가 매수 찬스</title>
+    <title>BW Mode 2</title>
     <style>
         * {
             margin: 0;
@@ -12,594 +12,634 @@
         }
         
         body {
-            background: #000000;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0f1f 100%);
             color: #ffffff;
-            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
         }
         
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(76, 175, 80, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(33, 150, 243, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(156, 39, 176, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            animation: moveGradient 20s ease infinite;
+        }
+        
+        @keyframes moveGradient {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px 15px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        /* Real-time indicator */
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+        
+        /* Controls */
         .controls {
             position: fixed;
             top: 20px;
             right: 20px;
             display: flex;
             gap: 10px;
-            z-index: 100;
+            z-index: 200;
         }
         
         .control-btn {
-            background: transparent;
-            border: 1px solid #333;
-            color: #666;
-            width: 40px;
-            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
             font-size: 20px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0;
-            margin: 0;
-            line-height: 1;
         }
         
         .control-btn:hover {
-            border-color: #666;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Main container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        /* Coin cards */
+        .coin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .coin-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .coin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4caf50, #2196f3);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .coin-card.buy-alert::before {
+            transform: scaleX(1);
+        }
+        
+        .coin-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Coin header */
+        .coin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .coin-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .coin-symbol {
+            font-size: 1.5em;
+            font-weight: 700;
             color: #fff;
         }
         
-        .control-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .price-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 40px;
-            padding: 20px;
-            width: 100%;
-            max-width: 1200px;
-        }
-        
-        .price-item {
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            justify-content: flex-start;
-            gap: 15px;
-            width: 100%;
-            line-height: 1.4;
-        }
-        
-        .price {
-            font-size: 48px;
-            font-weight: 300;
-            transition: font-size 0.3s ease;
-            display: flex;
-            align-items: baseline;
-            font-variant-numeric: tabular-nums;
-        }
-        
-        .price-part {
-            display: inline-block;
-        }
-        
-        /* All digits in white color */
-        .digit-0 { color: #ffffff; }
-        .digit-1 { color: #ffffff; }
-        .digit-2 { color: #ffffff; }
-        .digit-3 { color: #ffffff; }
-        .digit-4 { color: #ffffff; }
-        .digit-5 { color: #ffffff; }
-        .digit-6 { color: #ffffff; }
-        
-        .price-decimal {
-            font-size: 0.7em;
-            color: #666;
-        }
-        
-        /* Size variations */
-        .size-xs .price { font-size: 16px; }
-        .size-s .price { font-size: 20px; }
-        .size-m .price { font-size: 28px; }
-        .size-l .price { font-size: 36px; }
-        .size-xl .price { font-size: 44px; }
-        .size-xxl .price { font-size: 56px; }
-        
-        .loading {
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        /* Encoder mode styles */
-        .encoded-mode .price {
-            font-family: 'Courier New', monospace;
-            letter-spacing: 3px;
-        }
-        
-        /* CSS로 만든 눈 아이콘 */
-        .eye-icon {
-            width: 16px;
-            height: 10px;
-            position: relative;
-            display: block;
-        }
-        
-        .eye-icon::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            width: 16px;
-            height: 10px;
-            border: 1.5px solid currentColor;
-            border-radius: 50px;
-            transform: translateY(-50%);
-        }
-        
-        .eye-icon::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: currentColor;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        /* 보안 모드일 때 눈에 사선 추가 */
-        .control-btn.security-active .eye-icon .slash {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 1.5px;
-            background: currentColor;
-            transform: translate(-50%, -50%) rotate(45deg);
-            z-index: 1;
-        }
-        
-        .control-btn.security-active {
-            color: #4caf50;
-            border-color: #4caf50;
-            background: rgba(76, 175, 80, 0.1);
-        }
-        
-        .price.secure {
-            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
-            letter-spacing: 2px;
-        }
-        
-        /* Individual hide buttons */
-        .hide-btn {
-            background: transparent;
-            border: 1px solid #222;
-            color: #444;
+        .coin-icon {
             width: 32px;
             height: 32px;
-            border-radius: 6px;
-            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            transition: all 0.2s ease;
-            padding: 0;
-            position: relative;
-            margin-top: 8px;
+            font-size: 1.2em;
         }
         
-        .hide-btn:hover {
-            border-color: #444;
+        .buy-signal {
+            padding: 6px 16px;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #4caf50;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .buy-signal.active {
+            opacity: 1;
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Price display */
+        .price-display {
+            margin-bottom: 25px;
+        }
+        
+        .current-price {
+            font-size: 2.5em;
+            font-weight: 300;
+            font-family: 'SF Mono', monospace;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .price-formula {
+            font-size: 1.1em;
+            color: #888;
+            font-family: 'SF Mono', monospace;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .price-formula span {
+            color: #fff;
+        }
+        
+        .diff-value {
+            color: #4caf50;
+            font-weight: 600;
+        }
+        
+        /* Analysis grid */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        /* Price levels */
+        .price-levels {
+            margin-top: 20px;
+        }
+        
+        .level-title {
+            font-size: 0.9em;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        .level-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .level-badge {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        
+        .level-badge.active-buy {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4caf50;
+            color: #4caf50;
+            font-weight: 600;
+            animation: glow 2s infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+            50% { box-shadow: 0 0 10px 2px rgba(76, 175, 80, 0.4); }
+        }
+        
+        .level-badge.active-sell {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: #f44336;
+            color: #f44336;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .footer-link {
+            color: #444;
+            text-decoration: none;
+            font-size: 0.85em;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover {
             color: #666;
-            background: rgba(255, 255, 255, 0.03);
         }
         
-        .hide-btn.hidden {
-            color: #222;
-        }
-        
-        /* Simple dot icon */
-        .dot-icon {
-            font-size: 20px;
-            line-height: 1;
-        }
-        
-        .price.hidden span {
-            color: #000 !important;
-        }
-        
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .price-container {
-                gap: 30px;
+            .header {
+                padding: 15px 10px;
+            }
+            
+            .coin-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 0 10px;
+            }
+            
+            .coin-card {
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            .current-price {
+                font-size: 2em;
+            }
+            
+            .price-formula {
+                font-size: 0.95em;
+                padding: 10px;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
             
             .controls {
-                top: 10px;
-                right: 10px;
+                top: auto;
+                bottom: 20px;
+                right: 50%;
+                transform: translateX(50%);
+                gap: 8px;
             }
             
             .control-btn {
-                width: 35px;
-                height: 35px;
+                width: 40px;
+                height: 40px;
                 font-size: 18px;
+            }
+            
+            .level-container {
+                gap: 8px;
+            }
+            
+            .level-badge {
+                padding: 6px 12px;
+                font-size: 0.85em;
+            }
+            
+            .coin-symbol {
+                font-size: 1.3em;
+            }
+            
+            .buy-signal {
+                padding: 4px 12px;
+                font-size: 0.8em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 0;
+            }
+            
+            .current-price {
+                font-size: 1.8em;
+            }
+            
+            .stat-value {
+                font-size: 1.1em;
+            }
+            
+            .level-badge {
+                flex: 1 1 45%;
+                text-align: center;
             }
         }
     </style>
 </head>
-<body class="size-m">
+<body>
+    <header class="header">
+        <div class="live-indicator">
+            <span class="live-dot"></span>
+            <span>Live</span>
+        </div>
+    </header>
+    
     <div class="controls">
-        <button class="control-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
-            <span class="eye-icon"></span>
-        </button>
-        <button class="control-btn" onclick="openCalculator()" title="계산기 모드">÷</button>
-        <button class="control-btn" onclick="location.href='bw-mode1.html'" title="이전 모드">
-            ←<span class="mode-number" style="position: absolute; bottom: 2px; left: 2px; font-size: 10px; color: #444;">1</span>
-        </button>
-        <button class="control-btn" onclick="location.href='bw-mode3.html'" title="다음 모드">
-            →<span class="mode-number" style="position: absolute; bottom: 2px; right: 2px; font-size: 10px; color: #444;">3</span>
-        </button>
-        <button class="control-btn" onclick="adjustSize('increase')">+</button>
-        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+        <button class="control-btn" onclick="location.href='bw-mode1.html'" title="이전">←</button>
+        <button class="control-btn" onclick="location.href='bw-mode3.html'" title="다음">→</button>
+        <button class="control-btn" onclick="location.href='bw-mode.html'" title="메뉴">☰</button>
     </div>
     
-    <div class="price-container">
-        <div class="price-item">
-            <button class="hide-btn" onclick="toggleHide('btc')" id="btc-hide">
-                <span class="dot-icon">•</span>
-            </button>
-            <div class="price loading" id="btc-price">------</div>
-        </div>
-        
-        <div class="price-item">
-            <button class="hide-btn" onclick="toggleHide('eth')" id="eth-hide">
-                <span class="dot-icon">•</span>
-            </button>
-            <div class="price loading" id="eth-price">------</div>
-        </div>
-        
-        <div class="price-item">
-            <button class="hide-btn" onclick="toggleHide('sol')" id="sol-hide">
-                <span class="dot-icon">•</span>
-            </button>
-            <div class="price loading" id="sol-price">------</div>
+    <div class="container">
+        <div class="coin-grid">
+            <!-- BTC Card -->
+            <div class="coin-card" id="btc-card">
+                <div class="coin-header">
+                    <div class="coin-name">
+                        <div class="coin-icon">₿</div>
+                        <span class="coin-symbol">BTC</span>
+                    </div>
+                    <div class="buy-signal" id="btc-signal">●</div>
+                </div>
+                
+                <div class="price-display">
+                    <div class="current-price" id="btc-price">...</div>
+                    <div class="price-formula" id="btc-formula">
+                        계산 대기중...
+                    </div>
+                </div>
+                
+                <div class="analysis-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">24h Low</div>
+                        <div class="stat-value" id="btc-low">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Diff %</div>
+                        <div class="stat-value" id="btc-diff-percent">-</div>
+                    </div>
+                </div>
+                
+                <div class="price-levels">
+                    <div class="level-title"></div>
+                    <div class="level-container" id="btc-levels">
+                        <div class="level-badge">...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ETH Card -->
+            <div class="coin-card" id="eth-card">
+                <div class="coin-header">
+                    <div class="coin-name">
+                        <div class="coin-icon">Ξ</div>
+                        <span class="coin-symbol">ETH</span>
+                    </div>
+                    <div class="buy-signal" id="eth-signal">●</div>
+                </div>
+                
+                <div class="price-display">
+                    <div class="current-price" id="eth-price">...</div>
+                    <div class="price-formula" id="eth-formula">
+                        계산 대기중...
+                    </div>
+                </div>
+                
+                <div class="analysis-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">24h Low</div>
+                        <div class="stat-value" id="eth-low">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Diff %</div>
+                        <div class="stat-value" id="eth-diff-percent">-</div>
+                    </div>
+                </div>
+                
+                <div class="price-levels">
+                    <div class="level-title"></div>
+                    <div class="level-container" id="eth-levels">
+                        <div class="level-badge">...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SOL Card -->
+            <div class="coin-card" id="sol-card">
+                <div class="coin-header">
+                    <div class="coin-name">
+                        <div class="coin-icon">◉</div>
+                        <span class="coin-symbol">SOL</span>
+                    </div>
+                    <div class="buy-signal" id="sol-signal">●</div>
+                </div>
+                
+                <div class="price-display">
+                    <div class="current-price" id="sol-price">...</div>
+                    <div class="price-formula" id="sol-formula">
+                        계산 대기중...
+                    </div>
+                </div>
+                
+                <div class="analysis-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">24h Low</div>
+                        <div class="stat-value" id="sol-low">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Diff %</div>
+                        <div class="stat-value" id="sol-diff-percent">-</div>
+                    </div>
+                </div>
+                
+                <div class="price-levels">
+                    <div class="level-title"></div>
+                    <div class="level-container" id="sol-levels">
+                        <div class="level-badge">...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+    
+    <footer class="footer">
+        <a href="bw-mode.html" class="footer-link">made by euo</a>
+    </footer>
     
     <script>
-        // Size control
-        const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
-        let currentSizeIndex = 2; // Start with 'm'
+        // WebSocket connections
+        const coins = ['btc', 'eth', 'sol'];
+        const wsConnections = {};
         
-        // Security mode
-        let isSecureMode = false;
-        const numberMap = {
-            '1': 'T', '2': 'N', '3': 'M', '4': 'R', '5': 'L',
-            '6': 'S', '7': 'G', '8': 'F', '9': 'P', '0': '*'
-        };
-        
-        // Hidden coins tracker
-        const hiddenCoins = {
-            btc: false,
-            eth: false,
-            sol: false
-        };
-        
-        function adjustSize(action) {
-            const body = document.body;
-            
-            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
-                currentSizeIndex++;
-            } else if (action === 'decrease' && currentSizeIndex > 0) {
-                currentSizeIndex--;
-            }
-            
-            // Remove all size classes
-            sizes.forEach(size => body.classList.remove(`size-${size}`));
-            
-            // Add current size class
-            body.classList.add(`size-${sizes[currentSizeIndex]}`);
-            
-            // Save preference
-            localStorage.setItem('bwPriceSize', sizes[currentSizeIndex]);
+        // Format number with commas
+        function formatNumber(num) {
+            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\\d))/g, ',');
         }
         
-        // Restore saved size
-        const savedSize = localStorage.getItem('bwPriceSize');
-        if (savedSize) {
-            currentSizeIndex = sizes.indexOf(savedSize);
-            if (currentSizeIndex !== -1) {
-                document.body.classList.remove('size-m');
-                document.body.classList.add(`size-${savedSize}`);
-            }
-        }
-        
-        // Binance WebSocket connections
-        let btcWs, ethWs, solWs;
-        
-        function formatPrice(price) {
-            // Format price WITHOUT commas
-            const parts = price.toFixed(2).split('.');
-            const integerPart = parts[0]; // 콤마 제거
-            const formattedPrice = `${integerPart}.${parts[1]}`;
+        // Update coin data
+        function updateCoinData(coin, data) {
+            const currentPrice = parseFloat(data.c);
+            const low24h = parseFloat(data.l);
+            const high24h = parseFloat(data.h);
             
-            // Apply security encoding if enabled
-            if (isSecureMode) {
-                return `<span class="price-part">${encodePrice(formattedPrice)}</span>`;
-            }
-            
-            // Rainbow colors array
-            const rainbowColors = ['digit-0', 'digit-1', 'digit-2', 'digit-3', 'digit-4', 'digit-5', 'digit-6'];
-            
-            // Process all characters with rainbow colors
-            let styledPrice = '';
-            let digitIndex = 0; // Track position for rainbow colors
-            
-            // Process the entire price string
-            const fullPrice = `${integerPart}.${parts[1]}`;
-            
-            for (let i = 0; i < fullPrice.length; i++) {
-                const char = fullPrice[i];
-                
-                if (char === '.' || char === ',') {
-                    // Keep dots and commas gray
-                    styledPrice += `<span class="price-decimal">${char}</span>`;
-                } else {
-                    // Apply rainbow color to digits
-                    const colorClass = rainbowColors[digitIndex % rainbowColors.length];
-                    styledPrice += `<span class="price-part ${colorClass}">${char}</span>`;
-                    digitIndex++;
-                }
-            }
-            
-            return styledPrice;
-        }
-        
-        function encodePrice(priceStr) {
-            let encoded = '';
-            for (let char of priceStr) {
-                if (numberMap[char]) {
-                    encoded += numberMap[char];
-                } else {
-                    encoded += char;
-                }
-            }
-            return encoded;
-        }
-
-        function formatPriceWithLow(currentPrice, low24h) {
+            // Calculate difference
             const diff = currentPrice - low24h;
+            const diffPercent = (diff / low24h * 100).toFixed(2);
             
-            // Calculate percentage levels from 24h low
-            const low10percent = low24h * 0.90; // -10%
-            const low5percent = low24h * 0.95;  // -5%
-            const high5percent = low24h * 1.05; // +5%
-            const high10percent = low24h * 1.10; // +10%
+            // Update price display
+            document.getElementById(`${coin}-price`).textContent = `$${formatNumber(currentPrice)}`;
+            document.getElementById(`${coin}-low`).textContent = `$${formatNumber(low24h)}`;
+            document.getElementById(`${coin}-diff-percent`).textContent = `+${diffPercent}%`;
             
-            // Format numbers with commas for thousands
-            const formatNumber = (num) => {
-                return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            };
+            // Update formula
+            document.getElementById(`${coin}-formula`).innerHTML = 
+                `<span>$${formatNumber(currentPrice)}</span> - <span>$${formatNumber(low24h)}</span> = <span class="diff-value">$${formatNumber(diff)}</span>`;
             
-            const currentFormatted = formatPrice(currentPrice);
-            const lowFormatted = formatPrice(low24h);
+            // Calculate price levels
+            const levels = [
+                { name: '-10%', value: low24h * 0.90, type: 'buy' },
+                { name: '-5%', value: low24h * 0.95, type: 'buy' },
+                { name: 'Low', value: low24h, type: 'neutral' },
+                { name: '+5%', value: low24h * 1.05, type: 'neutral' },
+                { name: '+10%', value: low24h * 1.10, type: 'sell' }
+            ];
             
-            // For difference, apply green color and format with commas
-            const diffFormatted = formatNumber(diff);
-            const diffColor = diff >= 0 ? '#4caf50' : '#f44336'; // Green for positive, red for negative
-            
-            // Format percentage level prices
-            const low10Formatted = formatPrice(low10percent);
-            const low5Formatted = formatPrice(low5percent);
-            const high5Formatted = formatPrice(high5percent);
-            const high10Formatted = formatPrice(high10percent);
-            
-            // Return formatted string with spaces around operators
-            let result = `${currentFormatted} <span style="color: #444;"> - </span> ${lowFormatted} <span style="color: #444;"> = </span> <span style="color: ${diffColor};">${diffFormatted}</span>`;
-            
-            // Add percentage indicators on new lines with improved layout
-            result += `<br><span style="font-size: 0.75em;">`;
-            result += `<span style="color: #e91e63;">-10%: ${low10Formatted}</span> `;
-            result += `<span style="color: #ff5722;">-5%: ${low5Formatted}</span> `;
-            result += `<span style="color: #4caf50;">+5%: ${high5Formatted}</span> `;
-            result += `<span style="color: #00bcd4;">+10%: ${high10Formatted}</span>`;
-            result += `</span>`;
-            
-            return result;
-        }
-        
-        function toggleSecurity() {
-            isSecureMode = !isSecureMode;
-            const btn = document.getElementById('securityToggle');
-            const eyeIcon = btn.querySelector('.eye-icon');
-            
-            if (isSecureMode) {
-                btn.classList.add('security-active');
-                // 사선 추가
-                if (!eyeIcon.querySelector('.slash')) {
-                    const slash = document.createElement('span');
-                    slash.className = 'slash';
-                    eyeIcon.appendChild(slash);
+            // Update levels display
+            const levelsHtml = levels.map(level => {
+                let className = 'level-badge';
+                if (currentPrice <= level.value && level.type === 'buy') {
+                    className += ' active-buy';
+                } else if (currentPrice >= level.value && level.type === 'sell') {
+                    className += ' active-sell';
                 }
-                document.querySelectorAll('.price').forEach(el => el.classList.add('secure'));
+                return `<div class="${className}">${level.name}: $${formatNumber(level.value)}</div>`;
+            }).join('');
+            
+            document.getElementById(`${coin}-levels`).innerHTML = levelsHtml;
+            
+            // Update buy signal
+            const card = document.getElementById(`${coin}-card`);
+            const signal = document.getElementById(`${coin}-signal`);
+            
+            if (currentPrice <= low24h * 0.95) { // -5% or lower
+                card.classList.add('buy-alert');
+                signal.classList.add('active');
             } else {
-                btn.classList.remove('security-active');
-                // 사선 제거
-                const slash = eyeIcon.querySelector('.slash');
-                if (slash) {
-                    slash.remove();
-                }
-                document.querySelectorAll('.price').forEach(el => el.classList.remove('secure'));
-            }
-            
-            // Update all prices immediately
-            updateAllPrices();
-        }
-        
-        function updateAllPrices() {
-            // Update displayed prices with current values
-            if (window.lastPrices && window.low24hPrices) {
-                if (window.lastPrices.btc && window.low24hPrices.btc && !hiddenCoins.btc) {
-                    document.getElementById('btc-price').innerHTML = formatPriceWithLow(window.lastPrices.btc, window.low24hPrices.btc);
-                }
-                if (window.lastPrices.eth && window.low24hPrices.eth && !hiddenCoins.eth) {
-                    document.getElementById('eth-price').innerHTML = formatPriceWithLow(window.lastPrices.eth, window.low24hPrices.eth);
-                }
-                if (window.lastPrices.sol && window.low24hPrices.sol && !hiddenCoins.sol) {
-                    document.getElementById('sol-price').innerHTML = formatPriceWithLow(window.lastPrices.sol, window.low24hPrices.sol);
-                }
+                card.classList.remove('buy-alert');
+                signal.classList.remove('active');
             }
         }
         
-        function connectBinanceWebSocket(symbol, elementId) {
+        // Connect to Binance WebSocket
+        function connectWebSocket(symbol) {
+            const coin = symbol.replace('USDT', '').toLowerCase();
             const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
             
-            ws.onopen = function() {
-                console.log(`Connected to ${symbol} stream`);
-                document.getElementById(elementId).classList.remove('loading');
-            };
-            
-            ws.onmessage = function(event) {
+            ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                const price = parseFloat(data.c); // Current price
-                const low24h = parseFloat(data.l); // 24h low price
-                
-                // Store prices for later updates
-                if (!window.lastPrices) window.lastPrices = {};
-                if (!window.low24hPrices) window.low24hPrices = {};
-                const coinType = symbol.replace('USDT', '').toLowerCase();
-                window.lastPrices[coinType] = price;
-                window.low24hPrices[coinType] = low24h;
-                
-                document.getElementById(elementId).innerHTML = formatPriceWithLow(price, low24h);
+                updateCoinData(coin, data);
             };
             
-            ws.onerror = function(error) {
+            ws.onerror = (error) => {
                 console.error(`WebSocket error for ${symbol}:`, error);
             };
             
-            ws.onclose = function() {
-                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
-                setTimeout(() => {
-                    connectBinanceWebSocket(symbol, elementId);
-                }, 5000);
+            ws.onclose = () => {
+                console.log(`Reconnecting ${symbol}...`);
+                setTimeout(() => connectWebSocket(symbol), 5000);
             };
             
-            return ws;
+            wsConnections[coin] = ws;
         }
         
-        // Initialize WebSocket connections
-        function initializeWebSockets() {
-            btcWs = connectBinanceWebSocket('BTCUSDT', 'btc-price');
-            ethWs = connectBinanceWebSocket('ETHUSDT', 'eth-price');
-            solWs = connectBinanceWebSocket('SOLUSDT', 'sol-price');
-        }
-        
-        // Fallback: Fetch prices via API
-        async function fetchPricesAPI() {
-            try {
-                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
-                const promises = symbols.map(symbol => 
-                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
-                        .then(res => res.json())
-                );
-                
-                const results = await Promise.all(promises);
-                
-                // Store prices
-                if (!window.lastPrices) window.lastPrices = {};
-                if (!window.low24hPrices) window.low24hPrices = {};
-                
-                if (results[0]) {
-                    const btcPrice = parseFloat(results[0].lastPrice);
-                    const btcLow = parseFloat(results[0].lowPrice);
-                    window.lastPrices.btc = btcPrice;
-                    window.low24hPrices.btc = btcLow;
-                    document.getElementById('btc-price').innerHTML = formatPriceWithLow(btcPrice, btcLow);
-                    document.getElementById('btc-price').classList.remove('loading');
-                }
-                if (results[1]) {
-                    const ethPrice = parseFloat(results[1].lastPrice);
-                    const ethLow = parseFloat(results[1].lowPrice);
-                    window.lastPrices.eth = ethPrice;
-                    window.low24hPrices.eth = ethLow;
-                    document.getElementById('eth-price').innerHTML = formatPriceWithLow(ethPrice, ethLow);
-                    document.getElementById('eth-price').classList.remove('loading');
-                }
-                if (results[2]) {
-                    const solPrice = parseFloat(results[2].lastPrice);
-                    const solLow = parseFloat(results[2].lowPrice);
-                    window.lastPrices.sol = solPrice;
-                    window.low24hPrices.sol = solLow;
-                    document.getElementById('sol-price').innerHTML = formatPriceWithLow(solPrice, solLow);
-                    document.getElementById('sol-price').classList.remove('loading');
-                }
-            } catch (error) {
-                console.error('Error fetching prices:', error);
-            }
-        }
-        
-        // Initialize on page load
+        // Initialize
         window.addEventListener('load', () => {
-            // Try WebSocket first
-            initializeWebSockets();
-            
-            // Also fetch via API as backup
-            fetchPricesAPI();
-            
-            // Update API prices every 10 seconds as fallback
-            setInterval(fetchPricesAPI, 10000);
-        });
-        
-        // Toggle hide for individual coins
-        function toggleHide(coin) {
-            hiddenCoins[coin] = !hiddenCoins[coin];
-            const priceEl = document.getElementById(`${coin}-price`);
-            const btnEl = document.getElementById(`${coin}-hide`);
-            
-            if (hiddenCoins[coin]) {
-                priceEl.classList.add('hidden');
-                btnEl.classList.add('hidden');
-            } else {
-                priceEl.classList.remove('hidden');
-                btnEl.classList.remove('hidden');
-            }
-        }
-        
-        // Open calculator page
-        function openCalculator() {
-            window.open('BW_cal.html', '_blank');
-        }
-        
-        // Clean up on page unload
-        window.addEventListener('beforeunload', () => {
-            if (btcWs) btcWs.close();
-            if (ethWs) ethWs.close();
-            if (solWs) solWs.close();
-        });
-        
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '+' || e.key === '=') {
-                adjustSize('increase');
-            } else if (e.key === '-' || e.key === '_') {
-                adjustSize('decrease');
-            }
+            connectWebSocket('BTCUSDT');
+            connectWebSocket('ETHUSDT');
+            connectWebSocket('SOLUSDT');
         });
     </script>
 </body>
