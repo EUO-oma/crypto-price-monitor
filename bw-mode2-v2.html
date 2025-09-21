@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 초저가 매수 찬스 - 실시간 알림</title>
+    <title>BW Mode 2</title>
     <style>
         * {
             margin: 0;
@@ -425,11 +425,9 @@
 </head>
 <body>
     <header class="header">
-        <h1>초저가 매수 찬스</h1>
-        <p>24시간 최저가 대비 실시간 가격 분석</p>
         <div class="live-indicator">
             <span class="live-dot"></span>
-            <span>실시간 업데이트 중</span>
+            <span>Live</span>
         </div>
     </header>
     
@@ -448,11 +446,11 @@
                         <div class="coin-icon">₿</div>
                         <span class="coin-symbol">BTC</span>
                     </div>
-                    <div class="buy-signal" id="btc-signal">매수 찬스!</div>
+                    <div class="buy-signal" id="btc-signal">●</div>
                 </div>
                 
                 <div class="price-display">
-                    <div class="current-price" id="btc-price">로딩중...</div>
+                    <div class="current-price" id="btc-price">...</div>
                     <div class="price-formula" id="btc-formula">
                         계산 대기중...
                     </div>
@@ -470,9 +468,9 @@
                 </div>
                 
                 <div class="price-levels">
-                    <div class="level-title">가격 레벨</div>
+                    <div class="level-title"></div>
                     <div class="level-container" id="btc-levels">
-                        <div class="level-badge">계산중...</div>
+                        <div class="level-badge">...</div>
                     </div>
                 </div>
             </div>
@@ -488,7 +486,7 @@
                 </div>
                 
                 <div class="price-display">
-                    <div class="current-price" id="eth-price">로딩중...</div>
+                    <div class="current-price" id="eth-price">...</div>
                     <div class="price-formula" id="eth-formula">
                         계산 대기중...
                     </div>
@@ -506,9 +504,9 @@
                 </div>
                 
                 <div class="price-levels">
-                    <div class="level-title">가격 레벨</div>
+                    <div class="level-title"></div>
                     <div class="level-container" id="eth-levels">
-                        <div class="level-badge">계산중...</div>
+                        <div class="level-badge">...</div>
                     </div>
                 </div>
             </div>
@@ -524,7 +522,7 @@
                 </div>
                 
                 <div class="price-display">
-                    <div class="current-price" id="sol-price">로딩중...</div>
+                    <div class="current-price" id="sol-price">...</div>
                     <div class="price-formula" id="sol-formula">
                         계산 대기중...
                     </div>
@@ -542,40 +540,14 @@
                 </div>
                 
                 <div class="price-levels">
-                    <div class="level-title">가격 레벨</div>
+                    <div class="level-title"></div>
                     <div class="level-container" id="sol-levels">
-                        <div class="level-badge">계산중...</div>
+                        <div class="level-badge">...</div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="info-section">
-            <h2 class="info-title">📊 매수 전략 가이드</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-icon">🎯</div>
-                    <div class="info-content">
-                        <h3>초저가 구간</h3>
-                        <p>24시간 최저가 대비 -5% 이하일 때 강력한 매수 신호입니다.</p>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">📈</div>
-                    <div class="info-content">
-                        <h3>안전 매수 구간</h3>
-                        <p>최저가 ~ +5% 구간은 안전한 진입 시점입니다.</p>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">⚡</div>
-                    <div class="info-content">
-                        <h3>실시간 알림</h3>
-                        <p>초저가 도달 시 자동으로 표시되니 놓치지 마세요!</p>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
     
     <script>
@@ -609,11 +581,11 @@
             
             // Calculate price levels
             const levels = [
-                { name: '최저 -10%', value: low24h * 0.90, type: 'buy' },
-                { name: '최저 -5%', value: low24h * 0.95, type: 'buy' },
-                { name: '24H 최저가', value: low24h, type: 'neutral' },
-                { name: '최저 +5%', value: low24h * 1.05, type: 'neutral' },
-                { name: '최저 +10%', value: low24h * 1.10, type: 'sell' }
+                { name: '-10%', value: low24h * 0.90, type: 'buy' },
+                { name: '-5%', value: low24h * 0.95, type: 'buy' },
+                { name: 'Low', value: low24h, type: 'neutral' },
+                { name: '+5%', value: low24h * 1.05, type: 'neutral' },
+                { name: '+10%', value: low24h * 1.10, type: 'sell' }
             ];
             
             // Update levels display
