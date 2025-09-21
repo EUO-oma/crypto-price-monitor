@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>링크 관리 - Simple</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #111;
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .status-box {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .form-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1em;
+        }
+
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #777;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .links-container {
+            margin-top: 30px;
+        }
+
+        .category-section {
+            margin-bottom: 30px;
+        }
+
+        .category-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #4caf50;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .link-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.2s;
+        }
+
+        .link-card:hover {
+            border-color: #4caf50;
+            background: #222;
+        }
+
+        .link-title {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .link-url {
+            color: #888;
+            font-size: 0.85em;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+
+        .link-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .link-actions button {
+            padding: 5px 10px;
+            font-size: 0.85em;
+        }
+
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .link-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 링크 관리</h1>
+        
+        <div class="status-box" id="status">
+            <span>연결 상태 확인 중...</span>
+        </div>
+
+        <div class="form-section">
+            <h2>새 링크 추가</h2>
+            <div class="form-group">
+                <label for="name">링크 이름</label>
+                <input type="text" id="name" placeholder="예: 네이버">
+            </div>
+            <div class="form-group">
+                <label for="url">URL</label>
+                <input type="text" id="url" placeholder="예: https://www.naver.com">
+            </div>
+            <div class="form-group">
+                <label for="category">카테고리</label>
+                <select id="category">
+                    <option value="youtube">YouTube 채널</option>
+                    <option value="favorite">즐겨찾기</option>
+                    <option value="gpt">GPT 도구</option>
+                </select>
+            </div>
+            <button onclick="addLink()">추가하기</button>
+            <button class="btn-secondary" onclick="clearForm()">초기화</button>
+        </div>
+
+        <div class="links-container" id="links-container">
+            <p style="text-align: center; color: #666;">링크를 불러오는 중...</p>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 전역 변수
+        let supabase = null;
+        let allLinks = [];
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSupabase();
+        });
+
+        // Supabase 초기화
+        function initializeSupabase() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                // 하드코딩된 인증 정보 사용
+                const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                // Supabase 클라이언트 생성
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                // 연결 테스트
+                testConnection();
+                
+            } catch (error) {
+                console.error('초기화 오류:', error);
+                statusEl.innerHTML = '<span class="error">❌ 초기화 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 연결 테스트
+        async function testConnection() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                const { data, error } = await supabase.from('links').select('count').limit(1);
+                
+                if (error) throw error;
+                
+                statusEl.innerHTML = '<span class="success">✅ 연결 성공</span>';
+                
+                // 연결 성공 시 링크 불러오기
+                loadLinks();
+                
+            } catch (error) {
+                console.error('연결 오류:', error);
+                statusEl.innerHTML = '<span class="error">❌ 연결 실패: ' + error.message + '</span>';
+                
+                // 오류 시에도 빈 목록 표시
+                displayLinks([]);
+            }
+        }
+
+        // 링크 불러오기
+        async function loadLinks() {
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) throw error;
+                
+                allLinks = data || [];
+                displayLinks(allLinks);
+                
+            } catch (error) {
+                console.error('불러오기 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 불러오기 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 링크 표시
+        function displayLinks(links) {
+            const container = document.getElementById('links-container');
+            container.innerHTML = '';
+            
+            if (links.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">등록된 링크가 없습니다.</p>';
+                return;
+            }
+            
+            // 카테고리별로 그룹화
+            const categories = {
+                youtube: { title: '📺 YouTube 채널', links: [] },
+                favorite: { title: '⭐ 즐겨찾기', links: [] },
+                gpt: { title: '🤖 GPT 도구', links: [] }
+            };
+            
+            links.forEach(link => {
+                if (categories[link.category]) {
+                    categories[link.category].links.push(link);
+                }
+            });
+            
+            // 각 카테고리 표시
+            Object.keys(categories).forEach(key => {
+                if (categories[key].links.length > 0) {
+                    const section = document.createElement('div');
+                    section.className = 'category-section';
+                    
+                    section.innerHTML = `
+                        <h3 class="category-title">${categories[key].title}</h3>
+                        <div class="link-grid">
+                            ${categories[key].links.map(link => `
+                                <div class="link-card">
+                                    <div class="link-title">${link.name}</div>
+                                    <div class="link-url">
+                                        <a href="${link.url}" target="_blank" style="color: #888;">${link.url}</a>
+                                    </div>
+                                    <div class="link-actions">
+                                        <button class="btn-secondary" onclick="editLink('${link.id}', '${link.name}', '${link.url}', '${link.category}')">수정</button>
+                                        <button class="btn-danger" onclick="deleteLink('${link.id}')">삭제</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    
+                    container.appendChild(section);
+                }
+            });
+        }
+
+        // 링크 추가
+        async function addLink() {
+            const name = document.getElementById('name').value.trim();
+            const url = document.getElementById('url').value.trim();
+            const category = document.getElementById('category').value;
+            
+            if (!name || !url) {
+                alert('이름과 URL을 모두 입력해주세요.');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .insert([{
+                        name: name,
+                        url: url,
+                        category: category,
+                        position: 0
+                    }])
+                    .select();
+                
+                if (error) throw error;
+                
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ 링크가 추가되었습니다.</span>';
+                
+                clearForm();
+                loadLinks();
+                
+            } catch (error) {
+                console.error('추가 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 추가 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 링크 수정
+        function editLink(id, name, url, category) {
+            document.getElementById('name').value = name;
+            document.getElementById('url').value = url;
+            document.getElementById('category').value = category;
+            
+            // 추가 버튼을 수정 버튼으로 변경
+            const addBtn = document.querySelector('button[onclick="addLink()"]');
+            addBtn.textContent = '수정하기';
+            addBtn.onclick = function() { updateLink(id); };
+            
+            // 취소 버튼 추가
+            if (!document.querySelector('.btn-cancel')) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'btn-secondary btn-cancel';
+                cancelBtn.textContent = '취소';
+                cancelBtn.onclick = cancelEdit;
+                addBtn.parentNode.insertBefore(cancelBtn, addBtn.nextSibling);
+            }
+            
+            // 스크롤 이동
+            document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 링크 업데이트
+        async function updateLink(id) {
+            const name = document.getElementById('name').value.trim();
+            const url = document.getElementById('url').value.trim();
+            const category = document.getElementById('category').value;
+            
+            if (!name || !url) {
+                alert('이름과 URL을 모두 입력해주세요.');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .update({
+                        name: name,
+                        url: url,
+                        category: category
+                    })
+                    .eq('id', id)
+                    .select();
+                
+                if (error) throw error;
+                
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ 링크가 수정되었습니다.</span>';
+                
+                cancelEdit();
+                loadLinks();
+                
+            } catch (error) {
+                console.error('수정 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 수정 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 수정 취소
+        function cancelEdit() {
+            clearForm();
+            
+            const addBtn = document.querySelector('button[onclick^="updateLink"]');
+            if (addBtn) {
+                addBtn.textContent = '추가하기';
+                addBtn.onclick = addLink;
+            }
+            
+            const cancelBtn = document.querySelector('.btn-cancel');
+            if (cancelBtn) {
+                cancelBtn.remove();
+            }
+        }
+
+        // 링크 삭제
+        async function deleteLink(id) {
+            if (!confirm('정말로 이 링크를 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('links')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ 링크가 삭제되었습니다.</span>';
+                
+                loadLinks();
+                
+            } catch (error) {
+                console.error('삭제 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 삭제 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 폼 초기화
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('url').value = '';
+            document.getElementById('category').value = 'youtube';
+        }
+    </script>
+</body>
+</html>
