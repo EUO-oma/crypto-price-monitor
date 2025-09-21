@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW Mode 9 - Color Box</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .price-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        .price-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 15px;
+            width: 100%;
+            line-height: 1.4;
+            padding-left: 50%;
+            transform: translateX(-200px);
+        }
+        
+        .price {
+            font-size: 48px;
+            font-weight: 300;
+            transition: font-size 0.3s ease;
+            display: flex;
+            align-items: baseline;
+            font-variant-numeric: tabular-nums;
+            gap: 4px;
+        }
+        
+        /* Color box styles */
+        .color-box {
+            display: inline-block;
+            width: 36px;
+            height: 42px;
+            border-radius: 6px;
+            margin: 0 2px;
+            vertical-align: middle;
+            border: 5px solid rgba(0, 0, 0, 0.9);
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: help;
+        }
+        
+        .color-box:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Tooltip on hover */
+        .color-box::after {
+            content: attr(data-number);
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .color-box:hover::after {
+            opacity: 1;
+        }
+        
+        /* Circle style for decimal points */
+        .color-circle {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin: 0 2px;
+            vertical-align: middle;
+            border: 5px solid rgba(0, 0, 0, 0.9);
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: help;
+        }
+        
+        .color-circle:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Tooltip for circles */
+        .color-circle::after {
+            content: attr(data-number);
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .color-circle:hover::after {
+            opacity: 1;
+        }
+        
+        /* Number to color mapping */
+        .color-0 { background-color: #808080; } /* 회색 - Gray */
+        .color-1 { background-color: #8B0000; } /* 빨강 - Red */
+        .color-2 { background-color: #FF69B4; } /* 분홍 - Pink */
+        .color-3 { background-color: #FFA500; } /* 주황 - Orange */
+        .color-4 { background-color: #FFFF00; } /* 노랑 - Yellow */
+        .color-5 { background-color: #50C878; } /* 에머랄드 - Emerald */
+        .color-6 { background-color: #87CEEB; } /* 하늘색 - Sky Blue */
+        .color-7 { background-color: #0000FF; } /* 파란색 - Blue */
+        .color-8 { background-color: #9370DB; } /* 연한남색 - Medium Purple */
+        .color-9 { background-color: #4B0082; } /* 보라색 - Violet */
+        
+        .price-decimal {
+            font-size: 0.7em;
+            color: #666;
+            display: flex;
+            gap: 2px;
+        }
+        
+        .price-decimal .color-circle {
+            width: 25px;
+            height: 25px;
+        }
+        
+        /* Size variations */
+        .size-xs .price { font-size: 16px; }
+        .size-xs .color-box { width: 12px; height: 14px; }
+        .size-xs .color-box[style*="width: 48px"] { width: 16px !important; height: 19px !important; }
+        .size-xs .color-circle { width: 12px; height: 12px; }
+        .size-xs .price-decimal .color-circle { width: 8px; height: 8px; }
+        
+        .size-s .price { font-size: 20px; }
+        .size-s .color-box { width: 15px; height: 18px; }
+        .size-s .color-box[style*="width: 48px"] { width: 20px !important; height: 24px !important; }
+        .size-s .color-circle { width: 15px; height: 15px; }
+        .size-s .price-decimal .color-circle { width: 10px; height: 10px; }
+        
+        .size-m .price { font-size: 28px; }
+        .size-m .color-box { width: 21px; height: 25px; }
+        .size-m .color-box[style*="width: 48px"] { width: 28px !important; height: 33px !important; }
+        .size-m .color-circle { width: 21px; height: 21px; }
+        .size-m .price-decimal .color-circle { width: 14px; height: 14px; }
+        
+        .size-l .price { font-size: 36px; }
+        .size-l .color-box { width: 27px; height: 32px; }
+        .size-l .color-box[style*="width: 48px"] { width: 36px !important; height: 43px !important; }
+        .size-l .color-circle { width: 27px; height: 27px; }
+        .size-l .price-decimal .color-circle { width: 18px; height: 18px; }
+        
+        .size-xl .price { font-size: 44px; }
+        .size-xl .color-box { width: 33px; height: 39px; }
+        .size-xl .color-box[style*="width: 48px"] { width: 44px !important; height: 52px !important; }
+        .size-xl .color-circle { width: 33px; height: 33px; }
+        .size-xl .price-decimal .color-circle { width: 22px; height: 22px; }
+        
+        .size-xxl .price { font-size: 56px; }
+        .size-xxl .color-box { width: 42px; height: 49px; }
+        .size-xxl .color-box[style*="width: 48px"] { width: 56px !important; height: 65px !important; }
+        .size-xxl .color-circle { width: 42px; height: 42px; }
+        .size-xxl .price-decimal .color-circle { width: 28px; height: 28px; }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Secure mode - shows original numbers */
+        .secure-mode .color-box,
+        .secure-mode .color-circle {
+            background: transparent !important;
+            border: 1px solid #444;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .secure-mode .color-box::before,
+        .secure-mode .color-circle::before {
+            content: attr(data-number);
+        }
+        
+        .secure-mode .color-box::after,
+        .secure-mode .color-circle::after {
+            display: none;
+        }
+        
+        /* Individual hide buttons */
+        .hide-btn {
+            background: transparent;
+            border: 1px solid #222;
+            color: #444;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            padding: 0;
+            position: relative;
+            margin-top: 8px;
+        }
+        
+        .hide-btn:hover {
+            border-color: #444;
+            color: #666;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .hide-btn.hidden {
+            color: #222;
+        }
+        
+        /* Simple dot icon */
+        .dot-icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+        
+        .price.hidden {
+            opacity: 0;
+        }
+        
+        /* Legend */
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .legend.show {
+            display: flex;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .legend-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .price-container {
+                gap: 30px;
+                padding: 15px;
+            }
+            
+            .price-item {
+                padding-left: 40%;
+                transform: translateX(-120px);
+                gap: 12px;
+            }
+            
+            .controls {
+                top: 10px;
+                right: 10px;
+                gap: 8px;
+            }
+            
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                border-radius: 8px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .hide-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            
+            .price {
+                font-size: 36px;
+            }
+            
+            .color-box {
+                width: 30px;
+                height: 36px;
+                border-width: 4px;
+                margin: 0 1px;
+            }
+            
+            .color-circle {
+                width: 30px;
+                height: 30px;
+                border-width: 4px;
+            }
+            
+            .price-decimal .color-circle {
+                width: 21px;
+                height: 21px;
+                border-width: 3px;
+            }
+            
+            .legend {
+                flex-wrap: wrap;
+                max-width: 90%;
+                gap: 10px;
+                padding: 12px;
+            }
+            
+            /* Adjust sizes for mobile */
+            .size-xs .price { font-size: 14px; }
+            .size-xs .color-box { width: 12px; height: 14px; }
+            .size-xs .color-circle { width: 12px; height: 12px; }
+            
+            .size-s .price { font-size: 18px; }
+            .size-s .color-box { width: 16px; height: 19px; }
+            .size-s .color-circle { width: 16px; height: 16px; }
+            
+            .size-m .price { font-size: 24px; }
+            .size-m .color-box { width: 21px; height: 25px; }
+            .size-m .color-circle { width: 21px; height: 21px; }
+            
+            .size-l .price { font-size: 30px; }
+            .size-l .color-box { width: 26px; height: 31px; }
+            .size-l .color-circle { width: 26px; height: 26px; }
+            
+            .size-xl .price { font-size: 38px; }
+            .size-xl .color-box { width: 33px; height: 39px; }
+            .size-xl .color-circle { width: 33px; height: 33px; }
+            
+            .size-xxl .price { font-size: 48px; }
+            .size-xxl .color-box { width: 41px; height: 48px; }
+            .size-xxl .color-circle { width: 41px; height: 41px; }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .price-container {
+                gap: 25px;
+                padding: 10px;
+            }
+            
+            .price-item {
+                padding-left: 50%;
+                transform: translateX(-100px);
+                gap: 10px;
+            }
+            
+            .controls {
+                gap: 6px;
+                flex-wrap: wrap;
+                max-width: 200px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .price {
+                font-size: 30px;
+            }
+            
+            .color-box {
+                width: 25px;
+                height: 30px;
+                border-width: 3px;
+            }
+            
+            .color-circle {
+                width: 25px;
+                height: 25px;
+                border-width: 3px;
+            }
+            
+            .price-decimal .color-circle {
+                width: 18px;
+                height: 18px;
+            }
+            
+            .legend {
+                gap: 8px;
+                padding: 10px;
+                font-size: 11px;
+            }
+            
+            .legend-box {
+                width: 14px;
+                height: 14px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .price-item {
+                padding-left: 35%;
+                transform: translateX(-60px);
+            }
+            
+            .controls {
+                gap: 4px;
+            }
+            
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .color-box {
+                width: 20px;
+                height: 24px;
+            }
+            
+            .color-circle {
+                width: 20px;
+                height: 20px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn:active, .hide-btn:active {
+                transform: scale(0.9);
+            }
+            
+            .color-box:active, .color-circle:active {
+                transform: scale(0.95);
+            }
+        }
+    </style>
+</head>
+<body class="size-m">
+    <div class="controls">
+        <button class="control-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
+            <span class="eye-icon">👁</span>
+        </button>
+        <button class="control-btn" onclick="toggleLegend()" title="범례">?</button>
+        <button class="control-btn" onclick="location.href='bw-mode1.html'" title="숫자 모드">123</button>
+        <button class="control-btn" onclick="location.href='bw-mode.html'" title="메뉴">☰</button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+    </div>
+    
+    <div class="price-container">
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('btc')" id="btc-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="btc-price">Loading...</div>
+        </div>
+        
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('eth')" id="eth-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="eth-price">Loading...</div>
+        </div>
+        
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('sol')" id="sol-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="sol-price">Loading...</div>
+        </div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="legend" id="legend">
+        <div class="legend-item">
+            <div class="legend-box color-0"></div>
+            <span>0</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-1"></div>
+            <span>1</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-2"></div>
+            <span>2</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-3"></div>
+            <span>3</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-4"></div>
+            <span>4</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-5"></div>
+            <span>5</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-6"></div>
+            <span>6</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-7"></div>
+            <span>7</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-8"></div>
+            <span>8</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-9"></div>
+            <span>9</span>
+        </div>
+    </div>
+    
+    <script>
+        // Size control
+        const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
+        let currentSizeIndex = 2; // Start with 'm'
+        
+        // Security mode
+        let isSecureMode = false;
+        
+        // Hidden coins tracker
+        const hiddenCoins = {
+            btc: false,
+            eth: false,
+            sol: false
+        };
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            // Remove all size classes
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            
+            // Add current size class
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            // Save preference
+            localStorage.setItem('bwPriceSize9', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwPriceSize9');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-m');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        // Binance WebSocket connections
+        let btcWs, ethWs, solWs;
+        
+        function formatPriceWithBoxes(price) {
+            // Format price as string with 2 decimals
+            const priceStr = price.toFixed(2);
+            const [integerPart, decimalPart] = priceStr.split('.');
+            
+            // Convert each digit to a color box
+            let boxesHtml = '';
+            
+            // Integer part without commas
+            const integerDigits = integerPart.split('');
+            for (let i = 0; i < integerDigits.length; i++) {
+                const digit = parseInt(integerDigits[i]);
+                // Make 3rd and 4th boxes larger (positions 2 and 3 in 0-based index)
+                const isLarge = (i === 2 || i === 3);
+                const sizeStyle = isLarge ? 'style="width: 48px; height: 56px; font-size: 1.2em;"' : '';
+                boxesHtml += `<span class="color-box color-${digit}" data-number="${digit}" ${sizeStyle}></span>`;
+            }
+            
+            // Decimal part with circles
+            if (decimalPart) {
+                boxesHtml += '<span class="price-decimal">';
+                for (let digit of decimalPart) {
+                    boxesHtml += `<span class="color-circle color-${digit}" data-number="${digit}"></span>`;
+                }
+                boxesHtml += '</span>';
+            }
+            
+            return boxesHtml;
+        }
+        
+        function toggleSecurity() {
+            isSecureMode = !isSecureMode;
+            const btn = document.getElementById('securityToggle');
+            
+            if (isSecureMode) {
+                document.body.classList.add('secure-mode');
+                btn.querySelector('.eye-icon').textContent = '🔒';
+            } else {
+                document.body.classList.remove('secure-mode');
+                btn.querySelector('.eye-icon').textContent = '👁';
+            }
+        }
+        
+        function toggleLegend() {
+            const legend = document.getElementById('legend');
+            legend.classList.toggle('show');
+        }
+        
+        function connectBinanceWebSocket(symbol, elementId) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+                document.getElementById(elementId).classList.remove('loading');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c); // Current price
+                
+                // Don't update if coin is hidden
+                const coinType = symbol.replace('USDT', '').toLowerCase();
+                if (!hiddenCoins[coinType]) {
+                    document.getElementById(elementId).innerHTML = formatPriceWithBoxes(price);
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, elementId);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Initialize WebSocket connections
+        function initializeWebSockets() {
+            btcWs = connectBinanceWebSocket('BTCUSDT', 'btc-price');
+            ethWs = connectBinanceWebSocket('ETHUSDT', 'eth-price');
+            solWs = connectBinanceWebSocket('SOLUSDT', 'sol-price');
+        }
+        
+        // Fallback: Fetch prices via API
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                if (results[0] && !hiddenCoins.btc) {
+                    const btcPrice = parseFloat(results[0].lastPrice);
+                    document.getElementById('btc-price').innerHTML = formatPriceWithBoxes(btcPrice);
+                    document.getElementById('btc-price').classList.remove('loading');
+                }
+                if (results[1] && !hiddenCoins.eth) {
+                    const ethPrice = parseFloat(results[1].lastPrice);
+                    document.getElementById('eth-price').innerHTML = formatPriceWithBoxes(ethPrice);
+                    document.getElementById('eth-price').classList.remove('loading');
+                }
+                if (results[2] && !hiddenCoins.sol) {
+                    const solPrice = parseFloat(results[2].lastPrice);
+                    document.getElementById('sol-price').innerHTML = formatPriceWithBoxes(solPrice);
+                    document.getElementById('sol-price').classList.remove('loading');
+                }
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            // Try WebSocket first
+            initializeWebSockets();
+            
+            // Also fetch via API as backup
+            fetchPricesAPI();
+            
+            // Update API prices every 10 seconds as fallback
+            setInterval(fetchPricesAPI, 10000);
+        });
+        
+        // Toggle hide for individual coins
+        function toggleHide(coin) {
+            hiddenCoins[coin] = !hiddenCoins[coin];
+            const priceEl = document.getElementById(`${coin}-price`);
+            const btnEl = document.getElementById(`${coin}-hide`);
+            
+            if (hiddenCoins[coin]) {
+                priceEl.classList.add('hidden');
+                btnEl.classList.add('hidden');
+            } else {
+                priceEl.classList.remove('hidden');
+                btnEl.classList.remove('hidden');
+            }
+        }
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (btcWs) btcWs.close();
+            if (ethWs) ethWs.close();
+            if (solWs) solWs.close();
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === '=') {
+                adjustSize('increase');
+            } else if (e.key === '-' || e.key === '_') {
+                adjustSize('decrease');
+            } else if (e.key === '?') {
+                toggleLegend();
+            }
+        });
+    </script>
+</body>
+</html>

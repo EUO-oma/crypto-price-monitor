@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>BW</title>
     <style>
         * {
@@ -107,18 +107,89 @@
             background: #1a1a1a;
         }
         
+        /* Enhanced Mobile Responsiveness */
         @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
             .grid {
                 grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
+                gap: 12px;
+                max-width: 100%;
+            }
+            
+            .card {
+                min-height: 100px;
             }
             
             .number {
-                font-size: 36px;
+                font-size: 32px;
             }
             
             .icon {
                 font-size: 18px;
+            }
+            
+            .table {
+                bottom: 20px;
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .card {
+                min-height: 90px;
+            }
+            
+            .number {
+                font-size: 28px;
+            }
+            
+            .icon {
+                font-size: 16px;
+            }
+            
+            .table {
+                bottom: 15px;
+                padding: 8px 16px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .number {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+            
+            .icon {
+                font-size: 14px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .card {
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            .card:active {
+                transform: scale(0.95);
+                transition: transform 0.1s ease;
+            }
+            
+            .table:active {
+                transform: scale(0.95);
             }
         }
     </style>

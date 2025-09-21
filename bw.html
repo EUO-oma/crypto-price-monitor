@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>BW</title>
     <style>
         * {
@@ -15,12 +15,13 @@
             background: #000;
             color: #fff;
             font-family: 'SF Mono', monospace;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
             overflow: hidden;
+            padding: 20px;
         }
         
         /* Hidden interactive area */
@@ -149,6 +150,139 @@
         
         .pattern-dot.clicked {
             background: #333;
+        }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .title {
+                font-size: 56px;
+                letter-spacing: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .subtitle {
+                font-size: 12px;
+                letter-spacing: 1px;
+            }
+            
+            .secret-area {
+                bottom: 30px;
+                right: 30px;
+                width: 80px;
+                height: 80px;
+            }
+            
+            .secret-button {
+                padding: 16px 32px;
+                font-size: 14px;
+                border-radius: 6px;
+            }
+            
+            .pattern-area {
+                height: 150px;
+                gap: 15px;
+            }
+            
+            .pattern-dot {
+                width: 30px;
+                height: 30px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .pattern-dot:active {
+                transform: scale(1.1);
+            }
+            
+            .hidden-link {
+                font-size: 14px;
+                padding: 10px;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            #counter {
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 42px;
+                letter-spacing: 10px;
+                margin-bottom: 15px;
+            }
+            
+            .subtitle {
+                font-size: 11px;
+            }
+            
+            .secret-area {
+                bottom: 20px;
+                right: 20px;
+                width: 60px;
+                height: 60px;
+            }
+            
+            .secret-button {
+                padding: 14px 28px;
+                font-size: 13px;
+            }
+            
+            .pattern-area {
+                height: 120px;
+                gap: 12px;
+            }
+            
+            .pattern-dot {
+                width: 25px;
+                height: 25px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .title {
+                font-size: 36px;
+                letter-spacing: 8px;
+            }
+            
+            .subtitle {
+                font-size: 10px;
+            }
+            
+            .secret-area {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .secret-button {
+                padding: 12px 24px;
+                font-size: 12px;
+            }
+            
+            .pattern-dot {
+                width: 20px;
+                height: 20px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .secret-button:active {
+                transform: scale(0.95);
+            }
+            
+            .pattern-dot:active {
+                background: #222;
+                transform: scale(1.2);
+            }
+            
+            .pattern-dot.clicked:active {
+                background: #333;
+            }
         }
     </style>
 </head>

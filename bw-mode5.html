@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>BW Mode 5 - Target Alert</title>
     <style>
         * {
@@ -15,12 +15,12 @@
             background: #000;
             color: #fff;
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
             padding: 20px;
         }
         
@@ -215,20 +215,195 @@
         .size-l { font-size: 18px; }
         .size-l .current-price { font-size: 32px; }
         
+        /* Enhanced Mobile Responsiveness */
         @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .alert-container {
+                gap: 20px;
+                max-width: 100%;
+            }
+            
+            .coin-alert {
+                padding: 15px;
+                border-radius: 6px;
+            }
+            
+            .coin-header {
+                margin-bottom: 15px;
+            }
+            
+            .coin-name {
+                font-size: 18px;
+            }
+            
+            .current-price {
+                font-size: 24px;
+            }
+            
             .price-targets {
                 grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .target-box {
+                padding: 8px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .target-label {
+                text-align: left;
+                margin-bottom: 0;
+                flex: 1;
+            }
+            
+            .target-price {
+                font-size: 14px;
+                margin-bottom: 0;
+                margin: 0 10px;
+            }
+            
+            .target-diff {
+                font-size: 11px;
+                text-align: right;
+                min-width: 60px;
             }
             
             .controls {
                 top: 10px;
                 right: 10px;
+                gap: 8px;
             }
             
             .control-btn {
-                width: 35px;
-                height: 35px;
+                width: 40px;
+                height: 40px;
                 font-size: 18px;
+                border-radius: 8px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .position-indicator {
+                padding: 8px;
+                margin-top: 8px;
+            }
+            
+            .position-bar {
+                height: 6px;
+            }
+            
+            .position-marker {
+                width: 14px;
+                height: 14px;
+            }
+            
+            /* Adjust sizes for mobile */
+            .size-xs { font-size: 11px; }
+            .size-xs .current-price { font-size: 18px; }
+            .size-s { font-size: 13px; }
+            .size-s .current-price { font-size: 20px; }
+            .size-m { font-size: 14px; }
+            .size-m .current-price { font-size: 24px; }
+            .size-l { font-size: 16px; }
+            .size-l .current-price { font-size: 28px; }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .alert-container {
+                gap: 15px;
+            }
+            
+            .coin-alert {
+                padding: 12px;
+            }
+            
+            .coin-name {
+                font-size: 16px;
+            }
+            
+            .current-price {
+                font-size: 20px;
+            }
+            
+            .target-box {
+                padding: 6px;
+            }
+            
+            .target-label {
+                font-size: 10px;
+            }
+            
+            .target-price {
+                font-size: 13px;
+            }
+            
+            .target-diff {
+                font-size: 10px;
+                min-width: 50px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .mode-number {
+                font-size: 8px;
+            }
+            
+            .position-indicator {
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .coin-alert {
+                padding: 10px;
+            }
+            
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .controls {
+                gap: 4px;
+            }
+            
+            .coin-alert::before {
+                font-size: 8px;
+                padding: 2px 6px;
+            }
+            
+            .alert-near-low::before {
+                font-size: 8px;
+                padding: 2px 6px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn:active {
+                transform: scale(0.9);
+            }
+            
+            .target-box {
+                transition: background-color 0.1s ease;
+            }
+            
+            .target-box:active {
+                background-color: rgba(255, 255, 255, 0.05);
             }
         }
     </style>

@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>BW Mode 4 - Minimal</title>
     <style>
         * {
@@ -15,11 +15,12 @@
             background: #000;
             color: #fff;
             font-family: 'Helvetica', 'Arial', sans-serif;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
+            padding: 0;
         }
         
         .controls {
@@ -123,21 +124,122 @@
         .size-xl .coin-symbol { font-size: 20px; }
         .size-xl .change { font-size: 20px; }
         
+        /* Enhanced Mobile Responsiveness */
         @media (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+            
+            .price-container {
+                width: 100%;
+                max-width: 100%;
+            }
+            
             .price-row {
                 margin: 30px 0;
                 gap: 15px;
+                flex-wrap: nowrap;
+                justify-content: center;
             }
             
             .controls {
                 top: 10px;
                 right: 10px;
+                gap: 4px;
             }
             
             .control-btn {
-                width: 28px;
-                height: 28px;
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+                border-radius: 4px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            /* Adjust sizes for mobile */
+            .size-xs .price { font-size: 20px; }
+            .size-xs .coin-symbol { font-size: 11px; }
+            .size-xs .change { font-size: 11px; width: 60px; }
+            
+            .size-s .price { font-size: 28px; }
+            .size-s .coin-symbol { font-size: 13px; }
+            .size-s .change { font-size: 13px; width: 70px; }
+            
+            .size-m .price { font-size: 36px; }
+            .size-m .coin-symbol { font-size: 14px; }
+            .size-m .change { font-size: 14px; }
+            
+            .size-l .price { font-size: 44px; }
+            .size-l .coin-symbol { font-size: 16px; }
+            .size-l .change { font-size: 16px; }
+            
+            .size-xl .price { font-size: 52px; }
+            .size-xl .coin-symbol { font-size: 17px; }
+            .size-xl .change { font-size: 17px; }
+        }
+        
+        @media (max-width: 480px) {
+            .price-row {
+                margin: 25px 0;
+                gap: 12px;
+            }
+            
+            .control-btn {
+                width: 32px;
+                height: 32px;
                 font-size: 14px;
+            }
+            
+            .coin-symbol {
+                width: 35px;
+            }
+            
+            .change {
+                width: 65px;
+            }
+            
+            /* Further size adjustments */
+            .size-xs .price { font-size: 18px; }
+            .size-s .price { font-size: 24px; }
+            .size-m .price { font-size: 30px; }
+            .size-l .price { font-size: 36px; }
+            .size-xl .price { font-size: 42px; }
+        }
+        
+        @media (max-width: 360px) {
+            .price-row {
+                margin: 20px 0;
+                gap: 10px;
+            }
+            
+            .control-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 12px;
+            }
+            
+            .mode-number {
+                font-size: 7px;
+            }
+            
+            .coin-symbol {
+                width: 30px;
+                font-size: 12px;
+            }
+            
+            .change {
+                width: 55px;
+                font-size: 12px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn:active {
+                transform: scale(0.9);
+                background: #fff;
+                color: #000;
             }
         }
     </style>

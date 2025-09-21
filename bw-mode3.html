@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>BW Mode 3 - ASCII Chart</title>
     <style>
         * {
@@ -15,12 +15,12 @@
             background: #000000;
             color: #ffffff;
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
             padding: 20px;
         }
         
@@ -137,20 +137,160 @@
         .size-l { font-size: 16px; }
         .size-l .coin-price { font-size: 28px; }
         
+        /* Enhanced Mobile Responsiveness */
         @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
             .chart-container {
                 gap: 20px;
+                max-width: 100%;
+            }
+            
+            .coin-chart {
+                padding: 15px;
+                border-radius: 6px;
             }
             
             .controls {
                 top: 10px;
                 right: 10px;
+                gap: 8px;
             }
             
             .control-btn {
-                width: 35px;
-                height: 35px;
+                width: 40px;
+                height: 40px;
                 font-size: 18px;
+                border-radius: 8px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .chart-ascii {
+                height: 80px;
+                margin: 8px 0;
+            }
+            
+            .bar {
+                width: 3px;
+                margin: 0 0.5px;
+            }
+            
+            .coin-header {
+                margin-bottom: 10px;
+            }
+            
+            .coin-name {
+                font-size: 16px;
+            }
+            
+            .coin-price {
+                font-size: 20px;
+            }
+            
+            .price-info {
+                font-size: 11px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            /* Adjust sizes for mobile */
+            .size-xs { font-size: 9px; }
+            .size-xs .coin-price { font-size: 14px; }
+            .size-s { font-size: 11px; }
+            .size-s .coin-price { font-size: 18px; }
+            .size-m { font-size: 13px; }
+            .size-m .coin-price { font-size: 20px; }
+            .size-l { font-size: 14px; }
+            .size-l .coin-price { font-size: 24px; }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .chart-container {
+                gap: 15px;
+            }
+            
+            .coin-chart {
+                padding: 12px;
+                border-radius: 5px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .controls {
+                gap: 6px;
+            }
+            
+            .chart-ascii {
+                height: 70px;
+                margin: 6px 0;
+            }
+            
+            .bar {
+                width: 2px;
+                margin: 0 0.3px;
+            }
+            
+            .coin-name {
+                font-size: 14px;
+            }
+            
+            .coin-price {
+                font-size: 18px;
+            }
+            
+            .price-info {
+                font-size: 10px;
+            }
+            
+            .mode-number {
+                font-size: 8px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .chart-ascii {
+                height: 60px;
+            }
+            
+            .coin-price {
+                font-size: 16px;
+            }
+            
+            .price-info span {
+                flex: 1 1 100%;
+                text-align: center;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn:active {
+                transform: scale(0.9);
+            }
+            
+            .coin-chart {
+                transition: transform 0.1s ease;
+            }
+            
+            .coin-chart:active {
+                transform: scale(0.98);
             }
         }
     </style>

@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>BW Mode 1 - Simple</title>
     <style>
         * {
@@ -93,20 +93,24 @@
             display: flex;
             align-items: baseline;
             font-variant-numeric: tabular-nums;
+            white-space: nowrap;
         }
         
         .price-part {
             display: inline-block;
         }
         
-        /* Rainbow colors for digits */
-        .digit-0 { color: #ff0000; } /* 빨강 */
-        .digit-1 { color: #ff8c00; } /* 주황 */
-        .digit-2 { color: #ffd700; } /* 노랑 */
-        .digit-3 { color: #00ff00; } /* 초록 */
-        .digit-4 { color: #0000ff; } /* 파랑 */
-        .digit-5 { color: #4b0082; } /* 남색 */
-        .digit-6 { color: #9400d3; } /* 보라 */
+        /* Number to color mapping - same as BW9 */
+        .color-0 { color: #808080; } /* 회색 - Gray */
+        .color-1 { color: #FF0000; } /* 빨강 - Red */
+        .color-2 { color: #FF69B4; } /* 분홍 - Pink */
+        .color-3 { color: #FFA500; } /* 주황 - Orange */
+        .color-4 { color: #FFFF00; } /* 노랑 - Yellow */
+        .color-5 { color: #50C878; } /* 에머랄드 - Emerald */
+        .color-6 { color: #87CEEB; } /* 하늘색 - Sky Blue */
+        .color-7 { color: #0000FF; } /* 파란색 - Blue */
+        .color-8 { color: #9370DB; } /* 연한남색 - Medium Purple */
+        .color-9 { color: #8B00FF; } /* 보라색 - Violet */
         
         .price-decimal {
             font-size: 0.7em;
@@ -230,20 +234,116 @@
             color: #000 !important;
         }
         
+        /* Enhanced Mobile Responsiveness */
         @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
             .price-container {
                 gap: 30px;
+                padding: 15px;
+            }
+            
+            .price-item {
+                padding-left: 40%;
+                transform: translateX(-120px);
+                gap: 12px;
             }
             
             .controls {
                 top: 10px;
                 right: 10px;
+                gap: 8px;
             }
             
             .control-btn {
-                width: 35px;
-                height: 35px;
+                width: 40px;
+                height: 40px;
                 font-size: 18px;
+                border-radius: 8px;
+            }
+            
+            .hide-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            
+            /* Adjust font sizes for mobile */
+            .size-xs .price { font-size: 20px; }
+            .size-s .price { font-size: 28px; }
+            .size-m .price { font-size: 36px; }
+            .size-l .price { font-size: 44px; }
+            .size-xl .price { font-size: 52px; }
+            .size-xxl .price { font-size: 64px; }
+        }
+        
+        @media (max-width: 480px) {
+            .price-container {
+                gap: 25px;
+                padding: 10px;
+            }
+            
+            .price-item {
+                padding-left: 50%;
+                transform: translateX(-100px);
+                gap: 10px;
+            }
+            
+            .controls {
+                top: 8px;
+                right: 8px;
+                gap: 6px;
+                flex-wrap: wrap;
+                max-width: 200px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .mode-number {
+                font-size: 8px;
+            }
+            
+            /* Further size adjustments for small screens */
+            .size-xs .price { font-size: 18px; }
+            .size-s .price { font-size: 24px; }
+            .size-m .price { font-size: 30px; }
+            .size-l .price { font-size: 36px; }
+            .size-xl .price { font-size: 42px; }
+            .size-xxl .price { font-size: 48px; }
+        }
+        
+        @media (max-width: 360px) {
+            .price-item {
+                padding-left: 35%;
+                transform: translateX(-60px);
+            }
+            
+            .controls {
+                gap: 4px;
+            }
+            
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn, .hide-btn {
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .control-btn:active, .hide-btn:active {
+                transform: scale(0.9);
             }
         }
     </style>
@@ -346,12 +446,8 @@
                 return `<span class="price-part">${encodePrice(formattedPrice)}</span>`;
             }
             
-            // Rainbow colors array
-            const rainbowColors = ['digit-0', 'digit-1', 'digit-2', 'digit-3', 'digit-4', 'digit-5', 'digit-6'];
-            
-            // Process all characters with rainbow colors
+            // Process all characters with digit-based colors
             let styledPrice = '';
-            let digitIndex = 0;
             
             // Process the entire price string
             const fullPrice = `${integerPart}.${parts[1]}`;
@@ -359,12 +455,14 @@
             for (let i = 0; i < fullPrice.length; i++) {
                 const char = fullPrice[i];
                 
-                if (char === '.' || char === ',') {
+                if (char === '.') {
                     styledPrice += `<span class="price-decimal">${char}</span>`;
-                } else {
-                    const colorClass = rainbowColors[digitIndex % rainbowColors.length];
+                } else if (char >= '0' && char <= '9') {
+                    const digit = parseInt(char);
+                    const colorClass = `color-${digit}`;
                     styledPrice += `<span class="price-part ${colorClass}">${char}</span>`;
-                    digitIndex++;
+                } else {
+                    styledPrice += `<span class="price-part">${char}</span>`;
                 }
             }
             
