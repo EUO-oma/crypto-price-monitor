@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BW Mode - Select</title>
+    <title>BW</title>
     <style>
         * {
             margin: 0;
@@ -14,245 +14,153 @@
         body {
             background: #000;
             color: #fff;
-            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            font-family: 'SF Mono', monospace;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
         
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        h1 {
-            font-size: 36px;
-            font-weight: 300;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-        }
-        
-        .subtitle {
-            font-size: 16px;
-            color: #666;
-        }
-        
-        .mode-grid {
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            max-width: 600px;
             width: 100%;
         }
         
-        .mode-card {
+        .card {
+            aspect-ratio: 1;
             background: #0a0a0a;
             border: 1px solid #222;
             border-radius: 8px;
-            padding: 30px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             text-decoration: none;
-            color: inherit;
-            display: block;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             position: relative;
             overflow: hidden;
         }
         
-        .mode-card:hover {
-            border-color: #444;
-            transform: translateY(-2px);
+        .card:hover {
+            border-color: #666;
+            transform: scale(1.05);
             background: #111;
         }
         
-        .mode-number {
-            position: absolute;
-            top: 15px;
-            right: 20px;
+        .number {
             font-size: 48px;
             font-weight: 100;
-            color: #222;
-            z-index: 0;
-        }
-        
-        .mode-title {
-            font-size: 20px;
-            font-weight: 500;
+            line-height: 1;
             margin-bottom: 10px;
-            position: relative;
-            z-index: 1;
         }
         
-        .mode-description {
-            font-size: 14px;
-            color: #888;
-            line-height: 1.5;
-            position: relative;
-            z-index: 1;
+        .icon {
+            font-size: 24px;
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
         }
         
-        .mode-features {
-            margin-top: 15px;
-            font-size: 12px;
-            color: #666;
-            position: relative;
-            z-index: 1;
+        .card:hover .icon {
+            opacity: 1;
         }
         
-        .feature {
-            margin: 5px 0;
-            padding-left: 15px;
-            position: relative;
-        }
+        /* Rainbow colors for numbers */
+        .card:nth-child(1) .number { color: #ff0000; }
+        .card:nth-child(2) .number { color: #ff8c00; }
+        .card:nth-child(3) .number { color: #ffd700; }
+        .card:nth-child(4) .number { color: #00ff00; }
+        .card:nth-child(5) .number { color: #0000ff; }
+        .card:nth-child(6) .number { color: #4b0082; }
+        .card:nth-child(7) .number { color: #9400d3; }
         
-        .feature:before {
-            content: '•';
-            position: absolute;
-            left: 0;
-            color: #444;
-        }
+        .card:nth-child(1):hover { border-color: #ff0000; background: rgba(255, 0, 0, 0.1); }
+        .card:nth-child(2):hover { border-color: #ff8c00; background: rgba(255, 140, 0, 0.1); }
+        .card:nth-child(3):hover { border-color: #ffd700; background: rgba(255, 215, 0, 0.1); }
+        .card:nth-child(4):hover { border-color: #00ff00; background: rgba(0, 255, 0, 0.1); }
+        .card:nth-child(5):hover { border-color: #0000ff; background: rgba(0, 0, 255, 0.1); }
+        .card:nth-child(6):hover { border-color: #4b0082; background: rgba(75, 0, 130, 0.1); }
+        .card:nth-child(7):hover { border-color: #9400d3; background: rgba(148, 0, 211, 0.1); }
         
-        /* Special styling for different modes */
-        .mode-1 .mode-number { color: #ff0000; }
-        .mode-2 .mode-number { color: #ff8c00; }
-        .mode-3 .mode-number { color: #ffd700; }
-        .mode-4 .mode-number { color: #00ff00; }
-        .mode-5 .mode-number { color: #0000ff; }
-        .mode-6 .mode-number { color: #4b0082; }
-        .mode-7 .mode-number { color: #9400d3; }
-        
-        .mode-1:hover { border-color: #ff0000; }
-        .mode-2:hover { border-color: #ff8c00; }
-        .mode-3:hover { border-color: #ffd700; }
-        .mode-4:hover { border-color: #00ff00; }
-        .mode-5:hover { border-color: #0000ff; }
-        .mode-6:hover { border-color: #4b0082; }
-        .mode-7:hover { border-color: #9400d3; }
-        
-        .table-mode {
-            margin-top: 30px;
-            text-align: center;
-        }
-        
-        .table-link {
-            display: inline-block;
+        /* Table link */
+        .table {
+            position: fixed;
+            bottom: 30px;
             background: #111;
             border: 1px solid #333;
-            padding: 15px 30px;
+            padding: 12px 24px;
             border-radius: 8px;
-            color: #fff;
             text-decoration: none;
-            transition: all 0.3s ease;
+            color: #666;
+            font-size: 14px;
+            transition: all 0.2s ease;
         }
         
-        .table-link:hover {
+        .table:hover {
             border-color: #666;
+            color: #fff;
             background: #1a1a1a;
         }
         
         @media (max-width: 768px) {
-            h1 {
-                font-size: 28px;
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
             }
             
-            .mode-grid {
-                grid-template-columns: 1fr;
+            .number {
+                font-size: 36px;
+            }
+            
+            .icon {
+                font-size: 18px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>BW MODE</h1>
-        <p class="subtitle">Select Display Mode</p>
-    </div>
-    
-    <div class="mode-grid">
-        <a href="bw-mode1.html" class="mode-card mode-1">
-            <div class="mode-number">1</div>
-            <h2 class="mode-title">Simple Mode</h2>
-            <p class="mode-description">원래의 심플한 가격 표시</p>
-            <div class="mode-features">
-                <div class="feature">무지개 색상 숫자</div>
-                <div class="feature">보안 모드</div>
-                <div class="feature">크기 조절</div>
-            </div>
+    <div class="grid">
+        <a href="bw-mode1.html" class="card">
+            <div class="number">1</div>
+            <div class="icon">●</div>
         </a>
         
-        <a href="bw-mode2.html" class="mode-card mode-2">
-            <div class="mode-number">2</div>
-            <h2 class="mode-title">Low Price Mode</h2>
-            <p class="mode-description">전일 최저가 대비 계산</p>
-            <div class="mode-features">
-                <div class="feature">24h 최저가 표시</div>
-                <div class="feature">차이 계산</div>
-                <div class="feature">-10%, -5%, +5%, +10% 표시</div>
-            </div>
+        <a href="bw-mode2.html" class="card">
+            <div class="number">2</div>
+            <div class="icon">−</div>
         </a>
         
-        <a href="bw-mode3.html" class="mode-card mode-3">
-            <div class="mode-number">3</div>
-            <h2 class="mode-title">Chart Mode</h2>
-            <p class="mode-description">ASCII 차트로 가격 변동 시각화</p>
-            <div class="mode-features">
-                <div class="feature">실시간 막대 차트</div>
-                <div class="feature">고가/저가 표시</div>
-                <div class="feature">변화율 표시</div>
-            </div>
+        <a href="bw-mode3.html" class="card">
+            <div class="number">3</div>
+            <div class="icon">▬</div>
         </a>
         
-        <a href="bw-mode4.html" class="mode-card mode-4">
-            <div class="mode-number">4</div>
-            <h2 class="mode-title">Minimal Mode</h2>
-            <p class="mode-description">극도로 단순한 흑백 디자인</p>
-            <div class="mode-features">
-                <div class="feature">흑백 전용</div>
-                <div class="feature">최소한의 정보</div>
-                <div class="feature">깔끔한 타이포그래피</div>
-            </div>
+        <a href="bw-mode4.html" class="card">
+            <div class="number">4</div>
+            <div class="icon">□</div>
         </a>
         
-        <a href="bw-mode5.html" class="mode-card mode-5">
-            <div class="mode-number">5</div>
-            <h2 class="mode-title">Target Alert Mode</h2>
-            <p class="mode-description">매수 시점 알림 및 타겟 가격</p>
-            <div class="mode-features">
-                <div class="feature">전날 최고가/최저가</div>
-                <div class="feature">매수 구간 알림</div>
-                <div class="feature">포지션 인디케이터</div>
-            </div>
+        <a href="bw-mode5.html" class="card">
+            <div class="number">5</div>
+            <div class="icon">◎</div>
         </a>
         
-        <a href="bw-mode6.html" class="mode-card mode-6">
-            <div class="mode-number">6</div>
-            <h2 class="mode-title">Percentage Mode</h2>
-            <p class="mode-description">변화율 중심 표시</p>
-            <div class="mode-features">
-                <div class="feature">시간별 변화율</div>
-                <div class="feature">퍼센티지 바</div>
-                <div class="feature">강도별 색상</div>
-            </div>
+        <a href="bw-mode6.html" class="card">
+            <div class="number">6</div>
+            <div class="icon">%</div>
         </a>
         
-        <a href="bw-mode7.html" class="mode-card mode-7">
-            <div class="mode-number">7</div>
-            <h2 class="mode-title">Dashboard Mode</h2>
-            <p class="mode-description">종합 대시보드 뷰</p>
-            <div class="mode-features">
-                <div class="feature">시장 요약</div>
-                <div class="feature">히트맵</div>
-                <div class="feature">RSI 지표</div>
-            </div>
+        <a href="bw-mode7.html" class="card">
+            <div class="number">7</div>
+            <div class="icon">⊞</div>
         </a>
     </div>
     
-    <div class="table-mode">
-        <a href="bw-table.html" class="table-link">
-            📊 Table View
-        </a>
-    </div>
+    <a href="bw-table.html" class="table">≡</a>
 </body>
 </html>
