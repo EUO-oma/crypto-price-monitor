@@ -440,19 +440,6 @@
                     " onmouseover="this.style.background='#2a2a2a'; this.style.color='#fff'" onmouseout="this.style.background='#1a1a1a'; this.style.color='#888'">
                         A-
                     </button>
-                    <button onclick="window.location.href='bw-mode.html'" style="
-                        background: #1a1a1a;
-                        border: 1px solid #000;
-                        border-radius: 6px;
-                        padding: 6px 12px;
-                        cursor: pointer;
-                        font-size: 13px;
-                        font-weight: 500;
-                        color: #888;
-                        transition: all 0.2s;
-                    " onmouseover="this.style.background='#2a2a2a'; this.style.color='#fff'" onmouseout="this.style.background='#1a1a1a'; this.style.color='#888'">
-                        BW
-                    </button>
                     <button onclick="adjustPriceSize('increase')" style="
                         background: #1a1a1a;
                         border: 1px solid #000;
@@ -3496,5 +3483,10 @@
             console.log('가격 기록 Firebase 저장 완료:', today);
         }
     </script>
+    
+    <!-- Hidden footer -->
+    <footer style="position: fixed; bottom: 10px; right: 10px; opacity: 0.3; font-size: 12px;">
+        <a href="bw-mode.html" style="color: #333; text-decoration: none;">made by euo</a>
+    </footer>
 </body>
 </html>

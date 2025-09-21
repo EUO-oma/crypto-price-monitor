@@ -172,7 +172,6 @@
     <div class="header">
         <h1>Crypto Price Table</h1>
         <div class="controls">
-            <button class="control-btn" onclick="location.href='bw-mode.html'" title="BW Mode">BW</button>
             <button class="control-btn" onclick="adjustSize('increase')">+</button>
             <button class="control-btn" onclick="adjustSize('decrease')">-</button>
         </div>
@@ -376,5 +375,10 @@
         // Periodic API updates every 30 seconds as backup
         setInterval(fetchPricesAPI, 30000);
     </script>
+    
+    <!-- Hidden footer -->
+    <footer style="position: fixed; bottom: 10px; right: 10px; opacity: 0.3; font-size: 12px;">
+        <a href="bw-mode.html" style="color: #444; text-decoration: none;">made by euo</a>
+    </footer>
 </body>
 </html>
