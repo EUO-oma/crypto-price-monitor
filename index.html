@@ -89,7 +89,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
             max-width: 900px;
             width: 100%;
-            border: 1px solid #1a1a1a;
+            border: 1px solid #000;
         }
 
         h1 {
@@ -123,7 +123,7 @@
             border-radius: 15px;
             text-align: center;
             transition: transform 0.3s ease;
-            border: 1px solid #333;
+            border: 1px solid #000;
             cursor: pointer;
             text-decoration: none;
             display: block;
@@ -302,7 +302,7 @@
         #chat-container::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, #444 0%, #222 100%);
             border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid #000;
             transition: all 0.3s ease;
         }
         
@@ -411,7 +411,7 @@
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button onclick="adjustPriceSize('decrease')" style="
                         background: #1a1a1a;
-                        border: 1px solid #333;
+                        border: 1px solid #000;
                         border-radius: 6px;
                         padding: 6px 12px;
                         cursor: pointer;
@@ -424,7 +424,7 @@
                     </button>
                     <button onclick="window.location.href='bw-mode.html'" style="
                         background: #1a1a1a;
-                        border: 1px solid #333;
+                        border: 1px solid #000;
                         border-radius: 6px;
                         padding: 6px 12px;
                         cursor: pointer;
@@ -437,7 +437,7 @@
                     </button>
                     <button onclick="adjustPriceSize('increase')" style="
                         background: #1a1a1a;
-                        border: 1px solid #333;
+                        border: 1px solid #000;
                         border-radius: 6px;
                         padding: 6px 12px;
                         cursor: pointer;
@@ -456,12 +456,11 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0; margin-bottom: 20px;">
                 <!-- BTC Price Card -->
                 <a href="chart.html?symbol=BTCUSDT" style="text-decoration: none; display: block;">
-                <div style="background: #0d0d0d; border-radius: 10px; padding: 8px; border: 1px solid #222; transition: all 0.3s ease; cursor: pointer;"
+                <div style="background: #0d0d0d; border-radius: 10px; padding: 8px; border: 1px solid #000; transition: all 0.3s ease; cursor: pointer;"
                      onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#444';" 
                      onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#222';">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                         <span class="coin-symbol" style="color: #f7931a; font-size: 1.2em; font-weight: bold;">₿ BTC</span>
-                        <span style="color: #666; font-size: 0.9em;">USDT</span>
                     </div>
                     <div id="btc-price-custom" class="crypto-price mono" style="font-size: 2.5em; font-weight: 600; color: #f7931a; margin-bottom: 5px; text-align: right;">Loading...</div>
                     <div id="btc-change-custom" class="mono" style="font-size: 0.9em; color: #4caf50; text-align: right; font-weight: 400;">-</div>
@@ -470,12 +469,11 @@
                 
                 <!-- ETH Price Card -->
                 <a href="chart.html?symbol=ETHUSDT" style="text-decoration: none; display: block;">
-                <div class="crypto-card" style="background: #0d0d0d; border-radius: 10px; padding: 8px; border: 1px solid #222; transition: all 0.3s ease; cursor: pointer;"
+                <div class="crypto-card" style="background: #0d0d0d; border-radius: 10px; padding: 8px; border: 1px solid #000; transition: all 0.3s ease; cursor: pointer;"
                      onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#444';" 
                      onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#222';">
                     <div class="coin-info-section">
                         <span class="coin-symbol" style="color: #9a8ff8; font-size: 1.2em; font-weight: bold;">Ξ ETH</span>
-                        <span style="color: #666; font-size: 0.9em;">USDT</span>
                     </div>
                     <div class="price-section">
                         <div id="eth-price-custom" class="crypto-price mono" style="font-size: 2.5em; font-weight: 600; color: #9a8ff8; margin-bottom: 5px; text-align: right;">Loading...</div>
@@ -486,12 +484,11 @@
                 
                 <!-- SOL Price Card -->
                 <a href="chart.html?symbol=SOLUSDT" style="text-decoration: none; display: block;">
-                <div class="crypto-card" style="background: #0d0d0d; border-radius: 10px; padding: 8px; border: 1px solid #222; transition: all 0.3s ease; cursor: pointer;"
+                <div class="crypto-card" style="background: #0d0d0d; border-radius: 10px; padding: 8px; border: 1px solid #000; transition: all 0.3s ease; cursor: pointer;"
                      onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#444';" 
                      onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#222';">
                     <div class="coin-info-section">
                         <span class="coin-symbol" style="color: #00FFA3; font-size: 1.2em; font-weight: bold;">◎ SOL</span>
-                        <span style="color: #666; font-size: 0.9em;">USDT</span>
                     </div>
                     <div class="price-section">
                         <div id="sol-price-custom" class="crypto-price mono" style="font-size: 2.5em; font-weight: 600; color: #00FFA3; margin-bottom: 5px; text-align: right;">Loading...</div>
@@ -501,7 +498,7 @@
                 </a>
                 
                 <!-- NASDAQ (NDX) Price Card -->
-                <div style="background: #0d0d0d; border-radius: 10px; padding: 8px; border: 1px solid #222;">
+                <div style="background: #0d0d0d; border-radius: 10px; padding: 8px; border: 1px solid #000;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                         <span class="coin-symbol" style="color: #4facfe; font-size: 1.2em; font-weight: bold;">NDX</span>
                         <span style="color: #666; font-size: 0.9em;">NASDAQ-100</span>
@@ -1100,7 +1097,7 @@
                         padding: 20px;
                         background: #1a1a1a;
                         border-radius: 10px;
-                        border: 1px solid #333;
+                        border: 1px solid #000;
                     `;
                     errorDiv.textContent = '링크를 불러오는 중입니다...';
                     container.appendChild(errorDiv);
@@ -1210,7 +1207,7 @@
                                 margin: 5px 0;
                                 border-radius: 8px;
                                 text-decoration: none;
-                                border: 1px solid #333;
+                                border: 1px solid #000;
                                 text-align: center;
                                 transition: all 0.3s ease;
                             `;
@@ -1472,7 +1469,7 @@
                             padding: 20px;
                             background: #1a1a1a;
                             border-radius: 10px;
-                            border: 1px solid #333;
+                            border: 1px solid #000;
                         `;
                         errorDiv.innerHTML = `
                             <div>❌ ${name} 로드 실패</div>
@@ -1484,7 +1481,7 @@
                                 padding: 5px 15px;
                                 background: #333;
                                 color: #fff;
-                                border: 1px solid #555;
+                                border: 1px solid #000;
                                 border-radius: 5px;
                                 cursor: pointer;
                             ">새로고침</button>
@@ -2199,7 +2196,7 @@
                                 font-size: 14px;
                                 line-height: 1.4;
                                 word-wrap: break-word;
-                                border: 1px solid #444;
+                                border: 1px solid #000;
                                 flex-grow: 1;
                                 min-width: 0;
                             ">
@@ -2261,7 +2258,7 @@
                                     font-size: 14px;
                                     line-height: 1.4;
                                     word-wrap: break-word;
-                                    border: 1px solid #333;
+                                    border: 1px solid #000;
                                     flex-grow: 1;
                                     min-width: 0;
                                 ">
@@ -2709,7 +2706,7 @@
                 
                 gptLinks.forEach((link, index) => {
                     html += `
-                        <div style="background: #2a2a2a; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #444;">
+                        <div style="background: #2a2a2a; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #000;">
                             <a href="${link.url || '#'}" target="_blank" style="color: #4facfe; text-decoration: none; font-weight: bold;">
                                 ${index + 1}. ${link.name || '이름 없음'}
                             </a>
@@ -3198,7 +3195,7 @@
         padding: 8px 16px;
         border-radius: 20px;
         backdrop-filter: blur(10px);
-        border: 1px solid #333;
+        border: 1px solid #000;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     ">
         <!-- 홈 버튼 -->
@@ -3293,7 +3290,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease;
-            border: 1px solid #333;
+            border: 1px solid #000;
         }
         
         .nav-btn:hover::after {
@@ -3330,7 +3327,7 @@
             width: 50px;
             height: 50px;
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid #000;
             border-radius: 50%;
             display: flex;
             align-items: center;

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Supabase Test</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Simple Supabase Connection Test</h1>
+    <div id="status">Loading...</div>
+    <pre id="result"></pre>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        async function test() {
+            const status = document.getElementById('status');
+            const result = document.getElementById('result');
+            
+            try {
+                // Create client
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                // Test query
+                const { data, error } = await supabase.from('links').select('*').limit(1);
+                
+                if (error) {
+                    status.innerHTML = '❌ Error: ' + error.message;
+                    result.innerHTML = JSON.stringify(error, null, 2);
+                } else {
+                    status.innerHTML = '✅ Success!';
+                    result.innerHTML = JSON.stringify(data, null, 2);
+                }
+            } catch (e) {
+                status.innerHTML = '❌ Exception: ' + e.message;
+                result.innerHTML = e.stack;
+            }
+        }
+        
+        // Run test after page loads
+        window.addEventListener('load', () => {
+            setTimeout(test, 1000);
+        });
+    </script>
+</body>
+</html>

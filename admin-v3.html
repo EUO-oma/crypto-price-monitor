@@ -270,6 +270,15 @@
         <div class="config-section">
             <h3>⚙️ Supabase 연결 상태</h3>
             <div id="connection-status">확인 중...</div>
+            <div id="connection-help" style="display:none; margin-top: 10px; font-size: 0.9em; color: #ff9800;">
+                💡 연결 문제 해결 방법:
+                <ol style="margin: 5px 0; padding-left: 20px;">
+                    <li>Supabase 대시보드에서 SQL Editor 열기</li>
+                    <li>다음 명령 실행: <code>ALTER TABLE links DISABLE ROW LEVEL SECURITY;</code></li>
+                    <li>이 페이지 새로고침</li>
+                </ol>
+                <a href="/fix-supabase.html" target="_blank" style="color: #4caf50;">→ 자동 진단 도구 열기</a>
+            </div>
         </div>
 
         <div class="add-form" style="margin-bottom: 20px;">
@@ -443,9 +452,31 @@
     <!-- Supabase 라이브러리를 먼저 로드하고 초기화 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="supabase-init.js"></script>
-    <script src="config-env.js"></script>
-    <script src="config-loader.js"></script>
+    
+    <!-- 직접 Supabase 초기화 -->
+    <script>
+        // 즉시 Supabase 초기화
+        (function() {
+            const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+            
+            // Supabase SDK 로드 대기
+            function waitForSupabase() {
+                if (window.supabase && window.supabase.createClient) {
+                    try {
+                        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                        console.log('✅ Supabase client initialized directly');
+                    } catch (e) {
+                        console.error('❌ Failed to create Supabase client:', e);
+                    }
+                } else {
+                    setTimeout(waitForSupabase, 100);
+                }
+            }
+            
+            waitForSupabase();
+        })();
+    </script>
     
     <!-- Supabase 초기화 -->
     <script>
@@ -454,26 +485,60 @@
 
         // 페이지 로드 후 바로 초기화
         window.addEventListener('DOMContentLoaded', function() {
-            // 짧은 대기 후 초기화
-            setTimeout(() => {
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            // Supabase 클라이언트 초기화 시도
+            function tryInitialize() {
                 try {
-                    // supabaseClient는 supabase-init.js에서 생성됨
-                    supabase = window.supabaseClient;
+                    console.log(`[app] Initialization attempt ${retryCount + 1}/${maxRetries}`);
                     
-                    if (supabase) {
+                    // supabaseClient 확인
+                    if (window.supabaseClient) {
+                        supabase = window.supabaseClient;
                         console.log('[app] Supabase client ready');
                         initializeApp();
                     } else {
-                        console.error('[app] Supabase client not found');
-                        document.getElementById('connection-status').innerHTML = 
-                            '<span style="color: #f44336;">❌ Supabase에 연결할 수 없습니다.</span>';
+                        retryCount++;
+                        if (retryCount < maxRetries) {
+                            console.log('[app] Supabase client not ready, retrying in 500ms...');
+                            setTimeout(tryInitialize, 500);
+                        } else {
+                            console.error('[app] Supabase client not found after ' + maxRetries + ' attempts');
+                            document.getElementById('connection-status').innerHTML = 
+                                '<span style="color: #f44336;">❌ Supabase에 연결할 수 없습니다.</span>';
+                            
+                            // 수동으로 초기화 시도 - 하드코딩된 값 사용
+                            if (window.supabase && window.supabase.createClient) {
+                                console.log('[app] Attempting manual initialization with hardcoded values...');
+                                try {
+                                    const url = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                                    const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                                    
+                                    supabase = window.supabase.createClient(url, key);
+                                    window.supabaseClient = supabase;
+                                    console.log('[app] Manual initialization successful with hardcoded values');
+                                    initializeApp();
+                                } catch (e) {
+                                    console.error('[app] Manual initialization failed:', e);
+                                    document.getElementById('connection-status').innerHTML = 
+                                        `<span style="color: #f44336;">❌ 초기화 실패: ${e.message}</span>`;
+                                }
+                            } else {
+                                document.getElementById('connection-status').innerHTML = 
+                                    '<span style="color: #f44336;">❌ Supabase SDK가 로드되지 않았습니다</span>';
+                            }
+                        }
                     }
                 } catch (error) {
                     console.error('[app] 초기화 오류:', error);
                     document.getElementById('connection-status').innerHTML = 
                         '<span style="color: #f44336;">❌ 초기화 실패: ' + error.message + '</span>';
                 }
-            }, 500);
+            }
+            
+            // 첫 시도는 즉시 실행
+            tryInitialize();
         });
 
         // 링크 관련 함수들 직접 정의
@@ -703,6 +768,23 @@
             if (savedState === 'true') {
                 funYoutubeSettingsOpen = false; // toggle이 반대로 토글하므로
                 toggleFunYoutubeSettings();
+            }
+            
+            // Fun YouTube 슬라이더 이벤트 리스너 추가
+            const titleSizeSlider = document.getElementById('fun-youtube-title-size');
+            const titleSizeDisplay = document.getElementById('fun-youtube-title-size-display');
+            if (titleSizeSlider && titleSizeDisplay) {
+                titleSizeSlider.addEventListener('input', (e) => {
+                    titleSizeDisplay.textContent = e.target.value + 'px';
+                });
+            }
+            
+            const radiusSlider = document.getElementById('fun-youtube-border-radius');
+            const radiusDisplay = document.getElementById('fun-youtube-radius-display');
+            if (radiusSlider && radiusDisplay) {
+                radiusSlider.addEventListener('input', (e) => {
+                    radiusDisplay.textContent = e.target.value + 'px';
+                });
             }
         }
 
@@ -1012,23 +1094,23 @@
                 borderRadius: 8
             };
             
-            // 값 가져오기 및 검증
-            const gridColumns = parseInt(document.getElementById('fun-youtube-grid-columns').value);
-            const fontSize = parseInt(document.getElementById('fun-youtube-font-size').value);
+            // 값 가져오기 및 검증 - 올바른 ID 사용
+            const gridColumns = parseInt(document.getElementById('fun-youtube-grid-cols').value);
+            const fontSize = parseInt(document.getElementById('fun-youtube-title-size').value);
             const borderRadius = parseInt(document.getElementById('fun-youtube-border-radius').value);
             
             const settings = {
-                viewMode: document.getElementById('fun-youtube-view-mode').value || funDefaults.viewMode,
+                viewMode: document.getElementById('fun-youtube-default-view').value || funDefaults.viewMode,
                 gridColumns: isNaN(gridColumns) ? funDefaults.gridColumns : gridColumns,
-                showThumbnails: document.getElementById('fun-youtube-thumbnails').checked,
-                showAuthor: document.getElementById('fun-youtube-author').checked,
-                showViewButton: document.getElementById('fun-youtube-view-button').checked,
+                showThumbnails: document.getElementById('fun-youtube-show-thumbnail').checked,
+                showAuthor: document.getElementById('fun-youtube-show-author').checked,
+                showViewButton: document.getElementById('fun-youtube-show-toggle').checked,
+                autoFetch: document.getElementById('fun-youtube-auto-fetch').checked,
                 fontSize: isNaN(fontSize) ? funDefaults.fontSize : fontSize,
-                bgColor: document.getElementById('fun-youtube-bg-color').value || funDefaults.bgColor,
-                textColor: document.getElementById('fun-youtube-text-color').value || funDefaults.textColor,
-                hoverBgColor: document.getElementById('fun-youtube-hover-bg').value || funDefaults.hoverBgColor,
-                borderRadius: isNaN(borderRadius) ? funDefaults.borderRadius : borderRadius,
-                hoverScale: document.getElementById('fun-youtube-hover-scale').checked
+                bgColor: document.getElementById('fun-youtube-card-bg').value || funDefaults.bgColor,
+                borderColor: document.getElementById('fun-youtube-border-color').value || funDefaults.borderColor,
+                hoverEffect: document.getElementById('fun-youtube-hover-effect').value || 'lift',
+                borderRadius: isNaN(borderRadius) ? funDefaults.borderRadius : borderRadius
             };
 
             localStorage.setItem('funYoutubeSettings', JSON.stringify(settings));
@@ -1051,18 +1133,38 @@
                 hoverScale: true
             };
 
-            // 폼에 기본값 설정
-            document.getElementById('fun-youtube-view-mode').value = defaultSettings.viewMode;
-            document.getElementById('fun-youtube-grid-columns').value = defaultSettings.gridColumns;
-            document.getElementById('fun-youtube-thumbnails').checked = defaultSettings.showThumbnails;
-            document.getElementById('fun-youtube-author').checked = defaultSettings.showAuthor;
-            document.getElementById('fun-youtube-view-button').checked = defaultSettings.showViewButton;
-            document.getElementById('fun-youtube-font-size').value = defaultSettings.fontSize;
-            document.getElementById('fun-youtube-bg-color').value = defaultSettings.bgColor;
-            document.getElementById('fun-youtube-text-color').value = defaultSettings.textColor;
-            document.getElementById('fun-youtube-hover-bg').value = defaultSettings.hoverBgColor;
-            document.getElementById('fun-youtube-border-radius').value = defaultSettings.borderRadius;
-            document.getElementById('fun-youtube-hover-scale').checked = defaultSettings.hoverScale;
+            // 폼에 기본값 설정 - 올바른 ID 사용
+            const viewModeEl = document.getElementById('fun-youtube-default-view');
+            const gridColsEl = document.getElementById('fun-youtube-grid-cols');
+            const thumbnailEl = document.getElementById('fun-youtube-show-thumbnail');
+            const authorEl = document.getElementById('fun-youtube-show-author');
+            const toggleEl = document.getElementById('fun-youtube-show-toggle');
+            const autoFetchEl = document.getElementById('fun-youtube-auto-fetch');
+            const fontSizeEl = document.getElementById('fun-youtube-title-size');
+            const cardBgEl = document.getElementById('fun-youtube-card-bg');
+            const borderColorEl = document.getElementById('fun-youtube-border-color');
+            const hoverEffectEl = document.getElementById('fun-youtube-hover-effect');
+            const borderRadiusEl = document.getElementById('fun-youtube-border-radius');
+            
+            if (viewModeEl) viewModeEl.value = defaultSettings.viewMode;
+            if (gridColsEl) gridColsEl.value = defaultSettings.gridColumns;
+            if (thumbnailEl) thumbnailEl.checked = defaultSettings.showThumbnails;
+            if (authorEl) authorEl.checked = defaultSettings.showAuthor;
+            if (toggleEl) toggleEl.checked = defaultSettings.showViewButton;
+            if (autoFetchEl) autoFetchEl.checked = true;
+            if (fontSizeEl) {
+                fontSizeEl.value = defaultSettings.fontSize;
+                const fontSizeDisplay = document.getElementById('fun-youtube-title-size-display');
+                if (fontSizeDisplay) fontSizeDisplay.textContent = defaultSettings.fontSize + 'px';
+            }
+            if (cardBgEl) cardBgEl.value = defaultSettings.bgColor;
+            if (borderColorEl) borderColorEl.value = '#333333';
+            if (hoverEffectEl) hoverEffectEl.value = 'lift';
+            if (borderRadiusEl) {
+                borderRadiusEl.value = defaultSettings.borderRadius;
+                const radiusDisplay = document.getElementById('fun-youtube-radius-display');
+                if (radiusDisplay) radiusDisplay.textContent = defaultSettings.borderRadius + 'px';
+            }
 
             localStorage.setItem('funYoutubeSettings', JSON.stringify(defaultSettings));
             showStatus('Fun YouTube 설정이 초기화되었습니다', 'success');
@@ -1087,18 +1189,39 @@
             const savedSettings = JSON.parse(localStorage.getItem('funYoutubeSettings') || '{}');
             const settings = { ...defaultSettings, ...savedSettings };
 
-            // 폼에 저장된 값 설정
-            document.getElementById('fun-youtube-view-mode').value = settings.viewMode;
-            document.getElementById('fun-youtube-grid-columns').value = settings.gridColumns;
-            document.getElementById('fun-youtube-thumbnails').checked = settings.showThumbnails;
-            document.getElementById('fun-youtube-author').checked = settings.showAuthor;
-            document.getElementById('fun-youtube-view-button').checked = settings.showViewButton;
-            document.getElementById('fun-youtube-font-size').value = settings.fontSize;
-            document.getElementById('fun-youtube-bg-color').value = settings.bgColor;
-            document.getElementById('fun-youtube-text-color').value = settings.textColor;
-            document.getElementById('fun-youtube-hover-bg').value = settings.hoverBgColor;
-            document.getElementById('fun-youtube-border-radius').value = settings.borderRadius;
-            document.getElementById('fun-youtube-hover-scale').checked = settings.hoverScale;
+            // 폼에 저장된 값 설정 - 올바른 ID 사용
+            const viewModeEl = document.getElementById('fun-youtube-default-view');
+            const gridColsEl = document.getElementById('fun-youtube-grid-cols');
+            const thumbnailEl = document.getElementById('fun-youtube-show-thumbnail');
+            const authorEl = document.getElementById('fun-youtube-show-author');
+            const toggleEl = document.getElementById('fun-youtube-show-toggle');
+            const autoFetchEl = document.getElementById('fun-youtube-auto-fetch');
+            const fontSizeEl = document.getElementById('fun-youtube-title-size');
+            const cardBgEl = document.getElementById('fun-youtube-card-bg');
+            const borderColorEl = document.getElementById('fun-youtube-border-color');
+            const hoverEffectEl = document.getElementById('fun-youtube-hover-effect');
+            const borderRadiusEl = document.getElementById('fun-youtube-border-radius');
+            
+            // Elements가 존재하는 경우에만 설정
+            if (viewModeEl) viewModeEl.value = settings.viewMode;
+            if (gridColsEl) gridColsEl.value = settings.gridColumns;
+            if (thumbnailEl) thumbnailEl.checked = settings.showThumbnails;
+            if (authorEl) authorEl.checked = settings.showAuthor;
+            if (toggleEl) toggleEl.checked = settings.showViewButton;
+            if (autoFetchEl) autoFetchEl.checked = settings.autoFetch !== false;
+            if (fontSizeEl) {
+                fontSizeEl.value = settings.fontSize;
+                const fontSizeDisplay = document.getElementById('fun-youtube-title-size-display');
+                if (fontSizeDisplay) fontSizeDisplay.textContent = settings.fontSize + 'px';
+            }
+            if (cardBgEl) cardBgEl.value = settings.bgColor;
+            if (borderColorEl) borderColorEl.value = settings.borderColor || '#333333';
+            if (hoverEffectEl) hoverEffectEl.value = settings.hoverEffect || 'lift';
+            if (borderRadiusEl) {
+                borderRadiusEl.value = settings.borderRadius;
+                const radiusDisplay = document.getElementById('fun-youtube-radius-display');
+                if (radiusDisplay) radiusDisplay.textContent = settings.borderRadius + 'px';
+            }
         }
 
         function previewStyles() {
@@ -1319,32 +1442,67 @@
                 console.error('Supabase client not initialized');
                 statusElement.innerHTML = '<span style="color: #f44336;">❌ Supabase 초기화 실패</span>';
                 
-                // 재시도
-                if (window.supabase && window.APP_CONFIG) {
+                // 재시도 - 하드코딩된 값 사용
+                if (window.supabase && window.supabase.createClient) {
                     try {
-                        supabase = window.supabase.createClient(
-                            window.APP_CONFIG.SUPABASE.URL,
-                            window.APP_CONFIG.SUPABASE.ANON_KEY
-                        );
-                        console.log('Supabase client created in checkConnection');
+                        const url = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                        const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                        
+                        supabase = window.supabase.createClient(url, key);
+                        window.supabaseClient = supabase;
+                        console.log('Supabase client created in checkConnection with hardcoded values');
                     } catch (e) {
                         console.error('Failed to create Supabase client:', e);
+                        statusElement.innerHTML = `<span style="color: #f44336;">❌ 클라이언트 생성 실패: ${e.message}</span>`;
                         return;
                     }
                 } else {
+                    statusElement.innerHTML = '<span style="color: #f44336;">❌ Supabase SDK가 로드되지 않았습니다</span>';
                     return;
                 }
             }
 
             try {
                 console.log('Checking Supabase connection...');
+                statusElement.innerHTML = '<span style="color: #ff9800;">🔄 연결 확인 중...</span>';
+                
                 const { data, error } = await supabase.from('links').select('count').limit(1);
                 if (error) throw error;
+                
                 console.log('Supabase connection successful');
                 statusElement.innerHTML = '<span style="color: #4caf50;">✅ 연결됨</span>';
             } catch (error) {
                 console.error('Supabase connection error:', error);
-                statusElement.innerHTML = `<span style="color: #f44336;">❌ 연결 실패: ${error.message}</span>`;
+                
+                // 에러 메시지 처리
+                let errorMessage = '연결 실패';
+                
+                if (error.message && error.message.includes('Failed to fetch')) {
+                    errorMessage = '네트워크 연결 오류';
+                } else if (error.message && error.message.includes('JWSError')) {
+                    errorMessage = 'API 키 오류';
+                } else if (error.message && error.message.includes('permission')) {
+                    errorMessage = '권한 오류';
+                } else if (error.message) {
+                    // "Config File" 같은 메시지를 더 친화적으로
+                    errorMessage = '데이터베이스 연결 오류';
+                }
+                
+                statusElement.innerHTML = `<span style="color: #f44336;">❌ ${errorMessage}</span>`;
+                
+                // 도움말 표시
+                const helpElement = document.getElementById('connection-help');
+                if (helpElement) {
+                    helpElement.style.display = 'block';
+                }
+                
+                // 디버깅 정보 (개발자 콘솔에만)
+                console.log('Debug info:', {
+                    originalError: error.message,
+                    errorCode: error.code,
+                    errorHint: error.hint,
+                    url: supabase?._supabaseUrl
+                });
             }
         }
 
@@ -1354,6 +1512,13 @@
 
             if (!container) {
                 console.error('links-container element not found');
+                return;
+            }
+            
+            // Supabase 연결이 없으면 로컬 스토리지 사용
+            if (!supabase) {
+                console.warn('Supabase not available, using local storage');
+                loadLinksFromLocalStorage();
                 return;
             }
 
@@ -1680,6 +1845,74 @@
             } else {
                 console.warn('subscribeToLinks function not available');
             }
+        }
+        
+        // 로컬 스토리지 백업 함수들
+        function loadLinksFromLocalStorage() {
+            const container = document.getElementById('links-container');
+            const localLinks = localStorage.getItem('admin_links');
+            
+            if (localLinks) {
+                const links = JSON.parse(localLinks);
+                displayLinks(links);
+            } else {
+                container.innerHTML = '<p style="color: #ff9800;">⚠️ 로컬 데이터가 없습니다. Supabase 연결이 필요합니다.</p>';
+            }
+        }
+        
+        function saveLinksToLocalStorage(links) {
+            localStorage.setItem('admin_links', JSON.stringify(links));
+        }
+        
+        // 링크 표시 함수 (공통)
+        function displayLinks(allLinks) {
+            const container = document.getElementById('links-container');
+            const youtubeLinks = allLinks.filter(link => link.category === 'youtube');
+            const favoriteLinks = allLinks.filter(link => link.category === 'favorite');
+            const gptLinks = allLinks.filter(link => link.category === 'gpt');
+            
+            container.innerHTML = '';
+            
+            // YouTube 섹션
+            if (youtubeLinks.length > 0) {
+                container.innerHTML += createLinkSection('youtube', 'YouTube 채널', youtubeLinks);
+            }
+            
+            // Favorites 섹션
+            if (favoriteLinks.length > 0) {
+                container.innerHTML += createLinkSection('favorite', 'Favorite Sites', favoriteLinks);
+            }
+            
+            // GPT Tools 섹션
+            if (gptLinks.length > 0) {
+                container.innerHTML += createLinkSection('gpt', 'GPT Tools', gptLinks);
+            }
+            
+            if (allLinks.length === 0) {
+                container.innerHTML = '<p>등록된 링크가 없습니다.</p>';
+            }
+        }
+        
+        function createLinkSection(category, title, links) {
+            let html = `<div class="link-category"><h3>${title}</h3><div class="links-grid">`;
+            
+            links.forEach(link => {
+                html += `
+                    <div class="link-item" data-id="${link.id}">
+                        <div class="link-header">
+                            <span class="link-name">${link.name}</span>
+                            <div class="link-actions">
+                                <button onclick="editLink('${link.id}')" class="edit-btn">✏️</button>
+                                <button onclick="deleteLink('${link.id}')" class="delete-btn">🗑️</button>
+                            </div>
+                        </div>
+                        <a href="${link.url}" target="_blank" class="link-url">${link.url}</a>
+                    </div>
+                `;
+            });
+            
+            html += '</div></div>';
+            return html;
         }
     </script>
 </body>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Fix</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f0f0f0; }
+        .section { background: white; padding: 20px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Supabase Connection Fix</h1>
+    
+    <div class="section">
+        <h2>1. Direct Test</h2>
+        <button onclick="testDirect()">Test Direct Connection</button>
+        <div id="direct-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. Create Test Table</h2>
+        <button onclick="createTestTable()">Create Test Table</button>
+        <div id="table-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Check Links Table</h2>
+        <button onclick="checkLinksTable()">Check Links Table</button>
+        <div id="links-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. SQL to Run in Supabase Dashboard</h2>
+        <pre>
+-- Enable anon access to links table
+CREATE POLICY "Enable read access for all users" ON "public"."links"
+FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert access for all users" ON "public"."links"
+FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Enable update access for all users" ON "public"."links"
+FOR UPDATE USING (true);
+
+CREATE POLICY "Enable delete access for all users" ON "public"."links"
+FOR DELETE USING (true);
+
+-- Or disable RLS completely (temporary fix)
+ALTER TABLE links DISABLE ROW LEVEL SECURITY;
+        </pre>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        let supabase;
+        
+        // Initialize on load
+        window.onload = () => {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log('Supabase client created');
+        };
+        
+        async function testDirect() {
+            const resultEl = document.getElementById('direct-result');
+            resultEl.innerHTML = 'Testing...';
+            
+            try {
+                // Test a simple auth check
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                resultEl.innerHTML = `
+                    <p class="success">✓ Connection successful</p>
+                    <p>User: ${user ? user.email : 'Anonymous'}</p>
+                `;
+                
+                // Test database access
+                const tables = ['links', 'users', 'test_table'];
+                for (const table of tables) {
+                    try {
+                        const { count, error } = await supabase
+                            .from(table)
+                            .select('*', { count: 'exact', head: true });
+                            
+                        if (error) {
+                            resultEl.innerHTML += `<p class="error">${table}: ${error.message}</p>`;
+                        } else {
+                            resultEl.innerHTML += `<p class="success">${table}: Accessible (${count || 0} records)</p>`;
+                        }
+                    } catch (e) {
+                        resultEl.innerHTML += `<p class="error">${table}: ${e.message}</p>`;
+                    }
+                }
+                
+            } catch (error) {
+                resultEl.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function createTestTable() {
+            const resultEl = document.getElementById('table-result');
+            resultEl.innerHTML = 'Creating test table...';
+            
+            try {
+                // Try to insert a test record
+                const { data, error } = await supabase
+                    .from('test_table')
+                    .insert([
+                        { name: 'Test', value: new Date().toISOString() }
+                    ])
+                    .select();
+                
+                if (error) {
+                    if (error.code === '42P01') {
+                        resultEl.innerHTML = `
+                            <p class="error">Table doesn't exist. Create it in Supabase Dashboard:</p>
+                            <pre>
+CREATE TABLE test_table (
+    id SERIAL PRIMARY KEY,
+    name TEXT,
+    value TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE test_table ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable all access" ON test_table
+FOR ALL USING (true);
+                            </pre>
+                        `;
+                    } else {
+                        resultEl.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                    }
+                } else {
+                    resultEl.innerHTML = `<p class="success">✓ Test record created: ${JSON.stringify(data)}</p>`;
+                }
+            } catch (error) {
+                resultEl.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function checkLinksTable() {
+            const resultEl = document.getElementById('links-result');
+            resultEl.innerHTML = 'Checking links table...';
+            
+            try {
+                // Try different queries
+                const queries = [
+                    { name: 'Count', query: supabase.from('links').select('*', { count: 'exact', head: true }) },
+                    { name: 'Select 1', query: supabase.from('links').select('id').limit(1) },
+                    { name: 'Select All', query: supabase.from('links').select('*') }
+                ];
+                
+                let html = '';
+                for (const { name, query } of queries) {
+                    const { data, error, count } = await query;
+                    
+                    if (error) {
+                        html += `<p class="error">${name}: ${error.message}</p>`;
+                        if (error.hint) html += `<p>Hint: ${error.hint}</p>`;
+                    } else {
+                        html += `<p class="success">${name}: Success</p>`;
+                        if (count !== undefined) html += `<p>Count: ${count}</p>`;
+                        if (data) html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    }
+                }
+                
+                resultEl.innerHTML = html;
+                
+            } catch (error) {
+                resultEl.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

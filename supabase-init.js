@@ -26,6 +26,8 @@
             // Try to get config from various sources
             let url = SUPABASE_CONFIG.URL;
             let key = SUPABASE_CONFIG.ANON_KEY;
+            
+            console.log('🔍 Checking configuration sources...');
 
             // Check for ENV_CONFIG (Netlify build)
             if (window.ENV_CONFIG?.SUPABASE?.URL) {
@@ -39,17 +41,32 @@
                 key = window.APP_CONFIG.SUPABASE.ANON_KEY;
                 console.log('✅ Using APP_CONFIG');
             }
+            // Fallback to hardcoded config
+            else {
+                console.log('✅ Using hardcoded SUPABASE_CONFIG');
+            }
+
+            console.log('🔧 Creating Supabase client with URL:', url);
 
             // Create client
             window.supabaseClient = window.supabase.createClient(url, key);
-            console.log('✅ Supabase client initialized');
+            console.log('✅ Supabase client initialized successfully');
 
             // Also set on window for compatibility
             window.getSupabaseClient = () => window.supabaseClient;
 
+            // Dispatch custom event to notify that Supabase is ready
+            window.dispatchEvent(new Event('supabaseReady'));
+
             return window.supabaseClient;
         } catch (error) {
             console.error('❌ Failed to initialize Supabase:', error);
+            console.error('Error details:', {
+                hasSupabase: !!window.supabase,
+                hasCreateClient: !!(window.supabase?.createClient),
+                configUrl: url,
+                error: error.message
+            });
             return null;
         }
     }
