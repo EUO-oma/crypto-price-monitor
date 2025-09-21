@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>링크 편집기 (Fixed)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        .status {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            background: #1a1a1a;
+        }
+        
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+
+        button {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        .section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+
+        .links-list {
+            margin-top: 20px;
+        }
+
+        .link-item {
+            background: #222;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .link-info {
+            flex: 1;
+        }
+
+        .link-name {
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .link-url {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .link-category {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #333;
+            border-radius: 3px;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 링크 편집기 (Simplified)</h1>
+        
+        <div class="status" id="status">
+            <p>초기화 중...</p>
+        </div>
+
+        <div class="section">
+            <h2>연결 테스트</h2>
+            <button onclick="testConnection()">연결 테스트</button>
+            <button onclick="loadLinks()">링크 불러오기</button>
+            <button onclick="useLocalStorage()">로컬 저장소 사용</button>
+        </div>
+
+        <div class="section">
+            <h2>링크 추가</h2>
+            <input type="text" id="name" placeholder="링크 이름">
+            <input type="text" id="url" placeholder="URL">
+            <select id="category" style="width: 100%; padding: 10px; margin: 5px 0; background: #222; color: #fff; border: 1px solid #444; border-radius: 5px;">
+                <option value="youtube">YouTube</option>
+                <option value="favorite">Favorite</option>
+                <option value="gpt">GPT Tools</option>
+            </select>
+            <button onclick="addLink()">추가</button>
+        </div>
+
+        <div class="section">
+            <h2>링크 목록</h2>
+            <div id="links-list" class="links-list">
+                <p>링크를 불러오려면 위의 버튼을 클릭하세요.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // 전역 변수
+        let supabase = null;
+        let links = [];
+        const statusEl = document.getElementById('status');
+        const linksEl = document.getElementById('links-list');
+
+        // 초기화
+        window.onload = function() {
+            initSupabase();
+        };
+
+        // Supabase 초기화
+        function initSupabase() {
+            try {
+                const url = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                supabase = window.supabase.createClient(url, key);
+                statusEl.innerHTML = '<p class="success">✅ Supabase 클라이언트 초기화 성공</p>';
+                console.log('Supabase initialized');
+            } catch (error) {
+                statusEl.innerHTML = `<p class="error">❌ 초기화 실패: ${error.message}</p>`;
+                console.error('Init error:', error);
+            }
+        }
+
+        // 연결 테스트
+        async function testConnection() {
+            statusEl.innerHTML = '<p class="warning">🔄 연결 테스트 중...</p>';
+            
+            try {
+                const { data, error } = await supabase.from('links').select('count').limit(1);
+                
+                if (error) throw error;
+                
+                statusEl.innerHTML = '<p class="success">✅ 연결 성공!</p>';
+            } catch (error) {
+                statusEl.innerHTML = `<p class="error">❌ 연결 실패: ${error.message}</p>`;
+                console.error('Connection error:', error);
+            }
+        }
+
+        // 링크 불러오기
+        async function loadLinks() {
+            linksEl.innerHTML = '<p>불러오는 중...</p>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) throw error;
+                
+                links = data || [];
+                displayLinks();
+                statusEl.innerHTML = `<p class="success">✅ ${links.length}개 링크 불러옴</p>`;
+            } catch (error) {
+                linksEl.innerHTML = `<p class="error">❌ 불러오기 실패: ${error.message}</p>`;
+                console.error('Load error:', error);
+            }
+        }
+
+        // 링크 표시
+        function displayLinks() {
+            if (links.length === 0) {
+                linksEl.innerHTML = '<p>링크가 없습니다.</p>';
+                return;
+            }
+
+            linksEl.innerHTML = links.map(link => `
+                <div class="link-item">
+                    <div class="link-info">
+                        <div class="link-name">${link.name}</div>
+                        <div class="link-url">${link.url}</div>
+                        <span class="link-category">${link.category}</span>
+                    </div>
+                    <div>
+                        <button onclick="deleteLink('${link.id}')">삭제</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 링크 추가
+        async function addLink() {
+            const name = document.getElementById('name').value;
+            const url = document.getElementById('url').value;
+            const category = document.getElementById('category').value;
+
+            if (!name || !url) {
+                alert('이름과 URL을 입력하세요.');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .insert([{ name, url, category }])
+                    .select();
+
+                if (error) throw error;
+
+                document.getElementById('name').value = '';
+                document.getElementById('url').value = '';
+                
+                await loadLinks();
+                statusEl.innerHTML = '<p class="success">✅ 링크 추가됨</p>';
+            } catch (error) {
+                statusEl.innerHTML = `<p class="error">❌ 추가 실패: ${error.message}</p>`;
+                console.error('Add error:', error);
+            }
+        }
+
+        // 링크 삭제
+        async function deleteLink(id) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('links')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                await loadLinks();
+                statusEl.innerHTML = '<p class="success">✅ 링크 삭제됨</p>';
+            } catch (error) {
+                statusEl.innerHTML = `<p class="error">❌ 삭제 실패: ${error.message}</p>`;
+                console.error('Delete error:', error);
+            }
+        }
+
+        // 로컬 저장소 사용
+        function useLocalStorage() {
+            statusEl.innerHTML = '<p class="warning">⚠️ 로컬 저장소 모드</p>';
+            
+            // 로컬 저장소에서 링크 불러오기
+            const savedLinks = localStorage.getItem('local_links');
+            if (savedLinks) {
+                links = JSON.parse(savedLinks);
+                displayLinks();
+            }
+        }
+    </script>
+</body>
+</html>
