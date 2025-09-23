@@ -91,26 +91,64 @@
             gap: 0;
         }
         
-        /* Color box styles */
+        /* Color box styles - 3D card effect */
         .color-box {
             display: inline-block;
-            width: 36px;
-            height: 42px;
-            border-radius: 4px;
-            margin: 0 1px;
+            width: 50px;
+            height: 70px;
+            border-radius: 8px;
+            margin: 0 3px;
             vertical-align: middle;
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.9);
             transition: all 0.2s ease;
             position: relative;
             cursor: help;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            transform-style: preserve-3d;
+            transform: perspective(1000px) rotateY(0deg);
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+            background-image: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                transparent 50%, 
+                rgba(0, 0, 0, 0.1) 100%);
         }
         
         .color-box:hover {
-            transform: scale(1.1);
+            transform: perspective(1000px) rotateY(10deg) translateZ(10px) scale(1.05);
             border-color: rgba(255, 255, 255, 1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6),
-                        0 0 20px currentColor;
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                0 24px 48px rgba(0, 0, 0, 0.5),
+                0 0 30px currentColor,
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+        }
+        
+        /* Flip animation */
+        @keyframes flipX {
+            0% {
+                transform: perspective(400px) rotateX(0);
+            }
+            50% {
+                transform: perspective(400px) rotateX(-90deg);
+                opacity: 0.5;
+            }
+            100% {
+                transform: perspective(400px) rotateX(0);
+            }
+        }
+        
+        .color-box.flip,
+        .color-circle.flip {
+            animation: flipX 0.6s ease-in-out;
+            transform-style: preserve-3d;
         }
         
         /* Tooltip on hover */
@@ -137,26 +175,44 @@
             opacity: 1;
         }
         
-        /* Circle style for decimal points */
+        /* Circle style for decimal points - now same as boxes */
         .color-circle {
             display: inline-block;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            margin: 0 1px;
+            width: 50px;
+            height: 70px;
+            border-radius: 8px;
+            margin: 0 3px;
             vertical-align: middle;
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.9);
             transition: all 0.2s ease;
             position: relative;
             cursor: help;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            transform-style: preserve-3d;
+            transform: perspective(1000px) rotateY(0deg);
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+            background-image: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                transparent 50%, 
+                rgba(0, 0, 0, 0.1) 100%);
         }
         
         .color-circle:hover {
-            transform: scale(1.1);
+            transform: perspective(1000px) rotateY(10deg) translateZ(10px) scale(1.05);
             border-color: rgba(255, 255, 255, 1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6),
-                        0 0 20px currentColor;
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                0 24px 48px rgba(0, 0, 0, 0.5),
+                0 0 30px currentColor,
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.6);
         }
         
         /* Tooltip for circles */
@@ -202,17 +258,13 @@
             gap: 2px;
         }
         
-        .price-decimal .color-circle {
-            width: 25px;
-            height: 25px;
+        .price-decimal {
+            margin-left: 5px;
         }
         
-        /* Size variations */
+        /* Size variations - all boxes same size */
         .size-xs .price { font-size: 16px; }
-        .size-xs .color-box { width: 12px; height: 14px; }
-        .size-xs .color-box[style*="width: 48px"] { width: 16px !important; height: 19px !important; }
-        .size-xs .color-circle { width: 12px; height: 12px; }
-        .size-xs .price-decimal .color-circle { width: 8px; height: 8px; }
+        .size-xs .color-box, .size-xs .color-circle { width: 20px; height: 28px; border-radius: 4px; }
         
         .size-s .price { font-size: 20px; }
         .size-s .color-box { width: 15px; height: 18px; }
@@ -239,10 +291,7 @@
         .size-xl .price-decimal .color-circle { width: 22px; height: 22px; }
         
         .size-xxl .price { font-size: 56px; }
-        .size-xxl .color-box { width: 42px; height: 49px; }
-        .size-xxl .color-box[style*="width: 48px"] { width: 56px !important; height: 65px !important; }
-        .size-xxl .color-circle { width: 42px; height: 42px; }
-        .size-xxl .price-decimal .color-circle { width: 28px; height: 28px; }
+        .size-xxl .color-box, .size-xxl .color-circle { width: 50px; height: 70px; border-radius: 8px; }
         
         .loading {
             animation: pulse 1.5s infinite;
@@ -500,7 +549,14 @@
         // Binance WebSocket connections
         let btcWs, ethWs, solWs;
         
-        function formatPriceWithBoxes(price) {
+        // Track previous prices for comparison
+        const previousPrices = {
+            btc: '',
+            eth: '',
+            sol: ''
+        };
+        
+        function formatPriceWithBoxes(price, coinType) {
             // Format price as string with 2 decimals
             const priceStr = price.toFixed(2);
             const [integerPart, decimalPart] = priceStr.split('.');
@@ -508,24 +564,42 @@
             // Convert each digit to a color box
             let boxesHtml = '';
             
+            // Get previous price string for comparison
+            const prevPriceStr = previousPrices[coinType] || '';
+            const [prevIntegerPart = '', prevDecimalPart = ''] = prevPriceStr.split('.');
+            
             // Integer part without commas
             const integerDigits = integerPart.split('');
+            const prevIntegerDigits = prevIntegerPart.split('');
+            
             for (let i = 0; i < integerDigits.length; i++) {
                 const digit = parseInt(integerDigits[i]);
-                // Make 3rd and 4th boxes larger (positions 2 and 3 in 0-based index)
-                const isLarge = (i === 2 || i === 3);
-                const sizeStyle = isLarge ? 'style="width: 48px; height: 56px; font-size: 1.2em;"' : '';
-                boxesHtml += `<span class="color-box color-${digit}" data-number="${digit}" ${sizeStyle}></span>`;
+                const prevDigit = i < prevIntegerDigits.length ? prevIntegerDigits[i] : '';
+                const hasChanged = digit.toString() !== prevDigit;
+                
+                const flipClass = hasChanged && prevPriceStr ? 'flip' : '';
+                boxesHtml += `<span class="color-box color-${digit} ${flipClass}" data-number="${digit}"></span>`;
             }
             
             // Decimal part with circles
             if (decimalPart) {
+                boxesHtml += '<span style="font-size: 40px; color: #666; margin: 0 5px; vertical-align: middle;">·</span>';
                 boxesHtml += '<span class="price-decimal">';
-                for (let digit of decimalPart) {
-                    boxesHtml += `<span class="color-circle color-${digit}" data-number="${digit}"></span>`;
+                const prevDecimalDigits = prevDecimalPart.split('');
+                
+                for (let i = 0; i < decimalPart.length; i++) {
+                    const digit = decimalPart[i];
+                    const prevDigit = i < prevDecimalDigits.length ? prevDecimalDigits[i] : '';
+                    const hasChanged = digit !== prevDigit;
+                    const flipClass = hasChanged && prevPriceStr ? 'flip' : '';
+                    
+                    boxesHtml += `<span class="color-circle color-${digit} ${flipClass}" data-number="${digit}"></span>`;
                 }
                 boxesHtml += '</span>';
             }
+            
+            // Store current price for next comparison
+            previousPrices[coinType] = priceStr;
             
             return boxesHtml;
         }
@@ -563,7 +637,7 @@
                 // Don't update if coin is hidden
                 const coinType = symbol.replace('USDT', '').toLowerCase();
                 if (!hiddenCoins[coinType]) {
-                    document.getElementById(elementId).innerHTML = formatPriceWithBoxes(price);
+                    document.getElementById(elementId).innerHTML = formatPriceWithBoxes(price, coinType);
                 }
             };
             
@@ -601,17 +675,17 @@
                 
                 if (results[0] && !hiddenCoins.btc) {
                     const btcPrice = parseFloat(results[0].lastPrice);
-                    document.getElementById('btc-price').innerHTML = formatPriceWithBoxes(btcPrice);
+                    document.getElementById('btc-price').innerHTML = formatPriceWithBoxes(btcPrice, 'btc');
                     document.getElementById('btc-price').classList.remove('loading');
                 }
                 if (results[1] && !hiddenCoins.eth) {
                     const ethPrice = parseFloat(results[1].lastPrice);
-                    document.getElementById('eth-price').innerHTML = formatPriceWithBoxes(ethPrice);
+                    document.getElementById('eth-price').innerHTML = formatPriceWithBoxes(ethPrice, 'eth');
                     document.getElementById('eth-price').classList.remove('loading');
                 }
                 if (results[2] && !hiddenCoins.sol) {
                     const solPrice = parseFloat(results[2].lastPrice);
-                    document.getElementById('sol-price').innerHTML = formatPriceWithBoxes(solPrice);
+                    document.getElementById('sol-price').innerHTML = formatPriceWithBoxes(solPrice, 'sol');
                     document.getElementById('sol-price').classList.remove('loading');
                 }
             } catch (error) {
