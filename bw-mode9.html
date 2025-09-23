@@ -21,7 +21,8 @@
             justify-content: center;
             align-items: center;
             overflow-x: hidden;
-            padding: 20px;
+            padding: 0;
+            margin: 0;
         }
         
         .controls {
@@ -64,26 +65,33 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 40px;
-            padding: 20px;
-            width: 100%;
-            max-width: 1200px;
+            justify-content: center;
+            gap: 5vh;
+            padding: 10vh 10vw;
+            width: 100vw;
+            height: 100vh;
+            box-sizing: border-box;
+            margin: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
         }
         
         .price-item {
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: flex-start;
-            gap: 15px;
+            justify-content: center;
+            gap: 1vw;
             width: 100%;
             line-height: 1.4;
-            padding-left: 50%;
-            transform: translateX(-200px);
+            position: relative;
+            padding: 0;
+            transition: all 0.3s ease;
         }
         
         .price {
-            font-size: 48px;
+            font-size: 60px;
             font-weight: 300;
             transition: font-size 0.3s ease;
             display: flex;
@@ -95,12 +103,12 @@
         /* Color box styles - 3D card effect */
         .color-box {
             display: inline-block;
-            width: 50px;
-            height: 70px;
-            border-radius: 8px;
-            margin: 0 3px;
+            width: 80px;
+            height: 120px;
+            border-radius: 12px;
+            margin: 0 0.5vw;
             vertical-align: middle;
-            border: 2px solid rgba(255, 255, 255, 0.9);
+            border: 3px solid rgba(255, 255, 255, 0.9);
             transition: all 0.2s ease;
             position: relative;
             cursor: help;
@@ -179,12 +187,12 @@
         /* Circle style for decimal points - now same as boxes */
         .color-circle {
             display: inline-block;
-            width: 50px;
-            height: 70px;
-            border-radius: 8px;
-            margin: 0 3px;
+            width: 80px;
+            height: 120px;
+            border-radius: 12px;
+            margin: 0 0.5vw;
             vertical-align: middle;
-            border: 2px solid rgba(255, 255, 255, 0.9);
+            border: 3px solid rgba(255, 255, 255, 0.9);
             transition: all 0.2s ease;
             position: relative;
             cursor: help;
@@ -243,8 +251,169 @@
         /* Number to color mapping */
         .color-0 { background-color: #808080; } /* 회색 - Gray */
         .color-1 { background-color: #FFFFFF; } /* 흰색 - White */
-        .color-2 { background-color: #FF0000; } /* 빨강 - Red */
-        .color-3 { background-color: #FF4500; } /* 주황 - Orange Red */
+        .color-2 { 
+            background: 
+                linear-gradient(135deg, #DC143C 0%, #B91C3C 50%, #DC143C 100%),
+                #DC143C; /* 빨강 - Crimson */
+            background-size: 200% 200%;
+            position: relative;
+            overflow: hidden;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+        
+        /* Sparkle animation for red card */
+        @keyframes sparkle {
+            0% {
+                background-position: 0% 50%, 0% 0%, 100% 100%;
+            }
+            50% {
+                background-position: 100% 50%, 50% 50%, 50% 50%;
+            }
+            100% {
+                background-position: 0% 50%, 100% 100%, 0% 0%;
+            }
+        }
+        
+        .color-2::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                105deg,
+                transparent 40%,
+                rgba(255, 255, 255, 0) 40%,
+                rgba(255, 255, 255, 0.7) 50%,
+                rgba(255, 255, 255, 0) 60%,
+                transparent 60%
+            );
+            animation: shine 2s infinite;
+        }
+        
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) translateY(-100%);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%);
+            }
+        }
+        
+        /* Enhanced sparkle for red card (color-2) */
+        .color-box.color-2::before,
+        .color-box.color-2::after,
+        .color-circle.color-2::before,
+        .color-circle.color-2::after {
+            opacity: 1;
+            animation-duration: 1.5s;
+            color: #fff;
+            font-size: 18px;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+        }
+        
+        @keyframes twinkle {
+            0%, 100% {
+                transform: scale(0.8) rotate(0deg);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 1;
+            }
+        }
+        
+        /* Star sparkles on corners for all cards */
+        .color-box,
+        .color-circle {
+            position: relative;
+            overflow: visible;
+        }
+        
+        /* Create 4 star elements at corners */
+        .color-box::after,
+        .color-circle::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        /* Top-left star */
+        .color-box::before,
+        .color-circle::before {
+            content: '★';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            animation: sparkle1 2s ease-in-out infinite;
+            z-index: 10;
+            pointer-events: none;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+            opacity: 0;
+        }
+        
+        /* Create additional pseudo-elements using box-shadow trick */
+        .color-box::after,
+        .color-circle::after {
+            content: '✦';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            animation: sparkle2 2s ease-in-out infinite 0.5s;
+            z-index: 10;
+            pointer-events: none;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+            opacity: 0;
+        }
+        
+        /* Show sparkles on hover for all cards */
+        .color-box:hover::before,
+        .color-box:hover::after,
+        .color-circle:hover::before,
+        .color-circle:hover::after {
+            opacity: 1;
+        }
+        
+        @keyframes sparkle1 {
+            0%, 100% {
+                opacity: 0;
+                transform: scale(0.5) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(180deg);
+            }
+        }
+        
+        @keyframes sparkle2 {
+            0%, 100% {
+                opacity: 0;
+                transform: scale(0.5) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(-180deg);
+            }
+        }
+        .color-3 { background-color: #FF8C00; } /* 주황 - Dark Orange */
         .color-4 { background-color: #FFFF00; } /* 노랑 - Yellow */
         .color-5 { background-color: #00FF00; } /* 초록 - Green */
         .color-6 { background-color: #87CEEB; } /* 하늘색 - Sky Blue */
@@ -264,23 +433,23 @@
         }
         
         /* Size variations - all boxes same size */
-        .size-xs .price { font-size: 16px; }
-        .size-xs .color-box, .size-xs .color-circle { width: 20px; height: 28px; border-radius: 4px; }
+        .size-xs .price { font-size: 20px; }
+        .size-xs .color-box, .size-xs .color-circle { width: 25px; height: 35px; border-radius: 5px; }
         
-        .size-s .price { font-size: 20px; }
-        .size-s .color-box, .size-s .color-circle { width: 25px; height: 35px; border-radius: 5px; }
+        .size-s .price { font-size: 28px; }
+        .size-s .color-box, .size-s .color-circle { width: 35px; height: 50px; border-radius: 6px; }
         
-        .size-m .price { font-size: 28px; }
-        .size-m .color-box, .size-m .color-circle { width: 30px; height: 42px; border-radius: 6px; }
+        .size-m .price { font-size: 36px; }
+        .size-m .color-box, .size-m .color-circle { width: 45px; height: 65px; border-radius: 8px; }
         
-        .size-l .price { font-size: 36px; }
-        .size-l .color-box, .size-l .color-circle { width: 35px; height: 49px; border-radius: 6px; }
+        .size-l .price { font-size: 48px; }
+        .size-l .color-box, .size-l .color-circle { width: 60px; height: 85px; border-radius: 10px; }
         
-        .size-xl .price { font-size: 44px; }
-        .size-xl .color-box, .size-xl .color-circle { width: 40px; height: 56px; border-radius: 7px; }
+        .size-xl .price { font-size: 56px; }
+        .size-xl .color-box, .size-xl .color-circle { width: 70px; height: 100px; border-radius: 11px; }
         
-        .size-xxl .price { font-size: 56px; }
-        .size-xxl .color-box, .size-xxl .color-circle { width: 50px; height: 70px; border-radius: 8px; }
+        .size-xxl .price { font-size: 60px; }
+        .size-xxl .color-box, .size-xxl .color-circle { width: 80px; height: 120px; border-radius: 12px; }
         
         .loading {
             animation: pulse 1.5s infinite;
@@ -365,7 +534,7 @@
             padding: 15px;
             background: rgba(0, 0, 0, 0.8);
             border: 1px solid #333;
-            border-radius: 8px;
+            border-radius: 10px;
             backdrop-filter: blur(10px);
         }
         
@@ -391,12 +560,12 @@
         /* Enhanced Mobile Responsiveness */
         @media (max-width: 768px) {
             body {
-                padding: 15px;
+                padding: 0;
             }
             
             .price-container {
                 gap: 30px;
-                padding: 15px;
+                padding: 5vh 2vw;
             }
             
             .price-item {
@@ -415,7 +584,7 @@
                 width: 40px;
                 height: 40px;
                 font-size: 18px;
-                border-radius: 8px;
+                border-radius: 10px;
                 -webkit-tap-highlight-color: transparent;
                 touch-action: manipulation;
             }
@@ -743,7 +912,7 @@
             
             // Decimal part with circles
             if (decimalPart) {
-                boxesHtml += '<span style="font-size: 40px; color: #666; margin: 0 5px; vertical-align: middle;">·</span>';
+                boxesHtml += '<span style="font-size: 50px; color: #666; margin: 0 8px; vertical-align: middle;">·</span>';
                 boxesHtml += '<span class="price-decimal">';
                 const prevDecimalDigits = prevDecimalPart.split('');
                 
