@@ -95,20 +95,23 @@
         /* Color box styles */
         .color-box {
             display: inline-block;
-            width: 36px;
-            height: 42px;
-            border-radius: 6px;
-            margin: 0 2px;
+            width: 42px;
+            height: 49px;
+            border-radius: 4px;
+            margin: 0 1px;
             vertical-align: middle;
-            border: 5px solid rgba(0, 0, 0, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.8);
             transition: all 0.2s ease;
             position: relative;
             cursor: help;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
         
         .color-box:hover {
             transform: scale(1.1);
-            border-color: rgba(255, 255, 255, 0.5);
+            border-color: rgba(255, 255, 255, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6),
+                        0 0 20px currentColor;
         }
         
         /* Tooltip on hover */
@@ -138,20 +141,23 @@
         /* Circle style for decimal points */
         .color-circle {
             display: inline-block;
-            width: 36px;
-            height: 36px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            margin: 0 2px;
+            margin: 0 1px;
             vertical-align: middle;
-            border: 5px solid rgba(0, 0, 0, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.8);
             transition: all 0.2s ease;
             position: relative;
             cursor: help;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
         
         .color-circle:hover {
             transform: scale(1.1);
-            border-color: rgba(255, 255, 255, 0.5);
+            border-color: rgba(255, 255, 255, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6),
+                        0 0 20px currentColor;
         }
         
         /* Tooltip for circles */
@@ -180,15 +186,15 @@
         
         /* Number to color mapping */
         .color-0 { background-color: #808080; } /* 회색 - Gray */
-        .color-1 { background-color: #8B0000; } /* 빨강 - Red */
-        .color-2 { background-color: #FF69B4; } /* 분홍 - Pink */
-        .color-3 { background-color: #FFA500; } /* 주황 - Orange */
+        .color-1 { background-color: #FFFFFF; } /* 흰색 - White */
+        .color-2 { background-color: #FF0000; } /* 빨강 - Red */
+        .color-3 { background-color: #FF4500; } /* 주황 - Orange Red */
         .color-4 { background-color: #FFFF00; } /* 노랑 - Yellow */
-        .color-5 { background-color: #50C878; } /* 에머랄드 - Emerald */
+        .color-5 { background-color: #00FF00; } /* 초록 - Green */
         .color-6 { background-color: #87CEEB; } /* 하늘색 - Sky Blue */
-        .color-7 { background-color: #0000FF; } /* 파란색 - Blue */
-        .color-8 { background-color: #9370DB; } /* 연한남색 - Medium Purple */
-        .color-9 { background-color: #4B0082; } /* 보라색 - Violet */
+        .color-7 { background-color: #0000CD; } /* 남청색 - Medium Blue */
+        .color-8 { background-color: #8B00FF; } /* 보라 - Violet */
+        .color-9 { background-color: #000000; } /* 검정 - Black */
         
         .price-decimal {
             font-size: 0.7em;
@@ -539,7 +545,7 @@
         }
     </style>
 </head>
-<body class="size-m">
+<body class="size-xxl">
     <div class="controls">
         <button class="control-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
             <span class="eye-icon">👁</span>
@@ -622,7 +628,7 @@
     <script>
         // Size control
         const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
-        let currentSizeIndex = 2; // Start with 'm'
+        let currentSizeIndex = 5; // Start with 'xxl'
         
         // Security mode
         let isSecureMode = false;
@@ -658,7 +664,7 @@
         if (savedSize) {
             currentSizeIndex = sizes.indexOf(savedSize);
             if (currentSizeIndex !== -1) {
-                document.body.classList.remove('size-m');
+                document.body.classList.remove('size-xxl');
                 document.body.classList.add(`size-${savedSize}`);
             }
         }

@@ -184,16 +184,16 @@
         }
         
         /* Number to color mapping */
-        .color-0 { background-color: #808080; } /* Серый */
-        .color-1 { background-color: #8B0000; } /* Красный */
-        .color-2 { background-color: #FF69B4; } /* Розовый */
-        .color-3 { background-color: #FFA500; } /* Оранжевый */
-        .color-4 { background-color: #FFFF00; } /* Жёлтый */
-        .color-5 { background-color: #50C878; } /* Изумруд */
-        .color-6 { background-color: #87CEEB; } /* Небесный */
-        .color-7 { background-color: #0000FF; } /* Синий */
-        .color-8 { background-color: #9370DB; } /* Фиолетовый */
-        .color-9 { background-color: #4B0082; } /* Пурпурный */
+        .color-0 { background-color: #808080; } /* Серый - Gray */
+        .color-1 { background-color: #FFFFFF; } /* Белый - White */
+        .color-2 { background-color: #FF0000; } /* Красный - Red */
+        .color-3 { background-color: #FF4500; } /* Оранжево-красный - Orange Red */
+        .color-4 { background-color: #FFFF00; } /* Жёлтый - Yellow */
+        .color-5 { background-color: #00FF00; } /* Зелёный - Green */
+        .color-6 { background-color: #87CEEB; } /* Небесный - Sky Blue */
+        .color-7 { background-color: #0000CD; } /* Синий - Medium Blue */
+        .color-8 { background-color: #8B00FF; } /* Фиолетовый - Violet */
+        .color-9 { background-color: #000000; } /* Чёрный - Black */
         
         .price-decimal {
             font-size: 0.7em;
@@ -374,7 +374,7 @@
         }
     </style>
 </head>
-<body class="size-m">
+<body class="size-xxl">
     <div class="controls">
         <button class="control-btn" id="securityToggle" onclick="toggleSecurity()" title="Режим безопасности">
             <span class="eye-icon">👁</span>
@@ -456,7 +456,7 @@
     <script>
         // Size control
         const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
-        let currentSizeIndex = 2; // Start with 'm'
+        let currentSizeIndex = 5; // Start with 'xxl'
         
         // Security mode
         let isSecureMode = false;
@@ -492,7 +492,7 @@
         if (savedSize) {
             currentSizeIndex = sizes.indexOf(savedSize);
             if (currentSizeIndex !== -1) {
-                document.body.classList.remove('size-m');
+                document.body.classList.remove('size-xxl');
                 document.body.classList.add(`size-${savedSize}`);
             }
         }
