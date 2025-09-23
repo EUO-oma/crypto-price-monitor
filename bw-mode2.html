@@ -686,7 +686,9 @@
         
         // Format number with commas
         function formatNumber(num) {
-            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\\d))/g, ',');
+            const parts = num.toFixed(2).split('.');
+            const integerPart = parseInt(parts[0]).toLocaleString('en-US');
+            return integerPart + '.' + parts[1];
         }
         
         // Update coin data
