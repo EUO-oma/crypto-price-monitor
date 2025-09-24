@@ -140,33 +140,11 @@
                 inset 0 -1px 0 rgba(0, 0, 0, 0.6);
         }
         
-        /* Backlight glow effect */
+        /* Removed glow effect */
         .color-box,
         .color-circle {
             position: relative;
             z-index: 1;
-        }
-        
-        .color-box::before,
-        .color-circle::before {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
-            background: inherit;
-            filter: blur(20px);
-            opacity: 0;
-            z-index: -1;
-            transition: opacity 0.3s ease;
-            border-radius: inherit;
-        }
-        
-        /* Show backlight on number change */
-        .color-box.glow::before,
-        .color-circle.glow::before {
-            opacity: 0.6;
         }
         
         /* Tooltip on hover */
@@ -584,8 +562,8 @@
                 const prevDigit = i < prevIntegerDigits.length ? prevIntegerDigits[i] : '';
                 const hasChanged = digit.toString() !== prevDigit;
                 
-                const glowClass = hasChanged && prevPriceStr ? 'glow' : '';
-                boxesHtml += `<span class="color-box color-${digit} ${glowClass}" data-number="${digit}"></span>`;
+                // Removed glow class assignment
+                boxesHtml += `<span class="color-box color-${digit}" data-number="${digit}"></span>`;
             }
             
             // Decimal part with circles
@@ -598,9 +576,9 @@
                     const digit = decimalPart[i];
                     const prevDigit = i < prevDecimalDigits.length ? prevDecimalDigits[i] : '';
                     const hasChanged = digit !== prevDigit;
-                    const glowClass = hasChanged && prevPriceStr ? 'glow' : '';
+                    // Removed glow class assignment
                     
-                    boxesHtml += `<span class="color-circle color-${digit} ${glowClass}" data-number="${digit}"></span>`;
+                    boxesHtml += `<span class="color-circle color-${digit}" data-number="${digit}"></span>`;
                 }
                 boxesHtml += '</span>';
             }
@@ -608,12 +586,7 @@
             // Store current price for next comparison
             previousPrices[coinType] = priceStr;
             
-            // Remove glow effect after animation
-            setTimeout(() => {
-                document.querySelectorAll('.glow').forEach(el => {
-                    el.classList.remove('glow');
-                });
-            }, 500);
+            // Removed glow effect timeout
             
             return boxesHtml;
         }

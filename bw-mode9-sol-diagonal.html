@@ -125,11 +125,7 @@
         .color-8 { background-color: #8B00FF; } /* 보라 - Violet */
         .color-9 { background-color: #000000; } /* 검정 - Black */
         
-        /* Backlight glow effect */
-        .diagonal-slice.glow {
-            filter: brightness(1.5);
-            box-shadow: 0 0 100px currentColor;
-        }
+        /* Removed glow effect */
         
         .loading {
             display: flex;
@@ -199,8 +195,8 @@
                     const prevDigit = i < prevAllDigits.length ? prevAllDigits[i] : '';
                     const hasChanged = digit.toString() !== prevDigit;
                     
-                    const glowClass = hasChanged && previousPrice ? 'glow' : '';
-                    slicesHtml += `<div class="diagonal-slice slice-${i} color-${digit} ${glowClass}"></div>`;
+                    // Removed glow class assignment
+                    slicesHtml += `<div class="diagonal-slice slice-${i} color-${digit}"></div>`;
                 } else {
                     // If we have less than 5 digits, fill with gray (0)
                     slicesHtml += `<div class="diagonal-slice slice-${i} color-0"></div>`;
@@ -210,12 +206,7 @@
             // Store current price for next comparison
             previousPrice = priceStr;
             
-            // Remove glow effect after animation
-            setTimeout(() => {
-                document.querySelectorAll('.glow').forEach(el => {
-                    el.classList.remove('glow');
-                });
-            }, 500);
+            // Removed glow effect timeout
             
             return slicesHtml;
         }
