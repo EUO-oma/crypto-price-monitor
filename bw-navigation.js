@@ -11,7 +11,11 @@ class BWNavigation {
             'bw-mode7.html',
             'bw-mode9.html',
             'bw-mode10-dice.html',
-            'bw-mode9-sol-diagonal.html'
+            'bw-mode9-layouts.html',
+            'bw-mode9-vertical.html',
+            'bw-mode9-card.html',
+            'bw-mode9-diagonal-reverse.html',
+            'bw-mode9-grid.html'
         ];
         
         this.currentPage = this.getCurrentPage();

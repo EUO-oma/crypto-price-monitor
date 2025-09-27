@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>레버리지 청산가 계산기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #333;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: #222;
+        }
+
+        .input-addon {
+            position: absolute;
+            right: 12px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .position-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .position-btn {
+            flex: 1;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .position-btn.active.long {
+            background: #26a69a;
+            color: #000;
+            border-color: #26a69a;
+        }
+
+        .position-btn.active.short {
+            background: #ef5350;
+            color: #fff;
+            border-color: #ef5350;
+        }
+
+        .leverage-presets {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .leverage-btn {
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .leverage-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .leverage-btn.active {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .calculate-btn:hover {
+            background: #45a049;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+
+        .result-item.main {
+            background: #333;
+            border-color: #555;
+        }
+
+        .result-label {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .result-value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .result-value.liquidation {
+            color: #f44336;
+        }
+
+        .result-value.margin {
+            color: #2196F3;
+        }
+
+        .result-value.loss {
+            color: #ff9800;
+        }
+
+        .back-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #1a1a1a;
+            color: #aaa;
+            border: 1px solid #333;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            border: 1px solid #333;
+            font-size: 0.85em;
+            color: #888;
+        }
+
+        .info-box h3 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .info-box li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .leverage-presets {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">← 돌아가기</a>
+        
+        <div class="header">
+            <h1>🧮 레버리지 청산가 계산기</h1>
+            <p>선물 거래 레버리지별 청산 가격을 계산합니다</p>
+        </div>
+
+        <div class="position-toggle">
+            <button class="position-btn long active" onclick="setPosition('long')">🟢 롱 포지션</button>
+            <button class="position-btn short" onclick="setPosition('short')">🔴 숏 포지션</button>
+        </div>
+
+        <div class="input-group">
+            <label>진입 가격</label>
+            <div class="input-wrapper">
+                <input type="number" id="entryPrice" placeholder="50000" step="0.01">
+                <span class="input-addon">USDT</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>레버리지</label>
+            <div class="leverage-presets">
+                <button class="leverage-btn" onclick="setLeverage(1)">1x</button>
+                <button class="leverage-btn" onclick="setLeverage(2)">2x</button>
+                <button class="leverage-btn" onclick="setLeverage(3)">3x</button>
+                <button class="leverage-btn" onclick="setLeverage(5)">5x</button>
+                <button class="leverage-btn" onclick="setLeverage(10)">10x</button>
+                <button class="leverage-btn" onclick="setLeverage(20)">20x</button>
+                <button class="leverage-btn" onclick="setLeverage(25)">25x</button>
+                <button class="leverage-btn" onclick="setLeverage(50)">50x</button>
+                <button class="leverage-btn" onclick="setLeverage(75)">75x</button>
+                <button class="leverage-btn" onclick="setLeverage(100)">100x</button>
+            </div>
+            <input type="number" id="leverage" placeholder="10" min="1" max="125" value="10">
+        </div>
+
+        <div class="input-group">
+            <label>거래소 선택</label>
+            <select id="exchange" onchange="updateMaintenanceMargin()">
+                <option value="binance">Binance (유지 증거금: 0.4%)</option>
+                <option value="bybit">Bybit (유지 증거금: 0.5%)</option>
+                <option value="okx">OKX (유지 증거금: 0.4%)</option>
+                <option value="custom">직접 입력</option>
+            </select>
+        </div>
+
+        <div class="input-group" id="customMarginGroup" style="display: none;">
+            <label>유지 증거금 비율 (%)</label>
+            <input type="number" id="maintenanceMargin" placeholder="0.4" step="0.1" value="0.4">
+        </div>
+
+        <button class="calculate-btn" onclick="calculateLiquidation()">청산가 계산하기</button>
+
+        <div class="results" id="results" style="display: none;">
+            <div class="result-item main">
+                <span class="result-label">청산 가격</span>
+                <span class="result-value liquidation" id="liquidationPrice">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">필요 증거금</span>
+                <span class="result-value margin" id="requiredMargin">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">청산시 손실률</span>
+                <span class="result-value loss" id="lossPercentage">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">진입가 대비 변동률</span>
+                <span class="result-value" id="priceChange">-</span>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>💡 참고사항</h3>
+            <ul>
+                <li>청산가는 유지 증거금 비율을 기준으로 계산됩니다</li>
+                <li>실제 청산가는 거래소 정책과 시장 상황에 따라 달라질 수 있습니다</li>
+                <li>격리 마진 모드 기준으로 계산됩니다</li>
+                <li>수수료는 포함되지 않은 대략적인 계산입니다</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let position = 'long';
+
+        function setPosition(type) {
+            position = type;
+            document.querySelectorAll('.position-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.position-btn.${type}`).classList.add('active');
+        }
+
+        function setLeverage(value) {
+            document.getElementById('leverage').value = value;
+            document.querySelectorAll('.leverage-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function updateMaintenanceMargin() {
+            const exchange = document.getElementById('exchange').value;
+            const customGroup = document.getElementById('customMarginGroup');
+            const marginInput = document.getElementById('maintenanceMargin');
+            
+            if (exchange === 'custom') {
+                customGroup.style.display = 'block';
+            } else {
+                customGroup.style.display = 'none';
+                switch(exchange) {
+                    case 'binance':
+                    case 'okx':
+                        marginInput.value = 0.4;
+                        break;
+                    case 'bybit':
+                        marginInput.value = 0.5;
+                        break;
+                }
+            }
+        }
+
+        function calculateLiquidation() {
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
+            const leverage = parseFloat(document.getElementById('leverage').value);
+            const maintenanceMargin = parseFloat(document.getElementById('maintenanceMargin').value) / 100;
+            
+            if (!entryPrice || !leverage) {
+                alert('진입 가격과 레버리지를 입력해주세요.');
+                return;
+            }
+
+            // 청산가 계산 공식
+            // 롱 포지션: 청산가 = 진입가 × (1 - 1/레버리지 + 유지증거금률)
+            // 숏 포지션: 청산가 = 진입가 × (1 + 1/레버리지 - 유지증거금률)
+            
+            let liquidationPrice;
+            if (position === 'long') {
+                liquidationPrice = entryPrice * (1 - 1/leverage + maintenanceMargin);
+            } else {
+                liquidationPrice = entryPrice * (1 + 1/leverage - maintenanceMargin);
+            }
+
+            // 필요 증거금 (1 BTC 기준)
+            const requiredMargin = entryPrice / leverage;
+            
+            // 청산시 손실률
+            const lossPercentage = ((1 / leverage) - maintenanceMargin) * 100;
+            
+            // 진입가 대비 변동률
+            const priceChange = ((liquidationPrice - entryPrice) / entryPrice) * 100;
+
+            // 결과 표시
+            document.getElementById('liquidationPrice').textContent = 
+                liquidationPrice.toFixed(2) + ' USDT';
+            document.getElementById('requiredMargin').textContent = 
+                requiredMargin.toFixed(2) + ' USDT';
+            document.getElementById('lossPercentage').textContent = 
+                lossPercentage.toFixed(2) + '%';
+            document.getElementById('priceChange').textContent = 
+                (priceChange > 0 ? '+' : '') + priceChange.toFixed(2) + '%';
+
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // 엔터키로 계산 실행
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateLiquidation();
+            }
+        });
+
+        // 레버리지 입력시 버튼 하이라이트 업데이트
+        document.getElementById('leverage').addEventListener('input', function() {
+            const value = this.value;
+            document.querySelectorAll('.leverage-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === value + 'x') {
+                    btn.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

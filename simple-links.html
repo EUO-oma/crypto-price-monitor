@@ -15,7 +15,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #000;
             color: #fff;
-            padding: 20px;
+            padding: 10px;
             min-height: 100vh;
         }
 
@@ -24,29 +24,29 @@
             margin: 0 auto;
             background: #0a0a0a;
             border-radius: 20px;
-            padding: 30px;
+            padding: 15px;
             border: 1px solid #333;
         }
 
         h1 {
             text-align: center;
             color: #fff;
-            margin-bottom: 30px;
-            font-size: 2em;
+            margin-bottom: 15px;
+            font-size: 1.5em;
         }
 
         .section {
-            margin-bottom: 40px;
+            margin-bottom: 20px;
             background: #1a1a1a;
-            padding: 25px;
+            padding: 15px;
             border-radius: 15px;
             border: 1px solid #333;
         }
 
         .section h2 {
             color: #4CAF50;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+            margin-bottom: 10px;
+            font-size: 1.2em;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -55,12 +55,12 @@
         .links-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
+            gap: 10px;
         }
 
         .link-card {
             background: #2a2a2a;
-            padding: 15px;
+            padding: 10px;
             border-radius: 10px;
             border: 1px solid #444;
             transition: all 0.3s ease;
@@ -153,7 +153,7 @@
             border-radius: 5px;
             white-space: pre-wrap;
             font-size: 0.8em;
-            max-height: 200px;
+            max-height: 150px;
             overflow-y: auto;
         }
 
@@ -187,28 +187,9 @@
         <button class="refresh-btn" onclick="loadLinks()">📁 링크 다시 로드</button>
         <button class="refresh-btn" onclick="toggleDebug()">🔍 디버그 정보 토글</button>
 
-        <!-- GPT Links -->
-        <div class="section">
-            <h2>🤖 GPT Tools</h2>
-            <div id="gpt-links" class="links-grid">
-                <div class="empty-message">로딩 중...</div>
-            </div>
-        </div>
-
-        <!-- YouTube Links -->
-        <div class="section">
-            <h2>📺 YouTube Channels</h2>
-            <div id="youtube-links" class="links-grid">
-                <div class="empty-message">로딩 중...</div>
-            </div>
-        </div>
-
-        <!-- Favorite Links -->
-        <div class="section">
-            <h2>⭐ Favorite Sites</h2>
-            <div id="favorite-links" class="links-grid">
-                <div class="empty-message">로딩 중...</div>
-            </div>
+        <!-- Dynamic Categories Container -->
+        <div id="categories-container">
+            <div class="empty-message">카테고리 로딩 중...</div>
         </div>
 
         <!-- Debug Info -->
@@ -305,22 +286,38 @@
             `;
         }
 
-        // Render links for a category
-        function renderLinks(category, links) {
-            const container = document.getElementById(`${category}-links`);
+        // Get category emoji and title
+        function getCategoryInfo(category) {
+            const categoryMap = {
+                'gpt': { emoji: '🤖', title: 'GPT Tools' },
+                'youtube': { emoji: '📺', title: 'YouTube Channels' },
+                'favorite': { emoji: '⭐', title: 'Favorite Sites' },
+                'book': { emoji: '📚', title: 'Books' },
+                'news': { emoji: '📰', title: 'News' },
+                'dev': { emoji: '💻', title: 'Development' },
+                'design': { emoji: '🎨', title: 'Design' },
+                'education': { emoji: '🎓', title: 'Education' },
+                'tool': { emoji: '🔧', title: 'Tools' },
+                'social': { emoji: '💬', title: 'Social' }
+            };
 
-            if (!container) {
-                debugLog(`❌ ${category} 컨테이너를 찾을 수 없습니다`);
-                return;
-            }
+            return categoryMap[category] || { emoji: '📌', title: category.charAt(0).toUpperCase() + category.slice(1) };
+        }
 
-            if (links.length === 0) {
-                container.innerHTML = '<div class="empty-message">링크가 없습니다</div>';
-                debugLog(`ℹ️ ${category} 링크: 0개`);
-            } else {
-                container.innerHTML = links.map(link => createLinkCard(link)).join('');
-                debugLog(`✅ ${category} 링크: ${links.length}개 렌더링 완료`);
-            }
+        // Create category section
+        function createCategorySection(category, links) {
+            const info = getCategoryInfo(category);
+            return `
+                <div class="section">
+                    <h2>${info.emoji} ${info.title}</h2>
+                    <div id="${category}-links" class="links-grid">
+                        ${links.length === 0 
+                            ? '<div class="empty-message">링크가 없습니다</div>'
+                            : links.map(link => createLinkCard(link)).join('')
+                        }
+                    </div>
+                </div>
+            `;
         }
 
         // Load all links
@@ -354,35 +351,63 @@
 
                 debugLog(`📊 총 ${allLinks?.length || 0}개 링크 조회됨`);
 
+                // Debug: Show all unique categories
+                const categories = [...new Set(allLinks?.map(link => link.category) || [])];
+                debugLog(`📋 발견된 카테고리: ${categories.join(', ')}`);
+
+                // Debug: Show sample data
+                if (allLinks && allLinks.length > 0) {
+                    debugLog(`📊 첫 번째 링크 예시: ${JSON.stringify(allLinks[0], null, 2)}`);
+                }
+
                 // Filter links by category
                 const gptLinks = allLinks?.filter(link => link.category === 'gpt') || [];
                 const youtubeLinks = allLinks?.filter(link => link.category === 'youtube') || [];
                 const favoriteLinks = allLinks?.filter(link => link.category === 'favorite') || [];
 
-                // Render each category
-                renderLinks('gpt', gptLinks);
-                renderLinks('youtube', youtubeLinks);
-                renderLinks('favorite', favoriteLinks);
+                // Group links by category
+                const linksByCategory = allLinks.reduce((acc, link) => {
+                    const cat = link.category || 'uncategorized';
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(link);
+                    return acc;
+                }, {});
 
-                // Update status
-                const totalLinks = gptLinks.length + youtubeLinks.length + favoriteLinks.length;
+                // Sort categories alphabetically
+                const sortedCategories = Object.keys(linksByCategory).sort();
+
+                // Debug: Show counts for each category
+                sortedCategories.forEach(cat => {
+                    debugLog(`${cat} 링크: ${linksByCategory[cat].length}개`);
+                });
+
+                // Render all categories
+                const categoriesContainer = document.getElementById('categories-container');
+                categoriesContainer.innerHTML = sortedCategories
+                    .map(category => createCategorySection(category, linksByCategory[category]))
+                    .join('');
+
+                // Update status with all categories
+                const totalLinks = allLinks.length;
+                const categoryBreakdown = sortedCategories
+                    .map(cat => `${cat}: ${linksByCategory[cat].length}`)
+                    .join(', ');
+                    
                 statusEl.className = 'status success';
-                statusEl.innerHTML = `✅ ${totalLinks}개 링크 로딩 완료 (GPT: ${gptLinks.length}, YouTube: ${youtubeLinks.length}, Favorites: ${favoriteLinks.length})`;
+                statusEl.innerHTML = `✅ ${totalLinks}개 링크 로딩 완료 (${categoryBreakdown})`;
 
-                debugLog(`✅ 링크 로딩 완료: 총 ${totalLinks}개`);
+                debugLog(`✅ 링크 로딩 완료: 총 ${totalLinks}개, ${sortedCategories.length}개 카테고리`);
 
             } catch (error) {
                 debugLog(`❌ 링크 로딩 실패: ${error.message}`);
                 statusEl.className = 'status error';
                 statusEl.innerHTML = `❌ 로딩 실패: ${error.message}`;
 
-                // Show error in all sections
-                ['gpt', 'youtube', 'favorite'].forEach(category => {
-                    const container = document.getElementById(`${category}-links`);
-                    if (container) {
-                        container.innerHTML = `<div class="empty-message">로딩 실패: ${error.message}</div>`;
-                    }
-                });
+                // Show error in categories container
+                const categoriesContainer = document.getElementById('categories-container');
+                if (categoriesContainer) {
+                    categoriesContainer.innerHTML = `<div class="empty-message">로딩 실패: ${error.message}</div>`;
+                }
             }
 
             updateDebugInfo();

@@ -24,7 +24,7 @@
 
         .header {
             background: #0a0a0a;
-            padding: 15px 20px;
+            padding: 10px 15px;
             border-bottom: 1px solid #333;
             display: flex;
             justify-content: space-between;
@@ -37,7 +37,7 @@
         }
 
         .symbol-btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: #1a1a1a;
             color: #888;
             border: 1px solid #333;
@@ -66,7 +66,7 @@
         }
         
         .coin-dropdown {
-            padding: 8px 12px;
+            padding: 6px 10px;
             background: #1a1a1a;
             color: #fff;
             border: 1px solid #333;
@@ -82,7 +82,7 @@
         }
         
         .home-btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: #1a1a1a;
             color: #aaa;
             border: 1px solid #333;
@@ -100,7 +100,7 @@
         }
 
         .back-btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: #1a1a1a;
             color: #aaa;
             border: 1px solid #333;
@@ -115,7 +115,7 @@
         }
         
         .compare-btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: #1a1a1a;
             color: #aaa;
             border: 1px solid #333;
@@ -169,22 +169,22 @@
         
         .chart-container {
             flex: 1;
-            padding: 0;  /* 패딩 제거 */
+            padding: 10px;  /* 여백 추가로 잘림 방지 */
             display: flex;
             justify-content: center;
             align-items: stretch;  /* 전체 높이 사용 */
             width: 100%;
             margin: 0;
-            min-height: 500px;  /* 최소 높이 보장 */
+            min-height: 650px;  /* 최소 높이 증가 */
+            height: calc(100vh - 80px);  /* 헤더 높이를 뺀 나머지 */
         }
 
         #tradingview-widget {
             width: 100%;  /* 전체 너비 사용 */
-            aspect-ratio: 1 / 1.2;  /* 기본 가로:세로 = 1:1.2 비율 */
-            min-height: 500px;
-            max-height: 900px;
+            height: 100%;  /* 부모 컨테이너의 100% 사용 */
+            min-height: 600px;
             resize: vertical;  /* 세로 크기 조정 가능 */
-            overflow: auto;
+            overflow: hidden;  /* 스크롤 방지 */
             position: relative;
         }
         
@@ -197,7 +197,7 @@
         /* 모바일 대응 */
         @media (max-width: 768px) {
             .header {
-                padding: 10px 15px;  /* 헤더 패딩 축소 */
+                padding: 8px 12px;  /* 헤더 패딩 축소 */
             }
             
             .coin-title {
@@ -207,18 +207,17 @@
             }
             
             .chart-container {
-                padding-top: 0;  /* 모바일에서도 상단 여백 제거 */
-                padding-left: 5px;
-                padding-right: 5px;
+                padding: 10px;  /* 모바일에서도 동일한 여백 */
+                height: calc(100vh - 120px);  /* 모바일에서 헤더+타이틀 고려 */
+                min-height: 500px;
             }
             
             #tradingview-widget {
-                aspect-ratio: 1 / 1.2;  /* 모바일에서도 1:1.2 비율 */
-                min-height: 450px;
-                max-height: 700px;
+                height: 100%;  /* 부모의 100% 사용 */
+                min-height: 500px;
                 margin-top: 5px;  /* 차트 상단 여백 최소화 */
                 resize: vertical;  /* 세로 크기 조정 가능 */
-                overflow: auto;
+                overflow: hidden;  /* 스크롤 방지 */
             }
             
         }
@@ -300,6 +299,18 @@
             // 기존 차트 제거
             document.getElementById('tradingview-widget').innerHTML = '';
             
+            // 차트 재초기화 전에 저장된 높이 기억
+            const savedHeight = localStorage.getItem('chartHeight');
+            
+            // 디버깅: 현재 요소들의 높이 확인
+            console.log('=== 높이 디버깅 ===');
+            console.log('Window height:', window.innerHeight);
+            console.log('Body height:', document.body.offsetHeight);
+            console.log('Header height:', document.querySelector('.header').offsetHeight);
+            console.log('Chart container height:', document.querySelector('.chart-container').offsetHeight);
+            console.log('TradingView widget height:', document.getElementById('tradingview-widget').offsetHeight);
+            console.log('Saved height:', savedHeight);
+            
             // NASDAQ인 경우 TradingView 심볼 변경
             let tradingViewSymbol = symbol === 'NASDAQ' ? 'NASDAQ:NDX' : `BINANCE:${symbol}`;
             
@@ -336,10 +347,14 @@
                 studies = ["Volume@tv-basicstudies"];
             }
             
+            // 컨테이너 높이 계산
+            const container = document.querySelector('.chart-container');
+            const containerHeight = container ? container.offsetHeight - 20 : 600; // 패딩 고려
+            
             // 새 차트 생성
             widget = new TradingView.widget({
                 "width": "100%",
-                "height": "100%",
+                "height": containerHeight, // 픽셀 값으로 직접 전달
                 "symbol": tradingViewSymbol,
                 "interval": symbol === 'NASDAQ' ? "5" : "1",  // NASDAQ은 5분봉, 크립토는 1분봉
                 "timezone": "Asia/Seoul",
@@ -422,6 +437,21 @@
                     ws = null;
                 }
             }
+            
+            // 차트 초기화 후 컨테이너 높이 설정
+            setTimeout(() => {
+                const container = document.querySelector('.chart-container');
+                if (container && savedHeight) {
+                    container.style.setProperty('height', savedHeight + 'px', 'important');
+                }
+                
+                // 디버깅: iframe 높이 확인
+                const iframe = document.querySelector('#tradingview-widget iframe');
+                if (iframe) {
+                    console.log('TradingView iframe height:', iframe.offsetHeight);
+                    console.log('TradingView iframe style.height:', iframe.style.height);
+                }
+            }, 1500);  // 위젯 로드 대기
         }
 
         function changeSymbol(symbol) {
@@ -464,19 +494,20 @@
 
         // 차트 높이 조절 함수
         function adjustChartHeight(action) {
-            const chartWidget = document.getElementById('tradingview-widget');
-            if (!chartWidget) return;
+            const container = document.querySelector('.chart-container');
+            if (!container) return;
             
-            const currentHeight = chartWidget.offsetHeight;
+            const currentHeight = container.offsetHeight;
             let newHeight;
             
             if (action === 'increase') {
-                newHeight = Math.min(currentHeight + 50, 900);  // 50px씩 증가, 최대 900px
+                newHeight = Math.min(currentHeight + 50, 1000);  // 50px씩 증가, 최대 1000px
             } else {
-                newHeight = Math.max(currentHeight - 50, 400);  // 50px씩 감소, 최소 400px
+                newHeight = Math.max(currentHeight - 50, 500);  // 50px씩 감소, 최소 500px
             }
             
-            chartWidget.style.height = newHeight + 'px';
+            // 컨테이너 높이 설정
+            container.style.setProperty('height', newHeight + 'px', 'important');
             
             // localStorage에 저장
             localStorage.setItem('chartHeight', newHeight);
@@ -486,9 +517,10 @@
         function loadChartHeight() {
             const savedHeight = localStorage.getItem('chartHeight');
             if (savedHeight) {
-                const chartWidget = document.getElementById('tradingview-widget');
-                if (chartWidget) {
-                    chartWidget.style.height = savedHeight + 'px';
+                const container = document.querySelector('.chart-container');
+                if (container) {
+                    // 컨테이너 높이 설정
+                    container.style.setProperty('height', savedHeight + 'px', 'important');
                 }
             }
         }
@@ -536,10 +568,10 @@
         
         // 페이지 로드 시 차트 초기화
         window.addEventListener('DOMContentLoaded', function() {
-            initChart(currentSymbol);
+            // 먼저 저장된 높이 적용
+            loadChartHeight();
             
-            // 저장된 차트 높이 불러오기
-            setTimeout(loadChartHeight, 500);  // 차트 로드 후 적용
+            initChart(currentSymbol);
             
             // BTC인 경우 비교 버튼 숨기기
             if (currentSymbol === 'BTCUSDT') {
