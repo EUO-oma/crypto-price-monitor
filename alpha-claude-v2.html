@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha by Claude - Enterprise</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea, #764ba2);
+            --accent-gradient: linear-gradient(135deg, #f093fb, #f5576c);
+            --dark-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Animated background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .animated-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+        
+        .animated-bg::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(240, 147, 251, 0.1) 0%, transparent 70%);
+            animation: rotate-reverse 40s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes rotate-reverse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+        
+        /* Main container */
+        .app-container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Premium header */
+        .enterprise-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px 40px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .logo-container {
+            position: relative;
+            width: 50px;
+            height: 50px;
+        }
+        
+        .logo-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: pulse-ring 2s infinite;
+        }
+        
+        .logo-ring:nth-child(1) {
+            border-color: #667eea;
+            animation-delay: 0s;
+        }
+        
+        .logo-ring:nth-child(2) {
+            border-color: #f093fb;
+            animation-delay: 0.5s;
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 0; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+        
+        .logo-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 35px;
+            height: 35px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+        }
+        
+        .brand-text h1 {
+            font-size: 26px;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        
+        .edition-badge {
+            display: inline-block;
+            background: var(--accent-gradient);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Real-time metrics bar */
+        .metrics-bar {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .metric-value.positive { color: #4ade80; }
+        .metric-value.negative { color: #f87171; }
+        
+        /* Action buttons */
+        .actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .time-selector {
+            display: flex;
+            background: var(--glass-bg);
+            border-radius: 30px;
+            padding: 4px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .time-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .time-btn.active {
+            background: var(--primary-gradient);
+            color: #fff;
+        }
+        
+        .action-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-btn:hover {
+            background: var(--primary-gradient);
+            border-color: transparent;
+        }
+        
+        /* Main dashboard */
+        .dashboard {
+            flex: 1;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 30px;
+            width: 100%;
+        }
+        
+        /* Command center */
+        .command-center {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+        }
+        
+        .command-stat {
+            text-align: center;
+        }
+        
+        .command-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .command-label {
+            font-size: 13px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .command-value {
+            font-size: 32px;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        
+        .command-change {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        /* Analysis grid */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .analysis-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .analysis-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .analysis-card:hover::before {
+            opacity: 1;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .symbol-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Volume profile visualization */
+        .volume-profile {
+            position: relative;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .profile-grid {
+            position: absolute;
+            inset: 20px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .volume-bar {
+            position: absolute;
+            background: var(--primary-gradient);
+            border-radius: 0 4px 4px 0;
+            opacity: 0.8;
+            transition: all 0.3s;
+            cursor: pointer;
+            height: 3px !important;
+        }
+        
+        .volume-bar:hover {
+            opacity: 1;
+            transform: scaleX(1.02);
+            height: 5px !important;
+        }
+        
+        /* Advanced metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .metric-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        
+        .metric-name {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-display {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        /* AI insights panel */
+        .insights-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .insights-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .ai-indicator {
+            width: 50px;
+            height: 50px;
+            background: var(--accent-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .insights-title {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .insight-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .insight-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .insight-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        .insight-type {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .insight-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .insight-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .insight-description {
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.6;
+        }
+        
+        /* Footer */
+        .enterprise-footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .footer-brand {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: #888;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        
+        .footer-link:hover {
+            color: #fff;
+        }
+        
+        /* Loading state */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .header-content {
+                grid-template-columns: auto 1fr;
+                gap: 20px;
+            }
+            
+            .metrics-bar {
+                display: none;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .brand-text h1 {
+                font-size: 20px;
+            }
+            
+            .actions {
+                justify-content: center;
+            }
+            
+            .dashboard {
+                padding: 20px;
+            }
+            
+            .command-center {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                padding: 20px;
+            }
+            
+            .command-value {
+                font-size: 24px;
+            }
+            
+            .insight-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    
+    <div class="app-container">
+        <header class="enterprise-header">
+            <div class="header-content">
+                <div class="brand">
+                    <div class="logo-container">
+                        <div class="logo-ring"></div>
+                        <div class="logo-ring"></div>
+                        <div class="logo-core">α</div>
+                    </div>
+                    <div class="brand-text">
+                        <h1>Alpha by Claude</h1>
+                        <span class="edition-badge">Enterprise Edition</span>
+                    </div>
+                </div>
+                
+                <div class="metrics-bar">
+                    <div class="metric-item">
+                        <div class="metric-label">BTC Price</div>
+                        <div class="metric-value" id="btc-price-header">-</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">ETH Price</div>
+                        <div class="metric-value" id="eth-price-header">-</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Update Time</div>
+                        <div class="metric-value" id="update-time">-</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Data Status</div>
+                        <div class="metric-value positive" id="data-status">Live</div>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <div class="time-selector">
+                        <button class="time-btn" onclick="setTimeframe('15m')">15M</button>
+                        <button class="time-btn" onclick="setTimeframe('1h')">1H</button>
+                        <button class="time-btn active" onclick="setTimeframe('4h')">4H</button>
+                        <button class="time-btn" onclick="setTimeframe('1d')">1D</button>
+                    </div>
+                    <button class="action-btn">
+                        <span>⚡</span>
+                        <span>Real-time</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <main class="dashboard">
+            <section class="command-center">
+                <div class="command-stat">
+                    <div class="command-icon">📊</div>
+                    <div class="command-label">Tracking Symbols</div>
+                    <div class="command-value" id="tracking-count">5</div>
+                    <div class="command-change">Real-time analysis</div>
+                </div>
+                <div class="command-stat">
+                    <div class="command-icon">📈</div>
+                    <div class="command-label">Market Trend</div>
+                    <div class="command-value" id="market-trend">-</div>
+                    <div class="command-change" id="trend-strength">Calculating...</div>
+                </div>
+                <div class="command-stat">
+                    <div class="command-icon">💧</div>
+                    <div class="command-label">Avg Volume</div>
+                    <div class="command-value" id="avg-volume">-</div>
+                    <div class="command-change" id="volume-change">Loading...</div>
+                </div>
+                <div class="command-stat">
+                    <div class="command-icon">⚡</div>
+                    <div class="command-label">Volatility</div>
+                    <div class="command-value" id="avg-volatility">-</div>
+                    <div class="command-change" id="volatility-level">Analyzing...</div>
+                </div>
+                <div class="command-stat">
+                    <div class="command-icon">🎯</div>
+                    <div class="command-label">RSI Signals</div>
+                    <div class="command-value" id="rsi-signals">-</div>
+                    <div class="command-change" id="rsi-status">Scanning...</div>
+                </div>
+            </section>
+            
+            <section class="insights-panel">
+                <div class="insights-header">
+                    <div class="ai-indicator">🧠</div>
+                    <h2 class="insights-title">AI Market Intelligence</h2>
+                </div>
+                <div class="insight-cards">
+                    <div class="insight-card">
+                        <div class="insight-type">Volume Analysis</div>
+                        <div class="insight-content">
+                            <div class="insight-value" id="volume-insight">-</div>
+                            <div class="insight-description" id="volume-desc">
+                                Analyzing volume patterns across tracked symbols...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-type">Key Levels</div>
+                        <div class="insight-content">
+                            <div class="insight-value" id="levels-insight">-</div>
+                            <div class="insight-description" id="levels-desc">
+                                Identifying support and resistance zones...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-type">Technical Signals</div>
+                        <div class="insight-content">
+                            <div class="insight-value" id="signals-insight">-</div>
+                            <div class="insight-description" id="signals-desc">
+                                Scanning for RSI and MACD signals...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <div class="analysis-grid" id="analysis-container">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+        </main>
+        
+        <footer class="enterprise-footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    Alpha by Claude Enterprise • Advanced AI Trading Intelligence
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Documentation</a>
+                    <a href="#" class="footer-link">API Access</a>
+                    <a href="#" class="footer-link">Support</a>
+                    <a href="#" class="footer-link">Status</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+    <div class="loading-overlay" id="loading">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script>
+        let currentTimeframe = '4h';
+        let analysisData = {};
+        const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT'];
+        let updateInterval;
+        
+        function setTimeframe(timeframe) {
+            currentTimeframe = timeframe;
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            showLoading();
+            analysisData = {};
+            setTimeout(() => {
+                symbols.forEach(symbol => fetchAnalysis(symbol));
+            }, 500);
+        }
+        
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+        
+        async function fetchAnalysis(symbol) {
+            try {
+                const limit = {
+                    '15m': 96,
+                    '1h': 72,
+                    '4h': 60,
+                    '1d': 30
+                }[currentTimeframe] || 60;
+                
+                const response = await fetch(
+                    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentTimeframe}&limit=${limit}`
+                );
+                const klines = await response.json();
+                
+                const analysis = performAdvancedAnalysis(klines, symbol);
+                analysisData[symbol] = analysis;
+                updateAnalysisDisplay();
+                
+            } catch (error) {
+                console.error('Error fetching analysis for', symbol, error);
+            }
+        }
+        
+        function performAdvancedAnalysis(klines, symbol) {
+            const processedData = klines.map(k => ({
+                time: new Date(k[0]),
+                open: parseFloat(k[1]),
+                high: parseFloat(k[2]),
+                low: parseFloat(k[3]),
+                close: parseFloat(k[4]),
+                volume: parseFloat(k[5])
+            }));
+            
+            // Price metrics
+            const allPrices = processedData.flatMap(k => [k.high, k.low]);
+            const minPrice = Math.min(...allPrices);
+            const maxPrice = Math.max(...allPrices);
+            const currentPrice = processedData[processedData.length - 1].close;
+            const firstPrice = processedData[0].open;
+            const priceChange = ((currentPrice - firstPrice) / firstPrice) * 100;
+            
+            // Volume profile (20 levels for detail)
+            const levels = 20;
+            const priceRange = maxPrice - minPrice;
+            const levelSize = priceRange / levels;
+            const volumeProfile = new Array(levels).fill(0);
+            const priceAtLevel = new Array(levels).fill(0);
+            
+            processedData.forEach(k => {
+                const avgPrice = (k.high + k.low + k.close) / 3;
+                const levelIndex = Math.floor((avgPrice - minPrice) / levelSize);
+                if (levelIndex >= 0 && levelIndex < levels) {
+                    volumeProfile[levelIndex] += k.volume;
+                    priceAtLevel[levelIndex] = minPrice + (levelIndex + 0.5) * levelSize;
+                }
+            });
+            
+            // Key levels
+            const maxVolume = Math.max(...volumeProfile);
+            const pocIndex = volumeProfile.indexOf(maxVolume);
+            const poc = priceAtLevel[pocIndex];
+            
+            // VWAP
+            let totalVolume = 0;
+            let volumeWeightedPrice = 0;
+            processedData.forEach(k => {
+                const typicalPrice = (k.high + k.low + k.close) / 3;
+                volumeWeightedPrice += typicalPrice * k.volume;
+                totalVolume += k.volume;
+            });
+            const vwap = volumeWeightedPrice / totalVolume;
+            
+            // Advanced metrics
+            const rsi = calculateRSI(processedData.map(k => k.close));
+            const macd = calculateMACD(processedData.map(k => k.close));
+            const volumeTrend = calculateVolumeTrend(processedData.map(k => k.volume));
+            
+            // Market structure
+            const support = Math.min(...processedData.slice(-10).map(k => k.low));
+            const resistance = Math.max(...processedData.slice(-10).map(k => k.high));
+            
+            // Liquidation zones
+            const maintenanceMargin = 0.004;
+            const liquidationZones = {
+                long25x: poc * (1 - 1/25 + maintenanceMargin),
+                short25x: poc * (1 + 1/25 - maintenanceMargin),
+                long50x: poc * (1 - 1/50 + maintenanceMargin),
+                short50x: poc * (1 + 1/50 - maintenanceMargin),
+                long100x: poc * (1 - 1/100 + maintenanceMargin),
+                short100x: poc * (1 + 1/100 - maintenanceMargin)
+            };
+            
+            return {
+                symbol,
+                currentPrice,
+                priceChange,
+                poc,
+                vwap,
+                minPrice,
+                maxPrice,
+                support,
+                resistance,
+                totalVolume,
+                volumeProfile: volumeProfile.map((v, i) => ({
+                    price: priceAtLevel[i],
+                    volume: v,
+                    percentage: (v / maxVolume) * 100
+                })),
+                liquidationZones,
+                rsi,
+                macd,
+                volumeTrend,
+                marketStructure: analyzeMarketStructure(processedData),
+                trend: priceChange > 0 ? 'bullish' : 'bearish',
+                strength: Math.abs(priceChange),
+                volatility: calculateVolatility(processedData)
+            };
+        }
+        
+        function calculateRSI(prices, period = 14) {
+            if (prices.length < period) return 50;
+            
+            let gains = 0;
+            let losses = 0;
+            
+            for (let i = 1; i <= period; i++) {
+                const diff = prices[i] - prices[i - 1];
+                if (diff > 0) gains += diff;
+                else losses -= diff;
+            }
+            
+            const avgGain = gains / period;
+            const avgLoss = losses / period;
+            const rs = avgGain / avgLoss;
+            return 100 - (100 / (1 + rs));
+        }
+        
+        function calculateMACD(prices) {
+            const ema12 = calculateEMA(prices, 12);
+            const ema26 = calculateEMA(prices, 26);
+            const macdLine = ema12 - ema26;
+            const signal = calculateEMA([macdLine], 9);
+            return {
+                macd: macdLine,
+                signal: signal,
+                histogram: macdLine - signal
+            };
+        }
+        
+        function calculateEMA(values, period) {
+            if (values.length < period) return values[values.length - 1];
+            const multiplier = 2 / (period + 1);
+            let ema = values.slice(0, period).reduce((a, b) => a + b) / period;
+            
+            for (let i = period; i < values.length; i++) {
+                ema = (values[i] - ema) * multiplier + ema;
+            }
+            return ema;
+        }
+        
+        function calculateVolumeTrend(volumes) {
+            const recent = volumes.slice(-10).reduce((a, b) => a + b) / 10;
+            const previous = volumes.slice(-20, -10).reduce((a, b) => a + b) / 10;
+            return ((recent - previous) / previous) * 100;
+        }
+        
+        function calculateVolatility(data) {
+            const returns = [];
+            for (let i = 1; i < data.length; i++) {
+                returns.push((data[i].close - data[i-1].close) / data[i-1].close);
+            }
+            
+            const mean = returns.reduce((a, b) => a + b) / returns.length;
+            const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
+            return Math.sqrt(variance) * 100;
+        }
+        
+        function analyzeMarketStructure(data) {
+            const highs = [];
+            const lows = [];
+            
+            for (let i = 1; i < data.length - 1; i++) {
+                if (data[i].high > data[i-1].high && data[i].high > data[i+1].high) {
+                    highs.push({ price: data[i].high, index: i });
+                }
+                if (data[i].low < data[i-1].low && data[i].low < data[i+1].low) {
+                    lows.push({ price: data[i].low, index: i });
+                }
+            }
+            
+            const trendingUp = highs.length > 1 && highs[highs.length-1].price > highs[highs.length-2].price;
+            const trendingDown = lows.length > 1 && lows[lows.length-1].price < lows[lows.length-2].price;
+            
+            if (trendingUp && !trendingDown) return 'uptrend';
+            if (trendingDown && !trendingUp) return 'downtrend';
+            return 'range';
+        }
+        
+        function updateAnalysisDisplay() {
+            const container = document.getElementById('analysis-container');
+            
+            if (Object.keys(analysisData).length === symbols.length) {
+                hideLoading();
+                container.innerHTML = '';
+                
+                symbols.forEach(symbol => {
+                    const data = analysisData[symbol];
+                    if (!data) return;
+                    
+                    const card = createAnalysisCard(data);
+                    container.appendChild(card);
+                });
+            }
+        }
+        
+        function createAnalysisCard(data) {
+            const card = document.createElement('div');
+            card.className = 'analysis-card';
+            
+            const priceRange = data.maxPrice - data.minPrice;
+            
+            let volumeBarsHTML = '';
+            data.volumeProfile.forEach((node, index) => {
+                if (node.volume === 0) return;
+                const bottom = ((node.price - data.minPrice) / priceRange) * 100;
+                const width = node.percentage * 0.6;
+                // Calculate position to avoid overlap
+                const barPosition = (index / data.volumeProfile.length) * 100;
+                volumeBarsHTML += `
+                    <div class="volume-bar" 
+                         style="bottom: ${barPosition}%; width: ${width}%;">
+                    </div>
+                `;
+            });
+            
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="symbol-icon">${data.symbol.slice(0, -4)}</div>
+                        <span>${data.symbol.replace('USDT', '')}</span>
+                    </div>
+                    <div class="status-indicator"></div>
+                </div>
+                
+                <div class="volume-profile">
+                    <div class="profile-grid"></div>
+                    ${volumeBarsHTML}
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-name">Current Price</div>
+                        <div class="metric-display">$${formatPrice(data.currentPrice, data.symbol)}</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-name">24h Change</div>
+                        <div class="metric-display ${data.priceChange >= 0 ? 'positive' : 'negative'}">
+                            ${data.priceChange >= 0 ? '+' : ''}${data.priceChange.toFixed(2)}%
+                        </div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-name">POC Level</div>
+                        <div class="metric-display">$${formatPrice(data.poc, data.symbol)}</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-name">RSI</div>
+                        <div class="metric-display">${data.rsi.toFixed(1)}</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-name">Support</div>
+                        <div class="metric-display" style="color: #4ade80;">
+                            $${formatPrice(data.support, data.symbol)}
+                        </div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-name">Resistance</div>
+                        <div class="metric-display" style="color: #f87171;">
+                            $${formatPrice(data.resistance, data.symbol)}
+                        </div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-name">Volatility</div>
+                        <div class="metric-display">${data.volatility.toFixed(2)}%</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-name">Structure</div>
+                        <div class="metric-display">${data.marketStructure}</div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        function formatPrice(price, symbol) {
+            if (symbol === 'XRPUSDT') {
+                return price.toFixed(4);
+            } else if (price > 1000) {
+                return price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            } else if (price > 10) {
+                return price.toFixed(2);
+            } else {
+                return price.toFixed(4);
+            }
+        }
+        
+        // Real-time updates
+        function startRealTimeUpdates() {
+            updateInterval = setInterval(() => {
+                symbols.forEach(symbol => fetchAnalysis(symbol));
+                updateMarketMetrics();
+            }, 30000);
+        }
+        
+        function updateMarketMetrics() {
+            // Update command center with real data
+            if (Object.keys(analysisData).length === symbols.length) {
+                // Calculate market trend
+                let bullishCount = 0;
+                let totalChange = 0;
+                let totalVolume = 0;
+                let totalVolatility = 0;
+                let oversoldCount = 0;
+                let overboughtCount = 0;
+                
+                symbols.forEach(symbol => {
+                    const data = analysisData[symbol];
+                    if (data) {
+                        if (data.priceChange > 0) bullishCount++;
+                        totalChange += data.priceChange;
+                        totalVolume += data.totalVolume;
+                        totalVolatility += data.volatility;
+                        
+                        if (data.rsi < 30) oversoldCount++;
+                        if (data.rsi > 70) overboughtCount++;
+                    }
+                });
+                
+                // Update market trend
+                const avgChange = totalChange / symbols.length;
+                const trendEl = document.getElementById('market-trend');
+                const trendStrengthEl = document.getElementById('trend-strength');
+                if (trendEl && trendStrengthEl) {
+                    if (avgChange > 2) {
+                        trendEl.textContent = 'Bullish';
+                        trendEl.className = 'command-value positive';
+                        trendStrengthEl.textContent = 'Strong upward';
+                    } else if (avgChange > 0) {
+                        trendEl.textContent = 'Neutral+';
+                        trendEl.className = 'command-value';
+                        trendStrengthEl.textContent = 'Slight upward';
+                    } else if (avgChange > -2) {
+                        trendEl.textContent = 'Neutral-';
+                        trendEl.className = 'command-value';
+                        trendStrengthEl.textContent = 'Slight downward';
+                    } else {
+                        trendEl.textContent = 'Bearish';
+                        trendEl.className = 'command-value negative';
+                        trendStrengthEl.textContent = 'Strong downward';
+                    }
+                }
+                
+                // Update volume
+                const avgVolumeEl = document.getElementById('avg-volume');
+                if (avgVolumeEl) {
+                    const avgVol = totalVolume / symbols.length;
+                    if (avgVol > 1e9) {
+                        avgVolumeEl.textContent = (avgVol / 1e9).toFixed(1) + 'B';
+                    } else if (avgVol > 1e6) {
+                        avgVolumeEl.textContent = (avgVol / 1e6).toFixed(1) + 'M';
+                    } else {
+                        avgVolumeEl.textContent = (avgVol / 1e3).toFixed(1) + 'K';
+                    }
+                }
+                
+                // Update volatility
+                const avgVolatilityEl = document.getElementById('avg-volatility');
+                const volatilityLevelEl = document.getElementById('volatility-level');
+                if (avgVolatilityEl && volatilityLevelEl) {
+                    const avgVol = totalVolatility / symbols.length;
+                    avgVolatilityEl.textContent = avgVol.toFixed(1) + '%';
+                    if (avgVol < 1) {
+                        volatilityLevelEl.textContent = 'Very Low';
+                    } else if (avgVol < 2) {
+                        volatilityLevelEl.textContent = 'Low';
+                    } else if (avgVol < 3) {
+                        volatilityLevelEl.textContent = 'Medium';
+                    } else {
+                        volatilityLevelEl.textContent = 'High';
+                    }
+                }
+                
+                // Update RSI signals
+                const rsiSignalsEl = document.getElementById('rsi-signals');
+                const rsiStatusEl = document.getElementById('rsi-status');
+                if (rsiSignalsEl && rsiStatusEl) {
+                    rsiSignalsEl.textContent = `${oversoldCount}↓ ${overboughtCount}↑`;
+                    if (oversoldCount > 0) {
+                        rsiStatusEl.textContent = `${oversoldCount} oversold`;
+                    } else if (overboughtCount > 0) {
+                        rsiStatusEl.textContent = `${overboughtCount} overbought`;
+                    } else {
+                        rsiStatusEl.textContent = 'Neutral range';
+                    }
+                }
+                
+                // Update header prices
+                const btcData = analysisData['BTCUSDT'];
+                const ethData = analysisData['ETHUSDT'];
+                if (btcData) {
+                    const btcPriceEl = document.getElementById('btc-price-header');
+                    if (btcPriceEl) {
+                        btcPriceEl.textContent = '$' + formatPrice(btcData.currentPrice, 'BTCUSDT');
+                    }
+                }
+                if (ethData) {
+                    const ethPriceEl = document.getElementById('eth-price-header');
+                    if (ethPriceEl) {
+                        ethPriceEl.textContent = '$' + formatPrice(ethData.currentPrice, 'ETHUSDT');
+                    }
+                }
+                
+                // Update time
+                const updateTimeEl = document.getElementById('update-time');
+                if (updateTimeEl) {
+                    const now = new Date();
+                    updateTimeEl.textContent = now.toLocaleTimeString();
+                }
+                
+                // Update insights
+                updateInsights();
+            }
+        }
+        
+        function updateInsights() {
+            // Volume insight
+            const volumeInsightEl = document.getElementById('volume-insight');
+            const volumeDescEl = document.getElementById('volume-desc');
+            if (volumeInsightEl && volumeDescEl) {
+                const highVolumeSymbols = [];
+                symbols.forEach(symbol => {
+                    const data = analysisData[symbol];
+                    if (data && data.volumeTrend > 20) {
+                        highVolumeSymbols.push(symbol.replace('USDT', ''));
+                    }
+                });
+                
+                if (highVolumeSymbols.length > 0) {
+                    volumeInsightEl.textContent = 'High Activity Detected';
+                    volumeInsightEl.className = 'insight-value positive';
+                    volumeDescEl.textContent = `Increased volume on ${highVolumeSymbols.join(', ')}. Potential breakout or breakdown incoming.`;
+                } else {
+                    volumeInsightEl.textContent = 'Normal Volume';
+                    volumeInsightEl.className = 'insight-value';
+                    volumeDescEl.textContent = 'Volume levels are within normal range across all tracked symbols.';
+                }
+            }
+            
+            // Key levels insight
+            const levelsInsightEl = document.getElementById('levels-insight');
+            const levelsDescEl = document.getElementById('levels-desc');
+            if (levelsInsightEl && levelsDescEl) {
+                const nearSupport = [];
+                const nearResistance = [];
+                symbols.forEach(symbol => {
+                    const data = analysisData[symbol];
+                    if (data) {
+                        const supportDist = ((data.currentPrice - data.support) / data.support) * 100;
+                        const resistanceDist = ((data.resistance - data.currentPrice) / data.currentPrice) * 100;
+                        
+                        if (supportDist < 2) nearSupport.push(symbol.replace('USDT', ''));
+                        if (resistanceDist < 2) nearResistance.push(symbol.replace('USDT', ''));
+                    }
+                });
+                
+                if (nearSupport.length > 0) {
+                    levelsInsightEl.textContent = 'Near Support Levels';
+                    levelsDescEl.textContent = `${nearSupport.join(', ')} approaching support. Watch for bounces or breakdowns.`;
+                } else if (nearResistance.length > 0) {
+                    levelsInsightEl.textContent = 'Near Resistance Levels';
+                    levelsDescEl.textContent = `${nearResistance.join(', ')} approaching resistance. Monitor for breakouts or rejections.`;
+                } else {
+                    levelsInsightEl.textContent = 'Mid-Range Trading';
+                    levelsDescEl.textContent = 'All symbols trading in middle of their ranges.';
+                }
+            }
+            
+            // Technical signals insight
+            const signalsInsightEl = document.getElementById('signals-insight');
+            const signalsDescEl = document.getElementById('signals-desc');
+            if (signalsInsightEl && signalsDescEl) {
+                const oversold = [];
+                const overbought = [];
+                symbols.forEach(symbol => {
+                    const data = analysisData[symbol];
+                    if (data) {
+                        if (data.rsi < 30) oversold.push(symbol.replace('USDT', ''));
+                        if (data.rsi > 70) overbought.push(symbol.replace('USDT', ''));
+                    }
+                });
+                
+                if (oversold.length > 0) {
+                    signalsInsightEl.textContent = 'Oversold Signals';
+                    signalsInsightEl.className = 'insight-value positive';
+                    signalsDescEl.textContent = `${oversold.join(', ')} showing oversold RSI. Potential bounce opportunity.`;
+                } else if (overbought.length > 0) {
+                    signalsInsightEl.textContent = 'Overbought Signals';
+                    signalsInsightEl.className = 'insight-value negative';
+                    signalsDescEl.textContent = `${overbought.join(', ')} showing overbought RSI. Consider taking profits.`;
+                } else {
+                    signalsInsightEl.textContent = 'No Strong Signals';
+                    signalsInsightEl.className = 'insight-value';
+                    signalsDescEl.textContent = 'RSI levels are in neutral zone for all symbols.';
+                }
+            }
+        }
+        
+        // Initialize
+        showLoading();
+        symbols.forEach(symbol => fetchAnalysis(symbol));
+        startRealTimeUpdates();
+        
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (updateInterval) clearInterval(updateInterval);
+        });
+    </script>
+</body>
+</html>

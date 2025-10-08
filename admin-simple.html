@@ -184,7 +184,7 @@
             <span>연결 상태 확인 중...</span>
         </div>
 
-        <div class="form-section">
+        <div class="form-section" style="display: none;">
             <h2>새 링크 추가</h2>
             <div class="form-group">
                 <label for="name">링크 이름</label>
@@ -219,6 +219,7 @@
         let supabase = null;
         let allLinks = [];
         let allCategories = [];
+        let currentUser = null;
 
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
@@ -251,18 +252,39 @@
             const statusEl = document.getElementById('status');
             
             try {
+                // 로그인 상태 확인
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError) {
+                    throw new Error('인증 확인 실패: ' + authError.message);
+                }
+                
+                currentUser = user;
+                
+                // 연결 테스트
                 const { data, error } = await supabase.from('links').select('count').limit(1);
                 
                 if (error) throw error;
                 
-                statusEl.innerHTML = '<span class="success">✅ 연결 성공</span>';
+                if (user) {
+                    statusEl.innerHTML = `<span class="success">✅ 연결 성공 (${user.email})</span>`;
+                    // 입력 폼 표시
+                    document.querySelector('.form-section').style.display = 'block';
+                } else {
+                    statusEl.innerHTML = '<span class="warning">⚠️ 로그인이 필요합니다 (읽기 전용 모드)</span>';
+                    // 입력 폼 숨기기
+                    document.querySelector('.form-section').style.display = 'none';
+                }
                 
-                // 연결 성공 시 링크 불러오기
+                // 링크 불러오기
                 loadLinks();
                 
             } catch (error) {
                 console.error('연결 오류:', error);
                 statusEl.innerHTML = '<span class="error">❌ 연결 실패: ' + error.message + '</span>';
+                
+                // 입력 폼 숨기기
+                document.querySelector('.form-section').style.display = 'none';
                 
                 // 오류 시에도 빈 목록 표시
                 displayLinks([]);
@@ -352,9 +374,10 @@
                                         <a href="${link.url}" target="_blank" style="color: #888;">${link.url}</a>
                                     </div>
                                     <div class="link-actions">
-                                        <button class="btn-secondary" onclick="editLink('${link.id}', '${link.name}', '${link.url}', '${link.category}')">수정</button>
-                                        <button class="btn-danger" onclick="deleteLink('${link.id}')">삭제</button>
-                                    </div>
+                                        ${currentUser ? `
+                                            <button class="btn-secondary" onclick="editLink('${link.id}', '${link.name}', '${link.url}', '${link.category}')">수정</button>
+                                            <button class="btn-danger" onclick="deleteLink('${link.id}')">삭제</button>
+                                        ` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -367,6 +390,12 @@
 
         // 링크 추가
         async function addLink() {
+            // 로그인 확인
+            if (!currentUser) {
+                alert('링크를 추가하려면 로그인이 필요합니다.');
+                return;
+            }
+            
             const name = document.getElementById('name').value.trim();
             const url = document.getElementById('url').value.trim();
             const category = document.getElementById('category').value;
@@ -428,6 +457,12 @@
 
         // 링크 업데이트
         async function updateLink(id) {
+            // 로그인 확인
+            if (!currentUser) {
+                alert('링크를 수정하려면 로그인이 필요합니다.');
+                return;
+            }
+            
             const name = document.getElementById('name').value.trim();
             const url = document.getElementById('url').value.trim();
             const category = document.getElementById('category').value;
@@ -481,6 +516,12 @@
 
         // 링크 삭제
         async function deleteLink(id) {
+            // 로그인 확인
+            if (!currentUser) {
+                alert('링크를 삭제하려면 로그인이 필요합니다.');
+                return;
+            }
+            
             if (!confirm('정말로 이 링크를 삭제하시겠습니까?')) {
                 return;
             }

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha by Claude - Professional</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 80, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 80, 120, 0.1) 0%, transparent 50%);
+        }
+        
+        .premium-header {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 40px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #7850ff, #ff5078);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #7850ff, #ff5078);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .version-badge {
+            background: rgba(120, 80, 255, 0.2);
+            border: 1px solid rgba(120, 80, 255, 0.4);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #7850ff;
+            font-weight: 500;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .time-selector {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            padding: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .time-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .time-btn.active {
+            background: linear-gradient(135deg, #7850ff, #ff5078);
+            color: #fff;
+        }
+        
+        .time-btn:hover:not(.active) {
+            color: #fff;
+        }
+        
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(120, 80, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .stat-change {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .stat-change.positive {
+            color: #00ff88;
+        }
+        
+        .stat-change.negative {
+            color: #ff4444;
+        }
+        
+        .profile-section {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .symbol-name {
+            background: linear-gradient(135deg, #7850ff, #ff5078);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .profile-chart {
+            position: relative;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .volume-bar {
+            position: absolute;
+            background: linear-gradient(180deg, rgba(120, 80, 255, 0.8), rgba(120, 80, 255, 0.2));
+            border-radius: 4px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .volume-bar:hover {
+            background: linear-gradient(180deg, rgba(120, 80, 255, 1), rgba(120, 80, 255, 0.4));
+            transform: scaleX(1.05);
+        }
+        
+        .price-level-label {
+            position: absolute;
+            left: 20px;
+            font-size: 11px;
+            color: #888;
+            transform: translateY(-50%);
+        }
+        
+        .key-level {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            opacity: 0.8;
+        }
+        
+        .poc-level {
+            background: linear-gradient(90deg, transparent, #ff5078, transparent);
+            box-shadow: 0 0 20px rgba(255, 80, 120, 0.5);
+        }
+        
+        .vwap-level {
+            background: linear-gradient(90deg, transparent, #ffd700, transparent);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+        
+        .current-price-level {
+            background: linear-gradient(90deg, transparent, #00ff88, transparent);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            height: 3px;
+        }
+        
+        .level-label {
+            position: absolute;
+            right: 20px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            transform: translateY(-50%);
+        }
+        
+        .poc-label {
+            background: rgba(255, 80, 120, 0.2);
+            color: #ff5078;
+            border: 1px solid rgba(255, 80, 120, 0.4);
+        }
+        
+        .vwap-label {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+        }
+        
+        .current-label {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.4);
+        }
+        
+        .liquidation-zones {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+        }
+        
+        .liq-zone {
+            position: absolute;
+            left: 0;
+            right: 0;
+            opacity: 0.1;
+        }
+        
+        .liq-zone.long {
+            background: linear-gradient(180deg, transparent, rgba(0, 255, 136, 0.3));
+        }
+        
+        .liq-zone.short {
+            background: linear-gradient(180deg, rgba(255, 68, 68, 0.3), transparent);
+        }
+        
+        .advanced-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        
+        .metric-title {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .metric-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .metric-name {
+            font-size: 13px;
+            color: #ccc;
+        }
+        
+        .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .premium-footer {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: #888;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(120, 80, 255, 0.2);
+            border-top-color: #7850ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .advanced-metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .premium-header {
+                padding: 15px 20px;
+            }
+            
+            .logo-text {
+                font-size: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-container {
+                padding: 20px;
+            }
+            
+            .profile-chart {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="premium-header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">α</div>
+                <div class="logo-text">Alpha by Claude</div>
+                <div class="version-badge">Professional</div>
+            </div>
+            
+            <div class="controls">
+                <div class="time-selector">
+                    <button class="time-btn" onclick="setTimeframe('15m')">15M</button>
+                    <button class="time-btn" onclick="setTimeframe('1h')">1H</button>
+                    <button class="time-btn active" onclick="setTimeframe('4h')">4H</button>
+                    <button class="time-btn" onclick="setTimeframe('1d')">1D</button>
+                    <button class="time-btn" onclick="setTimeframe('1w')">1W</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="main-container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Portfolio Value</div>
+                <div class="stat-value">$125,420</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span>+12.4%</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">24h Volume</div>
+                <div class="stat-value">$45.2M</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span>+24.8%</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Market Dominance</div>
+                <div class="stat-value">42.3%</div>
+                <div class="stat-change negative">
+                    <span>↓</span>
+                    <span>-1.2%</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Active Signals</div>
+                <div class="stat-value">8</div>
+                <div class="stat-change">
+                    <span style="color: #ffd700;">●</span>
+                    <span style="color: #ccc;">3 pending</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="profiles-container">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="premium-footer">
+        <p>Alpha by Claude Professional • Real-time Market Intelligence • Powered by Advanced AI</p>
+    </footer>
+
+    <script>
+        let currentTimeframe = '4h';
+        let profileData = {};
+        const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+        
+        function setTimeframe(timeframe) {
+            currentTimeframe = timeframe;
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Reload data
+            profileData = {};
+            document.getElementById('profiles-container').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            symbols.forEach(symbol => fetchEnhancedProfile(symbol));
+        }
+        
+        async function fetchEnhancedProfile(symbol) {
+            try {
+                const limit = {
+                    '15m': 96,
+                    '1h': 72,
+                    '4h': 60,
+                    '1d': 60,
+                    '1w': 52
+                }[currentTimeframe] || 60;
+                
+                const response = await fetch(
+                    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${currentTimeframe}&limit=${limit}`
+                );
+                const klines = await response.json();
+                
+                // Enhanced calculations
+                const profile = calculateEnhancedProfile(klines, symbol);
+                profileData[symbol] = profile;
+                updateProfileDisplay();
+                
+            } catch (error) {
+                console.error('Error fetching profile for', symbol, error);
+            }
+        }
+        
+        function calculateEnhancedProfile(klines, symbol) {
+            const processedData = klines.map(k => ({
+                time: new Date(k[0]),
+                open: parseFloat(k[1]),
+                high: parseFloat(k[2]),
+                low: parseFloat(k[3]),
+                close: parseFloat(k[4]),
+                volume: parseFloat(k[5])
+            }));
+            
+            // Price range
+            const allPrices = processedData.flatMap(k => [k.high, k.low]);
+            const minPrice = Math.min(...allPrices);
+            const maxPrice = Math.max(...allPrices);
+            
+            // Volume profile calculation (20 levels)
+            const levels = 20;
+            const priceRange = maxPrice - minPrice;
+            const levelSize = priceRange / levels;
+            const volumeProfile = new Array(levels).fill(0);
+            const priceAtLevel = new Array(levels).fill(0);
+            
+            processedData.forEach(k => {
+                const avgPrice = (k.high + k.low + k.close) / 3;
+                const levelIndex = Math.floor((avgPrice - minPrice) / levelSize);
+                if (levelIndex >= 0 && levelIndex < levels) {
+                    volumeProfile[levelIndex] += k.volume;
+                    priceAtLevel[levelIndex] = minPrice + (levelIndex + 0.5) * levelSize;
+                }
+            });
+            
+            // Find POC
+            const maxVolume = Math.max(...volumeProfile);
+            const pocIndex = volumeProfile.indexOf(maxVolume);
+            const poc = priceAtLevel[pocIndex];
+            
+            // Calculate VWAP
+            let totalVolume = 0;
+            let volumeWeightedPrice = 0;
+            processedData.forEach(k => {
+                const typicalPrice = (k.high + k.low + k.close) / 3;
+                volumeWeightedPrice += typicalPrice * k.volume;
+                totalVolume += k.volume;
+            });
+            const vwap = volumeWeightedPrice / totalVolume;
+            
+            // Current price and trend
+            const currentPrice = processedData[processedData.length - 1].close;
+            const firstPrice = processedData[0].open;
+            const priceChange = ((currentPrice - firstPrice) / firstPrice) * 100;
+            
+            // Market profile metrics
+            const volumeNodes = volumeProfile.map((v, i) => ({
+                price: priceAtLevel[i],
+                volume: v,
+                percentage: (v / maxVolume) * 100
+            })).filter(node => node.volume > 0);
+            
+            // Liquidation levels (for 25x and 50x leverage)
+            const maintenanceMargin = 0.004;
+            const liquidationLevels = {
+                long25x: poc * (1 - 1/25 + maintenanceMargin),
+                short25x: poc * (1 + 1/25 - maintenanceMargin),
+                long50x: poc * (1 - 1/50 + maintenanceMargin),
+                short50x: poc * (1 + 1/50 - maintenanceMargin)
+            };
+            
+            return {
+                symbol,
+                currentPrice,
+                priceChange,
+                poc,
+                vwap,
+                minPrice,
+                maxPrice,
+                totalVolume,
+                volumeNodes,
+                liquidationLevels,
+                trend: priceChange > 0 ? 'bullish' : 'bearish',
+                strength: Math.abs(priceChange)
+            };
+        }
+        
+        function updateProfileDisplay() {
+            const container = document.getElementById('profiles-container');
+            
+            if (Object.keys(profileData).length === symbols.length) {
+                container.innerHTML = '';
+                
+                symbols.forEach(symbol => {
+                    const data = profileData[symbol];
+                    if (!data) return;
+                    
+                    const profileSection = createProfileSection(data);
+                    container.appendChild(profileSection);
+                });
+            }
+        }
+        
+        function createProfileSection(data) {
+            const section = document.createElement('div');
+            section.className = 'profile-section';
+            
+            const priceRange = data.maxPrice - data.minPrice;
+            
+            let volumeBarsHTML = '';
+            data.volumeNodes.forEach(node => {
+                const bottom = ((node.price - data.minPrice) / priceRange) * 100;
+                const width = node.percentage * 0.8;
+                volumeBarsHTML += `
+                    <div class="volume-bar" style="bottom: ${bottom}%; width: ${width}%; height: ${100/20}%;"></div>
+                `;
+            });
+            
+            // Price levels
+            const pocPosition = ((data.poc - data.minPrice) / priceRange) * 100;
+            const vwapPosition = ((data.vwap - data.minPrice) / priceRange) * 100;
+            const currentPosition = ((data.currentPrice - data.minPrice) / priceRange) * 100;
+            
+            // Liquidation zones
+            const liq25LongPos = ((data.liquidationLevels.long25x - data.minPrice) / priceRange) * 100;
+            const liq25ShortPos = ((data.liquidationLevels.short25x - data.minPrice) / priceRange) * 100;
+            
+            section.innerHTML = `
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="symbol-name">${data.symbol.replace('USDT', '')}</span>
+                        Volume Profile Analysis
+                    </h2>
+                    <div class="stat-change ${data.priceChange >= 0 ? 'positive' : 'negative'}">
+                        <span>${data.priceChange >= 0 ? '↑' : '↓'}</span>
+                        <span>${data.priceChange >= 0 ? '+' : ''}${data.priceChange.toFixed(2)}%</span>
+                    </div>
+                </div>
+                
+                <div class="profile-chart">
+                    <div class="liquidation-zones">
+                        <div class="liq-zone long" style="bottom: 0; height: ${liq25LongPos}%;"></div>
+                        <div class="liq-zone short" style="top: 0; height: ${100 - liq25ShortPos}%;"></div>
+                    </div>
+                    
+                    ${volumeBarsHTML}
+                    
+                    <div class="key-level poc-level" style="bottom: ${pocPosition}%;">
+                        <div class="level-label poc-label">POC $${formatPrice(data.poc)}</div>
+                    </div>
+                    
+                    <div class="key-level vwap-level" style="bottom: ${vwapPosition}%;">
+                        <div class="level-label vwap-label">VWAP $${formatPrice(data.vwap)}</div>
+                    </div>
+                    
+                    <div class="key-level current-price-level" style="bottom: ${currentPosition}%;">
+                        <div class="level-label current-label">Current $${formatPrice(data.currentPrice)}</div>
+                    </div>
+                </div>
+                
+                <div class="advanced-metrics">
+                    <div class="metric-card">
+                        <div class="metric-title">Key Levels</div>
+                        <div class="metric-content">
+                            <div class="metric-item">
+                                <span class="metric-name">Point of Control</span>
+                                <span class="metric-value">$${formatPrice(data.poc)}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-name">VWAP</span>
+                                <span class="metric-value">$${formatPrice(data.vwap)}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-name">Range High</span>
+                                <span class="metric-value">$${formatPrice(data.maxPrice)}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-name">Range Low</span>
+                                <span class="metric-value">$${formatPrice(data.minPrice)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-title">Liquidation Levels</div>
+                        <div class="metric-content">
+                            <div class="metric-item">
+                                <span class="metric-name">25x Long</span>
+                                <span class="metric-value" style="color: #00ff88;">$${formatPrice(data.liquidationLevels.long25x)}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-name">25x Short</span>
+                                <span class="metric-value" style="color: #ff4444;">$${formatPrice(data.liquidationLevels.short25x)}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-name">50x Long</span>
+                                <span class="metric-value" style="color: #00ff88;">$${formatPrice(data.liquidationLevels.long50x)}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-name">50x Short</span>
+                                <span class="metric-value" style="color: #ff4444;">$${formatPrice(data.liquidationLevels.short50x)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-title">Market Analysis</div>
+                        <div class="metric-content">
+                            <div class="metric-item">
+                                <span class="metric-name">Trend</span>
+                                <span class="metric-value" style="text-transform: capitalize; color: ${data.trend === 'bullish' ? '#00ff88' : '#ff4444'};">
+                                    ${data.trend}
+                                </span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-name">Strength</span>
+                                <span class="metric-value">${data.strength.toFixed(1)}%</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-name">Volume</span>
+                                <span class="metric-value">${formatVolume(data.totalVolume)}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-name">Position vs POC</span>
+                                <span class="metric-value">${((data.currentPrice - data.poc) / data.poc * 100).toFixed(2)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return section;
+        }
+        
+        function formatPrice(price) {
+            if (price > 1000) {
+                return price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            } else if (price > 10) {
+                return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } else {
+                return price.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+            }
+        }
+        
+        function formatVolume(volume) {
+            if (volume > 1e9) return (volume / 1e9).toFixed(2) + 'B';
+            if (volume > 1e6) return (volume / 1e6).toFixed(2) + 'M';
+            if (volume > 1e3) return (volume / 1e3).toFixed(2) + 'K';
+            return volume.toFixed(0);
+        }
+        
+        // Initialize
+        symbols.forEach(symbol => fetchEnhancedProfile(symbol));
+        
+        // Auto refresh every 30 seconds
+        setInterval(() => {
+            symbols.forEach(symbol => fetchEnhancedProfile(symbol));
+        }, 30000);
+    </script>
+</body>
+</html>
