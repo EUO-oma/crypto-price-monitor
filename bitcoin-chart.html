@@ -158,18 +158,20 @@
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            align-items: center;
         }
         
         .btn {
             background: #1a1a1a;
             border: 1px solid #333;
             color: #888;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 14px;
+            font-size: 13px;
             font-family: inherit;
+            white-space: nowrap;
         }
         
         .btn:hover {
@@ -316,6 +318,11 @@
                 <button class="btn" onclick="changeTimeframe('4h')">4H</button>
                 <button class="btn" onclick="changeTimeframe('1d')">1D</button>
                 <button class="btn" onclick="changeTimeframe('1w')">1W</button>
+                <button class="btn" onclick="changeTimeframe('1M')">1M</button>
+                <button class="btn" onclick="changeTimeframe('3M')">3M</button>
+                <button class="btn" onclick="changeTimeframe('6M')">6M</button>
+                <button class="btn" onclick="changeTimeframe('1Y')">1Y</button>
+                <button class="btn" onclick="changeTimeframe('ALL')">ALL</button>
             </div>
             <div class="separator"></div>
             <div class="control-group">
@@ -403,10 +410,11 @@
                     format: '$#,###'
                 },
                 colors: ['#667eea'],
-                lineWidth: 2,
-                pointSize: 0,
+                lineWidth: 3,
+                pointSize: 4,
+                pointsVisible: true,
                 series: {
-                    0: { areaOpacity: 0.1 }
+                    0: { areaOpacity: 0.05 }
                 },
                 crosshair: { 
                     trigger: 'both',
@@ -456,11 +464,31 @@
                         break;
                     case '1d':
                         interval = '1d';
-                        limit = 60;
+                        limit = 90;
                         break;
                     case '1w':
                         interval = '1w';
-                        limit = 60;
+                        limit = 52;
+                        break;
+                    case '1M':
+                        interval = '1M';
+                        limit = 12;
+                        break;
+                    case '3M':
+                        interval = '1M';
+                        limit = 36;
+                        break;
+                    case '6M':
+                        interval = '1d';
+                        limit = 180;
+                        break;
+                    case '1Y':
+                        interval = '1d';
+                        limit = 365;
+                        break;
+                    case 'ALL':
+                        interval = '1w';
+                        limit = 500; // Binance max limit
                         break;
                     default:
                         interval = '1m';
@@ -473,11 +501,24 @@
                 const data = new google.visualization.DataTable();
                 data.addColumn('datetime', 'Time');
                 data.addColumn('number', 'Price');
+                data.addColumn({type: 'string', role: 'style'});
                 
-                const rows = klines.map(kline => {
+                const rows = klines.map((kline, index) => {
                     const time = new Date(kline[0]);
                     const price = parseFloat(kline[4]); // Close price
-                    return [time, price];
+                    const open = parseFloat(kline[1]); // Open price
+                    
+                    // Determine color based on price change
+                    let color = '#667eea'; // Default purple
+                    if (price > open) {
+                        color = '#4caf50'; // Green for up
+                    } else if (price < open) {
+                        color = '#f44336'; // Red for down
+                    } else {
+                        color = '#ffa726'; // Orange for flat
+                    }
+                    
+                    return [time, price, `color: ${color}`];
                 });
                 
                 data.addRows(rows);
@@ -486,8 +527,8 @@
                 const options = getChartOptions();
                 chart.draw(data, options);
                 
-                // Store data for updates
-                priceData = rows;
+                // Store data for updates (without style column for real-time updates)
+                priceData = rows.map(row => [row[0], row[1]]);
                 
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -516,10 +557,11 @@
                     format: '$#,###'
                 },
                 colors: ['#667eea'],
-                lineWidth: 2,
-                pointSize: 0,
+                lineWidth: 3,
+                pointSize: 4,
+                pointsVisible: true,
                 series: {
-                    0: { areaOpacity: 0.1 }
+                    0: { areaOpacity: 0.05 }
                 },
                 crosshair: { 
                     trigger: 'both',
@@ -549,6 +591,17 @@
                 case '1w':
                     baseOptions.hAxis.format = 'MMM dd';
                     break;
+                case '1M':
+                case '3M':
+                    baseOptions.hAxis.format = 'MMM yyyy';
+                    break;
+                case '6M':
+                case '1Y':
+                    baseOptions.hAxis.format = 'MMM yy';
+                    break;
+                case 'ALL':
+                    baseOptions.hAxis.format = 'yyyy';
+                    break;
             }
             
             return baseOptions;
@@ -572,6 +625,7 @@
                 // Add new data point for minute charts
                 if (!isPaused && ['1m', '5m', '15m', '30m'].includes(currentTimeframe) && priceData.length > 0) {
                     const now = new Date();
+                    const lastPrice = priceData[priceData.length - 1][1];
                     priceData.push([now, price]);
                     
                     // Keep only last 60 points
@@ -579,12 +633,29 @@
                         priceData.shift();
                     }
                     
-                    // Redraw chart
+                    // Redraw chart with colors
                     const dataTable = new google.visualization.DataTable();
                     dataTable.addColumn('datetime', 'Time');
                     dataTable.addColumn('number', 'Price');
-                    dataTable.addRows(priceData);
+                    dataTable.addColumn({type: 'string', role: 'style'});
                     
+                    const coloredRows = priceData.map((row, index) => {
+                        let color = '#667eea';
+                        if (index > 0) {
+                            const prevPrice = priceData[index - 1][1];
+                            const currentPrice = row[1];
+                            if (currentPrice > prevPrice) {
+                                color = '#4caf50'; // Green
+                            } else if (currentPrice < prevPrice) {
+                                color = '#f44336'; // Red
+                            } else {
+                                color = '#ffa726'; // Orange
+                            }
+                        }
+                        return [row[0], row[1], `color: ${color}`];
+                    });
+                    
+                    dataTable.addRows(coloredRows);
                     chart.draw(dataTable, getChartOptions());
                 }
             };
