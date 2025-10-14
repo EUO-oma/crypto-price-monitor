@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BTC/ETH/SOL Triple Chart Viewer</title>
+    <title>BTC/ETH/NASDAQ Triple Chart Viewer</title>
     
     <!-- 파비콘 및 메타 태그 -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -42,7 +42,7 @@
         .title {
             font-size: 1.5em;
             font-weight: bold;
-            background: linear-gradient(90deg, #f7931a 0%, #627eea 50%, #00FFA3 100%);
+            background: linear-gradient(90deg, #f7931a 0%, #627eea 50%, #0066FF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -356,7 +356,7 @@
             return new TradingView.widget({
                     "width": "100%",
                     "height": actualHeight,  // 픽셀값으로 명시적 지정
-                    "symbol": `BINANCE:${symbol}`,
+                    "symbol": symbol.includes(':') ? symbol : `BINANCE:${symbol}`,
                     "interval": "1",  // 1분봉 (실시간 틱 데이터 자동 업데이트)
                     "timezone": "Asia/Seoul",
                     "theme": "dark",
@@ -460,7 +460,7 @@
                 // 모든 차트를 동시에 생성
                 createChart('btc-chart', 'BTCUSDT', '#f7931a');
                 createChart('eth-chart', 'ETHUSDT', '#627eea');
-                createChart('sol-chart', 'SOLUSDT', '#00FFA3');
+                createChart('sol-chart', 'NASDAQ:NDX', '#0066FF');
                 
                 // 차트 로드 후 버튼 활성화
                 setTimeout(() => {
