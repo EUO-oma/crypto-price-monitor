@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자동 가격 수집기 v2.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-inactive {
+            background: #666;
+        }
+        
+        .status-error {
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .settings-group {
+            margin: 20px 0;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #222;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 26px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #667eea;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #333;
+            border: 1px solid #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #444;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+        }
+        
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+        
+        .log-container {
+            background: #0f0f0f;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        
+        .log-entry {
+            padding: 5px;
+            margin: 2px 0;
+            border-radius: 4px;
+        }
+        
+        .log-info { background: rgba(66, 165, 245, 0.1); color: #42a5f5; }
+        .log-success { background: rgba(76, 175, 80, 0.1); color: #4caf50; }
+        .log-warning { background: rgba(255, 152, 0, 0.1); color: #ff9800; }
+        .log-error { background: rgba(244, 67, 54, 0.1); color: #f44336; }
+        
+        .coin-prices {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .coin-card {
+            background: #0f0f0f;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .coin-symbol {
+            font-size: 0.9em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .coin-price {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        
+        .coin-change {
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+        
+        .positive { color: #4caf50; }
+        .negative { color: #f44336; }
+        
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid #ff9800;
+            color: #ff9800;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 자동 가격 수집기 v2.0</h1>
+        
+        <div class="grid">
+            <!-- 상태 카드 -->
+            <div class="card">
+                <h3>시스템 상태</h3>
+                <p style="margin: 10px 0;">
+                    <span id="status-indicator" class="status-indicator status-inactive"></span>
+                    <span id="status-text">대기 중</span>
+                </p>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <p style="font-size: 0.9em; color: #888;">
+                    다음 수집: <span id="next-collection">-</span>
+                </p>
+            </div>
+            
+            <!-- 통계 카드 -->
+            <div class="card">
+                <h3>수집 통계</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                    <div>
+                        <div class="stat-label">총 수집</div>
+                        <div class="stat-value" id="total-collections">0</div>
+                    </div>
+                    <div>
+                        <div class="stat-label">성공률</div>
+                        <div class="stat-value" id="success-rate">100%</div>
+                    </div>
+                    <div>
+                        <div class="stat-label">누락된 날짜</div>
+                        <div class="stat-value" id="missing-days">0</div>
+                    </div>
+                    <div>
+                        <div class="stat-label">마지막 수집</div>
+                        <div style="font-size: 0.9em; color: #888;" id="last-collection">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 실시간 가격 -->
+            <div class="card">
+                <h3>실시간 가격</h3>
+                <div class="coin-prices">
+                    <div class="coin-card">
+                        <div class="coin-symbol">BTC</div>
+                        <div class="coin-price" id="btc-live">-</div>
+                        <div class="coin-change" id="btc-change">-</div>
+                    </div>
+                    <div class="coin-card">
+                        <div class="coin-symbol">ETH</div>
+                        <div class="coin-price" id="eth-live">-</div>
+                        <div class="coin-change" id="eth-change">-</div>
+                    </div>
+                    <div class="coin-card">
+                        <div class="coin-symbol">SOL</div>
+                        <div class="coin-price" id="sol-live">-</div>
+                        <div class="coin-change" id="sol-change">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 고급 설정 -->
+        <div class="card">
+            <h3>⚙️ 고급 설정</h3>
+            <div class="settings-group">
+                <div class="setting-item">
+                    <div>
+                        <strong>자동 시작</strong>
+                        <div style="font-size: 0.85em; color: #888;">페이지 로드 시 자동으로 수집 시작</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="auto-start" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div>
+                        <strong>백그라운드 수집</strong>
+                        <div style="font-size: 0.85em; color: #888;">탭이 비활성 상태에서도 계속 수집</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="background-collect" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div>
+                        <strong>실시간 모니터링</strong>
+                        <div style="font-size: 0.85em; color: #888;">매 10초마다 실시간 가격 업데이트</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="live-monitoring" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div>
+                        <strong>누락 데이터 자동 복구</strong>
+                        <div style="font-size: 0.85em; color: #888;">누락된 날짜 발견 시 자동으로 수집</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="auto-recovery" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div>
+                        <strong>다중 시간대 수집</strong>
+                        <div style="font-size: 0.85em; color: #888;">1일, 4시간, 1시간 간격으로 데이터 수집</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="multi-timeframe">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-item">
+                    <div>
+                        <strong>수집 시간</strong>
+                        <div style="font-size: 0.85em; color: #888;">매일 수집할 시간 설정</div>
+                    </div>
+                    <select id="collection-time" style="background: #222; color: #fff; border: 1px solid #444; padding: 5px 10px; border-radius: 4px;">
+                        <option value="00:01">매일 자정 1분</option>
+                        <option value="09:01" selected>매일 오전 9시 1분</option>
+                        <option value="12:01">매일 낮 12시 1분</option>
+                        <option value="18:01">매일 오후 6시 1분</option>
+                        <option value="21:01">매일 오후 9시 1분</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 컨트롤 버튼 -->
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="btn btn-primary" id="start-btn" onclick="startCollector()">
+                🚀 자동 수집 시작
+            </button>
+            <button class="btn btn-danger hidden" id="stop-btn" onclick="stopCollector()">
+                ⏹ 중지
+            </button>
+            <button class="btn btn-secondary" onclick="collectNow()">
+                📊 지금 수집
+            </button>
+            <button class="btn btn-secondary" onclick="checkMissingDates()">
+                🔍 누락 확인
+            </button>
+            <button class="btn btn-secondary" onclick="exportData()">
+                💾 데이터 내보내기
+            </button>
+        </div>
+        
+        <!-- 알림 -->
+        <div id="alert-box" class="alert hidden">
+            <strong>⚠️ 주의:</strong> <span id="alert-message"></span>
+        </div>
+        
+        <!-- 로그 -->
+        <div class="card">
+            <h3>📝 실행 로그</h3>
+            <div class="log-container" id="log-container"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+        
+        // Firebase 초기화
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+        
+        // 전역 변수
+        let isCollecting = false;
+        let collectionInterval = null;
+        let countdownInterval = null;
+        let liveUpdateInterval = null;
+        let totalCollections = 0;
+        let successfulCollections = 0;
+        let ws = {}; // WebSocket 연결들
+        
+        // 로그 함수
+        function log(message, type = 'info') {
+            const container = document.getElementById('log-container');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const time = new Date().toLocaleTimeString('ko-KR');
+            entry.textContent = `[${time}] ${message}`;
+            container.insertBefore(entry, container.firstChild);
+            
+            // 로그 제한
+            if (container.children.length > 100) {
+                container.removeChild(container.lastChild);
+            }
+        }
+        
+        // 상태 업데이트
+        function updateStatus(status, type = 'inactive') {
+            const indicator = document.getElementById('status-indicator');
+            const text = document.getElementById('status-text');
+            
+            indicator.className = `status-indicator status-${type}`;
+            text.textContent = status;
+        }
+        
+        // WebSocket 연결 (실시간 가격)
+        function connectWebSocket(symbol) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c);
+                const change = parseFloat(data.P);
+                
+                const coin = symbol.replace('USDT', '').toLowerCase();
+                document.getElementById(`${coin}-live`).textContent = 
+                    '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                
+                const changeEl = document.getElementById(`${coin}-change`);
+                changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+                changeEl.className = `coin-change ${change >= 0 ? 'positive' : 'negative'}`;
+            };
+            
+            ws.onerror = function() {
+                log(`${symbol} WebSocket 연결 실패`, 'error');
+            };
+            
+            ws.onclose = function() {
+                setTimeout(() => connectWebSocket(symbol), 5000);
+            };
+            
+            return ws;
+        }
+        
+        // UTC 날짜 문자열
+        function getUTCDateString(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        // 데이터 수집
+        async function collectDataForDate(date) {
+            const dateStr = getUTCDateString(date);
+            log(`${dateStr} 데이터 수집 시작...`);
+            
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const startTime = date.getTime();
+                const endTime = startTime + (24 * 60 * 60 * 1000) - 1;
+                
+                const dayData = {
+                    date: dateStr,
+                    collected_at: firebase.database.ServerValue.TIMESTAMP,
+                    source: 'auto_collector_v2'
+                };
+                
+                // 병렬 요청으로 더 빠른 수집
+                const promises = symbols.map(async (symbol) => {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=1`;
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) throw new Error(`${symbol} 요청 실패`);
+                    
+                    const klines = await response.json();
+                    if (klines.length > 0) {
+                        const kline = klines[0];
+                        const prefix = symbol.replace('USDT', '').toLowerCase();
+                        
+                        return {
+                            [`${prefix}`]: parseFloat(kline[4]),
+                            [`${prefix}_open`]: parseFloat(kline[1]),
+                            [`${prefix}_high`]: parseFloat(kline[2]),
+                            [`${prefix}_low`]: parseFloat(kline[3]),
+                            [`${prefix}_volume`]: parseFloat(kline[5])
+                        };
+                    }
+                    return null;
+                });
+                
+                const results = await Promise.all(promises);
+                results.forEach(result => {
+                    if (result) Object.assign(dayData, result);
+                });
+                
+                // Firebase에 저장
+                await database.ref(`prices/${dateStr}`).set(dayData);
+                
+                // 다중 시간대 수집 (옵션)
+                if (document.getElementById('multi-timeframe').checked) {
+                    await collectMultiTimeframe(date, symbols);
+                }
+                
+                log(`✅ ${dateStr} 수집 완료`, 'success');
+                successfulCollections++;
+                updateStats();
+                
+                return dayData;
+                
+            } catch (error) {
+                log(`❌ ${dateStr} 수집 실패: ${error.message}`, 'error');
+                return null;
+            }
+        }
+        
+        // 다중 시간대 수집
+        async function collectMultiTimeframe(date, symbols) {
+            const intervals = ['4h', '1h'];
+            const dateStr = getUTCDateString(date);
+            
+            for (const interval of intervals) {
+                try {
+                    const data = {};
+                    for (const symbol of symbols) {
+                        const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=24`;
+                        const response = await fetch(url);
+                        const klines = await response.json();
+                        
+                        const prefix = symbol.replace('USDT', '').toLowerCase();
+                        data[prefix] = klines.map(k => ({
+                            time: k[0],
+                            open: parseFloat(k[1]),
+                            high: parseFloat(k[2]),
+                            low: parseFloat(k[3]),
+                            close: parseFloat(k[4]),
+                            volume: parseFloat(k[5])
+                        }));
+                    }
+                    
+                    await database.ref(`prices_${interval}/${dateStr}`).set(data);
+                    log(`✅ ${interval} 데이터 수집 완료`, 'info');
+                    
+                } catch (error) {
+                    log(`${interval} 수집 실패: ${error.message}`, 'warning');
+                }
+            }
+        }
+        
+        // 통계 업데이트
+        function updateStats() {
+            document.getElementById('total-collections').textContent = totalCollections;
+            const rate = totalCollections > 0 ? Math.round((successfulCollections / totalCollections) * 100) : 100;
+            document.getElementById('success-rate').textContent = rate + '%';
+        }
+        
+        // 누락된 날짜 확인
+        async function checkMissingDates() {
+            updateStatus('누락된 날짜 확인 중...', 'active');
+            
+            try {
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - 30); // 최근 30일
+                
+                const snapshot = await database.ref('prices').once('value');
+                const existingData = snapshot.val() || {};
+                const missingDates = [];
+                
+                for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
+                    const dateStr = getUTCDateString(d);
+                    if (!existingData[dateStr]) {
+                        missingDates.push(new Date(d));
+                    }
+                }
+                
+                document.getElementById('missing-days').textContent = missingDates.length;
+                
+                if (missingDates.length > 0) {
+                    log(`${missingDates.length}개의 누락된 날짜 발견`, 'warning');
+                    
+                    if (document.getElementById('auto-recovery').checked) {
+                        log('자동 복구 시작...', 'info');
+                        for (const date of missingDates) {
+                            await collectDataForDate(date);
+                            await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
+                        }
+                    }
+                } else {
+                    log('누락된 날짜 없음', 'success');
+                }
+                
+            } catch (error) {
+                log('누락 확인 실패: ' + error.message, 'error');
+            }
+            
+            updateStatus('대기 중', 'inactive');
+        }
+        
+        // 즉시 수집
+        async function collectNow() {
+            if (isCollecting) {
+                log('이미 수집 중입니다', 'warning');
+                return;
+            }
+            
+            isCollecting = true;
+            updateStatus('수집 중...', 'active');
+            totalCollections++;
+            
+            try {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                
+                await collectDataForDate(yesterday);
+                
+                const now = new Date();
+                document.getElementById('last-collection').textContent = 
+                    now.toLocaleDateString('ko-KR') + ' ' + now.toLocaleTimeString('ko-KR');
+                
+            } finally {
+                isCollecting = false;
+                updateStatus('자동 수집 활성화', 'active');
+            }
+        }
+        
+        // 카운트다운 업데이트
+        function updateCountdown() {
+            const now = new Date();
+            const [hours, minutes] = document.getElementById('collection-time').value.split(':').map(Number);
+            
+            const next = new Date(now);
+            next.setHours(hours, minutes, 0, 0);
+            
+            if (next <= now) {
+                next.setDate(next.getDate() + 1);
+            }
+            
+            const diff = next - now;
+            const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
+            const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('next-collection').textContent = 
+                `${hoursLeft}시간 ${minutesLeft}분 ${secondsLeft}초`;
+            
+            // 프로그레스 바 업데이트
+            const totalSeconds = 24 * 60 * 60; // 하루
+            const elapsedSeconds = totalSeconds - (diff / 1000);
+            const progress = (elapsedSeconds / totalSeconds) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            
+            // 수집 시간이 되었는지 확인
+            if (diff < 1000 && !isCollecting) {
+                collectNow();
+            }
+        }
+        
+        // 수집기 시작
+        function startCollector() {
+            log('🚀 자동 수집기 시작', 'success');
+            
+            updateStatus('자동 수집 활성화', 'active');
+            document.getElementById('start-btn').classList.add('hidden');
+            document.getElementById('stop-btn').classList.remove('hidden');
+            
+            // 실시간 가격 모니터링
+            if (document.getElementById('live-monitoring').checked) {
+                ws.btc = connectWebSocket('BTCUSDT');
+                ws.eth = connectWebSocket('ETHUSDT');
+                ws.sol = connectWebSocket('SOLUSDT');
+            }
+            
+            // 카운트다운 시작
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+            
+            // 수집 간격 설정 (1분마다 체크)
+            collectionInterval = setInterval(() => {
+                updateCountdown();
+            }, 60000);
+            
+            // 로컬 스토리지에 상태 저장
+            localStorage.setItem('collector_active', 'true');
+            localStorage.setItem('collector_settings', JSON.stringify({
+                autoStart: document.getElementById('auto-start').checked,
+                backgroundCollect: document.getElementById('background-collect').checked,
+                liveMonitoring: document.getElementById('live-monitoring').checked,
+                autoRecovery: document.getElementById('auto-recovery').checked,
+                multiTimeframe: document.getElementById('multi-timeframe').checked,
+                collectionTime: document.getElementById('collection-time').value
+            }));
+            
+            // 누락된 날짜 확인
+            checkMissingDates();
+        }
+        
+        // 수집기 중지
+        function stopCollector() {
+            log('⏹ 자동 수집기 중지', 'warning');
+            
+            updateStatus('대기 중', 'inactive');
+            document.getElementById('start-btn').classList.remove('hidden');
+            document.getElementById('stop-btn').classList.add('hidden');
+            
+            // 인터벌 정리
+            if (countdownInterval) clearInterval(countdownInterval);
+            if (collectionInterval) clearInterval(collectionInterval);
+            if (liveUpdateInterval) clearInterval(liveUpdateInterval);
+            
+            // WebSocket 연결 종료
+            Object.values(ws).forEach(socket => {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.close();
+                }
+            });
+            ws = {};
+            
+            // 로컬 스토리지 업데이트
+            localStorage.setItem('collector_active', 'false');
+            
+            document.getElementById('next-collection').textContent = '-';
+            document.getElementById('progress-fill').style.width = '0%';
+        }
+        
+        // 데이터 내보내기
+        async function exportData() {
+            try {
+                const snapshot = await database.ref('prices').once('value');
+                const data = snapshot.val();
+                
+                if (!data) {
+                    log('내보낼 데이터가 없습니다', 'warning');
+                    return;
+                }
+                
+                // CSV 형식으로 변환
+                let csv = 'Date,BTC_Open,BTC_High,BTC_Low,BTC_Close,BTC_Volume,';
+                csv += 'ETH_Open,ETH_High,ETH_Low,ETH_Close,ETH_Volume,';
+                csv += 'SOL_Open,SOL_High,SOL_Low,SOL_Close,SOL_Volume\n';
+                
+                Object.entries(data).sort().forEach(([date, values]) => {
+                    csv += `${date},`;
+                    csv += `${values.btc_open || ''},${values.btc_high || ''},${values.btc_low || ''},${values.btc || ''},${values.btc_volume || ''},`;
+                    csv += `${values.eth_open || ''},${values.eth_high || ''},${values.eth_low || ''},${values.eth || ''},${values.eth_volume || ''},`;
+                    csv += `${values.sol_open || ''},${values.sol_high || ''},${values.sol_low || ''},${values.sol || ''},${values.sol_volume || ''}\n`;
+                });
+                
+                // 다운로드
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `crypto_prices_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                
+                log('✅ 데이터 내보내기 완료', 'success');
+                
+            } catch (error) {
+                log('데이터 내보내기 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 페이지 가시성 API (백그라운드 실행)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && !document.getElementById('background-collect').checked) {
+                log('백그라운드 실행 비활성화됨', 'info');
+            }
+        });
+        
+        // 페이지 로드 시 초기화
+        window.addEventListener('load', () => {
+            // 저장된 설정 복원
+            const savedSettings = localStorage.getItem('collector_settings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                document.getElementById('auto-start').checked = settings.autoStart;
+                document.getElementById('background-collect').checked = settings.backgroundCollect;
+                document.getElementById('live-monitoring').checked = settings.liveMonitoring;
+                document.getElementById('auto-recovery').checked = settings.autoRecovery;
+                document.getElementById('multi-timeframe').checked = settings.multiTimeframe;
+                document.getElementById('collection-time').value = settings.collectionTime;
+            }
+            
+            // 자동 시작
+            const isActive = localStorage.getItem('collector_active') === 'true';
+            if (isActive && document.getElementById('auto-start').checked) {
+                log('자동 시작 활성화', 'info');
+                setTimeout(startCollector, 2000);
+            }
+            
+            // 브라우저 알림 권한 요청
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        });
+        
+        // 언로드 시 상태 저장
+        window.addEventListener('beforeunload', () => {
+            if (collectionInterval) {
+                localStorage.setItem('collector_last_active', new Date().toISOString());
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  crypto-monitor:
+    build: .
+    container_name: crypto-price-monitor
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      - TZ=UTC  # Change to your timezone
+      - NODE_ENV=production
+    
+    # Volume mapping for persistent data
+    volumes:
+      - ./data:/app/data
+      - ./logs:/var/log
+    
+    # Optional: Expose web interface
+    ports:
+      - "8080:8080"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # Optional: Web dashboard service
+  web-dashboard:
+    image: nginx:alpine
+    container_name: crypto-dashboard
+    restart: unless-stopped
+    
+    volumes:
+      - ./auto-collector.html:/usr/share/nginx/html/index.html:ro
+      - ./data:/usr/share/nginx/html/data:ro
+    
+    ports:
+      - "8081:80"
+    
+    depends_on:
+      - crypto-monitor
+
+# Named volumes (optional alternative to bind mounts)
+volumes:
+  crypto-data:
+    driver: local

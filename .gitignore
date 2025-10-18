@@ -172,3 +172,12 @@ deploy.py
 private/
 secrets/
 credentials/
+
+# Firebase service account files
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+firebase-service-account.json
+
+# Local automation logs
+crypto-collector.log
+collector-*.log
