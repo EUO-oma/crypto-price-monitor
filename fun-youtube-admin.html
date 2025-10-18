@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun YouTube 제목 동기화 관리</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #111;
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .status-box {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .form-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-secondary {
+            background: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #777;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .btn-sync {
+            background: #2196F3;
+        }
+
+        .btn-sync:hover {
+            background: #1976D2;
+        }
+        
+        .login-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        
+        .login-section h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4caf50;
+        }
+
+        .links-container {
+            margin-top: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .link-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .link-table th {
+            background: #1a1a1a;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #333;
+            color: #4CAF50;
+            font-weight: normal;
+            position: sticky;
+            top: 0;
+        }
+
+        .link-table td {
+            padding: 12px;
+            border-bottom: 1px solid #222;
+        }
+
+        .link-table tr:hover {
+            background: #1a1a1a;
+        }
+
+        .link-url {
+            color: #888;
+            font-size: 0.85em;
+            word-break: break-all;
+        }
+
+        .sync-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+
+        .sync-status.synced {
+            background: #0a4a0a;
+            color: #4CAF50;
+        }
+
+        .sync-status.changed {
+            background: #4a2a0a;
+            color: #ff9800;
+        }
+
+        .sync-status.error {
+            background: #4a0a0a;
+            color: #f44336;
+        }
+
+        .sync-status.pending {
+            background: #333;
+            color: #aaa;
+        }
+
+        .link-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .link-actions button {
+            padding: 5px 10px;
+            font-size: 0.85em;
+        }
+
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            background: #333;
+            height: 6px;
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .link-table {
+                font-size: 0.9em;
+            }
+            
+            .link-table td {
+                padding: 8px;
+            }
+            
+            .actions-bar {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span>📺</span>
+            <span>Fun YouTube 제목 동기화 관리</span>
+            <span>🔄</span>
+        </h1>
+        
+        <div class="status-box" id="status">
+            <span>연결 상태 확인 중...</span>
+        </div>
+        
+        <div class="login-section" id="login-section" style="display: none;">
+            <h3>로그인</h3>
+            <div class="form-group">
+                <label for="email">이메일</label>
+                <input type="email" id="email" placeholder="admin@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" placeholder="비밀번호">
+            </div>
+            <button onclick="login()">로그인</button>
+            <button onclick="loginWithGoogle()" style="background: #4285f4; margin-top: 10px; width: 100%;">
+                <span style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Google로 로그인
+                </span>
+            </button>
+            <button class="btn-secondary" onclick="skipLogin()" style="margin-top: 10px;">읽기 전용으로 계속</button>
+        </div>
+
+        <div class="form-section" style="display: none;">
+            <h2>새 Fun YouTube 링크 추가</h2>
+            <div class="form-group">
+                <label for="name">제목</label>
+                <input type="text" id="name" placeholder="예: 재미있는 영상 제목">
+            </div>
+            <div class="form-group">
+                <label for="url">YouTube URL</label>
+                <input type="text" id="url" placeholder="예: https://www.youtube.com/watch?v=...">
+            </div>
+            <div class="form-group">
+                <label for="description">설명 (선택사항)</label>
+                <textarea id="description" placeholder="이 영상에 대한 간단한 설명..."></textarea>
+            </div>
+            <button onclick="addLink()">추가하기</button>
+            <button class="btn-secondary" onclick="clearForm()">초기화</button>
+        </div>
+
+        <div class="stats-grid" id="stats-grid" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="total-videos">0</div>
+                <div class="stat-label">전체 동영상</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="synced-videos">0</div>
+                <div class="stat-label">동기화 완료</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="changed-videos">0</div>
+                <div class="stat-label">제목 변경됨</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="error-videos">0</div>
+                <div class="stat-label">동기화 오류</div>
+            </div>
+        </div>
+
+        <div class="progress-bar" id="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+
+        <div class="actions-bar" id="actions-bar" style="display: none;">
+            <input type="text" class="search-box" id="search-box" placeholder="🔍 제목으로 검색..." onkeyup="searchLinks()">
+            <button class="btn-sync" onclick="syncAllTitles()">
+                <span>🔄</span> 모든 제목 동기화
+            </button>
+            <button onclick="exportData()">
+                <span>💾</span> CSV 내보내기
+            </button>
+            <button onclick="loadLinks()">
+                <span>🔄</span> 새로고침
+            </button>
+        </div>
+
+        <div class="links-container" id="links-container">
+            <p style="text-align: center; color: #666;">링크를 불러오는 중...</p>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 전역 변수
+        let supabase = null;
+        let allLinks = [];
+        let currentUser = null;
+        let syncedData = {};
+        const YOUTUBE_API_KEY = 'AIzaSyD5pNW1YlGSVRtrcvCJqUV7R2jVwzBSn8E'; // 실제 API 키로 교체 필요
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('load', async function() {
+            await initializeSupabase();
+        });
+
+        // UI 업데이트 함수
+        function updateAuthUI() {
+            const statusEl = document.getElementById('status');
+            const loginSection = document.getElementById('login-section');
+            const formSection = document.querySelector('.form-section');
+            const actionsBar = document.getElementById('actions-bar');
+            const statsGrid = document.getElementById('stats-grid');
+            
+            if (currentUser) {
+                statusEl.innerHTML = `<span class="success">✅ 로그인됨 (${currentUser.email}) <button class="btn-secondary" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8em;">로그아웃</button></span>`;
+                loginSection.style.display = 'none';
+                formSection.style.display = 'block';
+                actionsBar.style.display = 'flex';
+                statsGrid.style.display = 'grid';
+                loadLinks();
+            } else {
+                statusEl.innerHTML = '<span class="warning">⚠️ 로그인이 필요합니다 (읽기 전용 모드)</span>';
+                loginSection.style.display = 'block';
+                formSection.style.display = 'none';
+                actionsBar.style.display = 'flex';
+                statsGrid.style.display = 'grid';
+                loadLinks();
+            }
+        }
+        
+        // Supabase 초기화
+        async function initializeSupabase() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    auth: {
+                        persistSession: true,
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true,
+                        storage: window.localStorage,
+                        storageKey: 'supabase.auth.token',
+                        flowType: 'pkce'
+                    }
+                });
+                
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (session) {
+                    currentUser = session.user;
+                    statusEl.innerHTML = `<span class="success">✅ 로그인됨 (${session.user.email})</span>`;
+                    await testConnection();
+                } else {
+                    if (window.location.hash && window.location.hash.includes('access_token')) {
+                        setTimeout(async () => {
+                            const { data: { session: newSession } } = await supabase.auth.getSession();
+                            if (newSession) {
+                                location.reload();
+                            }
+                        }, 1000);
+                    } else {
+                        await testConnection();
+                    }
+                }
+                
+                supabase.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_IN') {
+                        currentUser = session.user;
+                        updateAuthUI();
+                    } else if (event === 'SIGNED_OUT') {
+                        currentUser = null;
+                        updateAuthUI();
+                    }
+                });
+                
+            } catch (error) {
+                console.error('초기화 오류:', error);
+                statusEl.innerHTML = '<span class="error">❌ 초기화 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 연결 테스트
+        async function testConnection() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                if (currentUser) {
+                    console.log('이미 로그인됨:', currentUser.email);
+                } else {
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                    
+                    if (sessionError || !session) {
+                        statusEl.innerHTML = '<span class="warning">⚠️ 로그인이 필요합니다 (읽기 전용 모드)</span>';
+                        document.getElementById('login-section').style.display = 'block';
+                        document.querySelector('.form-section').style.display = 'none';
+                        document.getElementById('actions-bar').style.display = 'flex';
+                        document.getElementById('stats-grid').style.display = 'grid';
+                        
+                        currentUser = null;
+                        loadLinks();
+                        return;
+                    }
+                    
+                    currentUser = session.user;
+                }
+                
+                const { data, error } = await supabase.from('links').select('count').limit(1);
+                
+                if (error) throw error;
+                
+                statusEl.innerHTML = `<span class="success">✅ 연결 성공 (${currentUser.email}) <button class="btn-secondary" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8em;">로그아웃</button></span>`;
+                document.getElementById('login-section').style.display = 'none';
+                document.querySelector('.form-section').style.display = 'block';
+                document.getElementById('actions-bar').style.display = 'flex';
+                document.getElementById('stats-grid').style.display = 'grid';
+                
+                loadLinks();
+                
+            } catch (error) {
+                console.error('연결 오류:', error);
+                
+                if (error.message.includes('RLS') || error.message.includes('policy')) {
+                    statusEl.innerHTML = '<span class="warning">⚠️ 읽기 전용 모드 (RLS 정책)</span>';
+                    currentUser = null;
+                    loadLinks();
+                } else {
+                    statusEl.innerHTML = '<span class="error">❌ 연결 실패: ' + error.message + '</span>';
+                    document.querySelector('.form-section').style.display = 'none';
+                    loadLinks();
+                }
+            }
+        }
+
+        // YouTube video ID 추출
+        function extractVideoId(url) {
+            if (url.includes('/shorts/')) {
+                const match = url.match(/shorts\/([^#&?]*)/);
+                return match ? match[1] : null;
+            }
+
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^#&?]*).*/,
+                /^([^#&?]*).*/
+            ];
+
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+            return null;
+        }
+
+        // YouTube 정보 가져오기
+        async function fetchYouTubeInfo(videoId) {
+            try {
+                const response = await fetch(
+                    `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('YouTube API 요청 실패');
+                }
+
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    const video = data.items[0].snippet;
+                    return {
+                        title: video.title,
+                        channel: video.channelTitle,
+                        description: video.description,
+                        publishedAt: video.publishedAt
+                    };
+                }
+                
+                throw new Error('동영상을 찾을 수 없습니다');
+            } catch (error) {
+                console.error('YouTube API 오류:', error);
+                
+                try {
+                    const proxyResponse = await fetch(
+                        `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`
+                    );
+                    
+                    if (proxyResponse.ok) {
+                        const data = await proxyResponse.json();
+                        
+                        if (!data.title || data.error) {
+                            throw new Error('Proxy failed');
+                        }
+                        
+                        return {
+                            title: data.title,
+                            channel: data.author_name || 'Unknown Channel',
+                            description: '',
+                            publishedAt: ''
+                        };
+                    }
+                } catch (proxyError) {
+                    console.error('Proxy 오류:', proxyError);
+                }
+                
+                throw error;
+            }
+        }
+
+        // 링크 불러오기
+        async function loadLinks() {
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .eq('category', 'fun-youtube')
+                    .order('position', { ascending: true });
+                
+                if (error) throw error;
+                
+                allLinks = data || [];
+                syncedData = {};
+                
+                updateStats();
+                displayLinks(allLinks);
+                
+            } catch (error) {
+                console.error('불러오기 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 불러오기 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 통계 업데이트
+        function updateStats() {
+            const total = allLinks.length;
+            const synced = Object.keys(syncedData).length;
+            const changed = Object.keys(syncedData).filter(id => 
+                syncedData[id]?.title && syncedData[id].title !== allLinks.find(l => l.id == id)?.name
+            ).length;
+            const errors = Object.keys(syncedData).filter(id => syncedData[id]?.error).length;
+
+            document.getElementById('total-videos').textContent = total;
+            document.getElementById('synced-videos').textContent = synced;
+            document.getElementById('changed-videos').textContent = changed;
+            document.getElementById('error-videos').textContent = errors;
+        }
+
+        // 링크 표시
+        function displayLinks(links) {
+            const container = document.getElementById('links-container');
+            container.innerHTML = '';
+            
+            if (links.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">등록된 Fun YouTube 링크가 없습니다.</p>';
+                return;
+            }
+            
+            const table = document.createElement('table');
+            table.className = 'link-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>제목</th>
+                        <th>동기화 상태</th>
+                        <th>YouTube 정보</th>
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${links.map(link => {
+                        const videoId = extractVideoId(link.url);
+                        const syncData = syncedData[link.id];
+                        const isChanged = syncData?.title && syncData.title !== link.name;
+                        const statusClass = syncData?.error ? 'error' : (syncData ? (isChanged ? 'changed' : 'synced') : 'pending');
+                        const statusText = syncData?.error ? '동기화 실패' : (syncData ? (isChanged ? '제목 변경됨' : '동기화됨') : '미동기화');
+                        
+                        return `
+                            <tr>
+                                <td>
+                                    <div class="link-title">${syncData?.title || link.name}</div>
+                                    <div class="link-url">
+                                        <a href="${link.url}" target="_blank" style="color: #888;">${link.url}</a>
+                                    </div>
+                                    ${link.description ? `<div style="color: #666; font-size: 0.85em; margin-top: 5px;">${link.description}</div>` : ''}
+                                </td>
+                                <td>
+                                    <span class="sync-status ${statusClass}">${statusText}</span>
+                                    ${syncData?.channel ? `<div style="font-size: 0.85em; color: #666; margin-top: 5px;">${syncData.channel}</div>` : ''}
+                                </td>
+                                <td>
+                                    ${videoId ? `<img src="https://img.youtube.com/vi/${videoId}/default.jpg" style="width: 60px; height: 45px; border-radius: 4px;">` : '-'}
+                                </td>
+                                <td>
+                                    <div class="link-actions">
+                                        <button class="btn-secondary" onclick="syncSingleVideo('${link.id}')">동기화</button>
+                                        ${currentUser ? `
+                                            <button class="btn-secondary" onclick="editLink('${link.id}', '${link.name}', '${link.url}', '${link.description || ''}')">수정</button>
+                                            <button class="btn-danger" onclick="deleteLink('${link.id}')">삭제</button>
+                                        ` : ''}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            `;
+            
+            container.appendChild(table);
+        }
+
+        // 검색 기능
+        function searchLinks() {
+            const searchTerm = document.getElementById('search-box').value.toLowerCase();
+            const filteredLinks = allLinks.filter(link => 
+                link.name.toLowerCase().includes(searchTerm) ||
+                (syncedData[link.id]?.title || '').toLowerCase().includes(searchTerm) ||
+                (link.description || '').toLowerCase().includes(searchTerm)
+            );
+            displayLinks(filteredLinks);
+        }
+
+        // 단일 동영상 동기화
+        async function syncSingleVideo(linkId) {
+            const link = allLinks.find(l => l.id == linkId);
+            if (!link) return;
+
+            try {
+                const videoId = extractVideoId(link.url);
+                if (!videoId) {
+                    throw new Error('유효하지 않은 YouTube URL');
+                }
+
+                document.getElementById('status').innerHTML = '<span class="warning">🔄 동기화 중...</span>';
+
+                const info = await fetchYouTubeInfo(videoId);
+                
+                syncedData[linkId] = {
+                    ...info,
+                    id: linkId,
+                    originalName: link.name,
+                    synced: true
+                };
+
+                updateStats();
+                displayLinks(allLinks);
+                document.getElementById('status').innerHTML = '<span class="success">✅ 동기화 완료</span>';
+
+            } catch (error) {
+                console.error('동기화 오류:', error);
+                syncedData[linkId] = { 
+                    error: true,
+                    errorMessage: error.message,
+                    title: link.name
+                };
+                updateStats();
+                displayLinks(allLinks);
+                document.getElementById('status').innerHTML = '<span class="error">❌ 동기화 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 모든 제목 동기화
+        async function syncAllTitles() {
+            if (allLinks.length === 0) return;
+
+            const videosToSync = allLinks.filter(link => {
+                const syncData = syncedData[link.id];
+                return !syncData || syncData.error;
+            });
+
+            if (videosToSync.length === 0) {
+                document.getElementById('status').innerHTML = '<span class="success">✅ 모든 동영상이 이미 동기화되어 있습니다</span>';
+                return;
+            }
+
+            document.getElementById('status').innerHTML = `<div class="loading-spinner"></div> ${videosToSync.length}개 동영상 동기화 중...`;
+            document.getElementById('progress-bar').style.display = 'block';
+
+            let completed = 0;
+            const total = videosToSync.length;
+
+            for (const link of videosToSync) {
+                await syncSingleVideo(link.id);
+                completed++;
+                
+                const progress = (completed / total) * 100;
+                document.getElementById('progress-fill').style.width = progress + '%';
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            const skippedCount = allLinks.length - videosToSync.length;
+            if (skippedCount > 0) {
+                document.getElementById('status').innerHTML = `✅ ${completed}개 동기화 완료 (${skippedCount}개는 이미 동기화됨)`;
+            } else {
+                document.getElementById('status').innerHTML = `✅ ${completed}개 동영상 동기화 완료`;
+            }
+            
+            setTimeout(() => {
+                document.getElementById('progress-bar').style.display = 'none';
+            }, 2000);
+
+            // 변경사항이 있으면 자동 저장
+            const changedCount = Object.keys(syncedData).filter(id => {
+                const synced = syncedData[id];
+                const original = allLinks.find(l => l.id == id);
+                return synced?.title && synced.title !== original?.name && !synced.error;
+            }).length;
+
+            if (changedCount > 0) {
+                setTimeout(() => saveAllChanges(), 1000);
+            }
+        }
+
+        // 모든 변경사항 저장
+        async function saveAllChanges() {
+            const changedVideos = Object.keys(syncedData).filter(id => {
+                const synced = syncedData[id];
+                const original = allLinks.find(l => l.id == id);
+                return synced?.title && synced.title !== original?.name && !synced.error;
+            });
+
+            if (changedVideos.length === 0) {
+                document.getElementById('status').innerHTML = '<span class="warning">⚠️ 저장할 변경사항이 없습니다</span>';
+                return;
+            }
+
+            document.getElementById('status').innerHTML = '<div class="loading-spinner"></div> 변경사항 저장 중...';
+
+            let savedCount = 0;
+            let errorCount = 0;
+
+            for (const linkId of changedVideos) {
+                const synced = syncedData[linkId];
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('links')
+                        .update({ 
+                            name: synced.title,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', parseInt(linkId))
+                        .select();
+
+                    if (error) {
+                        throw error;
+                    } else {
+                        savedCount++;
+                    }
+                } catch (error) {
+                    console.error(`Error saving ${linkId}:`, error);
+                    errorCount++;
+                }
+            }
+
+            if (errorCount > 0) {
+                document.getElementById('status').innerHTML = `⚠️ ${savedCount}개 저장 완료, ${errorCount}개 실패`;
+            } else {
+                document.getElementById('status').innerHTML = `✅ ${savedCount}개의 제목이 업데이트되었습니다`;
+            }
+
+            setTimeout(() => loadLinks(), 1500);
+        }
+
+        // 링크 추가
+        async function addLink() {
+            if (!currentUser) {
+                alert('링크를 추가하려면 로그인이 필요합니다.');
+                return;
+            }
+            
+            const name = document.getElementById('name').value.trim();
+            const url = document.getElementById('url').value.trim();
+            const description = document.getElementById('description').value.trim();
+            
+            if (!name || !url) {
+                alert('제목과 URL을 모두 입력해주세요.');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .insert([{
+                        name: name,
+                        url: url,
+                        category: 'fun-youtube',
+                        description: description,
+                        position: 0
+                    }])
+                    .select();
+                
+                if (error) throw error;
+                
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ 링크가 추가되었습니다.</span>';
+                
+                clearForm();
+                loadLinks();
+                
+            } catch (error) {
+                console.error('추가 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 추가 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 링크 수정
+        function editLink(id, name, url, description) {
+            document.getElementById('name').value = name;
+            document.getElementById('url').value = url;
+            document.getElementById('description').value = description || '';
+            
+            const addBtn = document.querySelector('button[onclick="addLink()"]');
+            addBtn.textContent = '수정하기';
+            addBtn.onclick = function() { updateLink(id); };
+            
+            if (!document.querySelector('.btn-cancel')) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'btn-secondary btn-cancel';
+                cancelBtn.textContent = '취소';
+                cancelBtn.onclick = cancelEdit;
+                addBtn.parentNode.insertBefore(cancelBtn, addBtn.nextSibling);
+            }
+            
+            document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 링크 업데이트
+        async function updateLink(id) {
+            if (!currentUser) {
+                alert('링크를 수정하려면 로그인이 필요합니다.');
+                return;
+            }
+            
+            const name = document.getElementById('name').value.trim();
+            const url = document.getElementById('url').value.trim();
+            const description = document.getElementById('description').value.trim();
+            
+            if (!name || !url) {
+                alert('제목과 URL을 모두 입력해주세요.');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .update({
+                        name: name,
+                        url: url,
+                        description: description
+                    })
+                    .eq('id', id)
+                    .select();
+                
+                if (error) throw error;
+                
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ 링크가 수정되었습니다.</span>';
+                
+                cancelEdit();
+                loadLinks();
+                
+            } catch (error) {
+                console.error('수정 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 수정 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 수정 취소
+        function cancelEdit() {
+            clearForm();
+            
+            const addBtn = document.querySelector('button[onclick^="updateLink"]');
+            if (addBtn) {
+                addBtn.textContent = '추가하기';
+                addBtn.onclick = addLink;
+            }
+            
+            const cancelBtn = document.querySelector('.btn-cancel');
+            if (cancelBtn) {
+                cancelBtn.remove();
+            }
+        }
+
+        // 링크 삭제
+        async function deleteLink(id) {
+            if (!currentUser) {
+                alert('링크를 삭제하려면 로그인이 필요합니다.');
+                return;
+            }
+            
+            if (!confirm('정말로 이 링크를 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('links')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ 링크가 삭제되었습니다.</span>';
+                
+                loadLinks();
+                
+            } catch (error) {
+                console.error('삭제 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 삭제 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 폼 초기화
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('url').value = '';
+            document.getElementById('description').value = '';
+        }
+
+        // 데이터 내보내기
+        function exportData() {
+            const csvContent = [
+                ['제목', 'URL', '동기화된 제목', '채널', '설명'],
+                ...allLinks.map(link => {
+                    const syncData = syncedData[link.id];
+                    return [
+                        link.name,
+                        link.url,
+                        syncData?.title || '',
+                        syncData?.channel || '',
+                        link.description || ''
+                    ];
+                })
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `fun-youtube-links-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+        
+        // 로그인 함수들
+        async function login() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const statusEl = document.getElementById('status');
+            
+            if (!email || !password) {
+                alert('이메일과 비밀번호를 입력해주세요.');
+                return;
+            }
+            
+            try {
+                statusEl.innerHTML = '<span class="warning">로그인 중...</span>';
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                location.reload();
+                
+            } catch (error) {
+                console.error('로그인 오류:', error);
+                statusEl.innerHTML = '<span class="error">❌ 로그인 실패: ' + error.message + '</span>';
+            }
+        }
+        
+        function skipLogin() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('status').innerHTML = '<span class="warning">⚠️ 읽기 전용 모드</span>';
+        }
+        
+        async function loginWithGoogle() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                statusEl.innerHTML = '<span class="warning">Google 로그인 중...</span>';
+                
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + window.location.pathname
+                    }
+                });
+                
+                if (error) throw error;
+                
+            } catch (error) {
+                console.error('Google 로그인 오류:', error);
+                statusEl.innerHTML = '<span class="error">❌ Google 로그인 실패: ' + error.message + '</span>';
+            }
+        }
+        
+        async function logout() {
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
+                location.reload();
+            }
+        }
+        
+        // Enter 키로 로그인
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        login();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
