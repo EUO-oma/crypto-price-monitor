@@ -73,10 +73,30 @@ function getUTCDateString(date) {
     return date.toISOString().split('T')[0];
 }
 
+// Firebase에서 기존 데이터 확인
+async function checkExistingData(dateStr) {
+    try {
+        const url = `${FIREBASE_DATABASE_URL}/prices/${dateStr}.json`;
+        const existingData = await httpsRequest(url);
+        return existingData;
+    } catch (error) {
+        return null;
+    }
+}
+
 // 특정 날짜의 데이터 수집
-async function collectDataForDate(date) {
+async function collectDataForDate(date, forceUpdate = false) {
     const dateStr = getUTCDateString(date);
     console.log(`[${new Date().toISOString()}] ${dateStr} 데이터 수집 시작...`);
+    
+    // 이미 데이터가 있는지 확인
+    if (!forceUpdate) {
+        const existingData = await checkExistingData(dateStr);
+        if (existingData && existingData.btc && existingData.eth && existingData.sol) {
+            console.log(`✅ ${dateStr} 데이터가 이미 존재합니다. 스킵합니다.`);
+            return existingData;
+        }
+    }
     
     // UTC 0시 기준으로 시작/종료 시간 설정
     const startTime = date.getTime();
@@ -134,6 +154,15 @@ async function main() {
     console.log('=== 일별 암호화폐 가격 수집 시작 ===');
     console.log(`실행 시간: ${new Date().toISOString()}`);
     
+    // 명령줄 인자 확인
+    const args = process.argv.slice(2);
+    const forceUpdate = args.includes('--force');
+    const checkMissing = args.includes('--check-missing');
+    
+    if (forceUpdate) {
+        console.log('⚠️  강제 업데이트 모드 활성화');
+    }
+    
     // UTC 기준 어제 날짜 계산
     const today = new Date();
     const yesterday = new Date(Date.UTC(
@@ -144,14 +173,43 @@ async function main() {
     ));
     
     try {
-        const data = await collectDataForDate(yesterday);
+        // 누락된 날짜 확인 모드
+        if (checkMissing) {
+            console.log('🔍 최근 30일 누락된 데이터 확인 중...');
+            let missingCount = 0;
+            
+            for (let i = 1; i <= 30; i++) {
+                const checkDate = new Date(Date.UTC(
+                    today.getUTCFullYear(),
+                    today.getUTCMonth(),
+                    today.getUTCDate() - i,
+                    0, 0, 0, 0
+                ));
+                
+                const dateStr = getUTCDateString(checkDate);
+                const existingData = await checkExistingData(dateStr);
+                
+                if (!existingData) {
+                    console.log(`❌ ${dateStr} 데이터 누락됨`);
+                    missingCount++;
+                    // 누락된 데이터 수집
+                    await collectDataForDate(checkDate, true);
+                    await new Promise(resolve => setTimeout(resolve, 500)); // API 제한 방지
+                }
+            }
+            
+            console.log(`\n📊 총 ${missingCount}개의 누락된 날짜를 수집했습니다.`);
+        } else {
+            // 일반 모드: 어제 데이터만 수집
+            const data = await collectDataForDate(yesterday, forceUpdate);
         
-        if (data) {
-            console.log('\n=== 수집 완료 ===');
-            console.log(`날짜: ${data.date}`);
-            console.log(`BTC: $${data.btc?.toLocaleString()} (${((data.btc - data.btc_open) / data.btc_open * 100).toFixed(2)}%)`);
-            console.log(`ETH: $${data.eth?.toLocaleString()} (${((data.eth - data.eth_open) / data.eth_open * 100).toFixed(2)}%)`);
-            console.log(`SOL: $${data.sol?.toLocaleString()} (${((data.sol - data.sol_open) / data.sol_open * 100).toFixed(2)}%)`);
+            if (data) {
+                console.log('\n=== 수집 완료 ===');
+                console.log(`날짜: ${data.date}`);
+                console.log(`BTC: $${data.btc?.toLocaleString()} (${((data.btc - data.btc_open) / data.btc_open * 100).toFixed(2)}%)`);
+                console.log(`ETH: $${data.eth?.toLocaleString()} (${((data.eth - data.eth_open) / data.eth_open * 100).toFixed(2)}%)`);
+                console.log(`SOL: $${data.sol?.toLocaleString()} (${((data.sol - data.sol_open) / data.sol_open * 100).toFixed(2)}%)`);
+            }
         }
         
         process.exit(0);
