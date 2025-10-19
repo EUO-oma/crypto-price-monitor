@@ -166,6 +166,19 @@
             border-color: #ff0000;
         }
 
+        .playlist-tab .play-btn {
+            margin-right: 8px;
+            color: #4CAF50;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+
+        .playlist-tab .play-btn:hover {
+            color: #66BB6A;
+            transform: scale(1.2);
+        }
+
         .playlist-tab .delete-btn {
             margin-left: 10px;
             color: #666;
@@ -551,9 +564,10 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                     }
                     
                     const data = await response.json();
+                    console.log(`페이지 로드: 현재 ${videos.length}개, 이번 페이지에서 ${data.items ? data.items.length : 0}개 추가`);
                     
                     if (data.items) {
-                        data.items.forEach((item, index) => {
+                        data.items.forEach((item) => {
                             const snippet = item.snippet;
                             videos.push({
                                 url: `https://www.youtube.com/watch?v=${snippet.resourceId.videoId}`,
@@ -562,7 +576,7 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                                 description: snippet.description,
                                 thumbnailUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url,
                                 channelTitle: snippet.channelTitle,
-                                position: videos.length + index
+                                position: snippet.position
                             });
                         });
                     }
@@ -570,6 +584,7 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                     nextPageToken = data.nextPageToken;
                 } while (nextPageToken);
                 
+                console.log(`총 ${videos.length}개의 동영상을 가져왔습니다.`);
                 return videos;
                 
             } catch (error) {
@@ -1010,17 +1025,24 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                 const tab = document.createElement('div');
                 tab.className = 'playlist-tab';
                 tab.innerHTML = `
+                    <span class="play-btn" onclick="playPlaylist('${playlistId}', event)" title="재생목록 재생">▶</span>
                     ${playlists[playlistId].name}
                     <span class="delete-btn" onclick="deletePlaylist('${playlistId}', event)">✕</span>
                 `;
                 tab.onclick = (e) => {
-                    if (!e.target.classList.contains('delete-btn')) {
+                    if (!e.target.classList.contains('delete-btn') && !e.target.classList.contains('play-btn')) {
                         showPlaylist(playlistId);
                     }
                 };
                 
                 tabsContainer.appendChild(tab);
             });
+        }
+        
+        // Play playlist in player
+        function playPlaylist(playlistId, event) {
+            event.stopPropagation();
+            window.open('youtube-playlist-player.html', '_blank');
         }
 
         // Show specific playlist
