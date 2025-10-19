@@ -579,6 +579,38 @@
             position: relative;
             group: card;
         }
+        
+        .video-delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            background: rgba(244, 67, 54, 0.9);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .video-card:hover .video-delete-btn {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .video-delete-btn:hover {
+            background: rgba(244, 67, 54, 1);
+            transform: scale(1.1);
+        }
 
         .video-card:hover {
             transform: translateY(-8px) scale(1.02);
@@ -1196,6 +1228,29 @@
         </button>
     </div>
     
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="delete-modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 style="color: var(--error); margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle"></i> 삭제 확인
+            </h3>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                이 동영상을 재생목록에서 삭제하시겠습니까?
+            </p>
+            <div id="delete-video-info" style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <!-- Video info will be displayed here -->
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeModal('delete-modal')">
+                    취소
+                </button>
+                <button class="btn" style="background: var(--error);" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i> 삭제
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Shortcuts Modal -->
     <div class="modal" id="shortcuts-modal">
         <div class="modal-content">
@@ -1761,25 +1816,30 @@
             }
             
             grid.innerHTML = filteredVideos.map(video => `
-                <div class="video-card" onclick="playVideo('${video.videoId}')">
-                    <div class="video-thumbnail-container">
-                        <img class="video-thumbnail" 
-                             src="${video.thumbnailUrl}" 
-                             alt="${video.title}"
-                             loading="lazy"
-                             onerror="this.src='https://img.youtube.com/vi/${video.videoId}/default.jpg'">
-                        <div class="video-overlay">
-                            <div class="play-button">
-                                <i class="fas fa-play"></i>
+                <div class="video-card">
+                    <button class="video-delete-btn" onclick="deleteVideo('${video.id}', event)" title="삭제">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <div onclick="playVideo('${video.videoId}')">
+                        <div class="video-thumbnail-container">
+                            <img class="video-thumbnail" 
+                                 src="${video.thumbnailUrl}" 
+                                 alt="${video.title}"
+                                 loading="lazy"
+                                 onerror="this.src='https://img.youtube.com/vi/${video.videoId}/default.jpg'">
+                            <div class="video-overlay">
+                                <div class="play-button">
+                                    <i class="fas fa-play"></i>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="video-info">
-                        <div class="video-title">${video.title}</div>
-                        <div class="video-meta">
-                            <div class="video-channel">
-                                <div class="channel-avatar">${(video.channelName || 'Y')[0]}</div>
-                                <span>${video.channelName || 'YouTube'}</span>
+                        <div class="video-info">
+                            <div class="video-title">${video.title}</div>
+                            <div class="video-meta">
+                                <div class="video-channel">
+                                    <div class="channel-avatar">${(video.channelName || 'Y')[0]}</div>
+                                    <span>${video.channelName || 'YouTube'}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1818,6 +1878,83 @@
                 
                 showNotification('삭제 완료', '재생목록이 삭제되었습니다', 'success');
                 await loadPlaylists();
+                
+            } catch (error) {
+                showNotification('삭제 실패', error.message, 'error');
+            }
+        }
+        
+        // Delete individual video
+        let videoToDelete = null;
+        
+        function deleteVideo(videoId, event) {
+            event.stopPropagation();
+            
+            const video = allVideos.find(v => v.id === videoId);
+            if (!video) return;
+            
+            videoToDelete = video;
+            
+            // Show video info in modal
+            const infoDiv = document.getElementById('delete-video-info');
+            infoDiv.innerHTML = `
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <img src="${video.thumbnailUrl}" 
+                         style="width: 80px; height: 45px; object-fit: cover; border-radius: 4px;"
+                         onerror="this.src='https://img.youtube.com/vi/${video.videoId}/default.jpg'">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">${video.title}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            ${video.channelName || 'YouTube'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('delete-modal').classList.add('active');
+        }
+        
+        async function confirmDelete() {
+            if (!videoToDelete || !currentUser) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('links')
+                    .delete()
+                    .eq('id', videoToDelete.id);
+                
+                if (error) throw error;
+                
+                // Remove from local arrays
+                const videoIndex = allVideos.findIndex(v => v.id === videoToDelete.id);
+                if (videoIndex > -1) {
+                    allVideos.splice(videoIndex, 1);
+                }
+                
+                const filteredIndex = filteredVideos.findIndex(v => v.id === videoToDelete.id);
+                if (filteredIndex > -1) {
+                    filteredVideos.splice(filteredIndex, 1);
+                }
+                
+                // Update playlist
+                const playlist = playlists[currentPlaylistId];
+                if (playlist) {
+                    const playlistVideoIndex = playlist.videos.findIndex(v => v.id === videoToDelete.id);
+                    if (playlistVideoIndex > -1) {
+                        playlist.videos.splice(playlistVideoIndex, 1);
+                    }
+                }
+                
+                // Update UI
+                displayVideos();
+                updatePlaylistStats(
+                    Object.keys(playlists).length,
+                    Object.values(playlists).reduce((sum, p) => sum + p.videos.length, 0)
+                );
+                
+                showNotification('삭제 완료', '동영상이 삭제되었습니다', 'success');
+                closeModal('delete-modal');
+                videoToDelete = null;
                 
             } catch (error) {
                 showNotification('삭제 실패', error.message, 'error');
