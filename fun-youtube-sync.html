@@ -313,6 +313,11 @@
             <span>🔄</span>
         </h1>
 
+        <div id="auth-status" style="margin-bottom: 20px; text-align: center; color: #666;">
+            <span id="auth-text">로그인하지 않음</span>
+            <button id="auth-btn" class="btn secondary" style="margin-left: 10px; padding: 8px 16px; font-size: 14px;" onclick="toggleAuth()">로그인</button>
+        </div>
+
         <div id="status" class="status">
             준비 중...
         </div>
@@ -372,6 +377,7 @@
         let youtubeVideos = [];
         let syncedData = {};
         let originalData = {};
+        let currentUser = null;
 
         // Supabase configuration
         const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
@@ -703,6 +709,13 @@
 
         // Save changes to database
         async function saveToDatabase() {
+            // Check authentication first
+            if (!currentUser) {
+                updateStatus('변경사항을 저장하려면 로그인이 필요합니다', 'error');
+                loginWithGoogle();
+                return;
+            }
+            
             const changedVideos = Object.keys(syncedData).filter(id => {
                 const synced = syncedData[id];
                 const original = originalData[id];
@@ -768,15 +781,110 @@
             }
         }
 
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                currentUser = user;
+                updateAuthUI();
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        }
+
+        // Update auth UI
+        function updateAuthUI() {
+            const authText = document.getElementById('auth-text');
+            const authBtn = document.getElementById('auth-btn');
+            
+            if (currentUser) {
+                authText.textContent = `로그인됨: ${currentUser.email}`;
+                authBtn.textContent = '로그아웃';
+            } else {
+                authText.textContent = '로그인하지 않음';
+                authBtn.textContent = '로그인';
+            }
+        }
+
+        // Toggle authentication
+        async function toggleAuth() {
+            if (currentUser) {
+                // Logout
+                await supabase.auth.signOut();
+                currentUser = null;
+                updateAuthUI();
+                updateStatus('로그아웃되었습니다', 'success');
+            } else {
+                // Login with Google directly
+                loginWithGoogle();
+            }
+        }
+
+        // Google로 로그인
+        async function loginWithGoogle() {
+            try {
+                updateStatus('Google 로그인 중...', 'loading');
+                
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href.split('?')[0].split('#')[0],
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        },
+                        skipBrowserRedirect: false
+                    }
+                });
+                
+                if (error) throw error;
+                
+                // OAuth는 자동으로 리다이렉트됨
+                
+            } catch (error) {
+                console.error('Google 로그인 오류:', error);
+                updateStatus(`Google 로그인 실패: ${error.message}`, 'error');
+            }
+        }
+
         // Initialize when page loads
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             if (window.supabase && window.supabase.createClient) {
                 initializeSupabase();
-                updateStatus('✅ 준비 완료. YouTube 링크를 불러오세요', 'success');
+                
+                // Check for OAuth callback
+                if (window.location.hash && window.location.hash.includes('access_token')) {
+                    console.log('OAuth 콜백 처리 중...');
+                    updateStatus('로그인 처리 중...', 'loading');
+                    // Supabase가 자동으로 처리하도록 대기
+                    setTimeout(async () => {
+                        await checkAuth();
+                        // Clear the hash
+                        window.history.replaceState(null, '', window.location.pathname);
+                        updateStatus('✅ 로그인 완료! YouTube 링크를 불러오세요', 'success');
+                    }, 1000);
+                } else {
+                    await checkAuth();
+                    updateStatus('✅ 준비 완료. YouTube 링크를 불러오세요', 'success');
+                }
+                
+                // Listen for auth changes
+                supabase.auth.onAuthStateChange((event, session) => {
+                    currentUser = session?.user || null;
+                    updateAuthUI();
+                });
             } else {
-                setTimeout(() => {
+                setTimeout(async () => {
                     if (window.supabase && window.supabase.createClient) {
                         initializeSupabase();
+                        await checkAuth();
+                        
+                        // Listen for auth changes
+                        supabase.auth.onAuthStateChange((event, session) => {
+                            currentUser = session?.user || null;
+                            updateAuthUI();
+                        });
+                        
                         updateStatus('✅ 준비 완료. YouTube 링크를 불러오세요', 'success');
                     } else {
                         updateStatus('❌ Supabase 라이브러리 로딩 실패', 'error');
