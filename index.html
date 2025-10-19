@@ -31,8 +31,53 @@
         .top-nav {
             background: #111;
             border-bottom: 1px solid #333;
-            margin: -20px -20px 20px -20px;
+            margin: -20px -20px 0 -20px;
             padding: 0;
+        }
+        
+        /* Admin Navigation Menu */
+        .admin-nav {
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            margin: 0 -20px 20px -20px;
+            padding: 0;
+        }
+        
+        .admin-nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .admin-menu {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .admin-item {
+            margin: 0;
+        }
+        
+        .admin-link {
+            display: block;
+            padding: 10px 15px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .admin-link:hover {
+            color: #999;
+            background: #222;
+            border-bottom-color: #444;
         }
         
         .nav-container {
@@ -54,11 +99,11 @@
             padding: 0;
         }
         
-        .nav-item {
+        .top-nav-item {
             margin: 0;
         }
         
-        .nav-link {
+        .top-nav-link {
             display: block;
             padding: 15px 20px;
             color: #888;
@@ -69,13 +114,13 @@
             border-bottom: 2px solid transparent;
         }
         
-        .nav-link:hover {
+        .top-nav-link:hover {
             color: #fff;
             background: #1a1a1a;
             border-bottom-color: #444;
         }
         
-        .nav-link.active {
+        .top-nav-link.active {
             color: #fff;
             border-bottom-color: #ff0000;
         }
@@ -207,10 +252,14 @@
         /* Mobile */
         @media (max-width: 768px) {
             .top-nav {
-                margin: -20px -20px 15px -20px;
+                margin: -20px -20px 0 -20px;
             }
             
-            .nav-link {
+            .admin-nav {
+                margin: 0 -20px 15px -20px;
+            }
+            
+            .top-nav-link {
                 padding: 12px 15px;
                 font-size: 13px;
             }
@@ -327,26 +376,52 @@
     <nav class="top-nav">
         <div class="nav-container">
             <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="index.html" class="nav-link active">암호화폐 가격</a>
+                <li class="top-nav-item">
+                    <a href="index.html" class="top-nav-link active">암호화폐 가격</a>
                 </li>
-                <li class="nav-item">
-                    <a href="bitcoin-chart.html" class="nav-link">비트코인 차트</a>
+                <li class="top-nav-item">
+                    <a href="bitcoin-chart.html" class="top-nav-link">비트코인 차트</a>
                 </li>
-                <li class="nav-item">
-                    <a href="youtube-playlist-player.html" class="nav-link">뮤직 플레이어</a>
+                <li class="top-nav-item">
+                    <a href="youtube-playlist-player.html" class="top-nav-link">뮤직 플레이어</a>
                 </li>
-                <li class="nav-item">
-                    <a href="simple-links.html" class="nav-link">북마크</a>
+                <li class="top-nav-item">
+                    <a href="simple-links.html" class="top-nav-link">북마크</a>
                 </li>
-                <li class="nav-item">
-                    <a href="calculator.html" class="nav-link">계산기</a>
+                <li class="top-nav-item">
+                    <a href="calculator.html" class="top-nav-link">계산기</a>
                 </li>
-                <li class="nav-item">
-                    <a href="world-clock.html" class="nav-link">세계시계</a>
+                <li class="top-nav-item">
+                    <a href="world-clock.html" class="top-nav-link">세계시계</a>
                 </li>
-                <li class="nav-item">
-                    <a href="anonymous-chat.html" class="nav-link">익명 채팅</a>
+                <li class="top-nav-item">
+                    <a href="anonymous-chat.html" class="top-nav-link">익명 채팅</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    
+    <!-- Admin Navigation (Secondary) -->
+    <nav class="admin-nav">
+        <div class="admin-nav-container">
+            <ul class="admin-menu">
+                <li class="admin-item">
+                    <a href="admin-simple.html" class="admin-link">관리자</a>
+                </li>
+                <li class="admin-item">
+                    <a href="youtube-playlist-gallery.html" class="admin-link">YouTube 갤러리 v1</a>
+                </li>
+                <li class="admin-item">
+                    <a href="youtube-playlist-gallery-v2.html" class="admin-link">YouTube 갤러리 v2</a>
+                </li>
+                <li class="admin-item">
+                    <a href="fun-youtube-sync.html" class="admin-link">YouTube 동기화</a>
+                </li>
+                <li class="admin-item">
+                    <a href="fun-youtube-admin.html" class="admin-link">YouTube 관리</a>
+                </li>
+                <li class="admin-item">
+                    <a href="price-history.html" class="admin-link">가격 히스토리</a>
                 </li>
             </ul>
         </div>
