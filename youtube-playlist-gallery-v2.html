@@ -576,7 +576,7 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                                 description: snippet.description,
                                 thumbnailUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url,
                                 channelTitle: snippet.channelTitle,
-                                position: snippet.position
+                                position: snippet.position !== undefined ? snippet.position : videos.length
                             });
                         });
                     }
@@ -812,28 +812,38 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                         return;
                     }
                     
-                    // Save to links table
-                    const { data: savedVideos, error } = await supabase
-                        .from('links')
-                        .insert(
-                            videos.map((video, index) => ({
-                                name: video.title || `${playlistName} - Video ${index + 1}`,
-                                url: video.url,
-                                category: 'youtube-playlist',
-                                description: JSON.stringify({
-                                    playlist_id: playlistId,
-                                    playlist_name: playlistName,
-                                    video_id: video.videoId,
-                                    channel_name: video.channelTitle || '',
-                                    channel_title: video.channelTitle || '',
-                                    thumbnail_url: video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
-                                }),
-                                position: index
-                            }))
-                        )
-                        .select();
+                    // Save to links table in batches to avoid size limitations
+                    const batchSize = 50; // Process 50 videos at a time
+                    const savedVideos = [];
                     
-                    if (error) throw error;
+                    for (let i = 0; i < videos.length; i += batchSize) {
+                        const batch = videos.slice(i, i + batchSize);
+                        const { data: batchSaved, error } = await supabase
+                            .from('links')
+                            .insert(
+                                batch.map((video, batchIndex) => ({
+                                    name: video.title || `${playlistName} - Video ${i + batchIndex + 1}`,
+                                    url: video.url,
+                                    category: 'youtube-playlist',
+                                    description: JSON.stringify({
+                                        playlist_id: playlistId,
+                                        playlist_name: playlistName,
+                                        video_id: video.videoId,
+                                        channel_name: video.channelTitle || '',
+                                        channel_title: video.channelTitle || '',
+                                        thumbnail_url: video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
+                                    }),
+                                    position: i + batchIndex
+                                }))
+                            )
+                            .select();
+                        
+                        if (error) throw error;
+                        if (batchSaved) savedVideos.push(...batchSaved);
+                        
+                        // Show progress
+                        showStatus(`저장 중... ${Math.min((i + batchSize), videos.length)}/${videos.length}개 완료`, 'success');
+                    }
                     
                     showStatus(`✅ 새 재생목록 '${playlistName}' 생성 완료! ${savedVideos.length}개의 동영상이 저장되었습니다!`, 'success');
                     
@@ -846,13 +856,29 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                     // Update existing playlist
                     showStatus(`기존 재생목록 '${playlistName}' 업데이트 중...`, 'warning');
                     
-                    // Get existing videos
-                    const { data: existingLinks, error: fetchError } = await supabase
-                        .from('links')
-                        .select('*')
-                        .eq('category', 'youtube-playlist');
+                    // Get existing videos with pagination
+                    let existingLinks = [];
+                    let from = 0;
+                    const pageSize = 1000;
+                    let hasMore = true;
                     
-                    if (fetchError) throw fetchError;
+                    while (hasMore) {
+                        const { data, error: fetchError } = await supabase
+                            .from('links')
+                            .select('*')
+                            .eq('category', 'youtube-playlist')
+                            .range(from, from + pageSize - 1);
+                        
+                        if (fetchError) throw fetchError;
+                        
+                        if (data && data.length > 0) {
+                            existingLinks = existingLinks.concat(data);
+                            from += pageSize;
+                            hasMore = data.length === pageSize;
+                        } else {
+                            hasMore = false;
+                        }
+                    }
                     
                     const existingVideos = existingLinks.filter(link => {
                         try {
@@ -921,9 +947,14 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                     }
                     
                     if (newVideos.length > 0) {
-                        promises.push(
-                            supabase.from('links').insert(newVideos).select()
-                        );
+                        // Insert new videos in batches
+                        const batchSize = 50;
+                        for (let i = 0; i < newVideos.length; i += batchSize) {
+                            const batch = newVideos.slice(i, i + batchSize);
+                            promises.push(
+                                supabase.from('links').insert(batch).select()
+                            );
+                        }
                     }
                     
                     if (videosToDelete.length > 0) {
@@ -951,13 +982,33 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
         // Load all playlists from links table
         async function loadPlaylists() {
             try {
-                const { data, error } = await supabase
-                    .from('links')
-                    .select('*')
-                    .eq('category', 'youtube-playlist')
-                    .order('created_at', { ascending: false });
+                // Load all videos with pagination to handle large playlists
+                let allData = [];
+                let from = 0;
+                const pageSize = 1000;
+                let hasMore = true;
                 
-                if (error) throw error;
+                while (hasMore) {
+                    const { data, error } = await supabase
+                        .from('links')
+                        .select('*')
+                        .eq('category', 'youtube-playlist')
+                        .order('created_at', { ascending: false })
+                        .range(from, from + pageSize - 1);
+                    
+                    if (error) throw error;
+                    
+                    if (data && data.length > 0) {
+                        allData = allData.concat(data);
+                        from += pageSize;
+                        hasMore = data.length === pageSize;
+                    } else {
+                        hasMore = false;
+                    }
+                }
+                
+                console.log(`Loaded ${allData.length} videos from database`);
+                const data = allData;
                 
                 // Group by playlist using description JSON
                 playlists = {};
@@ -997,6 +1048,7 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                 // Sort videos by position
                 Object.keys(playlists).forEach(playlistId => {
                     playlists[playlistId].videos.sort((a, b) => a.position - b.position);
+                    console.log(`Playlist ${playlists[playlistId].name} has ${playlists[playlistId].videos.length} videos`);
                 });
                 
                 displayPlaylistTabs();
