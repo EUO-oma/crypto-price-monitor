@@ -393,8 +393,16 @@
             <h3>📋 재생목록 가져오기</h3>
             
             <div class="input-group">
-                <label for="playlist-name">재생목록 이름</label>
-                <input type="text" id="playlist-name" class="playlist-name-input" placeholder="예: 음악 모음, 강의 목록 등...">
+                <label for="playlist-select">재생목록 선택</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="playlist-select" class="playlist-name-input" style="flex: 1;" onchange="handlePlaylistSelectChange()">
+                        <option value="">-- 재생목록 선택 --</option>
+                        <option value="__new__">➕ 새 재생목록 만들기</option>
+                    </select>
+                    <input type="text" id="new-playlist-name" class="playlist-name-input" 
+                           placeholder="새 재생목록 이름 입력..." 
+                           style="flex: 1; display: none;">
+                </div>
             </div>
             
             <div class="input-group">
@@ -670,6 +678,19 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
             return videos;
         }
 
+        // Handle playlist select change
+        function handlePlaylistSelectChange() {
+            const select = document.getElementById('playlist-select');
+            const newNameInput = document.getElementById('new-playlist-name');
+            
+            if (select.value === '__new__') {
+                newNameInput.style.display = 'block';
+                newNameInput.focus();
+            } else {
+                newNameInput.style.display = 'none';
+            }
+        }
+        
         // Import playlist
         async function importPlaylist() {
             // Check authentication first
@@ -679,12 +700,27 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                 return;
             }
             
-            const playlistName = document.getElementById('playlist-name').value.trim();
+            const playlistSelect = document.getElementById('playlist-select');
+            const newPlaylistName = document.getElementById('new-playlist-name').value.trim();
             const playlistUrl = document.getElementById('playlist-input').value.trim();
             const manualInput = document.getElementById('manual-input').value.trim();
             
-            if (!playlistName) {
-                showStatus('재생목록 이름을 입력해주세요', 'error');
+            let playlistName = '';
+            let selectedPlaylistId = null;
+            
+            if (playlistSelect.value === '__new__') {
+                if (!newPlaylistName) {
+                    showStatus('새 재생목록 이름을 입력해주세요', 'error');
+                    return;
+                }
+                playlistName = newPlaylistName;
+            } else if (playlistSelect.value) {
+                // Find the selected playlist
+                const option = playlistSelect.selectedOptions[0];
+                playlistName = option.textContent;
+                selectedPlaylistId = playlistSelect.value;
+            } else {
+                showStatus('재생목록을 선택하거나 새로 만들어주세요', 'error');
                 return;
             }
             
@@ -721,33 +757,132 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
             showStatus(`${videos.length}개의 동영상을 처리 중...`, 'success');
             
             try {
-                // Create playlist ID
-                const playlistId = `playlist_${Date.now()}`;
-                
-                // Save to links table with youtube-playlist category
-                const { data: savedVideos, error } = await supabase
+                // Check for existing playlist with same name
+                const { data: existingLinks, error: checkError } = await supabase
                     .from('links')
-                    .insert(
-                        videos.map((video, index) => ({
-                            name: video.title || `${playlistName} - Video ${index + 1}`,
-                            url: video.url,
-                            category: 'youtube-playlist',
-                            description: JSON.stringify({
-                                playlist_id: playlistId,
-                                playlist_name: playlistName,
-                                video_id: video.videoId,
-                                channel_name: video.channelTitle || '',
-                                channel_title: video.channelTitle || '',
-                                thumbnail_url: video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
-                            }),
-                            position: index
-                        }))
-                    )
-                    .select();
+                    .select('*')
+                    .eq('category', 'youtube-playlist');
                 
-                if (error) throw error;
+                if (checkError) throw checkError;
                 
-                showStatus(`✅ ${savedVideos.length}개의 동영상이 저장되었습니다!`, 'success');
+                let playlistId = selectedPlaylistId;
+                
+                if (playlistId) {
+                    // Update selected existing playlist
+                    showStatus(`기존 재생목록 '${playlistName}' 업데이트 중...`, 'warning');
+                        
+                        // Get all existing videos in this playlist
+                        const existingVideos = existingLinks.filter(link => {
+                            try {
+                                const metadata = JSON.parse(link.description || '{}');
+                                return metadata.playlist_id === playlistId;
+                            } catch (e) {
+                                return false;
+                            }
+                        });
+                        
+                        // Create maps for comparison
+                        const existingVideoMap = new Map(
+                            existingVideos.map(v => {
+                                const metadata = JSON.parse(v.description || '{}');
+                                return [metadata.video_id, v];
+                            })
+                        );
+                        
+                        const newVideos = [];
+                        const updatePromises = [];
+                        
+                        videos.forEach((video, index) => {
+                            const existing = existingVideoMap.get(video.videoId);
+                            
+                            if (existing) {
+                                // Update existing video if title changed
+                                if (existing.name !== video.title) {
+                                    updatePromises.push(
+                                        supabase
+                                            .from('links')
+                                            .update({
+                                                name: video.title,
+                                                position: index
+                                            })
+                                            .eq('id', existing.id)
+                                    );
+                                }
+                                existingVideoMap.delete(video.videoId);
+                            } else {
+                                // Add new video
+                                newVideos.push({
+                                    name: video.title || `${playlistName} - Video ${index + 1}`,
+                                    url: video.url,
+                                    category: 'youtube-playlist',
+                                    description: JSON.stringify({
+                                        playlist_id: playlistId,
+                                        playlist_name: playlistName,
+                                        video_id: video.videoId,
+                                        channel_name: video.channelTitle || '',
+                                        channel_title: video.channelTitle || '',
+                                        thumbnail_url: video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
+                                    }),
+                                    position: index
+                                });
+                            }
+                        });
+                        
+                        // Delete videos that are no longer in the playlist
+                        const videosToDelete = Array.from(existingVideoMap.values()).map(v => v.id);
+                        
+                        // Execute all operations
+                        const promises = [];
+                        
+                        if (updatePromises.length > 0) {
+                            promises.push(...updatePromises);
+                        }
+                        
+                        if (newVideos.length > 0) {
+                            promises.push(
+                                supabase.from('links').insert(newVideos).select()
+                            );
+                        }
+                        
+                        if (videosToDelete.length > 0) {
+                            promises.push(
+                                supabase.from('links').delete().in('id', videosToDelete)
+                            );
+                        }
+                        
+                        await Promise.all(promises);
+                        
+                        showStatus(`✅ 재생목록 업데이트 완료! 새 동영상: ${newVideos.length}개, 업데이트: ${updatePromises.length}개, 삭제: ${videosToDelete.length}개`, 'success');
+                    }
+                    
+                } else {
+                    // Create new playlist
+                    playlistId = `playlist_${Date.now()}`;
+                    
+                    const { data: savedVideos, error } = await supabase
+                        .from('links')
+                        .insert(
+                            videos.map((video, index) => ({
+                                name: video.title || `${playlistName} - Video ${index + 1}`,
+                                url: video.url,
+                                category: 'youtube-playlist',
+                                description: JSON.stringify({
+                                    playlist_id: playlistId,
+                                    playlist_name: playlistName,
+                                    video_id: video.videoId,
+                                    channel_name: video.channelTitle || '',
+                                    channel_title: video.channelTitle || '',
+                                    thumbnail_url: video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
+                                }),
+                                position: index
+                            }))
+                        )
+                        .select();
+                    
+                    if (error) throw error;
+                    
+                    showStatus(`✅ 새 재생목록 생성 완료! ${savedVideos.length}개의 동영상이 저장되었습니다!`, 'success');
+                }
                 
                 // Clear input
                 clearInput();
@@ -755,8 +890,8 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                 // Reload playlists
                 await loadPlaylists();
                 
-                // Show the new playlist
-                if (savedVideos.length > 0) {
+                // Show the playlist
+                if (playlistId) {
                     showPlaylist(playlistId);
                 }
                 
@@ -817,6 +952,9 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
                     playlists[playlistId].videos.sort((a, b) => a.position - b.position);
                 });
                 
+                // Update playlist dropdown
+                updatePlaylistDropdown();
+                
                 displayPlaylistTabs();
                 
                 // Show first playlist if exists
@@ -831,6 +969,30 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
             } catch (error) {
                 console.error('Error loading playlists:', error);
                 showStatus('재생목록 불러오기 실패', 'error');
+            }
+        }
+        
+        // Update playlist dropdown
+        function updatePlaylistDropdown() {
+            const select = document.getElementById('playlist-select');
+            const currentValue = select.value;
+            
+            // Clear existing options except first two
+            while (select.options.length > 2) {
+                select.remove(2);
+            }
+            
+            // Add playlists to dropdown
+            Object.keys(playlists).forEach(playlistId => {
+                const option = document.createElement('option');
+                option.value = playlistId;
+                option.textContent = playlists[playlistId].name;
+                select.appendChild(option);
+            });
+            
+            // Restore previous selection if possible
+            if (currentValue && select.querySelector(`option[value="${currentValue}"]`)) {
+                select.value = currentValue;
             }
         }
 
@@ -1000,7 +1162,9 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
 
         // Clear input
         function clearInput() {
-            document.getElementById('playlist-name').value = '';
+            document.getElementById('playlist-select').value = '';
+            document.getElementById('new-playlist-name').value = '';
+            document.getElementById('new-playlist-name').style.display = 'none';
             document.getElementById('playlist-input').value = '';
             document.getElementById('manual-input').value = '';
         }
@@ -1086,6 +1250,48 @@ https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
         function closeLoginModal() {
             const modal = document.getElementById('login-modal');
             if (modal) modal.remove();
+        }
+        
+        // Show choice modal for existing playlist
+        function showChoiceModal(playlistName) {
+            return new Promise((resolve) => {
+                const modalHTML = `
+                    <div id="choice-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1001;">
+                        <div style="background: #1a1a1a; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; border: 1px solid #333;">
+                            <h3 style="margin-bottom: 20px; color: #ff0000;">재생목록이 이미 존재합니다</h3>
+                            <p style="margin-bottom: 20px; color: #ccc; line-height: 1.6;">
+                                '${playlistName}' 재생목록이 이미 존재합니다.<br>
+                                어떻게 처리하시겠습니까?
+                            </p>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="resolveChoice('update')" style="flex: 1;">
+                                    🔄 기존 재생목록 업데이트
+                                </button>
+                                <button class="btn btn-primary" onclick="resolveChoice('new')" style="flex: 1; background: #4CAF50;">
+                                    ➕ 새 재생목록 만들기
+                                </button>
+                                <button class="btn btn-secondary" onclick="resolveChoice('cancel')" style="flex: 1;">
+                                    ❌ 취소
+                                </button>
+                            </div>
+                            <div style="margin-top: 15px; padding: 15px; background: #0a0a0a; border-radius: 8px; border: 1px solid #333;">
+                                <p style="color: #888; font-size: 0.85em; margin: 0;">
+                                    💡 <strong>업데이트</strong>: 새 동영상만 추가하고 변경된 제목을 업데이트합니다<br>
+                                    💡 <strong>새 재생목록</strong>: 날짜가 포함된 새 이름으로 재생목록을 생성합니다
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                window.resolveChoice = function(choice) {
+                    document.getElementById('choice-modal').remove();
+                    delete window.resolveChoice;
+                    resolve(choice);
+                };
+            });
         }
 
         // Do login
