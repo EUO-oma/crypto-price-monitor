@@ -225,7 +225,8 @@
             position: absolute;
             top: 100%;
             right: 0;
-            width: 350px;
+            width: 450px;
+            max-width: 90vw;
             max-height: 500px;
             background: #1a1a1a;
             border: 1px solid #333;
@@ -429,6 +430,24 @@
         .playlist-items::-webkit-scrollbar-thumb:hover {
             background: #444;
         }
+        
+        /* Custom scrollbar for playlist tabs */
+        .playlist-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .playlist-tabs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .playlist-tabs::-webkit-scrollbar-thumb {
+            background: #666;
+            border-radius: 2px;
+        }
+
+        .playlist-tabs::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
     </style>
 </head>
 <body>
@@ -576,6 +595,9 @@
                 
                 if (error) throw error;
                 
+                console.log('Loaded links from database:', data.length);
+                console.log('Raw data:', data);
+                
                 // Group by playlist
                 playlists = {};
                 data.forEach(link => {
@@ -583,11 +605,15 @@
                     try {
                         metadata = JSON.parse(link.description || '{}');
                     } catch (e) {
+                        console.error('Error parsing metadata for link:', link.name, e);
                         metadata = { playlist_id: 'default', playlist_name: 'Unknown Playlist' };
                     }
                     
                     const playlistId = metadata.playlist_id || 'default';
                     const playlistName = metadata.playlist_name || 'Unknown Playlist';
+                    
+                    // Log each playlist being processed
+                    console.log(`Processing link: ${link.name}, Playlist: ${playlistName} (${playlistId})`);
                     
                     if (!playlists[playlistId]) {
                         playlists[playlistId] = {
@@ -612,12 +638,21 @@
                     playlists[playlistId].videos.sort((a, b) => a.position - b.position);
                 });
                 
-                displayPlaylistTabs();
+                // Sort playlists by name for consistent ordering
+                const sortedPlaylistIds = Object.keys(playlists).sort((a, b) => 
+                    playlists[a].name.localeCompare(playlists[b].name, 'ko')
+                );
+                
+                console.log('Grouped playlists:', playlists);
+                console.log('Playlist IDs:', Object.keys(playlists));
+                console.log('Sorted Playlist IDs:', sortedPlaylistIds);
+                console.log('Playlist names:', sortedPlaylistIds.map(id => playlists[id].name));
+                
+                displayPlaylistTabs(sortedPlaylistIds);
                 
                 // Load first playlist
-                const playlistIds = Object.keys(playlists);
-                if (playlistIds.length > 0) {
-                    loadPlaylist(playlistIds[0]);
+                if (sortedPlaylistIds.length > 0) {
+                    loadPlaylist(sortedPlaylistIds[0]);
                 } else {
                     document.getElementById('playlist-items').innerHTML = 
                         '<div class="loading">재생목록이 없습니다</div>';
@@ -638,11 +673,14 @@
         }
 
         // Display playlist tabs
-        function displayPlaylistTabs() {
+        function displayPlaylistTabs(sortedIds = null) {
             const tabsContainer = document.getElementById('playlist-tabs');
             tabsContainer.innerHTML = '';
             
-            Object.keys(playlists).forEach((playlistId, index) => {
+            const playlistIds = sortedIds || Object.keys(playlists);
+            console.log('Displaying playlist tabs for:', playlistIds);
+            
+            playlistIds.forEach((playlistId, index) => {
                 const tab = document.createElement('div');
                 tab.className = 'playlist-tab';
                 tab.textContent = playlists[playlistId].name;
@@ -692,8 +730,8 @@
             currentVideoIndex = 0;
             
             // Update active tab
-            document.querySelectorAll('.playlist-tab').forEach((tab, index) => {
-                tab.classList.toggle('active', Object.keys(playlists)[index] === playlistId);
+            document.querySelectorAll('.playlist-tab').forEach((tab) => {
+                tab.classList.toggle('active', tab.textContent === playlists[playlistId].name);
             });
             
             // Update playlist info

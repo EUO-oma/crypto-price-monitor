@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>링크 관리 - Simple v2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #111;
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .status-box {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .form-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1em;
+        }
+
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #777;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        
+        .login-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        
+        .login-section h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4caf50;
+        }
+
+        .links-container {
+            margin-top: 30px;
+        }
+
+        .category-section {
+            margin-bottom: 30px;
+        }
+
+        .category-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #4caf50;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .link-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.2s;
+        }
+
+        .link-card:hover {
+            border-color: #4caf50;
+            background: #222;
+        }
+
+        .link-title {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .link-url {
+            color: #888;
+            font-size: 0.85em;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+
+        .link-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .link-actions button {
+            padding: 5px 10px;
+            font-size: 0.85em;
+        }
+
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .link-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 링크 관리</h1>
+        
+        <div class="status-box" id="status">
+            <span>연결 상태 확인 중...</span>
+        </div>
+        
+        <div class="login-section" id="login-section" style="display: none;">
+            <h3>로그인</h3>
+            <div class="form-group">
+                <label for="email">이메일</label>
+                <input type="email" id="email" placeholder="admin@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" placeholder="비밀번호">
+            </div>
+            <button onclick="login()">로그인</button>
+            <button onclick="loginWithGoogle()" style="background: #4285f4; margin-top: 10px; width: 100%;">
+                <span style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Google로 로그인
+                </span>
+            </button>
+            <button onclick="loginWithMagicLink()" style="background: #333; margin-top: 10px; width: 100%;">
+                ✉️ 이메일로 로그인 (Magic Link)
+            </button>
+            <button class="btn-secondary" onclick="skipLogin()" style="margin-top: 10px;">읽기 전용으로 계속</button>
+        </div>
+
+        <div class="form-section" style="display: none;">
+            <h2>새 링크 추가</h2>
+            <div class="form-group">
+                <label for="name">링크 이름</label>
+                <input type="text" id="name" placeholder="예: 네이버">
+            </div>
+            <div class="form-group">
+                <label for="url">URL</label>
+                <input type="text" id="url" placeholder="예: https://www.naver.com">
+            </div>
+            <div class="form-group">
+                <label for="category">카테고리 (자유롭게 입력 가능)</label>
+                <input type="text" id="category" list="category-list" placeholder="예: youtube, favorite, gpt, 또는 새 카테고리">
+                <datalist id="category-list">
+                    <option value="youtube">YouTube 채널</option>
+                    <option value="favorite">즐겨찾기</option>
+                    <option value="gpt">GPT 도구</option>
+                    <option value="fun-youtube">Fun YouTube</option>
+                    <option value="youtube-playlist">YouTube 재생목록</option>
+                    <option value="news">뉴스</option>
+                    <option value="tech">기술</option>
+                    <option value="shopping">쇼핑</option>
+                </datalist>
+            </div>
+            <button onclick="addLink()">추가하기</button>
+            <button class="btn-secondary" onclick="clearForm()">초기화</button>
+        </div>
+
+        <div class="links-container" id="links-container">
+            <p style="text-align: center; color: #666;">링크를 불러오는 중...</p>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 전역 변수
+        let supabase = null;
+        let allLinks = [];
+        let allCategories = new Set(); // Set으로 변경하여 중복 제거
+        let currentUser = null;
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('load', async function() {
+            // Supabase 초기화 먼저
+            await initializeSupabase();
+        });
+
+        // UI 업데이트 함수
+        function updateAuthUI() {
+            const statusEl = document.getElementById('status');
+            const loginSection = document.getElementById('login-section');
+            const formSection = document.querySelector('.form-section');
+            
+            if (currentUser) {
+                statusEl.innerHTML = `<span class="success">✅ 로그인됨 (${currentUser.email}) <button class="btn-secondary" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8em;">로그아웃</button></span>`;
+                loginSection.style.display = 'none';
+                formSection.style.display = 'block';
+                loadLinks();
+            } else {
+                statusEl.innerHTML = '<span class="warning">⚠️ 로그인이 필요합니다 (읽기 전용 모드)</span>';
+                loginSection.style.display = 'block';
+                formSection.style.display = 'none';
+                loadLinks(); // 읽기 전용으로도 링크 표시
+            }
+        }
+        
+        // Supabase 초기화
+        async function initializeSupabase() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                // 하드코딩된 인증 정보 사용
+                const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                // Service Role Key (RLS 우회용 - 주의: 프로덕션에서는 사용하지 마세요!)
+                // const SERVICE_KEY = 'YOUR_SERVICE_ROLE_KEY';
+                
+                // Supabase 클라이언트 생성
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    auth: {
+                        persistSession: true,
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true,
+                        storage: window.localStorage, // 명시적으로 localStorage 지정
+                        storageKey: 'supabase.auth.token', // 사파리를 위한 명시적 키
+                        flowType: 'pkce' // 사파리를 위한 PKCE flow
+                    }
+                });
+                
+                // 먼저 기존 세션 확인
+                console.log('세션 확인 중...');
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (session) {
+                    console.log('기존 세션 발견:', session.user.email);
+                    currentUser = session.user;
+                    statusEl.innerHTML = `<span class="success">✅ 로그인됨 (${session.user.email})</span>`;
+                    
+                    // 바로 연결 테스트
+                    await testConnection();
+                } else {
+                    console.log('세션 없음, OAuth 콜백 확인...');
+                    
+                    // URL에서 OAuth 토큰 확인
+                    if (window.location.hash && window.location.hash.includes('access_token')) {
+                        console.log('OAuth 콜백 처리 중...');
+                        // Supabase가 자동으로 처리하도록 대기
+                        setTimeout(async () => {
+                            const { data: { session: newSession } } = await supabase.auth.getSession();
+                            if (newSession) {
+                                console.log('OAuth 로그인 성공');
+                                location.reload();
+                            }
+                        }, 1000);
+                    } else {
+                        // 로그인 안 됨
+                        await testConnection();
+                    }
+                }
+                
+                // Auth 상태 변경 리스너
+                supabase.auth.onAuthStateChange((event, session) => {
+                    console.log('Auth 상태 변경:', event);
+                    if (event === 'SIGNED_IN') {
+                        console.log('로그인됨:', session.user.email);
+                        currentUser = session.user;
+                        // 페이지 새로고침 대신 UI 업데이트
+                        updateAuthUI();
+                    } else if (event === 'SIGNED_OUT') {
+                        console.log('로그아웃됨');
+                        currentUser = null;
+                        updateAuthUI();
+                    }
+                });
+                
+            } catch (error) {
+                console.error('초기화 오류:', error);
+                statusEl.innerHTML = '<span class="error">❌ 초기화 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 연결 테스트
+        async function testConnection() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                // 이미 currentUser가 설정되어 있으면 사용
+                if (currentUser) {
+                    console.log('이미 로그인됨:', currentUser.email);
+                } else {
+                    // 세션 확인
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                    
+                    if (sessionError || !session) {
+                        console.log('세션 없음');
+                        
+                        // 로그인 폼 표시
+                        statusEl.innerHTML = '<span class="warning">⚠️ 로그인이 필요합니다 (읽기 전용 모드)</span>';
+                        document.getElementById('login-section').style.display = 'block';
+                        document.querySelector('.form-section').style.display = 'none';
+                        
+                        // 읽기 전용으로도 링크 불러오기
+                        currentUser = null;
+                        loadLinks();
+                        return;
+                    }
+                    
+                    currentUser = session.user;
+                }
+                
+                // 연결 테스트
+                const { data, error } = await supabase.from('links').select('count').limit(1);
+                
+                if (error) throw error;
+                
+                statusEl.innerHTML = `<span class="success">✅ 연결 성공 (${currentUser.email}) <button class="btn-secondary" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8em;">로그아웃</button></span>`;
+                // 로그인 폼 숨기기, 입력 폼 표시
+                document.getElementById('login-section').style.display = 'none';
+                document.querySelector('.form-section').style.display = 'block';
+                
+                // 링크 불러오기
+                loadLinks();
+                
+            } catch (error) {
+                console.error('연결 오류:', error);
+                
+                // RLS 오류일 가능성이 있으므로 읽기 전용 모드로 전환
+                if (error.message.includes('RLS') || error.message.includes('policy')) {
+                    statusEl.innerHTML = '<span class="warning">⚠️ 읽기 전용 모드 (RLS 정책)</span>';
+                    currentUser = null;
+                    loadLinks();
+                } else {
+                    statusEl.innerHTML = '<span class="error">❌ 연결 실패: ' + error.message + '</span>';
+                    // 입력 폼 숨기기
+                    document.querySelector('.form-section').style.display = 'none';
+                    
+                    // 오류 시에도 링크 불러오기 시도
+                    loadLinks();
+                }
+            }
+        }
+
+        // 링크 불러오기
+        async function loadLinks() {
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) throw error;
+                
+                allLinks = data || [];
+                
+                // 모든 고유 카테고리 추출 및 Set에 추가
+                allLinks.forEach(link => {
+                    if (link.category) {
+                        allCategories.add(link.category);
+                    }
+                });
+                
+                // 카테고리 드롭다운 업데이트
+                updateCategoryDatalist();
+                
+                // 링크 표시
+                displayLinks(allLinks);
+                
+            } catch (error) {
+                console.error('불러오기 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 불러오기 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 카테고리 데이터리스트 업데이트
+        function updateCategoryDatalist() {
+            const datalist = document.getElementById('category-list');
+            datalist.innerHTML = '';
+            
+            // 기본 카테고리
+            const defaultCategories = [
+                { value: 'youtube', label: 'YouTube 채널' },
+                { value: 'favorite', label: '즐겨찾기' },
+                { value: 'gpt', label: 'GPT 도구' },
+                { value: 'fun-youtube', label: 'Fun YouTube' },
+                { value: 'youtube-playlist', label: 'YouTube 재생목록' },
+                { value: 'news', label: '뉴스' },
+                { value: 'tech', label: '기술' },
+                { value: 'shopping', label: '쇼핑' },
+                { value: 'crypto', label: '암호화폐' },
+                { value: 'dev', label: '개발 도구' },
+                { value: 'education', label: '교육' },
+                { value: 'entertainment', label: '엔터테인먼트' },
+                { value: 'social', label: '소셜' }
+            ];
+            
+            // 기본 카테고리 추가
+            defaultCategories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.value;
+                option.textContent = cat.label;
+                datalist.appendChild(option);
+            });
+            
+            // 데이터베이스에서 가져온 고유 카테고리 추가
+            allCategories.forEach(category => {
+                // 기본 카테고리와 중복되지 않는 경우만 추가
+                if (!defaultCategories.some(cat => cat.value === category)) {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    datalist.appendChild(option);
+                }
+            });
+        }
+        
+        // 링크 표시
+        function displayLinks(links) {
+            const container = document.getElementById('links-container');
+            container.innerHTML = '';
+            
+            if (links.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">등록된 링크가 없습니다.</p>';
+                return;
+            }
+            
+            // 카테고리별로 그룹화
+            const categories = {};
+            
+            // 카테고리 타이틀 매핑
+            const categoryTitles = {
+                youtube: '📺 YouTube 채널',
+                favorite: '⭐ 즐겨찾기',
+                gpt: '🤖 GPT 도구',
+                'fun-youtube': '🎬 Fun YouTube',
+                'youtube-playlist': '📋 YouTube 재생목록',
+                news: '📰 뉴스',
+                tech: '💻 기술',
+                shopping: '🛒 쇼핑',
+                crypto: '💰 암호화폐',
+                dev: '🛠️ 개발 도구',
+                education: '📚 교육',
+                entertainment: '🎮 엔터테인먼트',
+                social: '💬 소셜'
+            };
+            
+            // 모든 링크를 카테고리별로 그룹화
+            links.forEach(link => {
+                if (!categories[link.category]) {
+                    categories[link.category] = {
+                        title: categoryTitles[link.category] || `📌 ${link.category}`,
+                        links: []
+                    };
+                }
+                categories[link.category].links.push(link);
+            });
+            
+            // 각 카테고리 표시
+            Object.keys(categories).sort().forEach(key => {
+                if (categories[key].links.length > 0) {
+                    const section = document.createElement('div');
+                    section.className = 'category-section';
+                    
+                    section.innerHTML = `
+                        <h3 class="category-title">${categories[key].title}</h3>
+                        <div class="link-grid">
+                            ${categories[key].links.map(link => `
+                                <div class="link-card">
+                                    <div class="link-title">${link.name}</div>
+                                    <div class="link-url">
+                                        <a href="${link.url}" target="_blank" style="color: #888;">${link.url}</a>
+                                    </div>
+                                    <div class="link-actions">
+                                        ${currentUser ? `
+                                            <button class="btn-secondary" onclick="editLink('${link.id}', '${link.name.replace(/'/g, "\\'")}', '${link.url.replace(/'/g, "\\'")}', '${link.category}')">수정</button>
+                                            <button class="btn-danger" onclick="deleteLink('${link.id}')">삭제</button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    
+                    container.appendChild(section);
+                }
+            });
+        }
+
+        // 링크 추가
+        async function addLink() {
+            // 로그인 확인
+            if (!currentUser) {
+                alert('링크를 추가하려면 로그인이 필요합니다.');
+                return;
+            }
+            
+            const name = document.getElementById('name').value.trim();
+            const url = document.getElementById('url').value.trim();
+            const category = document.getElementById('category').value;
+            
+            if (!name || !url) {
+                alert('이름과 URL을 모두 입력해주세요.');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .insert([{
+                        name: name,
+                        url: url,
+                        category: category,
+                        position: 0
+                    }])
+                    .select();
+                
+                if (error) throw error;
+                
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ 링크가 추가되었습니다.</span>';
+                
+                clearForm();
+                loadLinks();
+                
+            } catch (error) {
+                console.error('추가 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 추가 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 링크 수정
+        function editLink(id, name, url, category) {
+            document.getElementById('name').value = name;
+            document.getElementById('url').value = url;
+            document.getElementById('category').value = category;
+            
+            // 추가 버튼을 수정 버튼으로 변경
+            const addBtn = document.querySelector('button[onclick="addLink()"]');
+            addBtn.textContent = '수정하기';
+            addBtn.onclick = function() { updateLink(id); };
+            
+            // 취소 버튼 추가
+            if (!document.querySelector('.btn-cancel')) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'btn-secondary btn-cancel';
+                cancelBtn.textContent = '취소';
+                cancelBtn.onclick = cancelEdit;
+                addBtn.parentNode.insertBefore(cancelBtn, addBtn.nextSibling);
+            }
+            
+            // 스크롤 이동
+            document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 링크 업데이트
+        async function updateLink(id) {
+            // 로그인 확인
+            if (!currentUser) {
+                alert('링크를 수정하려면 로그인이 필요합니다.');
+                return;
+            }
+            
+            const name = document.getElementById('name').value.trim();
+            const url = document.getElementById('url').value.trim();
+            const category = document.getElementById('category').value;
+            
+            if (!name || !url) {
+                alert('이름과 URL을 모두 입력해주세요.');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .update({
+                        name: name,
+                        url: url,
+                        category: category
+                    })
+                    .eq('id', id)
+                    .select();
+                
+                if (error) throw error;
+                
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ 링크가 수정되었습니다.</span>';
+                
+                cancelEdit();
+                loadLinks();
+                
+            } catch (error) {
+                console.error('수정 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 수정 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 수정 취소
+        function cancelEdit() {
+            clearForm();
+            
+            const addBtn = document.querySelector('button[onclick^="updateLink"]');
+            if (addBtn) {
+                addBtn.textContent = '추가하기';
+                addBtn.onclick = addLink;
+            }
+            
+            const cancelBtn = document.querySelector('.btn-cancel');
+            if (cancelBtn) {
+                cancelBtn.remove();
+            }
+        }
+
+        // 링크 삭제
+        async function deleteLink(id) {
+            // 로그인 확인
+            if (!currentUser) {
+                alert('링크를 삭제하려면 로그인이 필요합니다.');
+                return;
+            }
+            
+            if (!confirm('정말로 이 링크를 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('links')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ 링크가 삭제되었습니다.</span>';
+                
+                loadLinks();
+                
+            } catch (error) {
+                console.error('삭제 오류:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ 삭제 실패: ' + error.message + '</span>';
+            }
+        }
+
+        // 폼 초기화
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('url').value = '';
+            document.getElementById('category').value = '';
+        }
+        
+        
+        // 로그인 함수
+        async function login() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const statusEl = document.getElementById('status');
+            
+            if (!email || !password) {
+                alert('이메일과 비밀번호를 입력해주세요.');
+                return;
+            }
+            
+            try {
+                statusEl.innerHTML = '<span class="warning">로그인 중...</span>';
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                // 로그인 성공 - 페이지 새로고침
+                location.reload();
+                
+            } catch (error) {
+                console.error('로그인 오류:', error);
+                statusEl.innerHTML = '<span class="error">❌ 로그인 실패: ' + error.message + '</span>';
+            }
+        }
+        
+        // 읽기 전용으로 계속
+        function skipLogin() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('status').innerHTML = '<span class="warning">⚠️ 읽기 전용 모드</span>';
+        }
+        
+        // Google로 로그인
+        async function loginWithGoogle() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                statusEl.innerHTML = '<span class="warning">Google 로그인 중...</span>';
+                
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + window.location.pathname,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        },
+                        skipBrowserRedirect: false
+                    }
+                });
+                
+                if (error) throw error;
+                
+                // OAuth는 자동으로 리다이렉트됨
+                
+            } catch (error) {
+                console.error('Google 로그인 오류:', error);
+                statusEl.innerHTML = '<span class="error">❌ Google 로그인 실패: ' + error.message + '</span>';
+            }
+        }
+        
+        // 로그아웃 함수
+        async function logout() {
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
+                location.reload();
+            }
+        }
+        
+        // Magic Link 로그인
+        async function loginWithMagicLink() {
+            const email = document.getElementById('email').value.trim();
+            const statusEl = document.getElementById('status');
+            
+            if (!email) {
+                alert('이메일을 입력해주세요.');
+                return;
+            }
+            
+            try {
+                statusEl.innerHTML = '<span class="warning">Magic Link 전송 중...</span>';
+                
+                const { data, error } = await supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        emailRedirectTo: window.location.href
+                    }
+                });
+                
+                if (error) throw error;
+                
+                statusEl.innerHTML = '<span class="success">✅ 이메일을 확인해주세요! 로그인 링크가 전송되었습니다.</span>';
+                
+            } catch (error) {
+                console.error('Magic Link 오류:', error);
+                statusEl.innerHTML = '<span class="error">❌ Magic Link 전송 실패: ' + error.message + '</span>';
+            }
+        }
+        
+        // Enter 키로 로그인
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        login();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
