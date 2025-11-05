@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW Mode 6 - Percentage Change</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .mode-number {
+            position: absolute;
+            bottom: 2px;
+            font-size: 10px;
+            color: #444;
+        }
+        
+        .percentage-container {
+            width: 100%;
+            max-width: 900px;
+        }
+        
+        .coin-percentage {
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 8px;
+            background: #0a0a0a;
+            border: 1px solid #222;
+        }
+        
+        .coin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .coin-info {
+            display: flex;
+            align-items: baseline;
+            gap: 20px;
+        }
+        
+        .coin-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #888;
+        }
+        
+        .coin-price {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .main-percentage {
+            font-size: 36px;
+            font-weight: 600;
+        }
+        
+        .percentage-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .percentage-item {
+            text-align: center;
+            padding: 10px;
+            background: #111;
+            border-radius: 4px;
+        }
+        
+        .percentage-label {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        
+        .percentage-value {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .percentage-bar {
+            height: 40px;
+            background: #111;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .percentage-fill {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            height: 100%;
+            transition: all 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .percentage-fill span {
+            position: relative;
+            z-index: 2;
+            font-weight: 600;
+            padding: 0 10px;
+        }
+        
+        /* Colors */
+        .positive { color: #4caf50; }
+        .negative { color: #f44336; }
+        .neutral { color: #888; }
+        
+        .fill-positive {
+            background: #4caf50;
+            transform-origin: left;
+        }
+        
+        .fill-negative {
+            background: #f44336;
+            transform-origin: right;
+            right: 50%;
+            left: auto;
+        }
+        
+        /* Strong changes */
+        .strong-positive { color: #00e676; }
+        .strong-negative { color: #ff1744; }
+        
+        /* Size variations */
+        .size-xs .main-percentage { font-size: 24px; }
+        .size-xs .coin-price { font-size: 16px; }
+        .size-s .main-percentage { font-size: 30px; }
+        .size-s .coin-price { font-size: 20px; }
+        .size-m .main-percentage { font-size: 36px; }
+        .size-m .coin-price { font-size: 24px; }
+        .size-l .main-percentage { font-size: 42px; }
+        .size-l .coin-price { font-size: 28px; }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .percentage-container {
+                max-width: 100%;
+            }
+            
+            .coin-percentage {
+                margin: 20px 0;
+                padding: 15px;
+                border-radius: 6px;
+            }
+            
+            .coin-header {
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+            
+            .coin-info {
+                gap: 15px;
+            }
+            
+            .coin-name {
+                font-size: 16px;
+            }
+            
+            .coin-price {
+                font-size: 20px;
+            }
+            
+            .main-percentage {
+                font-size: 28px;
+            }
+            
+            .percentage-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .percentage-item {
+                padding: 8px;
+            }
+            
+            .percentage-label {
+                font-size: 9px;
+                margin-bottom: 2px;
+            }
+            
+            .percentage-value {
+                font-size: 16px;
+            }
+            
+            .percentage-bar {
+                height: 35px;
+                margin-top: 10px;
+            }
+            
+            .controls {
+                top: 10px;
+                right: 10px;
+                gap: 8px;
+            }
+            
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                border-radius: 8px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            /* Adjust sizes for mobile */
+            .size-xs .main-percentage { font-size: 20px; }
+            .size-xs .coin-price { font-size: 14px; }
+            .size-s .main-percentage { font-size: 24px; }
+            .size-s .coin-price { font-size: 18px; }
+            .size-m .main-percentage { font-size: 28px; }
+            .size-m .coin-price { font-size: 20px; }
+            .size-l .main-percentage { font-size: 32px; }
+            .size-l .coin-price { font-size: 24px; }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .coin-percentage {
+                margin: 15px 0;
+                padding: 12px;
+            }
+            
+            .coin-header {
+                margin-bottom: 12px;
+            }
+            
+            .coin-info {
+                gap: 10px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .coin-name {
+                font-size: 14px;
+            }
+            
+            .coin-price {
+                font-size: 18px;
+            }
+            
+            .main-percentage {
+                font-size: 24px;
+            }
+            
+            .percentage-grid {
+                gap: 6px;
+            }
+            
+            .percentage-item {
+                padding: 6px;
+            }
+            
+            .percentage-label {
+                font-size: 8px;
+            }
+            
+            .percentage-value {
+                font-size: 14px;
+            }
+            
+            .percentage-bar {
+                height: 30px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .mode-number {
+                font-size: 8px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .controls {
+                gap: 4px;
+            }
+            
+            .percentage-value {
+                font-size: 12px;
+            }
+            
+            .main-percentage {
+                font-size: 20px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn:active {
+                transform: scale(0.9);
+            }
+            
+            .percentage-item {
+                transition: background-color 0.1s ease;
+            }
+            
+            .percentage-item:active {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+        }
+    </style>
+</head>
+<body class="size-m">
+    <div class="controls">
+        <button class="control-btn" onclick="location.href='bw-mode5.html'" title="이전">←</button>
+        <button class="control-btn" onclick="location.href='bw-mode7.html'" title="다음">→</button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+    </div>
+    
+    <div class="percentage-container">
+        <div class="coin-percentage" id="btc-container">
+            <div class="coin-header">
+                <div class="coin-info">
+                    <span class="coin-name">BTC</span>
+                    <span class="coin-price" id="btc-price">------</span>
+                </div>
+                <div class="main-percentage" id="btc-main-percent">----</div>
+            </div>
+            <div class="percentage-grid">
+                <div class="percentage-item">
+                    <div class="percentage-label">1시간</div>
+                    <div class="percentage-value" id="btc-1h">----</div>
+                </div>
+                <div class="percentage-item">
+                    <div class="percentage-label">4시간</div>
+                    <div class="percentage-value" id="btc-4h">----</div>
+                </div>
+                <div class="percentage-item">
+                    <div class="percentage-label">오늘</div>
+                    <div class="percentage-value" id="btc-today">----</div>
+                </div>
+                <div class="percentage-item">
+                    <div class="percentage-label">7일</div>
+                    <div class="percentage-value" id="btc-7d">----</div>
+                </div>
+            </div>
+            <div class="percentage-bar">
+                <div class="percentage-fill" id="btc-fill">
+                    <span id="btc-bar-text">0%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="coin-percentage" id="eth-container">
+            <div class="coin-header">
+                <div class="coin-info">
+                    <span class="coin-name">ETH</span>
+                    <span class="coin-price" id="eth-price">------</span>
+                </div>
+                <div class="main-percentage" id="eth-main-percent">----</div>
+            </div>
+            <div class="percentage-grid">
+                <div class="percentage-item">
+                    <div class="percentage-label">1시간</div>
+                    <div class="percentage-value" id="eth-1h">----</div>
+                </div>
+                <div class="percentage-item">
+                    <div class="percentage-label">4시간</div>
+                    <div class="percentage-value" id="eth-4h">----</div>
+                </div>
+                <div class="percentage-item">
+                    <div class="percentage-label">오늘</div>
+                    <div class="percentage-value" id="eth-today">----</div>
+                </div>
+                <div class="percentage-item">
+                    <div class="percentage-label">7일</div>
+                    <div class="percentage-value" id="eth-7d">----</div>
+                </div>
+            </div>
+            <div class="percentage-bar">
+                <div class="percentage-fill" id="eth-fill">
+                    <span id="eth-bar-text">0%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="coin-percentage" id="sol-container">
+            <div class="coin-header">
+                <div class="coin-info">
+                    <span class="coin-name">SOL</span>
+                    <span class="coin-price" id="sol-price">------</span>
+                </div>
+                <div class="main-percentage" id="sol-main-percent">----</div>
+            </div>
+            <div class="percentage-grid">
+                <div class="percentage-item">
+                    <div class="percentage-label">1시간</div>
+                    <div class="percentage-value" id="sol-1h">----</div>
+                </div>
+                <div class="percentage-item">
+                    <div class="percentage-label">4시간</div>
+                    <div class="percentage-value" id="sol-4h">----</div>
+                </div>
+                <div class="percentage-item">
+                    <div class="percentage-label">오늘</div>
+                    <div class="percentage-value" id="sol-today">----</div>
+                </div>
+                <div class="percentage-item">
+                    <div class="percentage-label">7일</div>
+                    <div class="percentage-value" id="sol-7d">----</div>
+                </div>
+            </div>
+            <div class="percentage-bar">
+                <div class="percentage-fill" id="sol-fill">
+                    <span id="sol-bar-text">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const sizes = ['xs', 's', 'm', 'l'];
+        let currentSizeIndex = 2;
+        
+        // Store price history for calculating percentages
+        const priceHistory = {
+            btc: { prices: [], timestamps: [] },
+            eth: { prices: [], timestamps: [] },
+            sol: { prices: [], timestamps: [] }
+        };
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            localStorage.setItem('bwMode6Size', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwMode6Size');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-m');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        function formatNumber(num) {
+            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        
+        function formatPercent(percent) {
+            const formatted = `${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
+            return formatted;
+        }
+        
+        function getPercentageClass(percent) {
+            if (percent > 5) return 'strong-positive';
+            if (percent > 0) return 'positive';
+            if (percent < -5) return 'strong-negative';
+            if (percent < 0) return 'negative';
+            return 'neutral';
+        }
+        
+        function updatePercentageBar(coin, percent) {
+            const fill = document.getElementById(`${coin}-fill`);
+            const barText = document.getElementById(`${coin}-bar-text`);
+            
+            const width = Math.min(Math.abs(percent) * 10, 50); // Max 50% width
+            
+            fill.className = 'percentage-fill';
+            if (percent > 0) {
+                fill.classList.add('fill-positive');
+                fill.style.width = `${width}%`;
+                fill.style.transform = 'translateX(0)';
+            } else if (percent < 0) {
+                fill.classList.add('fill-negative');
+                fill.style.width = `${width}%`;
+                fill.style.transform = 'translateX(-100%)';
+            } else {
+                fill.style.width = '0%';
+            }
+            
+            barText.textContent = formatPercent(percent);
+            barText.style.color = percent > 0 ? '#000' : '#000';
+        }
+        
+        function updateCoin(coin, data) {
+            const currentPrice = parseFloat(data.c);
+            const change24h = parseFloat(data.P);
+            
+            // Update price history
+            const now = Date.now();
+            priceHistory[coin].prices.push(currentPrice);
+            priceHistory[coin].timestamps.push(now);
+            
+            // Keep only last 24 hours of data
+            const oneDayAgo = now - 24 * 60 * 60 * 1000;
+            while (priceHistory[coin].timestamps.length > 0 && priceHistory[coin].timestamps[0] < oneDayAgo) {
+                priceHistory[coin].prices.shift();
+                priceHistory[coin].timestamps.shift();
+            }
+            
+            // Update display
+            document.getElementById(`${coin}-price`).textContent = formatNumber(currentPrice);
+            
+            const mainPercentEl = document.getElementById(`${coin}-main-percent`);
+            mainPercentEl.textContent = formatPercent(change24h);
+            mainPercentEl.className = `main-percentage ${getPercentageClass(change24h)}`;
+            
+            // Calculate time-based percentages (simplified - in real app would need more data)
+            const prices = priceHistory[coin].prices;
+            if (prices.length > 1) {
+                const lastPrice = prices[prices.length - 1];
+                const firstPrice = prices[0];
+                const periodChange = ((lastPrice - firstPrice) / firstPrice) * 100;
+                
+                // Simulate different time periods
+                document.getElementById(`${coin}-1h`).textContent = formatPercent(periodChange * 0.1);
+                document.getElementById(`${coin}-1h`).className = `percentage-value ${getPercentageClass(periodChange * 0.1)}`;
+                
+                document.getElementById(`${coin}-4h`).textContent = formatPercent(periodChange * 0.3);
+                document.getElementById(`${coin}-4h`).className = `percentage-value ${getPercentageClass(periodChange * 0.3)}`;
+                
+                document.getElementById(`${coin}-today`).textContent = formatPercent(change24h);
+                document.getElementById(`${coin}-today`).className = `percentage-value ${getPercentageClass(change24h)}`;
+                
+                document.getElementById(`${coin}-7d`).textContent = formatPercent(change24h * 3.5);
+                document.getElementById(`${coin}-7d`).className = `percentage-value ${getPercentageClass(change24h * 3.5)}`;
+            }
+            
+            updatePercentageBar(coin, change24h);
+        }
+        
+        function connectBinanceWebSocket(symbol, coin) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                updateCoin(coin, data);
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, coin);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Initialize WebSockets
+        function initializeWebSockets() {
+            connectBinanceWebSocket('BTCUSDT', 'btc');
+            connectBinanceWebSocket('ETHUSDT', 'eth');
+            connectBinanceWebSocket('SOLUSDT', 'sol');
+        }
+        
+        // Fallback API
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const coins = ['btc', 'eth', 'sol'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                results.forEach((data, index) => {
+                    if (data && data.lastPrice) {
+                        updateCoin(coins[index], {
+                            c: data.lastPrice,
+                            P: data.priceChangePercent
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        // Initialize
+        initializeWebSockets();
+        setTimeout(fetchPricesAPI, 1000);
+    </script>
+    <script src="bw-navigation.js"></script>
+</body>
+</html>

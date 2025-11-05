@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Connection Test</title>
+    <meta charset="UTF-8">
+    <style>
+        body { 
+            font-family: monospace; 
+            background: #000; 
+            color: #0f0; 
+            padding: 20px;
+        }
+        button { 
+            background: #0f0; 
+            color: #000; 
+            border: none; 
+            padding: 10px 20px; 
+            cursor: pointer;
+            margin: 5px;
+        }
+        #result { 
+            margin-top: 20px; 
+            padding: 20px; 
+            border: 1px solid #0f0;
+            white-space: pre-wrap;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+    </style>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="testQuery()">Test Query</button>
+    <button onclick="clearResult()">Clear</button>
+    <div id="result"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        let supabase = null;
+        const result = document.getElementById('result');
+        
+        function log(msg, type = '') {
+            result.innerHTML += `<span class="${type}">${new Date().toTimeString().split(' ')[0]} - ${msg}</span>\n`;
+        }
+        
+        function clearResult() {
+            result.innerHTML = '';
+        }
+        
+        async function testConnection() {
+            clearResult();
+            log('Starting connection test...');
+            
+            try {
+                // Check if Supabase SDK is loaded
+                if (!window.supabase) {
+                    log('ERROR: Supabase SDK not loaded', 'error');
+                    return;
+                }
+                
+                log('✓ Supabase SDK loaded');
+                
+                // Create client
+                const url = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                log('Creating Supabase client...');
+                supabase = window.supabase.createClient(url, key);
+                
+                log('✓ Client created successfully', 'success');
+                log('URL: ' + url);
+                log('Key: ***' + key.slice(-20));
+                
+            } catch (error) {
+                log('ERROR: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        async function testQuery() {
+            clearResult();
+            
+            if (!supabase) {
+                log('Creating client first...');
+                const url = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                supabase = window.supabase.createClient(url, key);
+            }
+            
+            log('Testing query to links table...');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) {
+                    log('Query error: ' + error.message, 'error');
+                    log('Error code: ' + error.code, 'error');
+                    log('Error hint: ' + error.hint, 'error');
+                    log('Full error: ' + JSON.stringify(error, null, 2), 'error');
+                } else {
+                    log('✓ Query successful!', 'success');
+                    log('Found ' + data.length + ' records', 'success');
+                    log('Data: ' + JSON.stringify(data, null, 2));
+                }
+            } catch (e) {
+                log('Exception: ' + e.message, 'error');
+                console.error(e);
+            }
+        }
+        
+        // Auto test on load
+        window.addEventListener('load', () => {
+            setTimeout(testConnection, 1000);
+        });
+    </script>
+</body>
+</html>

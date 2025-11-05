@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW Mode 3 - ASCII Chart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .mode-number {
+            position: absolute;
+            bottom: 2px;
+            font-size: 10px;
+            color: #444;
+        }
+        
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            width: 100%;
+            max-width: 900px;
+        }
+        
+        .coin-chart {
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            background: #0a0a0a;
+        }
+        
+        .coin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .coin-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .coin-price {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .chart-ascii {
+            font-size: 12px;
+            line-height: 1;
+            white-space: pre;
+            font-family: monospace;
+            color: #4caf50;
+            margin: 10px 0;
+            height: 100px;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+        }
+        
+        .bar {
+            width: 4px;
+            background: #4caf50;
+            margin: 0 1px;
+            transition: height 0.3s ease;
+        }
+        
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .positive { color: #4caf50; }
+        .negative { color: #f44336; }
+        
+        /* Size variations */
+        .size-xs { font-size: 10px; }
+        .size-xs .coin-price { font-size: 16px; }
+        .size-s { font-size: 12px; }
+        .size-s .coin-price { font-size: 20px; }
+        .size-m { font-size: 14px; }
+        .size-m .coin-price { font-size: 24px; }
+        .size-l { font-size: 16px; }
+        .size-l .coin-price { font-size: 28px; }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .chart-container {
+                gap: 20px;
+                max-width: 100%;
+            }
+            
+            .coin-chart {
+                padding: 15px;
+                border-radius: 6px;
+            }
+            
+            .controls {
+                top: 10px;
+                right: 10px;
+                gap: 8px;
+            }
+            
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                border-radius: 8px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .chart-ascii {
+                height: 80px;
+                margin: 8px 0;
+            }
+            
+            .bar {
+                width: 3px;
+                margin: 0 0.5px;
+            }
+            
+            .coin-header {
+                margin-bottom: 10px;
+            }
+            
+            .coin-name {
+                font-size: 16px;
+            }
+            
+            .coin-price {
+                font-size: 20px;
+            }
+            
+            .price-info {
+                font-size: 11px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            /* Adjust sizes for mobile */
+            .size-xs { font-size: 9px; }
+            .size-xs .coin-price { font-size: 14px; }
+            .size-s { font-size: 11px; }
+            .size-s .coin-price { font-size: 18px; }
+            .size-m { font-size: 13px; }
+            .size-m .coin-price { font-size: 20px; }
+            .size-l { font-size: 14px; }
+            .size-l .coin-price { font-size: 24px; }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .chart-container {
+                gap: 15px;
+            }
+            
+            .coin-chart {
+                padding: 12px;
+                border-radius: 5px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .controls {
+                gap: 6px;
+            }
+            
+            .chart-ascii {
+                height: 70px;
+                margin: 6px 0;
+            }
+            
+            .bar {
+                width: 2px;
+                margin: 0 0.3px;
+            }
+            
+            .coin-name {
+                font-size: 14px;
+            }
+            
+            .coin-price {
+                font-size: 18px;
+            }
+            
+            .price-info {
+                font-size: 10px;
+            }
+            
+            .mode-number {
+                font-size: 8px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .chart-ascii {
+                height: 60px;
+            }
+            
+            .coin-price {
+                font-size: 16px;
+            }
+            
+            .price-info span {
+                flex: 1 1 100%;
+                text-align: center;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn:active {
+                transform: scale(0.9);
+            }
+            
+            .coin-chart {
+                transition: transform 0.1s ease;
+            }
+            
+            .coin-chart:active {
+                transform: scale(0.98);
+            }
+        }
+    </style>
+</head>
+<body class="size-m">
+    <div class="controls">
+        <button class="control-btn" onclick="location.href='bw-mode2.html'" title="이전">←</button>
+        <button class="control-btn" onclick="location.href='bw-mode4.html'" title="다음">→</button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+    </div>
+    
+    <div class="chart-container">
+        <div class="coin-chart" id="btc-chart">
+            <div class="coin-header">
+                <span class="coin-name">BTC</span>
+                <span class="coin-price" id="btc-price">------</span>
+            </div>
+            <div class="chart-ascii" id="btc-bars"></div>
+            <div class="price-info">
+                <span id="btc-low">Low: ------</span>
+                <span id="btc-change">Change: ------</span>
+                <span id="btc-high">High: ------</span>
+            </div>
+        </div>
+        
+        <div class="coin-chart" id="eth-chart">
+            <div class="coin-header">
+                <span class="coin-name">ETH</span>
+                <span class="coin-price" id="eth-price">------</span>
+            </div>
+            <div class="chart-ascii" id="eth-bars"></div>
+            <div class="price-info">
+                <span id="eth-low">Low: ------</span>
+                <span id="eth-change">Change: ------</span>
+                <span id="eth-high">High: ------</span>
+            </div>
+        </div>
+        
+        <div class="coin-chart" id="sol-chart">
+            <div class="coin-header">
+                <span class="coin-name">SOL</span>
+                <span class="coin-price" id="sol-price">------</span>
+            </div>
+            <div class="chart-ascii" id="sol-bars"></div>
+            <div class="price-info">
+                <span id="sol-low">Low: ------</span>
+                <span id="sol-change">Change: ------</span>
+                <span id="sol-high">High: ------</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const sizes = ['xs', 's', 'm', 'l'];
+        let currentSizeIndex = 2;
+        
+        // Store price history for charts
+        const priceHistory = {
+            btc: [],
+            eth: [],
+            sol: []
+        };
+        const maxHistory = 50;
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            localStorage.setItem('bwMode3Size', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwMode3Size');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-m');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        function formatNumber(num) {
+            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        
+        function updateChart(coin) {
+            const history = priceHistory[coin];
+            if (history.length < 2) return;
+            
+            const barsContainer = document.getElementById(`${coin}-bars`);
+            barsContainer.innerHTML = '';
+            
+            const min = Math.min(...history);
+            const max = Math.max(...history);
+            const range = max - min || 1;
+            
+            history.forEach(price => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                const height = ((price - min) / range) * 80 + 20; // 20-100px
+                bar.style.height = `${height}px`;
+                
+                // Color based on trend
+                if (history.indexOf(price) > 0) {
+                    const prevPrice = history[history.indexOf(price) - 1];
+                    bar.style.backgroundColor = price > prevPrice ? '#4caf50' : '#f44336';
+                }
+                
+                barsContainer.appendChild(bar);
+            });
+        }
+        
+        function updateCoin(coin, data) {
+            const currentPrice = parseFloat(data.c);
+            const low24h = parseFloat(data.l);
+            const high24h = parseFloat(data.h);
+            const change24h = parseFloat(data.P);
+            
+            // Update price history
+            priceHistory[coin].push(currentPrice);
+            if (priceHistory[coin].length > maxHistory) {
+                priceHistory[coin].shift();
+            }
+            
+            // Update display
+            document.getElementById(`${coin}-price`).textContent = formatNumber(currentPrice);
+            document.getElementById(`${coin}-low`).textContent = `Low: ${formatNumber(low24h)}`;
+            document.getElementById(`${coin}-high`).textContent = `High: ${formatNumber(high24h)}`;
+            
+            const changeEl = document.getElementById(`${coin}-change`);
+            changeEl.textContent = `Change: ${change24h.toFixed(2)}%`;
+            changeEl.className = change24h >= 0 ? 'positive' : 'negative';
+            
+            // Update chart
+            updateChart(coin);
+        }
+        
+        function connectBinanceWebSocket(symbol, coin) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                updateCoin(coin, data);
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, coin);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Initialize WebSockets
+        function initializeWebSockets() {
+            connectBinanceWebSocket('BTCUSDT', 'btc');
+            connectBinanceWebSocket('ETHUSDT', 'eth');
+            connectBinanceWebSocket('SOLUSDT', 'sol');
+        }
+        
+        // Fallback API
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const coins = ['btc', 'eth', 'sol'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                results.forEach((data, index) => {
+                    if (data && data.lastPrice) {
+                        updateCoin(coins[index], {
+                            c: data.lastPrice,
+                            l: data.lowPrice,
+                            h: data.highPrice,
+                            P: data.priceChangePercent
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        // Initialize
+        initializeWebSockets();
+        setTimeout(fetchPricesAPI, 1000);
+    </script>
+    <script src="bw-navigation.js"></script>
+</body>
+</html>

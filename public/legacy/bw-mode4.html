@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW Mode 4 - Minimal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 0;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .control-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+        
+        .mode-number {
+            position: absolute;
+            bottom: 2px;
+            font-size: 8px;
+        }
+        
+        .price-container {
+            text-align: center;
+        }
+        
+        .price-row {
+            margin: 40px 0;
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .coin-symbol {
+            font-size: 16px;
+            width: 40px;
+            text-align: right;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+        
+        .price {
+            font-size: 48px;
+            font-weight: 100;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -1px;
+        }
+        
+        .change {
+            font-size: 16px;
+            font-weight: 300;
+            width: 80px;
+            text-align: left;
+        }
+        
+        .up::before {
+            content: '↑';
+            margin-right: 4px;
+        }
+        
+        .down::before {
+            content: '↓';
+            margin-right: 4px;
+        }
+        
+        /* Size variations */
+        .size-xs .price { font-size: 24px; }
+        .size-xs .coin-symbol { font-size: 12px; }
+        .size-xs .change { font-size: 12px; }
+        
+        .size-s .price { font-size: 36px; }
+        .size-s .coin-symbol { font-size: 14px; }
+        .size-s .change { font-size: 14px; }
+        
+        .size-m .price { font-size: 48px; }
+        .size-m .coin-symbol { font-size: 16px; }
+        .size-m .change { font-size: 16px; }
+        
+        .size-l .price { font-size: 60px; }
+        .size-l .coin-symbol { font-size: 18px; }
+        .size-l .change { font-size: 18px; }
+        
+        .size-xl .price { font-size: 72px; }
+        .size-xl .coin-symbol { font-size: 20px; }
+        .size-xl .change { font-size: 20px; }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+            
+            .price-container {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .price-row {
+                margin: 30px 0;
+                gap: 15px;
+                flex-wrap: nowrap;
+                justify-content: center;
+            }
+            
+            .controls {
+                top: 10px;
+                right: 10px;
+                gap: 4px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+                border-radius: 4px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            /* Adjust sizes for mobile */
+            .size-xs .price { font-size: 20px; }
+            .size-xs .coin-symbol { font-size: 11px; }
+            .size-xs .change { font-size: 11px; width: 60px; }
+            
+            .size-s .price { font-size: 28px; }
+            .size-s .coin-symbol { font-size: 13px; }
+            .size-s .change { font-size: 13px; width: 70px; }
+            
+            .size-m .price { font-size: 36px; }
+            .size-m .coin-symbol { font-size: 14px; }
+            .size-m .change { font-size: 14px; }
+            
+            .size-l .price { font-size: 44px; }
+            .size-l .coin-symbol { font-size: 16px; }
+            .size-l .change { font-size: 16px; }
+            
+            .size-xl .price { font-size: 52px; }
+            .size-xl .coin-symbol { font-size: 17px; }
+            .size-xl .change { font-size: 17px; }
+        }
+        
+        @media (max-width: 480px) {
+            .price-row {
+                margin: 25px 0;
+                gap: 12px;
+            }
+            
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .coin-symbol {
+                width: 35px;
+            }
+            
+            .change {
+                width: 65px;
+            }
+            
+            /* Further size adjustments */
+            .size-xs .price { font-size: 18px; }
+            .size-s .price { font-size: 24px; }
+            .size-m .price { font-size: 30px; }
+            .size-l .price { font-size: 36px; }
+            .size-xl .price { font-size: 42px; }
+        }
+        
+        @media (max-width: 360px) {
+            .price-row {
+                margin: 20px 0;
+                gap: 10px;
+            }
+            
+            .control-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 12px;
+            }
+            
+            .mode-number {
+                font-size: 7px;
+            }
+            
+            .coin-symbol {
+                width: 30px;
+                font-size: 12px;
+            }
+            
+            .change {
+                width: 55px;
+                font-size: 12px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn:active {
+                transform: scale(0.9);
+                background: #fff;
+                color: #000;
+            }
+        }
+    </style>
+</head>
+<body class="size-m">
+    <div class="controls">
+        <button class="control-btn" onclick="location.href='bw-mode3.html'" title="이전">←</button>
+        <button class="control-btn" onclick="location.href='bw-mode5.html'" title="다음">→</button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+    </div>
+    
+    <div class="price-container">
+        <div class="price-row">
+            <span class="coin-symbol">BTC</span>
+            <span class="price" id="btc-price">------</span>
+            <span class="change" id="btc-change">----</span>
+        </div>
+        
+        <div class="price-row">
+            <span class="coin-symbol">ETH</span>
+            <span class="price" id="eth-price">------</span>
+            <span class="change" id="eth-change">----</span>
+        </div>
+        
+        <div class="price-row">
+            <span class="coin-symbol">SOL</span>
+            <span class="price" id="sol-price">------</span>
+            <span class="change" id="sol-change">----</span>
+        </div>
+    </div>
+    
+    <script>
+        const sizes = ['xs', 's', 'm', 'l', 'xl'];
+        let currentSizeIndex = 2;
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            localStorage.setItem('bwMode4Size', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwMode4Size');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-m');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        function formatPrice(price) {
+            // Minimal format - no commas, 2 decimals
+            return price.toFixed(2);
+        }
+        
+        function updateCoin(coin, data) {
+            const currentPrice = parseFloat(data.c);
+            const change24h = parseFloat(data.P);
+            
+            document.getElementById(`${coin}-price`).textContent = formatPrice(currentPrice);
+            
+            const changeEl = document.getElementById(`${coin}-change`);
+            changeEl.textContent = `${Math.abs(change24h).toFixed(1)}%`;
+            changeEl.className = change24h >= 0 ? 'change up' : 'change down';
+        }
+        
+        function connectBinanceWebSocket(symbol, coin) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                updateCoin(coin, data);
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, coin);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Initialize WebSockets
+        function initializeWebSockets() {
+            connectBinanceWebSocket('BTCUSDT', 'btc');
+            connectBinanceWebSocket('ETHUSDT', 'eth');
+            connectBinanceWebSocket('SOLUSDT', 'sol');
+        }
+        
+        // Fallback API
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const coins = ['btc', 'eth', 'sol'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                results.forEach((data, index) => {
+                    if (data && data.lastPrice) {
+                        updateCoin(coins[index], {
+                            c: data.lastPrice,
+                            P: data.priceChangePercent
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        // Initialize
+        initializeWebSockets();
+        setTimeout(fetchPricesAPI, 1000);
+    </script>
+    <script src="bw-navigation.js"></script>
+</body>
+</html>

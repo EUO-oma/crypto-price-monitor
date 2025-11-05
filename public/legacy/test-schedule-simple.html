@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 연결 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #121212;
+            color: #fff;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .success {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        .error {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        .info {
+            border-color: #2196f3;
+            background: rgba(33, 150, 243, 0.1);
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Supabase 연결 테스트</h1>
+    <div id="results"></div>
+    
+    <div style="margin-top: 30px;">
+        <button onclick="runTest()">테스트 다시 실행</button>
+        <button onclick="window.location.href='/'">메인 페이지로</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(title, content, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<h3>${title}</h3>${content}`;
+            resultsDiv.appendChild(div);
+        }
+        
+        async function runTest() {
+            resultsDiv.innerHTML = '';
+            
+            // Test 1: Supabase 라이브러리 로드 확인
+            if (typeof window.supabase === 'undefined') {
+                addResult('Supabase 라이브러리', '<p>❌ 로드 실패</p>', 'error');
+                return;
+            } else {
+                addResult('Supabase 라이브러리', '<p>✅ 로드 성공</p>', 'success');
+            }
+            
+            // Test 2: Supabase 클라이언트 생성
+            let supabase;
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                addResult('Supabase 클라이언트', '<p>✅ 생성 성공</p>', 'success');
+            } catch (error) {
+                addResult('Supabase 클라이언트', `<p>❌ 생성 실패: ${error.message}</p>`, 'error');
+                return;
+            }
+            
+            // Test 3: 인증 상태 확인
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                if (error) {
+                    addResult('인증 상태', `<p>⚠️ 로그인하지 않음: ${error.message}</p>`, 'info');
+                } else if (user) {
+                    addResult('인증 상태', `<p>✅ 로그인됨: ${user.email}</p>`, 'success');
+                } else {
+                    addResult('인증 상태', '<p>⚠️ 로그인하지 않음</p>', 'info');
+                }
+            } catch (error) {
+                addResult('인증 확인', `<p>❌ 오류: ${error.message}</p>`, 'error');
+            }
+            
+            // Test 4: 데이터베이스 연결 테스트
+            try {
+                const { data, error } = await supabase
+                    .from('schedules')
+                    .select('count');
+                    
+                if (error) {
+                    if (error.message.includes('relation "schedules" does not exist')) {
+                        addResult('데이터베이스 테이블', 
+                            `<p>❌ schedules 테이블이 존재하지 않습니다.</p>
+                            <p>해결방법:</p>
+                            <ol>
+                                <li><a href="https://supabase.com/dashboard/project/ddfnxbkiewolgweivomv/sql/new" target="_blank">Supabase SQL Editor 열기</a></li>
+                                <li><a href="https://github.com/EUO-oma/crypto-price-monitor/blob/main/schedule-table.sql" target="_blank">schedule-table.sql</a> 내용 복사</li>
+                                <li>SQL Editor에 붙여넣고 실행</li>
+                            </ol>`, 
+                            'error');
+                    } else {
+                        addResult('데이터베이스 연결', 
+                            `<p>❌ 오류: ${error.message}</p>
+                            <pre>${JSON.stringify(error, null, 2)}</pre>`, 
+                            'error');
+                    }
+                } else {
+                    addResult('데이터베이스 연결', 
+                        `<p>✅ 연결 성공</p>
+                        <p>schedules 테이블에 ${data?.[0]?.count || 0}개의 일정이 있습니다.</p>`, 
+                        'success');
+                }
+            } catch (error) {
+                addResult('데이터베이스 테스트', `<p>❌ 오류: ${error.message}</p>`, 'error');
+            }
+            
+            // Test 5: RLS 정책 확인
+            try {
+                // 읽기 테스트 (누구나 가능해야 함)
+                const { data: readData, error: readError } = await supabase
+                    .from('schedules')
+                    .select('*')
+                    .limit(1);
+                    
+                if (readError) {
+                    addResult('RLS 읽기 권한', `<p>❌ 읽기 실패: ${readError.message}</p>`, 'error');
+                } else {
+                    addResult('RLS 읽기 권한', '<p>✅ 읽기 권한 정상</p>', 'success');
+                }
+            } catch (error) {
+                addResult('RLS 테스트', `<p>❌ 오류: ${error.message}</p>`, 'error');
+            }
+        }
+        
+        // 페이지 로드 시 자동 실행
+        runTest();
+    </script>
+</body>
+</html>

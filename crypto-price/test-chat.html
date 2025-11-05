@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅 테스트 페이지</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #0f0;
+            background: #001100;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0a0;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .warning { color: #ff0; }
+        pre {
+            overflow-x: auto;
+            white-space: pre-wrap;
+            background: #000;
+            padding: 10px;
+            border: 1px solid #333;
+        }
+        #chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #0f0;
+            padding: 10px;
+            margin: 10px 0;
+            background: #000;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            background: #002200;
+            border-left: 3px solid #0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 채팅 기능 테스트</h1>
+    
+    <div class="test-section">
+        <h2>1. Supabase 연결 확인</h2>
+        <button onclick="testConnection()">연결 테스트</button>
+        <div id="connection-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 메시지 읽기 테스트</h2>
+        <button onclick="testReadMessages()">메시지 읽기</button>
+        <div id="read-result"></div>
+        <div id="chat-messages"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 메시지 전송 테스트</h2>
+        <input type="text" id="test-message" placeholder="테스트 메시지 입력" style="width: 300px; padding: 5px;">
+        <button onclick="testSendMessage()">전송 테스트</button>
+        <div id="send-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 정책 확인</h2>
+        <button onclick="checkPolicies()">RLS 정책 확인</button>
+        <pre id="policy-result"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. 실시간 구독 테스트</h2>
+        <button onclick="testSubscription()">구독 시작</button>
+        <button onclick="stopSubscription()">구독 중지</button>
+        <div id="subscription-result"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-loader.js"></script>
+    <script>
+        let subscription = null;
+        
+        // 연결 테스트
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            try {
+                resultDiv.innerHTML = '<p class="warning">연결 테스트 중...</p>';
+                
+                // 간단한 쿼리로 연결 테스트
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .select('count');
+                
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ 연결 실패</p>
+                        <p class="error">에러: ${error.message}</p>
+                        <p class="error">코드: ${error.code}</p>
+                        <p class="error">힌트: ${error.hint || '없음'}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="success">✅ 연결 성공!</p>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ 예외: ${err.message}</p>`;
+            }
+        }
+        
+        // 메시지 읽기 테스트
+        async function testReadMessages() {
+            const resultDiv = document.getElementById('read-result');
+            const messagesDiv = document.getElementById('chat-messages');
+            
+            try {
+                resultDiv.innerHTML = '<p class="warning">메시지 읽기 중...</p>';
+                
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ 읽기 실패</p>
+                        <p class="error">에러: ${error.message}</p>
+                        <p class="error">코드: ${error.code}</p>
+                    `;
+                    messagesDiv.innerHTML = '';
+                } else {
+                    resultDiv.innerHTML = `<p class="success">✅ ${data.length}개 메시지 읽기 성공!</p>`;
+                    
+                    if (data.length > 0) {
+                        messagesDiv.innerHTML = data.map(msg => `
+                            <div class="message">
+                                <small>${new Date(msg.created_at).toLocaleString('ko-KR')}</small><br>
+                                ${msg.message}
+                            </div>
+                        `).join('');
+                    } else {
+                        messagesDiv.innerHTML = '<p class="warning">메시지가 없습니다.</p>';
+                    }
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ 예외: ${err.message}</p>`;
+            }
+        }
+        
+        // 메시지 전송 테스트
+        async function testSendMessage() {
+            const resultDiv = document.getElementById('send-result');
+            const input = document.getElementById('test-message');
+            const message = input.value.trim() || `테스트 메시지 ${new Date().toLocaleTimeString('ko-KR')}`;
+            
+            try {
+                resultDiv.innerHTML = '<p class="warning">메시지 전송 중...</p>';
+                
+                console.log('전송할 메시지:', message);
+                
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .insert([{ message: message }])
+                    .select();
+                
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ 전송 실패</p>
+                        <p class="error">에러: ${error.message}</p>
+                        <p class="error">코드: ${error.code}</p>
+                        <p class="error">상세: ${JSON.stringify(error, null, 2)}</p>
+                    `;
+                    
+                    // RLS 문제인지 확인
+                    if (error.code === '42501') {
+                        resultDiv.innerHTML += `
+                            <p class="warning">⚠️ RLS 정책 문제입니다.</p>
+                            <p class="warning">chat-complete-setup.sql 파일을 Supabase SQL Editor에서 실행하세요.</p>
+                        `;
+                    }
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ 메시지 전송 성공!</p>
+                        <p class="success">전송된 메시지: ${message}</p>
+                    `;
+                    input.value = '';
+                    
+                    // 메시지 목록 새로고침
+                    setTimeout(testReadMessages, 500);
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ 예외: ${err.message}</p>`;
+                console.error('전송 오류:', err);
+            }
+        }
+        
+        // RLS 정책 확인
+        async function checkPolicies() {
+            const resultDiv = document.getElementById('policy-result');
+            
+            try {
+                resultDiv.textContent = '정책 확인 중...';
+                
+                // 테이블 존재 여부 확인
+                const { data: tables, error: tableError } = await window.supabaseClient.from('messages')
+                    .select('*')
+                    .limit(1);
+                
+                if (tableError) {
+                    resultDiv.textContent = `테이블 오류:\n${JSON.stringify(tableError, null, 2)}`;
+                } else {
+                    resultDiv.textContent = `테이블 상태: ✅ 정상\n\n`;
+                    
+                    // anon 키 확인
+                    resultDiv.textContent += `Supabase URL: ${SUPABASE_URL}\n`;
+                    resultDiv.textContent += `Anon Key: ${SUPABASE_ANON_KEY.substring(0, 50)}...\n\n`;
+                    
+                    // 테스트 메시지 전송
+                    const testMsg = `정책 테스트 ${Date.now()}`;
+                    const { error: insertError } = await window.supabaseClient.from('messages')
+                        .insert([{ message: testMsg }]);
+                    
+                    if (insertError) {
+                        resultDiv.textContent += `INSERT 테스트: ❌ 실패\n${JSON.stringify(insertError, null, 2)}`;
+                    } else {
+                        resultDiv.textContent += `INSERT 테스트: ✅ 성공`;
+                    }
+                }
+            } catch (err) {
+                resultDiv.textContent = `예외 발생:\n${err.message}`;
+            }
+        }
+        
+        // 실시간 구독 테스트
+        function testSubscription() {
+            const resultDiv = document.getElementById('subscription-result');
+            
+            if (subscription) {
+                resultDiv.innerHTML = '<p class="warning">이미 구독 중입니다.</p>';
+                return;
+            }
+            
+            subscription = window.supabaseClient.channel('test-chat-channel')
+                .on('postgres_changes', 
+                    { event: 'INSERT', schema: 'public', table: 'messages' },
+                    (payload) => {
+                        console.log('새 메시지:', payload);
+                        resultDiv.innerHTML = `
+                            <p class="success">✅ 새 메시지 수신!</p>
+                            <p>${new Date().toLocaleTimeString('ko-KR')}: ${payload.new.message}</p>
+                        `;
+                        testReadMessages();
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('구독 상태:', status);
+                    if (status === 'SUBSCRIBED') {
+                        resultDiv.innerHTML = '<p class="success">✅ 실시간 구독 시작됨</p>';
+                    }
+                });
+        }
+        
+        // 구독 중지
+        function stopSubscription() {
+            const resultDiv = document.getElementById('subscription-result');
+            
+            if (subscription) {
+                window.supabaseClient.removeChannel(subscription);
+                subscription = null;
+                resultDiv.innerHTML = '<p class="warning">구독이 중지되었습니다.</p>';
+            } else {
+                resultDiv.innerHTML = '<p class="warning">구독 중이 아닙니다.</p>';
+            }
+        }
+        
+        // 페이지 로드시 자동 테스트
+        window.addEventListener('DOMContentLoaded', () => {
+            testConnection();
+        });
+    </script>
+</body>
+</html>

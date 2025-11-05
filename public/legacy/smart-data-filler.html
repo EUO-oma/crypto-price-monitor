@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 데이터 채우기 - 암호화폐 가격 모니터</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .status-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #333;
+        }
+        .checking { border-left: 5px solid #2196f3; }
+        .filling { border-left: 5px solid #ff9800; }
+        .complete { border-left: 5px solid #4caf50; }
+        .error { border-left: 5px solid #f44336; }
+        
+        button {
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .progress-bar {
+            background: #333;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            background: #4caf50;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #444;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4caf50;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .log {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            border: 1px solid #333;
+        }
+        
+        .missing-dates {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .date-chip {
+            background: #333;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            border: 1px solid #555;
+        }
+        .date-chip.filled {
+            background: #1a3a1a;
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+        
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        .info { color: #2196f3; }
+        
+        .auto-fill-notice {
+            background: #1a2a1a;
+            border: 2px solid #4caf50;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧩 스마트 데이터 채우기</h1>
+        <p>페이지 로드 시 자동으로 누락된 날짜를 확인하고 채웁니다</p>
+        
+        <!-- 자동 채우기 알림 -->
+        <div class="auto-fill-notice pulse" id="auto-fill-notice">
+            🔄 누락된 데이터를 자동으로 수집하고 있습니다...
+        </div>
+        
+        <!-- 상태 표시 -->
+        <div class="status-card" id="status-card">
+            <h3>상태</h3>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="total-days">0</div>
+                    <div class="stat-label">확인 기간(일)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="existing-days">0</div>
+                    <div class="stat-label">기존 데이터</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="missing-days">0</div>
+                    <div class="stat-label">누락된 날짜</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="filled-days">0</div>
+                    <div class="stat-label">채운 데이터</div>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <p id="status-text">초기화 중...</p>
+        </div>
+        
+        <!-- 누락 날짜 표시 -->
+        <div class="status-card">
+            <h3>📅 누락된 날짜</h3>
+            <div class="missing-dates" id="missing-dates">
+                확인 중...
+            </div>
+        </div>
+        
+        <!-- 컨트롤 버튼 -->
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="checkAndFillMissingData()" id="manual-fill-btn">수동으로 누락 데이터 채우기</button>
+            <button onclick="fillSpecificDateRange()">특정 기간 채우기</button>
+            <button onclick="checkDataIntegrity()">데이터 무결성 검사</button>
+            <button onclick="clearLog()">로그 지우기</button>
+        </div>
+        
+        <!-- 설정 -->
+        <div class="status-card">
+            <h3>⚙️ 설정</h3>
+            <label>
+                <input type="checkbox" id="auto-fill-on-load" checked>
+                페이지 로드 시 자동으로 누락 데이터 채우기
+            </label>
+            <br>
+            <label>
+                확인 기간: 
+                <select id="check-days">
+                    <option value="7">최근 7일</option>
+                    <option value="30" selected>최근 30일</option>
+                    <option value="90">최근 90일</option>
+                    <option value="365">최근 1년</option>
+                </select>
+            </label>
+        </div>
+        
+        <!-- 로그 -->
+        <div class="status-card">
+            <h3>📝 활동 로그</h3>
+            <div class="log" id="log"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+        
+        // Firebase 초기화
+        let database;
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        database = firebase.database();
+        
+        // 전역 변수
+        let isProcessing = false;
+        let missingDates = [];
+        
+        // DOM 요소
+        const logDiv = document.getElementById('log');
+        const statusCard = document.getElementById('status-card');
+        const statusText = document.getElementById('status-text');
+        const progressFill = document.getElementById('progress-fill');
+        const missingDatesDiv = document.getElementById('missing-dates');
+        const autoFillNotice = document.getElementById('auto-fill-notice');
+        const manualFillBtn = document.getElementById('manual-fill-btn');
+        
+        // 로그 함수
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('ko-KR');
+            logDiv.innerHTML = `<div class="${type}">[${time}] ${message}</div>` + logDiv.innerHTML;
+            
+            // 로그 제한
+            const logs = logDiv.children;
+            if (logs.length > 100) {
+                logDiv.removeChild(logs[logs.length - 1]);
+            }
+        }
+        
+        // 로그 지우기
+        function clearLog() {
+            logDiv.innerHTML = '';
+            log('로그를 지웠습니다', 'info');
+        }
+        
+        // UTC 날짜 문자열
+        function getUTCDateString(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        // 누락된 날짜 확인
+        async function checkMissingDates() {
+            statusCard.className = 'status-card checking';
+            statusText.textContent = '데이터베이스를 확인하고 있습니다...';
+            log('누락된 날짜 확인 시작');
+            
+            try {
+                // Firebase에서 기존 데이터 가져오기
+                const snapshot = await database.ref('prices').once('value');
+                const existingData = snapshot.val() || {};
+                const existingDates = new Set(Object.keys(existingData));
+                
+                // 확인할 기간
+                const checkDays = parseInt(document.getElementById('check-days').value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                missingDates = [];
+                const allDates = [];
+                
+                // 어제부터 시작 (오늘 데이터는 아직 없을 수 있음)
+                for (let i = 1; i <= checkDays; i++) {
+                    const date = new Date(Date.UTC(
+                        today.getUTCFullYear(),
+                        today.getUTCMonth(),
+                        today.getUTCDate() - i
+                    ));
+                    const dateStr = getUTCDateString(date);
+                    allDates.push(dateStr);
+                    
+                    if (!existingDates.has(dateStr)) {
+                        missingDates.push({
+                            dateStr,
+                            date
+                        });
+                    }
+                }
+                
+                // 통계 업데이트
+                document.getElementById('total-days').textContent = checkDays;
+                document.getElementById('existing-days').textContent = existingDates.size;
+                document.getElementById('missing-days').textContent = missingDates.length;
+                
+                // 누락 날짜 표시
+                if (missingDates.length > 0) {
+                    missingDatesDiv.innerHTML = missingDates.map(d => 
+                        `<span class="date-chip" id="date-${d.dateStr}">${d.dateStr}</span>`
+                    ).join('');
+                    log(`${missingDates.length}개의 누락된 날짜를 발견했습니다`, 'warning');
+                } else {
+                    missingDatesDiv.innerHTML = '<span style="color: #4caf50;">✅ 모든 날짜의 데이터가 있습니다!</span>';
+                    log('누락된 날짜가 없습니다', 'success');
+                    statusCard.className = 'status-card complete';
+                    statusText.textContent = '데이터가 완벽합니다!';
+                }
+                
+                return missingDates;
+                
+            } catch (error) {
+                log(`확인 중 오류 발생: ${error.message}`, 'error');
+                statusCard.className = 'status-card error';
+                statusText.textContent = '확인 중 오류가 발생했습니다';
+                return [];
+            }
+        }
+        
+        // 특정 날짜 데이터 수집
+        async function collectDataForDate(dateInfo) {
+            const { dateStr, date } = dateInfo;
+            
+            try {
+                const startTime = date.getTime();
+                const endTime = startTime + (24 * 60 * 60 * 1000) - 1;
+                
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const dayData = {
+                    date: dateStr,
+                    collected_at: new Date().toISOString(),
+                    source: 'smart_data_filler'
+                };
+                
+                for (const symbol of symbols) {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=1`;
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API 오류: ${response.status}`);
+                    }
+                    
+                    const klines = await response.json();
+                    
+                    if (klines.length > 0) {
+                        const kline = klines[0];
+                        const prefix = symbol.replace('USDT', '').toLowerCase();
+                        
+                        dayData[prefix] = parseFloat(kline[4]);
+                        dayData[`${prefix}_open`] = parseFloat(kline[1]);
+                        dayData[`${prefix}_high`] = parseFloat(kline[2]);
+                        dayData[`${prefix}_low`] = parseFloat(kline[3]);
+                        dayData[`${prefix}_volume`] = parseFloat(kline[5]);
+                    }
+                    
+                    // API 제한 방지
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // Firebase에 저장
+                await database.ref(`prices/${dateStr}`).set(dayData);
+                
+                // UI 업데이트
+                const dateChip = document.getElementById(`date-${dateStr}`);
+                if (dateChip) {
+                    dateChip.classList.add('filled');
+                }
+                
+                log(`✅ ${dateStr} 데이터 수집 완료`, 'success');
+                return true;
+                
+            } catch (error) {
+                log(`❌ ${dateStr} 수집 실패: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        // 누락 데이터 채우기
+        async function fillMissingData() {
+            if (isProcessing || missingDates.length === 0) return;
+            
+            isProcessing = true;
+            manualFillBtn.disabled = true;
+            statusCard.className = 'status-card filling';
+            autoFillNotice.style.display = 'block';
+            
+            const totalMissing = missingDates.length;
+            let filled = 0;
+            
+            log(`${totalMissing}개의 누락된 데이터를 채우기 시작합니다...`, 'info');
+            
+            for (let i = 0; i < missingDates.length; i++) {
+                const dateInfo = missingDates[i];
+                statusText.textContent = `${dateInfo.dateStr} 수집 중... (${i + 1}/${totalMissing})`;
+                progressFill.style.width = `${((i + 1) / totalMissing) * 100}%`;
+                
+                const success = await collectDataForDate(dateInfo);
+                if (success) filled++;
+                
+                // API 제한 방지를 위한 딜레이
+                if (i < missingDates.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+            }
+            
+            document.getElementById('filled-days').textContent = filled;
+            
+            if (filled === totalMissing) {
+                statusCard.className = 'status-card complete';
+                statusText.textContent = `완료! ${filled}개의 데이터를 성공적으로 채웠습니다.`;
+                log(`✅ 모든 누락 데이터를 채웠습니다 (${filled}/${totalMissing})`, 'success');
+            } else {
+                statusCard.className = 'status-card error';
+                statusText.textContent = `부분 완료: ${filled}/${totalMissing}개 채움`;
+                log(`⚠️ 일부 데이터만 채웠습니다 (${filled}/${totalMissing})`, 'warning');
+            }
+            
+            autoFillNotice.style.display = 'none';
+            isProcessing = false;
+            manualFillBtn.disabled = false;
+            
+            // 다시 확인
+            setTimeout(() => checkMissingDates(), 1000);
+        }
+        
+        // 수동으로 채우기
+        async function checkAndFillMissingData() {
+            await checkMissingDates();
+            if (missingDates.length > 0) {
+                if (confirm(`${missingDates.length}개의 누락된 날짜를 채우시겠습니까?`)) {
+                    await fillMissingData();
+                }
+            }
+        }
+        
+        // 특정 기간 채우기
+        async function fillSpecificDateRange() {
+            const startDateStr = prompt('시작 날짜를 입력하세요 (YYYY-MM-DD):', '2025-01-01');
+            const endDateStr = prompt('종료 날짜를 입력하세요 (YYYY-MM-DD):', getUTCDateString(new Date()));
+            
+            if (!startDateStr || !endDateStr) return;
+            
+            const startDate = new Date(startDateStr + 'T00:00:00Z');
+            const endDate = new Date(endDateStr + 'T00:00:00Z');
+            
+            if (startDate > endDate) {
+                alert('시작 날짜가 종료 날짜보다 늦습니다.');
+                return;
+            }
+            
+            const dates = [];
+            const current = new Date(startDate);
+            
+            while (current <= endDate) {
+                dates.push({
+                    dateStr: getUTCDateString(current),
+                    date: new Date(current)
+                });
+                current.setDate(current.getDate() + 1);
+            }
+            
+            log(`${startDateStr} ~ ${endDateStr} 기간 데이터 수집 시작 (${dates.length}일)`, 'info');
+            
+            missingDates = dates;
+            await fillMissingData();
+        }
+        
+        // 데이터 무결성 검사
+        async function checkDataIntegrity() {
+            log('데이터 무결성 검사 시작...', 'info');
+            statusCard.className = 'status-card checking';
+            statusText.textContent = '데이터 무결성을 검사하고 있습니다...';
+            
+            try {
+                const snapshot = await database.ref('prices').once('value');
+                const data = snapshot.val() || {};
+                
+                let incomplete = 0;
+                let invalid = 0;
+                
+                Object.entries(data).forEach(([date, dayData]) => {
+                    // 필수 필드 확인
+                    const requiredFields = ['btc', 'eth', 'sol'];
+                    const hasAllFields = requiredFields.every(field => 
+                        dayData[field] !== undefined && dayData[field] !== null
+                    );
+                    
+                    if (!hasAllFields) {
+                        incomplete++;
+                        log(`⚠️ ${date}: 불완전한 데이터`, 'warning');
+                    }
+                    
+                    // 가격 유효성 확인
+                    requiredFields.forEach(field => {
+                        if (dayData[field] && (dayData[field] <= 0 || dayData[field] > 1000000)) {
+                            invalid++;
+                            log(`❌ ${date}: ${field} 가격이 비정상적입니다 ($${dayData[field]})`, 'error');
+                        }
+                    });
+                });
+                
+                if (incomplete === 0 && invalid === 0) {
+                    log('✅ 모든 데이터가 정상입니다', 'success');
+                    statusText.textContent = '데이터 무결성 검사 통과!';
+                } else {
+                    log(`검사 완료: 불완전 ${incomplete}개, 비정상 ${invalid}개`, 'warning');
+                    statusText.textContent = `문제 발견: 불완전 ${incomplete}개, 비정상 ${invalid}개`;
+                }
+                
+            } catch (error) {
+                log('무결성 검사 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 초기화
+        window.onload = async () => {
+            log('스마트 데이터 채우기 시스템 초기화', 'info');
+            
+            // 설정 로드
+            const savedAutoFill = localStorage.getItem('auto_fill_on_load');
+            if (savedAutoFill !== null) {
+                document.getElementById('auto-fill-on-load').checked = savedAutoFill === 'true';
+            }
+            
+            // 누락 데이터 확인
+            const missing = await checkMissingDates();
+            
+            // 자동 채우기 실행
+            if (document.getElementById('auto-fill-on-load').checked && missing.length > 0) {
+                log(`🤖 자동 채우기 모드: ${missing.length}개의 누락 데이터 발견`, 'warning');
+                
+                // 3초 후 자동 실행
+                setTimeout(async () => {
+                    log('자동으로 누락된 데이터를 채우기 시작합니다...', 'info');
+                    await fillMissingData();
+                }, 3000);
+            }
+            
+            // 설정 저장
+            document.getElementById('auto-fill-on-load').addEventListener('change', (e) => {
+                localStorage.setItem('auto_fill_on_load', e.target.checked);
+                log(`자동 채우기 설정: ${e.target.checked ? '활성화' : '비활성화'}`, 'info');
+            });
+            
+            document.getElementById('check-days').addEventListener('change', () => {
+                checkMissingDates();
+            });
+        };
+    </script>
+</body>
+</html>

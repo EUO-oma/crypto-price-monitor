@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>링크 관리 - Admin v3 (수정 기능 포함)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        .config-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+
+        .config-section h3 {
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #222;
+            color: #fff;
+        }
+
+        input {
+            width: 300px;
+        }
+
+        button {
+            cursor: pointer;
+            background: #333;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        .add-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+
+        .links-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .links-table th {
+            background: #1a1a1a;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid #333;
+        }
+
+        .links-table tbody {
+            background: #0a0a0a;
+        }
+
+        .links-table td {
+            padding: 12px;
+            border-bottom: 1px solid #333;
+        }
+
+        .links-table tr:hover {
+            background: #1a1a1a;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #444 !important;
+        }
+
+        .drag-handle {
+            cursor: move;
+            color: #666;
+            padding: 0 10px;
+            font-size: 1.2em;
+        }
+
+        .drag-handle:hover {
+            color: #fff;
+        }
+
+        .position-btn {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            margin: 0 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .position-btn:hover {
+            background: #666;
+        }
+
+        .edit-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background: #1976d2;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        .save-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .save-btn:hover {
+            background: #45a049;
+        }
+
+        .cancel-btn {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+            background: #555;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .success {
+            background: #4caf50;
+        }
+
+        .error {
+            background: #f44336;
+        }
+
+        .info {
+            background: #2196f3;
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        a {
+            color: #4ecdc4;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .edit-input {
+            padding: 5px;
+            margin: 2px;
+            border-radius: 3px;
+            border: 1px solid #444;
+            background: #333;
+            color: #fff;
+            width: 200px;
+        }
+
+        .edit-mode {
+            background: #2a2a2a !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 링크 관리 시스템 v3</h1>
+        
+        <div class="info">
+            💡 기능 안내:
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>✏️ <strong>수정</strong>: 링크 이름과 URL 직접 수정</li>
+                <li>🔄 <strong>드래그 앤 드롭</strong>: ≡ 아이콘으로 순서 변경</li>
+                <li>⬆️⬇️ <strong>버튼 이동</strong>: 위/아래 이동</li>
+                <li>➕ <strong>추가</strong>: 새 링크 추가</li>
+                <li>🗑️ <strong>삭제</strong>: 링크 제거</li>
+            </ul>
+        </div>
+
+        <div class="config-section">
+            <h3>⚙️ Supabase 연결 상태</h3>
+            <div id="connection-status">확인 중...</div>
+        </div>
+
+        <div class="add-form" style="margin-bottom: 20px;">
+            <h3 style="width: 100%; margin-bottom: 10px;">🏷️ 카테고리 관리</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="new-category-id" placeholder="카테고리 ID (예: voucher)" style="flex: 1;">
+                <input type="text" id="new-category-name" placeholder="표시 이름 (예: Voucher)" style="flex: 1;">
+                <button onclick="addCustomCategory()" style="background: #007bff;">카테고리 추가</button>
+            </div>
+            <div id="custom-categories" style="font-size: 0.9em; color: #888;">
+                기본 카테고리: youtube, favorite, gpt, fun-youtube
+            </div>
+        </div>
+
+        <div class="add-form">
+            <h3 style="width: 100%; margin-bottom: 10px;">➕ 새 링크 추가</h3>
+            <input type="text" id="link-name" placeholder="이름 (예: 사또)">
+            <input type="text" id="link-url" placeholder="URL (예: https://...)">
+            <select id="link-category">
+                <option value="youtube">YouTube</option>
+                <option value="favorite">Favorite</option>
+                <option value="gpt">GPT Tools</option>
+                <option value="fun-youtube">Fun YouTube</option>
+            </select>
+            <input type="number" id="link-position" placeholder="순서 (1, 2, 3...)" value="999">
+            <button onclick="addNewLink()">추가</button>
+        </div>
+
+        <div id="status-message"></div>
+
+        <h2 style="margin-bottom: 20px;">📋 현재 링크 목록</h2>
+        
+        <div id="links-container">
+            <p>로딩 중...</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="index.html" style="margin-right: 20px;">← 메인 페이지로 돌아가기</a>
+            <button onclick="signOut()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">로그아웃</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    <script>
+        let editingId = null;
+        let customCategories = [];
+
+        // localStorage에서 커스텀 카테고리 불러오기
+        function loadCustomCategories() {
+            const saved = localStorage.getItem('customCategories');
+            if (saved) {
+                customCategories = JSON.parse(saved);
+                updateCategoryDropdown();
+                updateCategoryDisplay();
+            }
+        }
+
+        // 카테고리 드롭다운 업데이트
+        function updateCategoryDropdown() {
+            const select = document.getElementById('link-category');
+            
+            // 커스텀 카테고리 옵션 추가
+            customCategories.forEach(cat => {
+                if (!document.querySelector(`option[value="${cat.id}"]`)) {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // 카테고리 표시 업데이트
+        function updateCategoryDisplay() {
+            const display = document.getElementById('custom-categories');
+            const allCategories = [
+                'youtube', 'favorite', 'gpt', 'fun-youtube',
+                ...customCategories.map(c => c.id)
+            ];
+            display.innerHTML = `
+                <div>기본 카테고리: youtube, favorite, gpt, fun-youtube</div>
+                ${customCategories.length > 0 ? 
+                    `<div>커스텀 카테고리: ${customCategories.map(c => `${c.id} (${c.name})`).join(', ')}</div>` : 
+                    ''}
+            `;
+        }
+
+        // 커스텀 카테고리 추가
+        function addCustomCategory() {
+            const idInput = document.getElementById('new-category-id');
+            const nameInput = document.getElementById('new-category-name');
+            
+            const categoryId = idInput.value.trim().toLowerCase();
+            const categoryName = nameInput.value.trim();
+            
+            if (!categoryId || !categoryName) {
+                alert('카테고리 ID와 이름을 모두 입력해주세요.');
+                return;
+            }
+            
+            // 중복 체크
+            const existing = ['youtube', 'favorite', 'gpt', 'fun-youtube', ...customCategories.map(c => c.id)];
+            if (existing.includes(categoryId)) {
+                alert('이미 존재하는 카테고리 ID입니다.');
+                return;
+            }
+            
+            // 카테고리 추가
+            customCategories.push({ id: categoryId, name: categoryName });
+            localStorage.setItem('customCategories', JSON.stringify(customCategories));
+            
+            // UI 업데이트
+            updateCategoryDropdown();
+            updateCategoryDisplay();
+            
+            // 입력 필드 초기화
+            idInput.value = '';
+            nameInput.value = '';
+            
+            showStatus(`카테고리 '${categoryName}' (${categoryId})가 추가되었습니다.`, 'success');
+        }
+
+        // 페이지 로드시 인증 확인 후 링크 목록 불러오기
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 인증 확인
+            const hasAccess = await checkAdminAccess();
+            if (!hasAccess) {
+                return; // 인증 실패시 admin-links.html로 자동 리다이렉트됨
+            }
+            
+            loadCustomCategories(); // 커스텀 카테고리 로드
+            updateCategoryDropdown(); // 카테고리 드롭다운 업데이트
+            await checkConnection();
+            await loadLinks();
+        });
+
+        // Supabase 연결 확인
+        async function checkConnection() {
+            const statusElement = document.getElementById('connection-status');
+            try {
+                const { data, error } = await window.supabaseClient.from('links').select('count').limit(1);
+                if (error) throw error;
+                statusElement.innerHTML = '<span style="color: #4caf50;">✅ 연결됨</span>';
+            } catch (error) {
+                statusElement.innerHTML = `<span style="color: #f44336;">❌ 연결 실패: ${error.message}</span>`;
+            }
+        }
+
+        // 링크 목록 로드
+        async function loadLinks() {
+            const container = document.getElementById('links-container');
+            
+            try {
+                const links = await fetchLinks();
+                
+                let html = '';
+                
+                // YouTube 링크
+                if (links.youtube.length > 0) {
+                    html += '<h3 style="margin: 20px 0 10px;">🎬 YouTube</h3>';
+                    html += createTable(links.youtube, 'youtube');
+                }
+                
+                // Favorite 링크
+                if (links.favorites.length > 0) {
+                    html += '<h3 style="margin: 20px 0 10px;">⭐ Favorites</h3>';
+                    html += createTable(links.favorites, 'favorite');
+                }
+                
+                // GPT 링크
+                if (links.gpt.length > 0) {
+                    html += '<h3 style="margin: 20px 0 10px;">🤖 GPT Tools</h3>';
+                    html += createTable(links.gpt, 'gpt');
+                }
+                
+                container.innerHTML = html || '<p>등록된 링크가 없습니다.</p>';
+                
+                // 드래그 앤 드롭 초기화
+                initSortable();
+            } catch (error) {
+                container.innerHTML = `<p style="color: #f44336;">오류: ${error.message}</p>`;
+            }
+        }
+
+        // 테이블 생성
+        function createTable(links, category) {
+            let html = `<table class="links-table" data-category="${category}">`;
+            html += '<thead><tr><th width="30">⇅</th><th width="60">순서</th><th>이름</th><th>URL</th><th width="120">카테고리</th><th width="250">작업</th></tr></thead>';
+            html += `<tbody id="sortable-${category}">`;
+            
+            links.forEach(link => {
+                html += `
+                    <tr data-id="${link.id}" data-position="${link.position}" data-category="${link.category}" id="row-${link.id}">
+                        <td class="drag-handle">≡</td>
+                        <td>${link.position || '-'}</td>
+                        <td class="name-cell" id="name-${link.id}">${link.name}</td>
+                        <td class="url-cell" id="url-${link.id}">
+                            <a href="${link.url}" target="_blank">${link.url.substring(0, 50)}${link.url.length > 50 ? '...' : ''}</a>
+                        </td>
+                        <td class="category-cell" id="category-${link.id}" style="text-align: center; color: #888; font-size: 0.9em;">${link.category}</td>
+                        <td class="action-cell" id="actions-${link.id}">
+                            <button class="position-btn" onclick="moveUp(${link.id}, ${link.position}, '${category}')">↑</button>
+                            <button class="position-btn" onclick="moveDown(${link.id}, ${link.position}, '${category}')">↓</button>
+                            <button class="edit-btn" onclick="editLink(${link.id}, '${link.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${link.url.replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${link.category}')">수정</button>
+                            <button class="delete-btn" onclick="removeLink(${link.id})">삭제</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            return html;
+        }
+
+        // 카테고리 목록 가져오기
+        function getCategories() {
+            const defaultCategories = [
+                { id: 'youtube', name: 'YouTube' },
+                { id: 'favorite', name: 'Favorite' },
+                { id: 'gpt', name: 'GPT Tools' },
+                { id: 'fun-youtube', name: 'Fun YouTube' }
+            ];
+            
+            // localStorage에서 사용자 정의 카테고리 가져오기
+            const customCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
+            
+            return [...defaultCategories, ...customCategories];
+        }
+
+        // 링크 수정 모드
+        function editLink(id, name, url, currentCategory) {
+            // 이미 다른 항목을 수정 중이면 취소
+            if (editingId && editingId !== id) {
+                cancelEdit(editingId);
+            }
+
+            editingId = id;
+            const row = document.getElementById(`row-${id}`);
+            row.classList.add('edit-mode');
+
+            // 이름 셀을 입력 필드로 변경
+            document.getElementById(`name-${id}`).innerHTML = 
+                `<input type="text" class="edit-input" id="edit-name-${id}" value="${name}">`;
+
+            // URL 셀을 입력 필드로 변경
+            document.getElementById(`url-${id}`).innerHTML = 
+                `<input type="text" class="edit-input" id="edit-url-${id}" value="${url}" style="width: 90%;">`;
+
+            // 카테고리 셀을 선택 박스로 변경
+            const categories = getCategories();
+            let categoryOptions = '';
+            categories.forEach(cat => {
+                categoryOptions += `<option value="${cat.id}" ${cat.id === currentCategory ? 'selected' : ''}>${cat.name}</option>`;
+            });
+            
+            document.getElementById(`category-${id}`).innerHTML = 
+                `<select class="edit-input" id="edit-category-${id}" style="width: 100px; background: #333; color: #fff; border: 1px solid #444;">
+                    ${categoryOptions}
+                </select>`;
+
+            // 작업 버튼 변경
+            document.getElementById(`actions-${id}`).innerHTML = 
+                `<button class="save-btn" onclick="saveEdit(${id})">저장</button>
+                 <button class="cancel-btn" onclick="cancelEdit(${id})">취소</button>`;
+        }
+
+        // 수정 저장
+        async function saveEdit(id) {
+            const newName = document.getElementById(`edit-name-${id}`).value;
+            const newUrl = document.getElementById(`edit-url-${id}`).value;
+            const newCategory = document.getElementById(`edit-category-${id}`).value;
+
+            if (!newName || !newUrl || !newCategory) {
+                showStatus('이름, URL, 카테고리를 모두 입력하세요', 'error');
+                return;
+            }
+
+            const result = await updateLink(id, { 
+                name: newName, 
+                url: newUrl, 
+                category: newCategory 
+            });
+            
+            if (result) {
+                showStatus('수정되었습니다', 'success');
+                editingId = null;
+                await loadLinks();
+            } else {
+                showStatus('수정 실패', 'error');
+            }
+        }
+
+        // 수정 취소
+        function cancelEdit(id) {
+            editingId = null;
+            loadLinks();
+        }
+
+        // 드래그 앤 드롭 초기화
+        function initSortable() {
+            ['youtube', 'favorite', 'gpt', 'fun-youtube'].forEach(category => {
+                const element = document.getElementById(`sortable-${category}`);
+                if (element) {
+                    new Sortable(element, {
+                        handle: '.drag-handle',
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        onEnd: async function(evt) {
+                            await updatePositions(category);
+                        }
+                    });
+                }
+            });
+        }
+
+        // 순서 업데이트
+        async function updatePositions(category) {
+            const tbody = document.getElementById(`sortable-${category}`);
+            if (!tbody) return;
+            
+            const rows = tbody.querySelectorAll('tr');
+            const updates = [];
+            
+            rows.forEach((row, index) => {
+                const id = row.dataset.id;
+                const newPosition = index + 1;
+                updates.push(updateLink(id, { position: newPosition }));
+            });
+            
+            await Promise.all(updates);
+            showStatus('순서가 업데이트되었습니다', 'success');
+            await loadLinks();
+        }
+
+        // 위로 이동
+        async function moveUp(id, currentPos, category) {
+            if (currentPos <= 1) return;
+            
+            const { data: links } = await window.supabaseClient.from('links')
+                .select('*')
+                .eq('category', category)
+                .order('position');
+            
+            const currentIndex = links.findIndex(l => l.id === id);
+            if (currentIndex > 0) {
+                const prevLink = links[currentIndex - 1];
+                
+                await updateLink(id, { position: prevLink.position });
+                await updateLink(prevLink.id, { position: currentPos });
+                
+                await loadLinks();
+            }
+        }
+
+        // 아래로 이동
+        async function moveDown(id, currentPos, category) {
+            const { data: links } = await window.supabaseClient.from('links')
+                .select('*')
+                .eq('category', category)
+                .order('position');
+            
+            const currentIndex = links.findIndex(l => l.id === id);
+            if (currentIndex < links.length - 1) {
+                const nextLink = links[currentIndex + 1];
+                
+                await updateLink(id, { position: nextLink.position });
+                await updateLink(nextLink.id, { position: currentPos });
+                
+                await loadLinks();
+            }
+        }
+
+        // 새 링크 추가
+        async function addNewLink() {
+            const name = document.getElementById('link-name').value;
+            const url = document.getElementById('link-url').value;
+            const category = document.getElementById('link-category').value;
+            const position = parseInt(document.getElementById('link-position').value) || 999;
+            
+            if (!name || !url) {
+                showStatus('이름과 URL을 입력하세요', 'error');
+                return;
+            }
+            
+            const result = await addLink(name, url, category, position);
+            
+            if (result) {
+                showStatus('링크가 추가되었습니다', 'success');
+                document.getElementById('link-name').value = '';
+                document.getElementById('link-url').value = '';
+                document.getElementById('link-position').value = '999';
+                await loadLinks();
+            } else {
+                showStatus('추가 실패', 'error');
+            }
+        }
+
+        // 링크 삭제
+        async function removeLink(id) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+            
+            const result = await deleteLink(id);
+            
+            if (result) {
+                showStatus('삭제되었습니다', 'success');
+                await loadLinks();
+            } else {
+                showStatus('삭제 실패', 'error');
+            }
+        }
+
+        // 상태 메시지 표시
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status-message');
+            statusElement.className = `status ${type}`;
+            statusElement.textContent = message;
+            
+            setTimeout(() => {
+                statusElement.textContent = '';
+                statusElement.className = '';
+            }, 3000);
+        }
+
+        // 실시간 업데이트 구독
+        subscribeToLinks(async (payload) => {
+            console.log('데이터 변경 감지:', payload);
+            if (!editingId) {  // 수정 중이 아닐 때만 자동 새로고침
+                await loadLinks();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <h1>Crypto Live Icon Generator</h1>
+    <p>아래 캔버스를 우클릭하여 이미지로 저장하세요:</p>
+    
+    <h2>Favicon ICO (16x16)</h2>
+    <canvas id="favicon16" width="16" height="16"></canvas>
+    
+    <h2>Favicon PNG (32x32)</h2>
+    <canvas id="favicon32" width="32" height="32"></canvas>
+    
+    <h2>Apple Touch Icon (180x180)</h2>
+    <canvas id="apple180" width="180" height="180"></canvas>
+    
+    <h2>Android Chrome (192x192)</h2>
+    <canvas id="android192" width="192" height="192"></canvas>
+    
+    <h2>Android Chrome (512x512)</h2>
+    <canvas id="android512" width="512" height="512"></canvas>
+    
+    <h2>OG Image (1200x630)</h2>
+    <canvas id="ogImage" width="1200" height="630"></canvas>
+
+    <script>
+        function drawIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // 배경
+            ctx.fillStyle = '#000000';
+            if (canvasId === 'ogImage') {
+                ctx.fillRect(0, 0, 1200, 630);
+            } else {
+                ctx.roundRect(0, 0, size, size, size * 0.2);
+                ctx.fill();
+            }
+            
+            // 그라데이션
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#f7931a');
+            gradient.addColorStop(0.5, '#627eea');
+            gradient.addColorStop(1, '#00FFA3');
+            
+            if (canvasId === 'ogImage') {
+                // OG Image 디자인
+                ctx.fillStyle = gradient;
+                ctx.font = 'bold 200px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('CRYPTO', 600, 250);
+                
+                ctx.font = 'bold 100px Arial';
+                ctx.fillText('× LIVE', 600, 380);
+                
+                // 차트 라인
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.moveTo(200, 500);
+                ctx.lineTo(300, 450);
+                ctx.lineTo(400, 470);
+                ctx.lineTo(500, 420);
+                ctx.lineTo(600, 440);
+                ctx.lineTo(700, 390);
+                ctx.lineTo(800, 410);
+                ctx.lineTo(900, 360);
+                ctx.lineTo(1000, 380);
+                ctx.stroke();
+            } else {
+                // 아이콘 디자인
+                ctx.fillStyle = gradient;
+                const fontSize = size * 0.6;
+                ctx.font = `bold ${fontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('C', size/2, size/2 + fontSize * 0.1);
+                
+                // 작은 차트 라인 (큰 아이콘에만)
+                if (size >= 180) {
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = size * 0.03;
+                    ctx.globalAlpha = 0.8;
+                    ctx.beginPath();
+                    ctx.moveTo(size * 0.2, size * 0.8);
+                    ctx.lineTo(size * 0.3, size * 0.7);
+                    ctx.lineTo(size * 0.4, size * 0.75);
+                    ctx.lineTo(size * 0.5, size * 0.65);
+                    ctx.lineTo(size * 0.6, size * 0.7);
+                    ctx.lineTo(size * 0.7, size * 0.6);
+                    ctx.lineTo(size * 0.8, size * 0.65);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                }
+            }
+        }
+        
+        // 모든 아이콘 그리기
+        drawIcon('favicon16', 16);
+        drawIcon('favicon32', 32);
+        drawIcon('apple180', 180);
+        drawIcon('android192', 192);
+        drawIcon('android512', 512);
+        drawIcon('ogImage', 1200);
+        
+        // 다운로드 링크 생성
+        function createDownloadLink(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            canvas.style.border = '1px solid #ccc';
+            canvas.style.margin = '10px';
+            
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL();
+            link.textContent = ` [${filename} 다운로드]`;
+            link.style.marginLeft = '10px';
+            canvas.parentNode.appendChild(link);
+        }
+        
+        setTimeout(() => {
+            createDownloadLink('favicon16', 'favicon-16x16.png');
+            createDownloadLink('favicon32', 'favicon-32x32.png');
+            createDownloadLink('apple180', 'apple-touch-icon.png');
+            createDownloadLink('android192', 'android-chrome-192x192.png');
+            createDownloadLink('android512', 'android-chrome-512x512.png');
+            createDownloadLink('ogImage', 'og-image.png');
+        }, 100);
+    </script>
+</body>
+</html>

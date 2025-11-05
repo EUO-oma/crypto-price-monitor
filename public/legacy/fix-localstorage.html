@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalStorage 스타일 수정 도구</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #4facfe;
+            text-align: center;
+        }
+        
+        .section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+        
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #2563eb;
+        }
+        
+        button.danger {
+            background: #dc2626;
+        }
+        
+        button.danger:hover {
+            background: #b91c1c;
+        }
+        
+        button.success {
+            background: #10b981;
+        }
+        
+        button.success:hover {
+            background: #059669;
+        }
+        
+        pre {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .error { color: #f87171; }
+        .success { color: #4ade80; }
+        .warning { color: #fbbf24; }
+        .info { color: #60a5fa; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background: #2a2a2a;
+        }
+        
+        .problem {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 LocalStorage 스타일 수정 도구</h1>
+    
+    <div class="section">
+        <h2>1. 현재 저장된 스타일 검사</h2>
+        <button onclick="checkCurrentStyles()">현재 스타일 확인</button>
+        <button onclick="findProblems()">문제 찾기</button>
+        <div id="current-styles"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. 문제 자동 수정</h2>
+        <button onclick="autoFix()" class="success">자동 수정</button>
+        <button onclick="resetToDefaults()" class="danger">기본값으로 초기화</button>
+        <div id="fix-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. 커스텀 카테고리 검사</h2>
+        <button onclick="checkCustomCategories()">커스텀 카테고리 확인</button>
+        <div id="custom-categories"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. 전체 LocalStorage 내용</h2>
+        <button onclick="showAllStorage()">전체 보기</button>
+        <button onclick="clearAll()" class="danger">전체 삭제 (주의!)</button>
+        <div id="all-storage"></div>
+    </div>
+
+    <script>
+        // 현재 스타일 확인
+        function checkCurrentStyles() {
+            const result = document.getElementById('current-styles');
+            
+            try {
+                const styles = localStorage.getItem('linkCardStyles');
+                
+                if (!styles) {
+                    result.innerHTML = '<p class="warning">⚠️ 저장된 스타일이 없습니다.</p>';
+                    return;
+                }
+                
+                const parsed = JSON.parse(styles);
+                result.innerHTML = `
+                    <p class="success">✅ 스타일 데이터 발견</p>
+                    <pre>${JSON.stringify(parsed, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                result.innerHTML = `
+                    <p class="error">❌ 파싱 오류: ${error.message}</p>
+                    <p>원본 데이터:</p>
+                    <pre>${localStorage.getItem('linkCardStyles')}</pre>
+                `;
+            }
+        }
+        
+        // 문제 찾기
+        function findProblems() {
+            const result = document.getElementById('current-styles');
+            
+            try {
+                const styles = localStorage.getItem('linkCardStyles');
+                if (!styles) {
+                    result.innerHTML = '<p class="info">저장된 스타일이 없습니다.</p>';
+                    return;
+                }
+                
+                const parsed = JSON.parse(styles);
+                let problems = [];
+                
+                // 각 카테고리 검사
+                ['gpt', 'youtube', 'favorite'].forEach(category => {
+                    if (parsed[category]) {
+                        const cat = parsed[category];
+                        
+                        // NaN 체크
+                        if (isNaN(cat.fontSize)) problems.push(`${category}.fontSize가 NaN`);
+                        if (isNaN(cat.borderWidth)) problems.push(`${category}.borderWidth가 NaN`);
+                        if (isNaN(cat.borderRadius)) problems.push(`${category}.borderRadius가 NaN`);
+                        if (isNaN(cat.padding)) problems.push(`${category}.padding이 NaN`);
+                        
+                        // undefined/null 체크
+                        if (cat.bgColor === undefined || cat.bgColor === null) 
+                            problems.push(`${category}.bgColor가 undefined/null`);
+                        if (cat.textColor === undefined || cat.textColor === null) 
+                            problems.push(`${category}.textColor가 undefined/null`);
+                        
+                        // 빈 문자열 체크
+                        if (cat.bgColor === '') problems.push(`${category}.bgColor가 빈 문자열`);
+                        if (cat.textColor === '') problems.push(`${category}.textColor가 빈 문자열`);
+                    }
+                });
+                
+                if (problems.length === 0) {
+                    result.innerHTML += '<p class="success">✅ 문제가 발견되지 않았습니다.</p>';
+                } else {
+                    let html = '<p class="error">❌ 발견된 문제:</p><table>';
+                    problems.forEach(problem => {
+                        html += `<tr class="problem"><td>${problem}</td></tr>`;
+                    });
+                    html += '</table>';
+                    result.innerHTML += html;
+                }
+                
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ 검사 실패: ${error.message}</p>`;
+            }
+        }
+        
+        // 자동 수정
+        function autoFix() {
+            const result = document.getElementById('fix-result');
+            
+            try {
+                const styles = localStorage.getItem('linkCardStyles');
+                let fixed;
+                
+                if (!styles) {
+                    // 스타일이 없으면 기본값 생성
+                    fixed = getDefaultStyles();
+                } else {
+                    fixed = JSON.parse(styles);
+                    
+                    // 각 카테고리 수정
+                    ['gpt', 'youtube', 'favorite'].forEach(category => {
+                        if (!fixed[category]) {
+                            fixed[category] = getDefaultStyles()[category];
+                        } else {
+                            const cat = fixed[category];
+                            
+                            // NaN을 기본값으로 대체
+                            if (isNaN(cat.fontSize)) cat.fontSize = 16;
+                            if (isNaN(cat.borderWidth)) cat.borderWidth = 1;
+                            if (isNaN(cat.borderRadius)) cat.borderRadius = 10;
+                            if (isNaN(cat.padding)) cat.padding = 15;
+                            if (isNaN(cat.gap)) cat.gap = 10;
+                            
+                            // undefined/null/빈 문자열 수정
+                            if (!cat.bgColor) cat.bgColor = '#1a1a1a';
+                            if (!cat.textColor) cat.textColor = '#ffffff';
+                            if (!cat.borderColor) cat.borderColor = '#333333';
+                            if (!cat.fontWeight) cat.fontWeight = '500';
+                            
+                            // 호버 관련
+                            if (!cat.hoverBg) cat.hoverBg = '#2a2a2a';
+                            if (!cat.hoverScale) cat.hoverScale = 102;
+                        }
+                    });
+                }
+                
+                // 저장
+                localStorage.setItem('linkCardStyles', JSON.stringify(fixed));
+                
+                result.innerHTML = `
+                    <p class="success">✅ 스타일이 수정되었습니다!</p>
+                    <p>수정된 데이터:</p>
+                    <pre>${JSON.stringify(fixed, null, 2)}</pre>
+                    <p class="info">ℹ️ 페이지를 새로고침하면 적용됩니다.</p>
+                `;
+                
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ 수정 실패: ${error.message}</p>`;
+            }
+        }
+        
+        // 기본값
+        function getDefaultStyles() {
+            return {
+                gpt: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                },
+                youtube: {
+                    fontSize: 17, fontWeight: '600', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102,
+                    showLiveIndicator: true
+                },
+                favorite: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                }
+            };
+        }
+        
+        // 기본값으로 초기화
+        function resetToDefaults() {
+            if (confirm('정말로 모든 스타일을 기본값으로 초기화하시겠습니까?')) {
+                localStorage.setItem('linkCardStyles', JSON.stringify(getDefaultStyles()));
+                document.getElementById('fix-result').innerHTML = 
+                    '<p class="success">✅ 기본값으로 초기화되었습니다.</p>';
+            }
+        }
+        
+        // 커스텀 카테고리 확인
+        function checkCustomCategories() {
+            const result = document.getElementById('custom-categories');
+            
+            try {
+                const custom = localStorage.getItem('customCategories');
+                
+                if (!custom) {
+                    result.innerHTML = '<p class="info">커스텀 카테고리가 없습니다.</p>';
+                    // 기본 커스텀 카테고리 생성 제안
+                    result.innerHTML += `
+                        <button onclick="createDefaultCustomCategories()" class="success" style="margin-top: 10px;">
+                            기본 커스텀 카테고리 생성
+                        </button>
+                    `;
+                    return;
+                }
+                
+                const parsed = JSON.parse(custom);
+                result.innerHTML = `
+                    <p class="success">✅ 커스텀 카테고리 발견</p>
+                    <pre>${JSON.stringify(parsed, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ 파싱 오류: ${error.message}</p>`;
+            }
+        }
+        
+        // 기본 커스텀 카테고리 생성
+        function createDefaultCustomCategories() {
+            const defaultCustom = [
+                { id: 'tools', name: '🛠️ 도구', order: 4 },
+                { id: 'news', name: '📰 뉴스', order: 5 },
+                { id: 'research', name: '🔬 연구', order: 6 },
+                { id: 'education', name: '📚 교육', order: 7 }
+            ];
+            
+            localStorage.setItem('customCategories', JSON.stringify(defaultCustom));
+            
+            // 스타일도 함께 생성
+            const currentStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
+            
+            defaultCustom.forEach(cat => {
+                if (!currentStyles[cat.id]) {
+                    currentStyles[cat.id] = {
+                        fontSize: 16, 
+                        fontWeight: '500', 
+                        bgColor: '#1a1a1a', 
+                        textColor: '#ffffff',
+                        borderColor: '#333333', 
+                        borderWidth: 1, 
+                        borderRadius: 10, 
+                        padding: 15, 
+                        gap: 10,
+                        shadow: true, 
+                        hoverEffect: true, 
+                        hoverBg: '#2a2a2a', 
+                        hoverScale: 102
+                    };
+                }
+            });
+            
+            localStorage.setItem('linkCardStyles', JSON.stringify(currentStyles));
+            
+            document.getElementById('custom-categories').innerHTML = 
+                '<p class="success">✅ 기본 커스텀 카테고리가 생성되었습니다!</p>' +
+                '<p class="info">ℹ️ 페이지를 새로고침하면 적용됩니다.</p>';
+            
+            // 다시 확인
+            setTimeout(() => checkCustomCategories(), 1000);
+        }
+        
+        // 전체 LocalStorage 보기
+        function showAllStorage() {
+            const result = document.getElementById('all-storage');
+            let html = '<h3>전체 LocalStorage 내용:</h3><table>';
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                html += `
+                    <tr>
+                        <th>${key}</th>
+                        <td><pre>${value}</pre></td>
+                    </tr>
+                `;
+            }
+            
+            html += '</table>';
+            result.innerHTML = html;
+        }
+        
+        // 전체 삭제
+        function clearAll() {
+            if (confirm('정말로 모든 LocalStorage 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다!')) {
+                localStorage.clear();
+                document.getElementById('all-storage').innerHTML = 
+                    '<p class="success">✅ 모든 LocalStorage 데이터가 삭제되었습니다.</p>';
+            }
+        }
+        
+        // 페이지 로드 시 자동 검사
+        window.addEventListener('DOMContentLoaded', () => {
+            checkCurrentStyles();
+            findProblems();
+        });
+    </script>
+</body>
+</html>

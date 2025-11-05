@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalStorage 버전 - 가격 수집기</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #333;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #1a1a1a;
+        }
+        tr:hover {
+            background: #1a1a1a;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        #log {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 로컬 가격 수집기 (Offline 버전)</h1>
+        <p class="warning">⚠️ Supabase 연결 문제로 인해 로컬 저장소를 사용하는 버전입니다.</p>
+        
+        <div class="status">
+            <h3>현재 상태</h3>
+            <p>저장된 데이터: <span id="data-count">0</span>개</p>
+            <p>마지막 업데이트: <span id="last-update">없음</span></p>
+        </div>
+        
+        <div>
+            <button onclick="collectCurrentPrices()">현재 가격 수집</button>
+            <button onclick="collectHistoricalData()">과거 데이터 수집 (30일)</button>
+            <button onclick="exportData()">데이터 내보내기 (JSON)</button>
+            <button onclick="clearData()" style="background: #f44336;">데이터 초기화</button>
+        </div>
+        
+        <div id="log"></div>
+        
+        <h3>수집된 데이터</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>날짜</th>
+                    <th>BTC</th>
+                    <th>ETH</th>
+                    <th>SOL</th>
+                    <th>수집 시간</th>
+                </tr>
+            </thead>
+            <tbody id="data-table">
+                <tr><td colspan="5">데이터가 없습니다.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // LocalStorage 키
+        const STORAGE_KEY = 'crypto_price_history';
+        
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            logEl.innerHTML = `<div class="${className}">[${time}] ${message}</div>` + logEl.innerHTML;
+        }
+        
+        // LocalStorage에서 데이터 불러오기
+        function loadData() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                log('데이터 로드 실패: ' + e.message, 'error');
+                return [];
+            }
+        }
+        
+        // LocalStorage에 데이터 저장
+        function saveData(data) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                updateDisplay();
+                log('데이터 저장 완료', 'success');
+            } catch (e) {
+                log('데이터 저장 실패: ' + e.message, 'error');
+            }
+        }
+        
+        // 현재 가격 수집
+        async function collectCurrentPrices() {
+            log('현재 가격 수집 시작...');
+            
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const prices = {};
+                
+                for (const symbol of symbols) {
+                    const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+                    const data = await response.json();
+                    
+                    prices[symbol] = {
+                        price: parseFloat(data.lastPrice),
+                        high: parseFloat(data.highPrice),
+                        low: parseFloat(data.lowPrice)
+                    };
+                    
+                    log(`${symbol}: $${prices[symbol].price}`, 'success');
+                }
+                
+                // 데이터 저장
+                const existingData = loadData();
+                const today = new Date().toISOString().split('T')[0];
+                
+                // 오늘 데이터가 이미 있는지 확인
+                const todayIndex = existingData.findIndex(d => d.date === today);
+                const newEntry = {
+                    date: today,
+                    btc: prices.BTCUSDT.price,
+                    eth: prices.ETHUSDT.price,
+                    sol: prices.SOLUSDT.price,
+                    collectedAt: new Date().toISOString()
+                };
+                
+                if (todayIndex >= 0) {
+                    existingData[todayIndex] = newEntry;
+                } else {
+                    existingData.push(newEntry);
+                }
+                
+                // 날짜순 정렬
+                existingData.sort((a, b) => b.date.localeCompare(a.date));
+                
+                saveData(existingData);
+                
+            } catch (error) {
+                log('가격 수집 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 과거 데이터 수집 (30일)
+        async function collectHistoricalData() {
+            log('과거 30일 데이터 수집 시작...');
+            
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const endTime = new Date().getTime();
+                const startTime = endTime - (30 * 24 * 60 * 60 * 1000); // 30일 전
+                
+                const allData = loadData();
+                
+                for (const symbol of symbols) {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=30`;
+                    const response = await fetch(url);
+                    const klines = await response.json();
+                    
+                    log(`${symbol}: ${klines.length}일 데이터 수집`, 'success');
+                    
+                    // 각 일별 데이터 처리
+                    for (const kline of klines) {
+                        const date = new Date(kline[0]).toISOString().split('T')[0];
+                        
+                        // 해당 날짜 데이터 찾기 또는 생성
+                        let dayData = allData.find(d => d.date === date);
+                        if (!dayData) {
+                            dayData = { date, btc: 0, eth: 0, sol: 0 };
+                            allData.push(dayData);
+                        }
+                        
+                        // 심볼에 따라 가격 설정
+                        const price = parseFloat(kline[4]); // 종가
+                        if (symbol === 'BTCUSDT') dayData.btc = price;
+                        else if (symbol === 'ETHUSDT') dayData.eth = price;
+                        else if (symbol === 'SOLUSDT') dayData.sol = price;
+                        
+                        dayData.collectedAt = new Date().toISOString();
+                    }
+                }
+                
+                // 날짜순 정렬
+                allData.sort((a, b) => b.date.localeCompare(a.date));
+                
+                saveData(allData);
+                log('과거 데이터 수집 완료!', 'success');
+                
+            } catch (error) {
+                log('과거 데이터 수집 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 데이터 내보내기
+        function exportData() {
+            const data = loadData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `crypto_prices_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            log('데이터 내보내기 완료', 'success');
+        }
+        
+        // 데이터 초기화
+        function clearData() {
+            if (confirm('모든 데이터를 삭제하시겠습니까?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                updateDisplay();
+                log('데이터 초기화 완료', 'success');
+            }
+        }
+        
+        // 화면 업데이트
+        function updateDisplay() {
+            const data = loadData();
+            
+            // 카운트 업데이트
+            document.getElementById('data-count').textContent = data.length;
+            
+            // 마지막 업데이트 시간
+            if (data.length > 0 && data[0].collectedAt) {
+                const lastUpdate = new Date(data[0].collectedAt);
+                document.getElementById('last-update').textContent = lastUpdate.toLocaleString('ko-KR');
+            }
+            
+            // 테이블 업데이트
+            const tbody = document.getElementById('data-table');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">데이터가 없습니다.</td></tr>';
+            } else {
+                tbody.innerHTML = data.slice(0, 30).map(d => `
+                    <tr>
+                        <td>${d.date}</td>
+                        <td>$${d.btc ? d.btc.toLocaleString() : '-'}</td>
+                        <td>$${d.eth ? d.eth.toLocaleString() : '-'}</td>
+                        <td>$${d.sol ? d.sol.toLocaleString() : '-'}</td>
+                        <td>${new Date(d.collectedAt).toLocaleTimeString('ko-KR')}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+        
+        // 페이지 로드시 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            updateDisplay();
+            log('로컬 저장소 버전 준비 완료', 'success');
+        });
+    </script>
+</body>
+</html>

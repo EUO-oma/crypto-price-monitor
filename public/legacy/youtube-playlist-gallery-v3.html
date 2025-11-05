@@ -1,0 +1,2122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Playlist Gallery v3 - Ultimate Experience</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-red: #ff0000;
+            --dark-bg: #0a0a0a;
+            --card-bg: #141414;
+            --hover-bg: #1f1f1f;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+            --border-color: #333333;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --gradient-start: #ff0000;
+            --gradient-end: #ff4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            background: radial-gradient(circle at 20% 50%, var(--gradient-start) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, var(--gradient-end) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 20%, #ff6666 0%, transparent 50%);
+            animation: bgPulse 20s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(10deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .logo-container {
+            display: inline-block;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 4em;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo::after {
+            content: 'v3';
+            position: absolute;
+            top: -10px;
+            right: -40px;
+            font-size: 0.3em;
+            background: var(--success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        /* Auth Section */
+        .auth-section {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideLeft 0.8s ease-out;
+        }
+
+        .auth-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auth-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-red);
+        }
+
+        /* Import Section - Redesigned */
+        .import-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 50px;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.8s ease-out 0.2s both;
+        }
+
+        .import-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .import-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .import-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mode-switcher {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            padding: 4px;
+            position: relative;
+        }
+
+        .mode-option {
+            padding: 10px 24px;
+            border-radius: 26px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+            color: var(--text-secondary);
+        }
+
+        .mode-option.active {
+            color: white;
+        }
+
+        .mode-indicator {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            height: calc(100% - 8px);
+            background: var(--primary-red);
+            border-radius: 26px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 0;
+        }
+
+        /* Input Areas - Enhanced */
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .input-card:hover {
+            border-color: rgba(255, 0, 0, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .input-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary-red), transparent);
+            border-radius: 16px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+
+        .input-card:focus-within::before {
+            opacity: 0.3;
+        }
+
+        .input-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .input-label i {
+            color: var(--primary-red);
+        }
+
+        .modern-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .modern-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .modern-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+        }
+
+        /* Action Buttons - Redesigned */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 30px rgba(255, 0, 0, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Quick Actions Bar */
+        .quick-actions {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 60px;
+            padding: 10px 20px;
+            display: flex;
+            gap: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: slideUp 0.8s ease-out 0.5s both;
+        }
+
+        .quick-action-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
+        }
+
+        .quick-action-btn:hover {
+            background: var(--primary-red);
+            transform: translateY(-5px);
+        }
+
+        .quick-action-btn .tooltip {
+            position: absolute;
+            bottom: 65px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .quick-action-btn:hover .tooltip {
+            opacity: 1;
+        }
+
+        /* Playlist Tabs - Enhanced */
+        .playlist-container {
+            margin-top: 50px;
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .playlist-title {
+            font-size: 2em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .playlist-stats {
+            display: flex;
+            gap: 30px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-item i {
+            color: var(--primary-red);
+        }
+
+        .playlist-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            padding-bottom: 15px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .playlist-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .playlist-tabs::-webkit-scrollbar-thumb {
+            background: var(--primary-red);
+            border-radius: 2px;
+        }
+
+        .playlist-tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .playlist-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .playlist-tab.active {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
+        }
+
+        .playlist-tab .tab-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 10px;
+        }
+
+        .tab-action {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .tab-action:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.2);
+        }
+
+        .tab-action.play:hover {
+            background: var(--success);
+        }
+
+        .tab-action.delete:hover {
+            background: var(--error);
+        }
+
+        /* Video Grid - Ultimate Design */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .video-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            group: card;
+        }
+        
+        .video-delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            background: rgba(244, 67, 54, 0.9);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .video-card:hover .video-delete-btn {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .video-delete-btn:hover {
+            background: rgba(244, 67, 54, 1);
+            transform: scale(1.1);
+        }
+
+        .video-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(255, 0, 0, 0.3);
+            border-color: rgba(255, 0, 0, 0.5);
+        }
+
+        .video-thumbnail-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .video-thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .video-card:hover .video-thumbnail {
+            transform: scale(1.1);
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent 60%, rgba(0, 0, 0, 0.8));
+            opacity: 0;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-card:hover .video-overlay {
+            opacity: 1;
+        }
+
+        .play-button {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 0, 0, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            transform: scale(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .video-card:hover .play-button {
+            transform: scale(1);
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .video-info {
+            padding: 20px;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        .video-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .video-channel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .channel-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* Loading States */
+        .loading-skeleton {
+            background: linear-gradient(90deg, var(--card-bg) 25%, rgba(255, 255, 255, 0.1) 50%, var(--card-bg) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Notifications */
+        .notification-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 2000;
+        }
+
+        .notification {
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 300px;
+            animation: slideInRight 0.3s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--success);
+        }
+
+        .notification.error::before {
+            background: var(--error);
+        }
+
+        .notification.warning::before {
+            background: var(--warning);
+        }
+
+        .notification-icon {
+            font-size: 24px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 20px;
+            transition: color 0.3s;
+        }
+
+        .notification-close:hover {
+            color: white;
+        }
+
+        /* Search and Filter */
+        .search-filter-section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-red);
+            color: var(--primary-red);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-red);
+            border-color: var(--primary-red);
+            color: white;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideLeft {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5em;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                padding: 8px 15px;
+                gap: 15px;
+            }
+
+            .quick-action-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 15px;
+            }
+
+            .playlist-header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+
+            .search-filter-section {
+                flex-direction: column;
+            }
+
+            .filter-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Dark/Light Theme Toggle */
+        body.light-theme {
+            --dark-bg: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+        }
+
+        body.light-theme .bg-animation {
+            opacity: 0.05;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    
+    <!-- Auth Section -->
+    <div class="auth-section" id="auth-section">
+        <button class="auth-btn" id="auth-btn" onclick="toggleAuth()">
+            <i class="fab fa-google"></i>
+            <span>Google 로그인</span>
+        </button>
+    </div>
+    
+    <!-- Notification Container -->
+    <div class="notification-container" id="notification-container"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <h1 class="logo">YouTube Gallery</h1>
+            </div>
+            <p class="subtitle">재생목록을 더 스마트하게 관리하세요 ✨</p>
+        </header>
+        
+        <!-- Import Section -->
+        <div class="import-section">
+            <div class="import-header">
+                <h2 class="import-title">
+                    <i class="fas fa-plus-circle"></i>
+                    재생목록 가져오기
+                </h2>
+                <div class="mode-switcher">
+                    <div class="mode-indicator" id="mode-indicator"></div>
+                    <div class="mode-option active" data-mode="new" onclick="switchMode('new')">
+                        새 재생목록
+                    </div>
+                    <div class="mode-option" data-mode="update" onclick="switchMode('update')">
+                        기존 업데이트
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-grid">
+                <div class="input-card">
+                    <label class="input-label">
+                        <i class="fas fa-link"></i>
+                        YouTube 재생목록 URL
+                    </label>
+                    <input type="text" 
+                           class="modern-input" 
+                           id="playlist-url"
+                           placeholder="https://youtube.com/playlist?list=..."
+                           onpaste="handlePaste(event)">
+                </div>
+                
+                <div class="input-card" id="name-input-card">
+                    <label class="input-label">
+                        <i class="fas fa-tag"></i>
+                        재생목록 이름
+                    </label>
+                    <input type="text" 
+                           class="modern-input" 
+                           id="playlist-name"
+                           placeholder="나만의 멋진 재생목록">
+                </div>
+                
+                <div class="input-card" id="playlist-select-card" style="display: none;">
+                    <label class="input-label">
+                        <i class="fas fa-list"></i>
+                        업데이트할 재생목록
+                    </label>
+                    <select class="modern-input" id="playlist-select">
+                        <option value="">재생목록을 선택하세요</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-card" style="grid-column: 1 / -1;">
+                <label class="input-label">
+                    <i class="fas fa-clipboard-list"></i>
+                    개별 동영상 링크 (선택사항)
+                </label>
+                <textarea class="modern-input modern-textarea" 
+                          id="video-links"
+                          placeholder="YouTube 동영상 링크를 한 줄에 하나씩 입력하세요..."></textarea>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="importPlaylist()">
+                    <i class="fas fa-download"></i>
+                    재생목록 가져오기
+                </button>
+                <button class="btn btn-secondary" onclick="clearInputs()">
+                    <i class="fas fa-eraser"></i>
+                    초기화
+                </button>
+            </div>
+        </div>
+        
+        <!-- Search and Filter Section -->
+        <div class="search-filter-section" id="search-section" style="display: none;">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" 
+                       class="search-input" 
+                       id="search-input"
+                       placeholder="동영상 검색..."
+                       oninput="searchVideos(this.value)">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="sortVideos('position')">
+                    <i class="fas fa-sort-numeric-down"></i>
+                    기본순
+                </button>
+                <button class="filter-btn" onclick="sortVideos('title')">
+                    <i class="fas fa-sort-alpha-down"></i>
+                    이름순
+                </button>
+                <button class="filter-btn" onclick="sortVideos('random')">
+                    <i class="fas fa-random"></i>
+                    랜덤
+                </button>
+            </div>
+        </div>
+        
+        <!-- Playlist Container -->
+        <div class="playlist-container" id="playlist-container" style="display: none;">
+            <div class="playlist-header">
+                <h2 class="playlist-title">
+                    <i class="fas fa-play-circle"></i>
+                    내 재생목록
+                </h2>
+                <div class="playlist-stats" id="playlist-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-folder"></i>
+                        <span id="playlist-count">0</span>개 재생목록
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-video"></i>
+                        <span id="video-count">0</span>개 동영상
+                    </div>
+                </div>
+            </div>
+            
+            <div class="playlist-tabs" id="playlist-tabs"></div>
+            
+            <div class="video-grid" id="video-grid"></div>
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <div class="empty-state-icon">
+                <i class="fas fa-film"></i>
+            </div>
+            <h3>아직 재생목록이 없습니다</h3>
+            <p>YouTube 재생목록 URL을 입력하여 시작하세요!</p>
+        </div>
+    </div>
+    
+    <!-- Quick Actions Bar -->
+    <div class="quick-actions" id="quick-actions">
+        <button class="quick-action-btn" onclick="scrollToTop()">
+            <i class="fas fa-chevron-up"></i>
+            <span class="tooltip">맨 위로</span>
+        </button>
+        <button class="quick-action-btn" onclick="toggleTheme()">
+            <i class="fas fa-moon" id="theme-icon"></i>
+            <span class="tooltip">테마 변경</span>
+        </button>
+        <button class="quick-action-btn" onclick="openPlayerPage()">
+            <i class="fas fa-play"></i>
+            <span class="tooltip">플레이어 열기</span>
+        </button>
+        <button class="quick-action-btn" onclick="showShortcuts()">
+            <i class="fas fa-keyboard"></i>
+            <span class="tooltip">단축키</span>
+        </button>
+        <button class="quick-action-btn" onclick="exportData()">
+            <i class="fas fa-file-export"></i>
+            <span class="tooltip">내보내기</span>
+        </button>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="delete-modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 style="color: var(--error); margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle"></i> 삭제 확인
+            </h3>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                이 동영상을 재생목록에서 삭제하시겠습니까?
+            </p>
+            <div id="delete-video-info" style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <!-- Video info will be displayed here -->
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeModal('delete-modal')">
+                    취소
+                </button>
+                <button class="btn" style="background: var(--error);" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i> 삭제
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Shortcuts Modal -->
+    <div class="modal" id="shortcuts-modal">
+        <div class="modal-content">
+            <h3>키보드 단축키</h3>
+            <div style="margin-top: 20px;">
+                <div style="margin-bottom: 10px;">
+                    <kbd>Ctrl/Cmd + K</kbd> - 검색
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <kbd>Ctrl/Cmd + N</kbd> - 새 재생목록
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <kbd>Space</kbd> - 재생/일시정지
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <kbd>←/→</kbd> - 이전/다음 동영상
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <kbd>T</kbd> - 테마 변경
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <kbd>Esc</kbd> - 닫기
+                </div>
+            </div>
+            <button class="btn btn-secondary" style="margin-top: 20px;" onclick="closeModal('shortcuts-modal')">
+                닫기
+            </button>
+        </div>
+    </div>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // Global variables
+        let supabase = null;
+        let currentUser = null;
+        let playlists = {};
+        let currentPlaylistId = null;
+        let currentMode = 'new';
+        let allVideos = [];
+        let filteredVideos = [];
+        
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        // Initialize
+        window.addEventListener('load', async function() {
+            initializeSupabase();
+            await checkAuth();
+            await loadPlaylists();
+            setupKeyboardShortcuts();
+            checkThemePreference();
+        });
+        
+        // Initialize Supabase
+        function initializeSupabase() {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            // Listen for auth changes
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN') {
+                    currentUser = session.user;
+                    updateAuthUI();
+                } else if (event === 'SIGNED_OUT') {
+                    currentUser = null;
+                    updateAuthUI();
+                }
+            });
+        }
+        
+        // Check authentication
+        async function checkAuth() {
+            const { data: { user } } = await supabase.auth.getUser();
+            currentUser = user;
+            updateAuthUI();
+        }
+        
+        // Update auth UI
+        function updateAuthUI() {
+            const authSection = document.getElementById('auth-section');
+            
+            if (currentUser) {
+                authSection.innerHTML = `
+                    <div class="user-info">
+                        <img class="user-avatar" src="${currentUser.user_metadata.avatar_url || ''}" alt="User">
+                        <span style="font-size: 14px;">${currentUser.email}</span>
+                        <button class="auth-btn" style="padding: 8px 16px;" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                authSection.innerHTML = `
+                    <button class="auth-btn" onclick="toggleAuth()">
+                        <i class="fab fa-google"></i>
+                        <span>Google 로그인</span>
+                    </button>
+                `;
+            }
+        }
+        
+        // Toggle authentication
+        async function toggleAuth() {
+            if (currentUser) {
+                await logout();
+            } else {
+                await loginWithGoogle();
+            }
+        }
+        
+        // Login with Google
+        async function loginWithGoogle() {
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + window.location.pathname
+                    }
+                });
+                
+                if (error) throw error;
+            } catch (error) {
+                showNotification('로그인 실패', error.message, 'error');
+            }
+        }
+        
+        // Logout
+        async function logout() {
+            try {
+                await supabase.auth.signOut();
+                showNotification('로그아웃 완료', '성공적으로 로그아웃되었습니다', 'success');
+            } catch (error) {
+                showNotification('로그아웃 실패', error.message, 'error');
+            }
+        }
+        
+        // Switch mode
+        function switchMode(mode) {
+            currentMode = mode;
+            const modeOptions = document.querySelectorAll('.mode-option');
+            const indicator = document.getElementById('mode-indicator');
+            
+            modeOptions.forEach(option => {
+                option.classList.toggle('active', option.dataset.mode === mode);
+            });
+            
+            // Animate indicator
+            if (mode === 'new') {
+                indicator.style.transform = 'translateX(0)';
+                indicator.style.width = modeOptions[0].offsetWidth + 'px';
+            } else {
+                indicator.style.transform = `translateX(${modeOptions[0].offsetWidth + 8}px)`;
+                indicator.style.width = modeOptions[1].offsetWidth + 'px';
+            }
+            
+            // Toggle input cards
+            document.getElementById('name-input-card').style.display = mode === 'new' ? 'block' : 'none';
+            document.getElementById('playlist-select-card').style.display = mode === 'update' ? 'block' : 'none';
+            
+            if (mode === 'update') {
+                updatePlaylistSelect();
+            }
+        }
+        
+        // Update playlist select options
+        function updatePlaylistSelect() {
+            const select = document.getElementById('playlist-select');
+            select.innerHTML = '<option value="">재생목록을 선택하세요</option>';
+            
+            Object.entries(playlists).forEach(([id, playlist]) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = playlist.name;
+                select.appendChild(option);
+            });
+        }
+        
+        // Handle paste event
+        function handlePaste(event) {
+            setTimeout(() => {
+                const input = event.target;
+                const url = input.value;
+                
+                if (url.includes('youtube.com/playlist')) {
+                    // Auto-focus on name input if in new mode
+                    if (currentMode === 'new') {
+                        document.getElementById('playlist-name').focus();
+                    }
+                }
+            }, 100);
+        }
+        
+        // Import playlist
+        async function importPlaylist() {
+            if (!currentUser) {
+                showNotification('로그인 필요', '재생목록을 저장하려면 로그인해주세요', 'warning');
+                await loginWithGoogle();
+                return;
+            }
+            
+            const playlistUrl = document.getElementById('playlist-url').value.trim();
+            const videoLinks = document.getElementById('video-links').value.trim();
+            let playlistName = '';
+            let targetPlaylistId = null;
+            
+            if (currentMode === 'new') {
+                playlistName = document.getElementById('playlist-name').value.trim();
+                if (!playlistName) {
+                    showNotification('이름 필요', '재생목록 이름을 입력해주세요', 'warning');
+                    return;
+                }
+                targetPlaylistId = `playlist_${Date.now()}`;
+            } else {
+                const select = document.getElementById('playlist-select');
+                targetPlaylistId = select.value;
+                if (!targetPlaylistId) {
+                    showNotification('선택 필요', '업데이트할 재생목록을 선택해주세요', 'warning');
+                    return;
+                }
+                playlistName = playlists[targetPlaylistId].name;
+            }
+            
+            let videos = [];
+            
+            // Fetch playlist videos
+            if (playlistUrl) {
+                const playlistId = extractPlaylistId(playlistUrl);
+                if (playlistId) {
+                    showNotification('가져오는 중', '재생목록에서 동영상을 가져오고 있습니다...', 'info');
+                    videos = await fetchPlaylistVideos(playlistId);
+                }
+            }
+            
+            // Parse manual video links
+            if (videoLinks) {
+                const manualVideos = parseVideoLinks(videoLinks);
+                videos = [...videos, ...manualVideos];
+            }
+            
+            if (videos.length === 0) {
+                showNotification('동영상 없음', '가져올 동영상이 없습니다', 'error');
+                return;
+            }
+            
+            // Save to Supabase
+            await savePlaylist(targetPlaylistId, playlistName, videos, currentMode === 'update');
+        }
+        
+        // Extract playlist ID from URL
+        function extractPlaylistId(url) {
+            const match = url.match(/[&?]list=([^&]+)/);
+            return match ? match[1] : null;
+        }
+        
+        // Extract video ID from URL
+        function extractVideoId(url) {
+            if (url.includes('/shorts/')) {
+                const match = url.match(/shorts\/([^#&?]*)/);
+                return match ? match[1] : null;
+            }
+            
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^#&?]*).*/,
+                /^([^#&?]*).*/
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1].length === 11) {
+                    return match[1];
+                }
+            }
+            return null;
+        }
+        
+        // Fetch playlist videos
+        async function fetchPlaylistVideos(playlistId) {
+            const API_KEY = 'AIzaSyCCbyfWSpCbZE5irT8jl6eG9tzX_rJnJtw';
+            const videos = [];
+            let nextPageToken = '';
+            
+            try {
+                do {
+                    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}${nextPageToken ? '&pageToken=' + nextPageToken : ''}`;
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error('YouTube API 요청 실패');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.items) {
+                        data.items.forEach((item) => {
+                            const snippet = item.snippet;
+                            videos.push({
+                                url: `https://www.youtube.com/watch?v=${snippet.resourceId.videoId}`,
+                                videoId: snippet.resourceId.videoId,
+                                title: snippet.title,
+                                description: snippet.description,
+                                thumbnailUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url,
+                                channelTitle: snippet.channelTitle,
+                                position: snippet.position !== undefined ? snippet.position : videos.length
+                            });
+                        });
+                    }
+                    
+                    nextPageToken = data.nextPageToken;
+                } while (nextPageToken);
+                
+                showNotification('가져오기 완료', `${videos.length}개의 동영상을 가져왔습니다`, 'success');
+                return videos;
+                
+            } catch (error) {
+                showNotification('API 오류', error.message, 'error');
+                return [];
+            }
+        }
+        
+        // Parse video links from textarea
+        function parseVideoLinks(text) {
+            const lines = text.split('\n');
+            const videos = [];
+            
+            lines.forEach(line => {
+                const url = line.trim();
+                if (url) {
+                    const videoId = extractVideoId(url);
+                    if (videoId) {
+                        videos.push({
+                            url: url,
+                            videoId: videoId,
+                            title: `Video ${videos.length + 1}`,
+                            position: videos.length
+                        });
+                    }
+                }
+            });
+            
+            return videos;
+        }
+        
+        // Save playlist to Supabase
+        async function savePlaylist(playlistId, playlistName, videos, isUpdate) {
+            try {
+                if (isUpdate) {
+                    // Delete existing videos
+                    const { error: deleteError } = await supabase
+                        .from('links')
+                        .delete()
+                        .eq('category', 'youtube-playlist')
+                        .like('description', `%"playlist_id":"${playlistId}"%`);
+                    
+                    if (deleteError) throw deleteError;
+                }
+                
+                // Save videos in batches
+                const batchSize = 50;
+                let savedCount = 0;
+                
+                for (let i = 0; i < videos.length; i += batchSize) {
+                    const batch = videos.slice(i, i + batchSize);
+                    const { data, error } = await supabase
+                        .from('links')
+                        .insert(
+                            batch.map((video, index) => ({
+                                name: video.title || `${playlistName} - Video ${i + index + 1}`,
+                                url: video.url,
+                                category: 'youtube-playlist',
+                                description: JSON.stringify({
+                                    playlist_id: playlistId,
+                                    playlist_name: playlistName,
+                                    video_id: video.videoId,
+                                    channel_name: video.channelTitle || '',
+                                    channel_title: video.channelTitle || '',
+                                    thumbnail_url: video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`,
+                                    position: video.position !== undefined ? video.position : i + index
+                                }),
+                                position: i + index
+                            }))
+                        );
+                    
+                    if (error) throw error;
+                    savedCount += batch.length;
+                    
+                    // Show progress
+                    if (videos.length > batchSize) {
+                        showNotification('저장 중', `${savedCount}/${videos.length}개 저장 완료`, 'info');
+                    }
+                }
+                
+                showNotification(
+                    isUpdate ? '업데이트 완료' : '생성 완료',
+                    `${playlistName} - ${videos.length}개 동영상`,
+                    'success'
+                );
+                
+                clearInputs();
+                await loadPlaylists();
+                showPlaylist(playlistId);
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                showNotification('저장 실패', error.message, 'error');
+            }
+        }
+        
+        // Load playlists from Supabase
+        async function loadPlaylists() {
+            try {
+                // Load all videos with pagination
+                let allData = [];
+                let from = 0;
+                const pageSize = 1000;
+                let hasMore = true;
+                
+                while (hasMore) {
+                    const { data, error } = await supabase
+                        .from('links')
+                        .select('*')
+                        .eq('category', 'youtube-playlist')
+                        .order('created_at', { ascending: false })
+                        .range(from, from + pageSize - 1);
+                    
+                    if (error) throw error;
+                    
+                    if (data && data.length > 0) {
+                        allData = allData.concat(data);
+                        from += pageSize;
+                        hasMore = data.length === pageSize;
+                    } else {
+                        hasMore = false;
+                    }
+                }
+                
+                // Group by playlist
+                playlists = {};
+                let totalVideos = 0;
+                
+                allData.forEach(link => {
+                    let metadata = {};
+                    try {
+                        metadata = JSON.parse(link.description || '{}');
+                    } catch (e) {
+                        metadata = { playlist_id: 'unknown' };
+                    }
+                    
+                    const playlistId = metadata.playlist_id || 'unknown';
+                    const playlistName = metadata.playlist_name || 'Unknown Playlist';
+                    
+                    if (!playlists[playlistId]) {
+                        playlists[playlistId] = {
+                            name: playlistName,
+                            videos: []
+                        };
+                    }
+                    
+                    playlists[playlistId].videos.push({
+                        id: link.id,
+                        title: link.name,
+                        url: link.url,
+                        videoId: metadata.video_id || extractVideoId(link.url),
+                        channelName: metadata.channel_name || '',
+                        thumbnailUrl: metadata.thumbnail_url || `https://img.youtube.com/vi/${metadata.video_id}/mqdefault.jpg`,
+                        position: link.position || 0
+                    });
+                    totalVideos++;
+                });
+                
+                // Sort videos by position
+                Object.values(playlists).forEach(playlist => {
+                    playlist.videos.sort((a, b) => a.position - b.position);
+                });
+                
+                updatePlaylistStats(Object.keys(playlists).length, totalVideos);
+                displayPlaylists();
+                
+            } catch (error) {
+                console.error('Load error:', error);
+                showNotification('로드 실패', error.message, 'error');
+            }
+        }
+        
+        // Update playlist stats
+        function updatePlaylistStats(playlistCount, videoCount) {
+            document.getElementById('playlist-count').textContent = playlistCount;
+            document.getElementById('video-count').textContent = videoCount;
+        }
+        
+        // Display playlists
+        function displayPlaylists() {
+            const container = document.getElementById('playlist-container');
+            const emptyState = document.getElementById('empty-state');
+            const searchSection = document.getElementById('search-section');
+            
+            if (Object.keys(playlists).length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                searchSection.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            emptyState.style.display = 'none';
+            searchSection.style.display = 'flex';
+            
+            displayPlaylistTabs();
+            
+            // Show first playlist
+            const firstPlaylistId = Object.keys(playlists)[0];
+            if (firstPlaylistId) {
+                showPlaylist(firstPlaylistId);
+            }
+        }
+        
+        // Display playlist tabs
+        function displayPlaylistTabs() {
+            const tabsContainer = document.getElementById('playlist-tabs');
+            tabsContainer.innerHTML = '';
+            
+            Object.entries(playlists).forEach(([id, playlist]) => {
+                const tab = document.createElement('div');
+                tab.className = 'playlist-tab';
+                tab.innerHTML = `
+                    <span onclick="showPlaylist('${id}')">${playlist.name}</span>
+                    <div class="tab-actions">
+                        <button class="tab-action play" onclick="playPlaylist('${id}', event)" title="재생">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="tab-action delete" onclick="deletePlaylist('${id}', event)" title="삭제">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                tabsContainer.appendChild(tab);
+            });
+        }
+        
+        // Show playlist videos
+        function showPlaylist(playlistId) {
+            currentPlaylistId = playlistId;
+            allVideos = playlists[playlistId].videos;
+            filteredVideos = [...allVideos];
+            
+            // Update active tab
+            const tabs = document.querySelectorAll('.playlist-tab');
+            tabs.forEach((tab, index) => {
+                tab.classList.toggle('active', Object.keys(playlists)[index] === playlistId);
+            });
+            
+            displayVideos();
+        }
+        
+        // Display videos
+        function displayVideos() {
+            const grid = document.getElementById('video-grid');
+            
+            if (filteredVideos.length === 0) {
+                grid.innerHTML = '<div class="empty-state">검색 결과가 없습니다</div>';
+                return;
+            }
+            
+            grid.innerHTML = filteredVideos.map(video => `
+                <div class="video-card">
+                    <button class="video-delete-btn" onclick="deleteVideo('${video.id}', event)" title="삭제">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <div onclick="playVideo('${video.videoId}')">
+                        <div class="video-thumbnail-container">
+                            <img class="video-thumbnail" 
+                                 src="${video.thumbnailUrl}" 
+                                 alt="${video.title}"
+                                 loading="lazy"
+                                 onerror="this.src='https://img.youtube.com/vi/${video.videoId}/default.jpg'">
+                            <div class="video-overlay">
+                                <div class="play-button">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="video-info">
+                            <div class="video-title">${video.title}</div>
+                            <div class="video-meta">
+                                <div class="video-channel">
+                                    <div class="channel-avatar">${(video.channelName || 'Y')[0]}</div>
+                                    <span>${video.channelName || 'YouTube'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Play video in modal
+        function playVideo(videoId) {
+            // For now, open in new tab
+            window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+        }
+        
+        // Play playlist
+        function playPlaylist(playlistId, event) {
+            event.stopPropagation();
+            window.open('youtube-playlist-player.html', '_blank');
+        }
+        
+        // Delete playlist
+        async function deletePlaylist(playlistId, event) {
+            event.stopPropagation();
+            
+            if (!confirm('정말로 이 재생목록을 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('links')
+                    .delete()
+                    .eq('category', 'youtube-playlist')
+                    .like('description', `%"playlist_id":"${playlistId}"%`);
+                
+                if (error) throw error;
+                
+                showNotification('삭제 완료', '재생목록이 삭제되었습니다', 'success');
+                await loadPlaylists();
+                
+            } catch (error) {
+                showNotification('삭제 실패', error.message, 'error');
+            }
+        }
+        
+        // Delete individual video
+        let videoToDelete = null;
+        
+        function deleteVideo(videoId, event) {
+            event.stopPropagation();
+            
+            const video = allVideos.find(v => v.id === videoId);
+            if (!video) return;
+            
+            videoToDelete = video;
+            
+            // Show video info in modal
+            const infoDiv = document.getElementById('delete-video-info');
+            infoDiv.innerHTML = `
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <img src="${video.thumbnailUrl}" 
+                         style="width: 80px; height: 45px; object-fit: cover; border-radius: 4px;"
+                         onerror="this.src='https://img.youtube.com/vi/${video.videoId}/default.jpg'">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">${video.title}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            ${video.channelName || 'YouTube'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('delete-modal').classList.add('active');
+        }
+        
+        async function confirmDelete() {
+            if (!videoToDelete || !currentUser) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('links')
+                    .delete()
+                    .eq('id', videoToDelete.id);
+                
+                if (error) throw error;
+                
+                // Remove from local arrays
+                const videoIndex = allVideos.findIndex(v => v.id === videoToDelete.id);
+                if (videoIndex > -1) {
+                    allVideos.splice(videoIndex, 1);
+                }
+                
+                const filteredIndex = filteredVideos.findIndex(v => v.id === videoToDelete.id);
+                if (filteredIndex > -1) {
+                    filteredVideos.splice(filteredIndex, 1);
+                }
+                
+                // Update playlist
+                const playlist = playlists[currentPlaylistId];
+                if (playlist) {
+                    const playlistVideoIndex = playlist.videos.findIndex(v => v.id === videoToDelete.id);
+                    if (playlistVideoIndex > -1) {
+                        playlist.videos.splice(playlistVideoIndex, 1);
+                    }
+                }
+                
+                // Update UI
+                displayVideos();
+                updatePlaylistStats(
+                    Object.keys(playlists).length,
+                    Object.values(playlists).reduce((sum, p) => sum + p.videos.length, 0)
+                );
+                
+                showNotification('삭제 완료', '동영상이 삭제되었습니다', 'success');
+                closeModal('delete-modal');
+                videoToDelete = null;
+                
+            } catch (error) {
+                showNotification('삭제 실패', error.message, 'error');
+            }
+        }
+        
+        // Search videos
+        function searchVideos(query) {
+            if (!query) {
+                filteredVideos = [...allVideos];
+            } else {
+                const lowerQuery = query.toLowerCase();
+                filteredVideos = allVideos.filter(video => 
+                    video.title.toLowerCase().includes(lowerQuery) ||
+                    (video.channelName && video.channelName.toLowerCase().includes(lowerQuery))
+                );
+            }
+            displayVideos();
+        }
+        
+        // Sort videos
+        function sortVideos(sortBy) {
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.filter-btn').classList.add('active');
+            
+            switch(sortBy) {
+                case 'position':
+                    filteredVideos.sort((a, b) => a.position - b.position);
+                    break;
+                case 'title':
+                    filteredVideos.sort((a, b) => a.title.localeCompare(b.title));
+                    break;
+                case 'random':
+                    filteredVideos.sort(() => Math.random() - 0.5);
+                    break;
+            }
+            displayVideos();
+        }
+        
+        // Clear inputs
+        function clearInputs() {
+            document.getElementById('playlist-url').value = '';
+            document.getElementById('playlist-name').value = '';
+            document.getElementById('video-links').value = '';
+            document.getElementById('playlist-select').value = '';
+        }
+        
+        // Show notification
+        function showNotification(title, message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="notification-icon">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+                <button class="notification-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+        
+        // Theme functions
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            const icon = document.getElementById('theme-icon');
+            icon.className = document.body.classList.contains('light-theme') ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+        }
+        
+        function checkThemePreference() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('theme-icon').className = 'fas fa-sun';
+            }
+        }
+        
+        // Quick action functions
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function openPlayerPage() {
+            window.open('youtube-playlist-player.html', '_blank');
+        }
+        
+        function showShortcuts() {
+            document.getElementById('shortcuts-modal').classList.add('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        function exportData() {
+            const data = JSON.stringify(playlists, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `youtube-playlists-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('내보내기 완료', 'JSON 파일로 저장되었습니다', 'success');
+        }
+        
+        // Setup keyboard shortcuts
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Ctrl/Cmd + K: Search
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    document.getElementById('search-input').focus();
+                }
+                
+                // Ctrl/Cmd + N: New playlist
+                if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                    e.preventDefault();
+                    switchMode('new');
+                    document.getElementById('playlist-url').focus();
+                }
+                
+                // T: Toggle theme
+                if (e.key === 't' && !e.target.matches('input, textarea')) {
+                    toggleTheme();
+                }
+                
+                // Esc: Close modals
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal.active').forEach(modal => {
+                        modal.classList.remove('active');
+                    });
+                }
+            });
+        }
+        
+        // Initialize mode indicator width
+        window.addEventListener('resize', () => {
+            const activeMode = document.querySelector('.mode-option.active');
+            const indicator = document.getElementById('mode-indicator');
+            if (activeMode && indicator) {
+                indicator.style.width = activeMode.offsetWidth + 'px';
+            }
+        });
+        
+        // Set initial indicator width
+        setTimeout(() => {
+            switchMode('new');
+        }, 100);
+    </script>
+</body>
+</html>

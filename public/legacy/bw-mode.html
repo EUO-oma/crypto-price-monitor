@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'SF Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .card {
+            aspect-ratio: 1;
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            border-color: #666;
+            transform: scale(1.05);
+            background: #111;
+        }
+        
+        .number {
+            font-size: 48px;
+            font-weight: 100;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .icon {
+            font-size: 24px;
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
+        }
+        
+        .card:hover .icon {
+            opacity: 1;
+        }
+        
+        /* Rainbow colors for numbers */
+        .card:nth-child(1) .number { color: #ff0000; }
+        .card:nth-child(2) .number { color: #ff8c00; }
+        .card:nth-child(3) .number { color: #ffd700; }
+        .card:nth-child(4) .number { color: #00ff00; }
+        .card:nth-child(5) .number { color: #0000ff; }
+        .card:nth-child(6) .number { color: #4b0082; }
+        .card:nth-child(7) .number { color: #9400d3; }
+        .card:nth-child(8) .number { color: #ff1493; }
+        .card:nth-child(9) .number { color: #00ffff; }
+        .card:nth-child(10) .number { color: #ff69b4; }
+        .card:nth-child(11) .number { color: #00fa9a; }
+        .card:nth-child(12) .number { color: #ffa500; }
+        .card:nth-child(13) .number { color: #ff00ff; }
+        .card:nth-child(14) .number { color: #40e0d0; }
+        .card:nth-child(15) .number { color: #daa520; }
+        .card:nth-child(16) .number { 
+            background: linear-gradient(135deg, #7850ff, #ff5078);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card:nth-child(17) .number { 
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card:nth-child(1):hover { border-color: #ff0000; background: rgba(255, 0, 0, 0.1); }
+        .card:nth-child(2):hover { border-color: #ff8c00; background: rgba(255, 140, 0, 0.1); }
+        .card:nth-child(3):hover { border-color: #ffd700; background: rgba(255, 215, 0, 0.1); }
+        .card:nth-child(4):hover { border-color: #00ff00; background: rgba(0, 255, 0, 0.1); }
+        .card:nth-child(5):hover { border-color: #0000ff; background: rgba(0, 0, 255, 0.1); }
+        .card:nth-child(6):hover { border-color: #4b0082; background: rgba(75, 0, 130, 0.1); }
+        .card:nth-child(7):hover { border-color: #9400d3; background: rgba(148, 0, 211, 0.1); }
+        .card:nth-child(8):hover { border-color: #ff1493; background: rgba(255, 20, 147, 0.1); }
+        .card:nth-child(9):hover { border-color: #00ffff; background: rgba(0, 255, 255, 0.1); }
+        .card:nth-child(10):hover { border-color: #ff69b4; background: rgba(255, 105, 180, 0.1); }
+        .card:nth-child(11):hover { border-color: #00fa9a; background: rgba(0, 250, 154, 0.1); }
+        .card:nth-child(12):hover { border-color: #ffa500; background: rgba(255, 165, 0, 0.1); }
+        .card:nth-child(13):hover { border-color: #ff00ff; background: rgba(255, 0, 255, 0.1); }
+        .card:nth-child(14):hover { border-color: #40e0d0; background: rgba(64, 224, 208, 0.1); }
+        .card:nth-child(15):hover { border-color: #daa520; background: rgba(218, 165, 32, 0.1); }
+        .card:nth-child(16):hover { 
+            border-color: #7850ff; 
+            background: linear-gradient(135deg, rgba(120, 80, 255, 0.1), rgba(255, 80, 120, 0.1));
+        }
+        .card:nth-child(17):hover { 
+            border-color: #667eea; 
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+        
+        /* Table link */
+        .table {
+            position: fixed;
+            bottom: 30px;
+            background: #111;
+            border: 1px solid #333;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #666;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .table:hover {
+            border-color: #666;
+            color: #fff;
+            background: #1a1a1a;
+        }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                max-width: 100%;
+            }
+            
+            .card {
+                min-height: 100px;
+            }
+            
+            .number {
+                font-size: 32px;
+            }
+            
+            .icon {
+                font-size: 18px;
+            }
+            
+            .table {
+                bottom: 20px;
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .card {
+                min-height: 90px;
+            }
+            
+            .number {
+                font-size: 28px;
+            }
+            
+            .icon {
+                font-size: 16px;
+            }
+            
+            .table {
+                bottom: 15px;
+                padding: 8px 16px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .number {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+            
+            .icon {
+                font-size: 14px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .card {
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            .card:active {
+                transform: scale(0.95);
+                transition: transform 0.1s ease;
+            }
+            
+            .table:active {
+                transform: scale(0.95);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid">
+        <a href="bw-mode1.html" class="card">
+            <div class="number">1</div>
+            <div class="icon">●</div>
+        </a>
+        
+        <a href="bw-mode2.html" class="card">
+            <div class="number">2</div>
+            <div class="icon">−</div>
+        </a>
+        
+        <a href="bw-mode3.html" class="card">
+            <div class="number">3</div>
+            <div class="icon">▬</div>
+        </a>
+        
+        <a href="bw-mode4.html" class="card">
+            <div class="number">4</div>
+            <div class="icon">□</div>
+        </a>
+        
+        <a href="bw-mode5.html" class="card">
+            <div class="number">5</div>
+            <div class="icon">◎</div>
+        </a>
+        
+        <a href="bw-mode6.html" class="card">
+            <div class="number">6</div>
+            <div class="icon">%</div>
+        </a>
+        
+        <a href="bw-mode7.html" class="card">
+            <div class="number">7</div>
+            <div class="icon">⊞</div>
+        </a>
+        
+        <a href="bw-mode9.html" class="card">
+            <div class="number">9</div>
+            <div class="icon">■</div>
+        </a>
+        
+        <a href="bw-mode10-dice.html" class="card">
+            <div class="number">10</div>
+            <div class="icon">⚀</div>
+        </a>
+        
+        <a href="bw-mode9-sol-diagonal.html" class="card">
+            <div class="number">11</div>
+            <div class="icon">◢</div>
+        </a>
+        
+        <a href="bw-mode12-liquidation.html" class="card">
+            <div class="number">12</div>
+            <div class="icon">⚡</div>
+        </a>
+        
+        <a href="bw-mode13-liquidation-table.html" class="card">
+            <div class="number">13</div>
+            <div class="icon">⊞</div>
+        </a>
+        
+        <a href="bw-mode14-range-finder.html" class="card">
+            <div class="number">14</div>
+            <div class="icon">═</div>
+        </a>
+        
+        <a href="bw-mode15-volume-profile.html" class="card">
+            <div class="number">15</div>
+            <div class="icon">▬</div>
+        </a>
+        
+        <a href="alpha-claude-v1.html" class="card">
+            <div class="number">α1</div>
+            <div class="icon">◆</div>
+        </a>
+        
+        <a href="alpha-claude-v2.html" class="card">
+            <div class="number">α2</div>
+            <div class="icon">◈</div>
+        </a>
+    </div>
+    
+    <a href="bw-table.html" class="table">≡</a>
+</body>
+</html>

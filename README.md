@@ -1,77 +1,50 @@
-# Crypto Price Monitor - Next.js Version
+# Crypto Price Monitor
 
-Next.js로 재구축된 일정 관리 및 정보 허브 애플리케이션입니다.
+실시간 암호화폐 선물 가격 모니터링 웹 애플리케이션
 
-## 기술 스택
+## 기능
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS
-- **Backend**: Supabase (PostgreSQL + Auth)
-- **Hosting**: Netlify
+- Binance 거래소의 실시간 선물 가격 표시
+- WebSocket을 통한 실시간 업데이트
+- 지원 코인:
+  - BTCUSDT (비트코인)
+  - ETHUSDT (이더리움)
+  - XRPUSDT (리플)
+  - SOLUSDT (솔라나)
 
-## 주요 기능
+## 실행 방법
 
-- 📅 일정 관리 (CRUD)
-- 🔐 사용자 인증
-- 📊 암호화폐 가격 모니터링
-- 📺 YouTube 플레이리스트
-- 🌍 세계 시계
-- 🔖 즐겨찾기 관리
-- 💬 실시간 채팅
+### 방법 1: 직접 실행
+브라우저에서 `index.html` 파일을 직접 열기
 
-## 시작하기
-
-### 1. 의존성 설치
-
+### 방법 2: 로컬 서버 실행
 ```bash
+# 의존성 설치
 npm install
-```
 
-### 2. 환경 변수 설정
-
-`.env.local` 파일에 다음 환경 변수를 설정하세요:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-### 3. 개발 서버 실행
-
-```bash
+# 개발 서버 실행
 npm run dev
 ```
 
-### 4. 빌드
+## 기술 스택
 
-```bash
-npm run build
-```
+- HTML5
+- CSS3
+- JavaScript (Vanilla)
+- WebSocket API
+- Binance Futures WebSocket API
 
-## 프로젝트 구조
+## 특징
 
-```
-src/
-├── app/              # Next.js App Router 페이지
-│   ├── page.tsx      # 홈페이지 (일정 관리)
-│   ├── info-hub/     # 정보 허브
-│   └── ...           # 기타 페이지
-├── components/       # 재사용 가능한 컴포넌트
-├── lib/             # 유틸리티 함수 및 설정
-└── types/           # TypeScript 타입 정의
-```
+- 반응형 디자인
+- 다크 테마
+- 자동 재연결 (30초마다)
+- 실시간 타임스탬프 표시
 
 ## 배포
 
-Netlify에 자동 배포됩니다. `main` 브랜치에 push하면 자동으로 빌드 및 배포가 실행됩니다.
+GitHub Pages, Netlify, Vercel 등의 정적 호스팅 서비스에 배포 가능
 
-## 마이그레이션 노트
+## 라이선스
 
-이 프로젝트는 기존 정적 HTML 사이트에서 Next.js로 마이그레이션되었습니다. 
-주요 개선 사항:
-
-- 더 나은 성능 (SSR/SSG)
-- 향상된 에러 처리
-- TypeScript 타입 안정성
-- 모듈화된 컴포넌트 구조
-- 더 나은 개발 경험
+MIT

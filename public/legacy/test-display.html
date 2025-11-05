@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일정 표시 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #121212;
+            color: #fff;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #1e1e1e;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        pre {
+            background: #0d0d0d;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        /* index.html에서 복사한 스타일 */
+        .schedule-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        }
+        .schedule-card {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-left: 4px solid;
+            border-radius: 12px;
+            padding: 20px 25px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .schedule-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            background: #2a2a2a;
+        }
+        .schedule-date-box {
+            flex-shrink: 0;
+            width: 80px;
+            text-align: center;
+            padding: 15px 10px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>일정 표시 테스트 페이지</h1>
+    
+    <div class="test-section">
+        <h2>1. Supabase 연결 테스트</h2>
+        <button onclick="testConnection()">연결 테스트</button>
+        <div id="connectionResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 데이터 로드 테스트</h2>
+        <button onclick="testLoadData()">데이터 로드</button>
+        <div id="loadResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 렌더링 테스트</h2>
+        <button onclick="testRender()">테스트 데이터로 렌더링</button>
+        <button onclick="renderLoadedData()">로드된 데이터로 렌더링</button>
+        <div id="renderResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. DOM 상태 확인</h2>
+        <button onclick="checkDOM()">DOM 요소 확인</button>
+        <div id="domResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>렌더링 결과</h2>
+        <div id="testListView" class="schedule-grid"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        let supabase;
+        let loadedData = [];
+        
+        window.addEventListener('load', () => {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                log('Supabase 클라이언트 생성 완료', 'success');
+            } catch (error) {
+                log('Supabase 클라이언트 생성 실패: ' + error.message, 'error');
+            }
+        });
+        
+        function log(message, type = 'info') {
+            console.log(message);
+        }
+        
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            try {
+                const { data, error } = await supabase.from('schedules').select('count').limit(1);
+                if (error) {
+                    resultDiv.innerHTML = `<p class="error">❌ 연결 실패: ${error.message}</p>`;
+                } else {
+                    resultDiv.innerHTML = `<p class="success">✅ 연결 성공</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 예외 발생: ${error.message}</p>`;
+            }
+        }
+        
+        async function testLoadData() {
+            const resultDiv = document.getElementById('loadResult');
+            try {
+                const { data, error } = await supabase
+                    .from('schedules')
+                    .select('*')
+                    .order('event_date', { ascending: true });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<p class="error">❌ 로드 실패: ${error.message}</p>`;
+                } else {
+                    loadedData = data || [];
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ 로드 성공: ${loadedData.length}개 일정</p>
+                        <pre>${JSON.stringify(loadedData.slice(0, 2), null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 예외 발생: ${error.message}</p>`;
+            }
+        }
+        
+        function testRender() {
+            const testData = [{
+                id: 'test-1',
+                title: '테스트 일정 1',
+                description: '테스트 설명입니다',
+                event_date: '2024-11-06',
+                event_time: '14:00:00',
+                location: '서울',
+                category: 'general',
+                priority: 'normal',
+                status: 'upcoming',
+                color: '#2196f3'
+            }];
+            
+            renderSchedules(testData);
+            document.getElementById('renderResult').innerHTML = '<p class="success">✅ 테스트 데이터로 렌더링 완료</p>';
+        }
+        
+        function renderLoadedData() {
+            if (loadedData.length === 0) {
+                document.getElementById('renderResult').innerHTML = '<p class="error">❌ 로드된 데이터가 없습니다. 먼저 데이터를 로드하세요.</p>';
+                return;
+            }
+            renderSchedules(loadedData);
+            document.getElementById('renderResult').innerHTML = `<p class="success">✅ ${loadedData.length}개 일정 렌더링 완료</p>`;
+        }
+        
+        function renderSchedules(schedules) {
+            const container = document.getElementById('testListView');
+            container.innerHTML = schedules.map(schedule => createScheduleCard(schedule)).join('');
+            console.log('렌더링된 HTML 길이:', container.innerHTML.length);
+        }
+        
+        function createScheduleCard(schedule) {
+            try {
+                const eventDate = new Date(schedule.event_date);
+                const day = eventDate.getDate();
+                const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+                const month = monthNames[eventDate.getMonth()];
+                
+                return `
+                    <div class="schedule-card" style="border-left-color: ${schedule.color};">
+                        <div class="schedule-date-box" style="border-color: ${schedule.color};">
+                            <div style="font-size: 24px; font-weight: bold; color: ${schedule.color};">${day}</div>
+                            <div style="font-size: 14px; color: #b0b0b0;">${month}</div>
+                        </div>
+                        <div class="schedule-content">
+                            <h3 style="margin: 0 0 10px 0; font-size: 18px;">${schedule.title}</h3>
+                            <p style="margin: 0; color: #b0b0b0; font-size: 14px;">
+                                ${schedule.description || '설명 없음'}
+                            </p>
+                            ${schedule.location ? `<p style="margin: 5px 0 0 0; font-size: 14px;">📍 ${schedule.location}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Schedule card creation error:', error, schedule);
+                return `<div class="error">렌더링 오류: ${error.message}</div>`;
+            }
+        }
+        
+        function checkDOM() {
+            const resultDiv = document.getElementById('domResult');
+            const elements = {
+                'listView (메인 페이지)': document.getElementById('listView'),
+                'loadingDiv': document.getElementById('loadingDiv'),
+                'emptyState': document.getElementById('emptyState'),
+                'testListView (이 페이지)': document.getElementById('testListView')
+            };
+            
+            let html = '<h4>DOM 요소 상태:</h4><ul>';
+            for (const [name, elem] of Object.entries(elements)) {
+                if (elem) {
+                    const display = window.getComputedStyle(elem).display;
+                    const visibility = window.getComputedStyle(elem).visibility;
+                    const childCount = elem.children.length;
+                    html += `<li class="success">✅ ${name}: display=${display}, visibility=${visibility}, children=${childCount}</li>`;
+                } else {
+                    html += `<li class="error">❌ ${name}: 요소를 찾을 수 없음</li>`;
+                }
+            }
+            html += '</ul>';
+            
+            // 메인 페이지의 전역 변수 확인
+            if (typeof schedules !== 'undefined') {
+                html += `<p class="info">📊 schedules 변수: ${schedules.length}개</p>`;
+            }
+            if (typeof filteredSchedules !== 'undefined') {
+                html += `<p class="info">📊 filteredSchedules 변수: ${filteredSchedules.length}개</p>`;
+            }
+            if (typeof currentView !== 'undefined') {
+                html += `<p class="info">👁️ currentView: ${currentView}</p>`;
+            }
+            
+            resultDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

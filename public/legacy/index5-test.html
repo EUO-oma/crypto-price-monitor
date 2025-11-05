@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Style - YouTube Link Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #000000;
+            --secondary: #666666;
+            --tertiary: #999999;
+            --background: #ffffff;
+            --border: #e5e5e5;
+            --hover: #f5f5f5;
+            --accent: #ff0000;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--background);
+            color: var(--primary);
+            line-height: 1.6;
+            padding: 60px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 60px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 400;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            color: var(--secondary);
+            font-size: 0.95rem;
+        }
+
+        .input-section {
+            margin-bottom: 60px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--primary);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 16px 20px;
+            border: none;
+            font-size: 15px;
+            outline: none;
+            background: transparent;
+        }
+
+        button {
+            padding: 16px 32px;
+            background: var(--primary);
+            color: var(--background);
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+        .videos-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: var(--border);
+            margin-bottom: 60px;
+        }
+
+        .video-item {
+            background: var(--background);
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            position: relative;
+        }
+
+        .video-item:hover {
+            background: var(--hover);
+        }
+
+        .video-item::after {
+            content: '→';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.2s ease, right 0.2s ease;
+            font-size: 20px;
+        }
+
+        .video-item:hover::after {
+            opacity: 1;
+            right: 15px;
+        }
+
+        .thumbnail-minimal {
+            width: 160px;
+            height: 90px;
+            background: var(--hover);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .thumbnail-minimal img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .duration-minimal {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: var(--primary);
+            color: var(--background);
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .video-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .video-title-minimal {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .video-meta {
+            display: flex;
+            gap: 15px;
+            color: var(--secondary);
+            font-size: 13px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .separator {
+            color: var(--border);
+        }
+
+        /* Grid Layout Alternative */
+        .grid-view {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .grid-card {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .grid-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .grid-thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--hover);
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .grid-card:hover .grid-thumbnail img {
+            transform: scale(1.05);
+        }
+
+        .grid-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        .grid-meta {
+            font-size: 12px;
+            color: var(--secondary);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn.active {
+            background: var(--primary);
+            color: var(--background);
+            border-color: var(--primary);
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--primary);
+            background: var(--background);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(180deg);
+        }
+
+        body.dark {
+            --primary: #ffffff;
+            --secondary: #999999;
+            --tertiary: #666666;
+            --background: #000000;
+            --border: #222222;
+            --hover: #111111;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+            font-size: 13px;
+            color: var(--secondary);
+        }
+
+        @media (max-width: 768px) {
+            .grid-view {
+                grid-template-columns: 1fr;
+            }
+
+            .video-item {
+                flex-direction: column;
+            }
+
+            .thumbnail-minimal {
+                width: 100%;
+                height: 180px;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            button {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+
+    <div class="container">
+        <div class="header">
+            <h1>YouTube Preview</h1>
+            <p class="tagline">Clean, minimal, focused.</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-row">
+                <input type="text" id="youtube-url" placeholder="Paste YouTube URL" />
+                <button onclick="fetchVideoInfo()">Load</button>
+            </div>
+        </div>
+
+        <div class="view-toggle">
+            <button class="view-btn active" onclick="toggleView('list')">List</button>
+            <button class="view-btn" onclick="toggleView('grid')">Grid</button>
+        </div>
+
+        <div class="stats-bar">
+            <span>6 videos</span>
+            <span>Last updated: Just now</span>
+            <span>Total views: 24.2B</span>
+        </div>
+
+        <div id="list-container" class="videos-list"></div>
+        <div id="grid-container" class="grid-view" style="display: none;"></div>
+    </div>
+
+    <script>
+        let currentView = 'list';
+
+        const sampleVideos = [
+            {
+                id: 'OPf0YbXqDm0',
+                title: 'Mark Ronson - Uptown Funk ft. Bruno Mars',
+                channel: 'Mark Ronson',
+                views: '4.9B',
+                time: '8 years ago',
+                duration: '4:31',
+                thumbnail: 'https://img.youtube.com/vi/OPf0YbXqDm0/maxresdefault.jpg'
+            },
+            {
+                id: 'YqeW9_5kURI',
+                title: 'Major Lazer & DJ Snake - Lean On',
+                channel: 'Major Lazer',
+                views: '3.2B',
+                time: '8 years ago',
+                duration: '2:57',
+                thumbnail: 'https://img.youtube.com/vi/YqeW9_5kURI/maxresdefault.jpg'
+            },
+            {
+                id: '2Vv-BfVoq4g',
+                title: 'Ed Sheeran - Perfect (Official Music Video)',
+                channel: 'Ed Sheeran',
+                views: '3.4B',
+                time: '6 years ago',
+                duration: '4:40',
+                thumbnail: 'https://img.youtube.com/vi/2Vv-BfVoq4g/maxresdefault.jpg'
+            },
+            {
+                id: '60ItHLz5WEA',
+                title: 'Alan Walker - Faded',
+                channel: 'Alan Walker',
+                views: '3.4B',
+                time: '7 years ago',
+                duration: '3:33',
+                thumbnail: 'https://img.youtube.com/vi/60ItHLz5WEA/maxresdefault.jpg'
+            },
+            {
+                id: 'nfs8NYg7yQM',
+                title: 'Imagine Dragons - Believer',
+                channel: 'Imagine Dragons',
+                views: '2.5B',
+                time: '6 years ago',
+                duration: '3:37',
+                thumbnail: 'https://img.youtube.com/vi/7wtfhZwyrcc/maxresdefault.jpg'
+            },
+            {
+                id: 'SlPhMPnQ58k',
+                title: 'Memories - Maroon 5',
+                channel: 'Maroon 5',
+                views: '1.0B',
+                time: '4 years ago',
+                duration: '3:15',
+                thumbnail: 'https://img.youtube.com/vi/SlPhMPnQ58k/maxresdefault.jpg'
+            }
+        ];
+
+        function createListItem(video) {
+            const item = document.createElement('div');
+            item.className = 'video-item';
+            item.onclick = () => window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank');
+
+            item.innerHTML = `
+                <div class="thumbnail-minimal">
+                    <img src="${video.thumbnail}" alt="${video.title}">
+                    <div class="duration-minimal">${video.duration}</div>
+                </div>
+                <div class="video-details">
+                    <div class="video-title-minimal">${video.title}</div>
+                    <div class="video-meta">
+                        <span class="meta-item">${video.channel}</span>
+                        <span class="separator">•</span>
+                        <span class="meta-item">${video.views} views</span>
+                        <span class="separator">•</span>
+                        <span class="meta-item">${video.time}</span>
+                    </div>
+                </div>
+            `;
+
+            return item;
+        }
+
+        function createGridCard(video) {
+            const card = document.createElement('div');
+            card.className = 'grid-card';
+            card.onclick = () => window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank');
+
+            card.innerHTML = `
+                <div class="grid-thumbnail">
+                    <img src="${video.thumbnail}" alt="${video.title}">
+                </div>
+                <div class="grid-title">${video.title}</div>
+                <div class="grid-meta">
+                    ${video.channel} • ${video.views}
+                </div>
+            `;
+
+            return card;
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            const listContainer = document.getElementById('list-container');
+            const gridContainer = document.getElementById('grid-container');
+            const buttons = document.querySelectorAll('.view-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            if (view === 'list') {
+                listContainer.style.display = 'flex';
+                gridContainer.style.display = 'none';
+                buttons[0].classList.add('active');
+            } else {
+                listContainer.style.display = 'none';
+                gridContainer.style.display = 'grid';
+                buttons[1].classList.add('active');
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+        }
+
+        function getVideoId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        function fetchVideoInfo() {
+            const url = document.getElementById('youtube-url').value.trim();
+            const videoId = getVideoId(url);
+
+            if (!videoId) {
+                alert('Invalid YouTube URL');
+                return;
+            }
+
+            const mockVideo = {
+                id: videoId,
+                title: 'New Video',
+                channel: 'YouTube',
+                views: '0',
+                time: 'Just now',
+                duration: '0:00',
+                thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+            };
+
+            const listContainer = document.getElementById('list-container');
+            const gridContainer = document.getElementById('grid-container');
+
+            listContainer.insertBefore(createListItem(mockVideo), listContainer.firstChild);
+            gridContainer.insertBefore(createGridCard(mockVideo), gridContainer.firstChild);
+
+            // Update stats
+            document.querySelector('.stats-bar span').textContent =
+                `${document.querySelectorAll('.video-item').length} videos`;
+        }
+
+        // Load sample videos
+        window.addEventListener('DOMContentLoaded', () => {
+            const listContainer = document.getElementById('list-container');
+            const gridContainer = document.getElementById('grid-container');
+
+            sampleVideos.forEach(video => {
+                listContainer.appendChild(createListItem(video));
+                gridContainer.appendChild(createGridCard(video));
+            });
+        });
+
+        // Enter key support
+        document.getElementById('youtube-url').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchVideoInfo();
+            }
+        });
+    </script>
+    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: var(--background); padding: 10px 20px; border: 1px solid var(--border);">
+        <a href="index.html" style="text-decoration: none; color: var(--primary); font-weight: bold;">Main</a>
+        <a href="index2-test.html" style="text-decoration: none; color: var(--primary); font-weight: bold;">2</a>
+        <a href="index3-test.html" style="text-decoration: none; color: var(--primary); font-weight: bold;">3</a>
+        <a href="index4-test.html" style="text-decoration: none; color: var(--primary); font-weight: bold;">4</a>
+        <a href="index5-test.html" style="text-decoration: none; color: var(--primary); font-weight: bold; border-bottom: 2px solid var(--primary);">5</a>
+        <a href="index6-test.html" style="text-decoration: none; color: var(--primary); font-weight: bold;">6</a>
+    </div>
+</body>
+</html>

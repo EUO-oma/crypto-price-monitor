@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Playlist Gallery v2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ff0000 0%, #ff4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .import-section {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        .import-section h3 {
+            color: #ff4444;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        .playlist-input {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .playlist-input:focus {
+            outline: none;
+            border-color: #ff4444;
+        }
+
+        .playlist-name-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #ff0000;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        .playlists-section {
+            margin-top: 40px;
+        }
+
+        .playlist-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #222;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .playlist-tab {
+            padding: 10px 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .playlist-tab:hover {
+            background: #222;
+        }
+
+        .playlist-tab.active {
+            background: #ff0000;
+            color: white;
+            border-color: #ff0000;
+        }
+
+        .playlist-tab .play-btn {
+            margin-right: 8px;
+            color: #4CAF50;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+
+        .playlist-tab .play-btn:hover {
+            color: #66BB6A;
+            transform: scale(1.2);
+        }
+
+        .playlist-tab .delete-btn {
+            margin-left: 10px;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .playlist-tab .delete-btn:hover {
+            color: #ff4444;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .video-card {
+            background: #1a1a1a;
+            border: 1px solid #222;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff0000;
+            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.2);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .video-info {
+            padding: 15px;
+        }
+
+        .video-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            color: #fff;
+            font-size: 1.05em;
+        }
+
+        .video-channel {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .video-stats {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 85px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-radius: 50%;
+            border-top-color: #ff0000;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-message {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .status-success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4caf50;
+            color: #4caf50;
+        }
+
+        .status-error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid #f44336;
+            color: #f44336;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .video-player-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-player-container {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            aspect-ratio: 16 / 9;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .close-modal:hover {
+            color: #ff0000;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .import-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>YouTube Playlist Gallery v2</h1>
+            <p class="subtitle">재생목록을 붙여넣으면 멋진 갤러리로 만들어드려요</p>
+            <div id="auth-status" style="margin-top: 10px; text-align: center; color: #666;">
+                <span id="auth-text">로그인하지 않음</span>
+                <button id="auth-btn" class="btn btn-secondary" style="margin-left: 10px; padding: 8px 16px; font-size: 14px;" onclick="toggleAuth()">로그인</button>
+            </div>
+        </div>
+
+        <div class="import-section">
+            <h3>📋 재생목록 가져오기</h3>
+            
+            <div class="input-group">
+                <label for="playlist-mode">작업 선택</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <label style="flex: 1; display: flex; align-items: center; padding: 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; cursor: pointer;">
+                        <input type="radio" name="mode" value="new" checked onchange="handleModeChange()" style="margin-right: 10px;">
+                        <span>새 재생목록 만들기</span>
+                    </label>
+                    <label style="flex: 1; display: flex; align-items: center; padding: 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; cursor: pointer;">
+                        <input type="radio" name="mode" value="update" onchange="handleModeChange()" style="margin-right: 10px;">
+                        <span>기존 재생목록 수정</span>
+                    </label>
+                </div>
+                
+                <div id="new-playlist-section">
+                    <label for="new-playlist-name">새 재생목록 이름</label>
+                    <input type="text" id="new-playlist-name" class="playlist-name-input" placeholder="예: 음악 모음, 강의 목록 등...">
+                </div>
+                
+                <div id="existing-playlist-section" style="display: none;">
+                    <label for="existing-playlist">수정할 재생목록 선택</label>
+                    <select id="existing-playlist" class="playlist-name-input">
+                        <option value="">-- 재생목록을 선택하세요 --</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="playlist-input">YouTube 재생목록 URL을 붙여넣으세요</label>
+                <input type="text" id="playlist-input" class="playlist-name-input" placeholder="https://www.youtube.com/playlist?list=...">
+            </div>
+            
+            <div class="input-group" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
+                <label for="manual-input">또는 개별 동영상 링크들을 붙여넣으세요 (한 줄에 하나씩)</label>
+                <textarea id="manual-input" class="playlist-input" placeholder="https://www.youtube.com/watch?v=...
+https://youtu.be/...
+https://www.youtube.com/shorts/..." style="min-height: 100px;"></textarea>
+            </div>
+            
+            <div>
+                <button class="btn btn-primary" onclick="importPlaylist()">
+                    <span>🎬</span> 재생목록 가져오기
+                </button>
+                <button class="btn btn-secondary" onclick="clearInput()">
+                    <span>🗑️</span> 지우기
+                </button>
+            </div>
+            
+            <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                💡 YouTube 재생목록 URL을 입력하면 자동으로 모든 동영상을 가져옵니다
+            </p>
+        </div>
+
+        <div id="status-container"></div>
+
+        <div class="playlists-section" id="playlists-section">
+            <div class="playlist-tabs" id="playlist-tabs"></div>
+            <div id="videos-container"></div>
+        </div>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div class="video-player-modal" id="video-modal" onclick="closeModal(event)">
+        <div class="video-player-container" onclick="event.stopPropagation()">
+            <button class="close-modal" onclick="closeModal()">✕</button>
+            <iframe id="video-iframe" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // Global variables
+        let supabase = null;
+        let playlists = {};
+        let currentPlaylist = null;
+        let currentUser = null;
+
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+
+        // Initialize
+        window.addEventListener('load', async function() {
+            await initializeSupabase();
+            
+            // Check for OAuth callback
+            if (window.location.hash && window.location.hash.includes('access_token')) {
+                console.log('OAuth 콜백 처리 중...');
+                // Supabase가 자동으로 처리하도록 대기
+                setTimeout(async () => {
+                    await checkAuth();
+                    await loadPlaylists();
+                    // Clear the hash
+                    window.history.replaceState(null, '', window.location.pathname);
+                }, 1000);
+            } else {
+                await checkAuth();
+                await loadPlaylists();
+            }
+        });
+
+        // Initialize Supabase
+        async function initializeSupabase() {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase initialized');
+            } catch (error) {
+                console.error('Failed to initialize Supabase:', error);
+                showStatus('Supabase 초기화 실패', 'error');
+            }
+        }
+
+        // Extract video ID from URL
+        function extractVideoId(url) {
+            // Handle YouTube Shorts
+            if (url.includes('/shorts/')) {
+                const match = url.match(/shorts\/([^#&?]*)/);
+                return match ? match[1] : null;
+            }
+
+            // Regular YouTube URLs
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^#&?]*).*/,
+                /^([^#&?]*).*/
+            ];
+
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+            return null;
+        }
+
+        // Extract playlist ID from URL
+        function extractPlaylistId(url) {
+            const match = url.match(/[&?]list=([^&]+)/);
+            return match ? match[1] : null;
+        }
+
+        // Fetch playlist videos using YouTube API
+        async function fetchPlaylistVideos(playlistId) {
+            // YouTube API 키를 여기에 입력하세요
+            const API_KEY = 'AIzaSyCCbyfWSpCbZE5irT8jl6eG9tzX_rJnJtw';
+            const videos = [];
+            let nextPageToken = '';
+            
+            try {
+                do {
+                    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}${nextPageToken ? '&pageToken=' + nextPageToken : ''}`;
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error('YouTube API 요청 실패');
+                    }
+                    
+                    const data = await response.json();
+                    console.log(`페이지 로드: 현재 ${videos.length}개, 이번 페이지에서 ${data.items ? data.items.length : 0}개 추가`);
+                    
+                    if (data.items) {
+                        data.items.forEach((item) => {
+                            const snippet = item.snippet;
+                            videos.push({
+                                url: `https://www.youtube.com/watch?v=${snippet.resourceId.videoId}`,
+                                videoId: snippet.resourceId.videoId,
+                                title: snippet.title,
+                                description: snippet.description,
+                                thumbnailUrl: snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url,
+                                channelTitle: snippet.channelTitle,
+                                position: snippet.position !== undefined ? snippet.position : videos.length
+                            });
+                        });
+                    }
+                    
+                    nextPageToken = data.nextPageToken;
+                } while (nextPageToken);
+                
+                console.log(`총 ${videos.length}개의 동영상을 가져왔습니다.`);
+                return videos;
+                
+            } catch (error) {
+                console.error('YouTube API Error:', error);
+                // 대체 방법 시도
+                return await fetchPlaylistVideosAlternative(playlistId);
+            }
+        }
+
+        // Alternative method using web scraping service
+        async function fetchPlaylistVideosAlternative(playlistId) {
+            try {
+                showStatus('YouTube API 대신 대체 방법을 사용합니다. 수동으로 동영상을 추가해주세요.', 'warning');
+                
+                // YouTube 재생목록 페이지 열기를 안내
+                const playlistUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
+                
+                // 안내 메시지 표시
+                const instructions = `
+                    <div style="background: #333; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h4 style="color: #ff9800; margin-bottom: 15px;">📋 재생목록 동영상 복사 방법:</h4>
+                        <ol style="line-height: 1.8; color: #ccc;">
+                            <li><a href="${playlistUrl}" target="_blank" style="color: #4CAF50;">여기를 클릭하여 재생목록 열기</a></li>
+                            <li>재생목록 페이지에서 모든 동영상을 확인</li>
+                            <li>각 동영상을 우클릭 → "동영상 URL 복사"</li>
+                            <li>아래 "개별 동영상 링크" 영역에 붙여넣기</li>
+                            <li>"재생목록 가져오기" 다시 클릭</li>
+                        </ol>
+                        <p style="margin-top: 15px; color: #888;">💡 팁: Ctrl+A로 전체 선택 후 복사하면 더 쉽게 가져올 수 있습니다.</p>
+                    </div>
+                `;
+                
+                document.getElementById('status-container').innerHTML = instructions;
+                
+                // 수동 입력 영역으로 포커스
+                document.getElementById('manual-input').focus();
+                
+                return [];
+                
+            } catch (error) {
+                console.error('Alternative fetch error:', error);
+                return [];
+            }
+        }
+
+        // YouTube Data API v3 with better error handling
+        async function fetchPlaylistWithFallback(playlistId) {
+            // 먼저 공개 API 프록시 시도
+            try {
+                // YouTube RSS Feed 사용 시도
+                const corsProxy = 'https://api.allorigins.win/get?url=';
+                const rssUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`;
+                const response = await fetch(corsProxy + encodeURIComponent(rssUrl));
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(data.contents, 'text/xml');
+                    
+                    const entries = xmlDoc.querySelectorAll('entry');
+                    const videos = [];
+                    
+                    entries.forEach((entry, index) => {
+                        const videoId = entry.querySelector('videoId')?.textContent || 
+                                       entry.querySelector('id')?.textContent?.split(':').pop();
+                        const title = entry.querySelector('title')?.textContent;
+                        const author = entry.querySelector('author name')?.textContent;
+                        
+                        if (videoId) {
+                            videos.push({
+                                url: `https://www.youtube.com/watch?v=${videoId}`,
+                                videoId: videoId,
+                                title: title || `Video ${index + 1}`,
+                                channelTitle: author || 'Unknown Channel',
+                                position: index
+                            });
+                        }
+                    });
+                    
+                    if (videos.length > 0) {
+                        showStatus(`RSS를 통해 ${videos.length}개의 동영상을 찾았습니다!`, 'success');
+                        return videos;
+                    }
+                }
+            } catch (error) {
+                console.error('RSS fetch error:', error);
+            }
+            
+            // RSS도 실패하면 원래 API 시도
+            return await fetchPlaylistVideos(playlistId);
+        }
+
+        // Parse playlist input
+        function parsePlaylistInput(input) {
+            const lines = input.trim().split('\n');
+            const videos = [];
+            
+            lines.forEach((line, index) => {
+                const trimmedLine = line.trim();
+                if (!trimmedLine) return;
+                
+                // Try to extract URL from line
+                const urlMatch = trimmedLine.match(/(https?:\/\/[^\s]+)/);
+                if (urlMatch) {
+                    const url = urlMatch[1];
+                    const videoId = extractVideoId(url);
+                    
+                    if (videoId) {
+                        videos.push({
+                            url: url,
+                            videoId: videoId,
+                            title: `Video ${index + 1}`, // Temporary title
+                            position: index
+                        });
+                    }
+                }
+            });
+            
+            return videos;
+        }
+
+        // Handle mode change
+        function handleModeChange() {
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            const newSection = document.getElementById('new-playlist-section');
+            const existingSection = document.getElementById('existing-playlist-section');
+            
+            if (mode === 'new') {
+                newSection.style.display = 'block';
+                existingSection.style.display = 'none';
+            } else {
+                newSection.style.display = 'none';
+                existingSection.style.display = 'block';
+                updatePlaylistDropdown();
+            }
+        }
+        
+        // Update playlist dropdown
+        function updatePlaylistDropdown() {
+            const select = document.getElementById('existing-playlist');
+            select.innerHTML = '<option value="">-- 재생목록을 선택하세요 --</option>';
+            
+            Object.keys(playlists).forEach(playlistId => {
+                const option = document.createElement('option');
+                option.value = playlistId;
+                option.textContent = playlists[playlistId].name;
+                option.dataset.playlistName = playlists[playlistId].name;
+                select.appendChild(option);
+            });
+        }
+        
+        // Import playlist
+        async function importPlaylist() {
+            // Check authentication first
+            if (!currentUser) {
+                showStatus('재생목록을 저장하려면 로그인이 필요합니다', 'error');
+                loginWithGoogle();
+                return;
+            }
+            
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            let playlistName = '';
+            let selectedPlaylistId = null;
+            
+            if (mode === 'new') {
+                playlistName = document.getElementById('new-playlist-name').value.trim();
+                if (!playlistName) {
+                    showStatus('새 재생목록 이름을 입력해주세요', 'error');
+                    return;
+                }
+            } else {
+                const select = document.getElementById('existing-playlist');
+                selectedPlaylistId = select.value;
+                if (!selectedPlaylistId) {
+                    showStatus('수정할 재생목록을 선택해주세요', 'error');
+                    return;
+                }
+                playlistName = select.selectedOptions[0].dataset.playlistName;
+            }
+            
+            const playlistUrl = document.getElementById('playlist-input').value.trim();
+            const manualInput = document.getElementById('manual-input').value.trim();
+            
+            let videos = [];
+            
+            // Check if playlist URL is provided
+            if (playlistUrl) {
+                const playlistId = extractPlaylistId(playlistUrl);
+                if (playlistId) {
+                    showStatus('재생목록에서 동영상을 가져오는 중...', 'success');
+                    videos = await fetchPlaylistWithFallback(playlistId);
+                    
+                    if (videos.length === 0) {
+                        // 대체 방법 안내는 이미 표시됨
+                        return;
+                    }
+                } else {
+                    showStatus('유효한 재생목록 URL이 아닙니다', 'error');
+                    return;
+                }
+            } else if (manualInput) {
+                // Use manual input if no playlist URL
+                videos = parsePlaylistInput(manualInput);
+                
+                if (videos.length === 0) {
+                    showStatus('유효한 YouTube 링크를 찾을 수 없습니다', 'error');
+                    return;
+                }
+            } else {
+                showStatus('재생목록 URL 또는 개별 동영상 링크를 입력해주세요', 'error');
+                return;
+            }
+            
+            showStatus(`${videos.length}개의 동영상을 처리 중...`, 'success');
+            
+            try {
+                if (mode === 'new') {
+                    // Create new playlist
+                    const playlistId = `playlist_${Date.now()}`;
+                    
+                    // Check if playlist name already exists
+                    const existingPlaylist = Object.values(playlists).find(p => p.name === playlistName);
+                    if (existingPlaylist) {
+                        showStatus('이미 같은 이름의 재생목록이 있습니다. 다른 이름을 사용해주세요.', 'error');
+                        return;
+                    }
+                    
+                    // Save to links table in batches to avoid size limitations
+                    const batchSize = 50; // Process 50 videos at a time
+                    const savedVideos = [];
+                    
+                    for (let i = 0; i < videos.length; i += batchSize) {
+                        const batch = videos.slice(i, i + batchSize);
+                        const { data: batchSaved, error } = await supabase
+                            .from('links')
+                            .insert(
+                                batch.map((video, batchIndex) => ({
+                                    name: video.title || `${playlistName} - Video ${i + batchIndex + 1}`,
+                                    url: video.url,
+                                    category: 'youtube-playlist',
+                                    description: JSON.stringify({
+                                        playlist_id: playlistId,
+                                        playlist_name: playlistName,
+                                        video_id: video.videoId,
+                                        channel_name: video.channelTitle || '',
+                                        channel_title: video.channelTitle || '',
+                                        thumbnail_url: video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
+                                    }),
+                                    position: i + batchIndex
+                                }))
+                            )
+                            .select();
+                        
+                        if (error) throw error;
+                        if (batchSaved) savedVideos.push(...batchSaved);
+                        
+                        // Show progress
+                        showStatus(`저장 중... ${Math.min((i + batchSize), videos.length)}/${videos.length}개 완료`, 'success');
+                    }
+                    
+                    showStatus(`✅ 새 재생목록 '${playlistName}' 생성 완료! ${savedVideos.length}개의 동영상이 저장되었습니다!`, 'success');
+                    
+                    // Clear input and reload
+                    clearInput();
+                    await loadPlaylists();
+                    showPlaylist(playlistId);
+                    
+                } else {
+                    // Update existing playlist
+                    showStatus(`기존 재생목록 '${playlistName}' 업데이트 중...`, 'warning');
+                    
+                    // Get existing videos with pagination
+                    let existingLinks = [];
+                    let from = 0;
+                    const pageSize = 1000;
+                    let hasMore = true;
+                    
+                    while (hasMore) {
+                        const { data, error: fetchError } = await supabase
+                            .from('links')
+                            .select('*')
+                            .eq('category', 'youtube-playlist')
+                            .range(from, from + pageSize - 1);
+                        
+                        if (fetchError) throw fetchError;
+                        
+                        if (data && data.length > 0) {
+                            existingLinks = existingLinks.concat(data);
+                            from += pageSize;
+                            hasMore = data.length === pageSize;
+                        } else {
+                            hasMore = false;
+                        }
+                    }
+                    
+                    const existingVideos = existingLinks.filter(link => {
+                        try {
+                            const metadata = JSON.parse(link.description || '{}');
+                            return metadata.playlist_id === selectedPlaylistId;
+                        } catch (e) {
+                            return false;
+                        }
+                    });
+                    
+                    // Create maps for comparison
+                    const existingVideoMap = new Map(
+                        existingVideos.map(v => {
+                            const metadata = JSON.parse(v.description || '{}');
+                            return [metadata.video_id, v];
+                        })
+                    );
+                    
+                    const newVideos = [];
+                    const updatePromises = [];
+                    
+                    videos.forEach((video, index) => {
+                        const existing = existingVideoMap.get(video.videoId);
+                        
+                        if (existing) {
+                            // Update position and title if changed
+                            if (existing.name !== video.title || existing.position !== index) {
+                                updatePromises.push(
+                                    supabase
+                                        .from('links')
+                                        .update({
+                                            name: video.title,
+                                            position: index
+                                        })
+                                        .eq('id', existing.id)
+                                );
+                            }
+                            existingVideoMap.delete(video.videoId);
+                        } else {
+                            // Add new video
+                            newVideos.push({
+                                name: video.title || `${playlistName} - Video ${index + 1}`,
+                                url: video.url,
+                                category: 'youtube-playlist',
+                                description: JSON.stringify({
+                                    playlist_id: selectedPlaylistId,
+                                    playlist_name: playlistName,
+                                    video_id: video.videoId,
+                                    channel_name: video.channelTitle || '',
+                                    channel_title: video.channelTitle || '',
+                                    thumbnail_url: video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`
+                                }),
+                                position: index
+                            });
+                        }
+                    });
+                    
+                    // Videos to delete (no longer in playlist)
+                    const videosToDelete = Array.from(existingVideoMap.values()).map(v => v.id);
+                    
+                    // Execute all operations
+                    const promises = [];
+                    
+                    if (updatePromises.length > 0) {
+                        promises.push(...updatePromises);
+                    }
+                    
+                    if (newVideos.length > 0) {
+                        // Insert new videos in batches
+                        const batchSize = 50;
+                        for (let i = 0; i < newVideos.length; i += batchSize) {
+                            const batch = newVideos.slice(i, i + batchSize);
+                            promises.push(
+                                supabase.from('links').insert(batch).select()
+                            );
+                        }
+                    }
+                    
+                    if (videosToDelete.length > 0) {
+                        promises.push(
+                            supabase.from('links').delete().in('id', videosToDelete)
+                        );
+                    }
+                    
+                    await Promise.all(promises);
+                    
+                    showStatus(`✅ 재생목록 업데이트 완료! 새 동영상: ${newVideos.length}개, 수정: ${updatePromises.length}개, 삭제: ${videosToDelete.length}개`, 'success');
+                    
+                    // Clear input and reload
+                    clearInput();
+                    await loadPlaylists();
+                    showPlaylist(selectedPlaylistId);
+                }
+                
+            } catch (error) {
+                console.error('Error saving playlist:', error);
+                showStatus('재생목록 저장 실패: ' + error.message, 'error');
+            }
+        }
+
+        // Load all playlists from links table
+        async function loadPlaylists() {
+            try {
+                // Load all videos with pagination to handle large playlists
+                let allData = [];
+                let from = 0;
+                const pageSize = 1000;
+                let hasMore = true;
+                
+                while (hasMore) {
+                    const { data, error } = await supabase
+                        .from('links')
+                        .select('*')
+                        .eq('category', 'youtube-playlist')
+                        .order('created_at', { ascending: false })
+                        .range(from, from + pageSize - 1);
+                    
+                    if (error) throw error;
+                    
+                    if (data && data.length > 0) {
+                        allData = allData.concat(data);
+                        from += pageSize;
+                        hasMore = data.length === pageSize;
+                    } else {
+                        hasMore = false;
+                    }
+                }
+                
+                console.log(`Loaded ${allData.length} videos from database`);
+                const data = allData;
+                
+                // Group by playlist using description JSON
+                playlists = {};
+                data.forEach(link => {
+                    let metadata = {};
+                    try {
+                        metadata = JSON.parse(link.description || '{}');
+                    } catch (e) {
+                        // If description is not JSON, create default metadata
+                        metadata = {
+                            playlist_id: 'default',
+                            playlist_name: 'Unknown Playlist'
+                        };
+                    }
+                    const playlistId = metadata.playlist_id || 'default';
+                    const playlistName = metadata.playlist_name || 'Unknown Playlist';
+                    
+                    if (!playlists[playlistId]) {
+                        playlists[playlistId] = {
+                            name: playlistName,
+                            videos: []
+                        };
+                    }
+                    
+                    playlists[playlistId].videos.push({
+                        id: link.id,
+                        title: link.name,
+                        url: link.url,
+                        video_id: metadata.video_id || extractVideoId(link.url),
+                        channel_name: metadata.channel_name || metadata.channel_title || '',
+                        thumbnail_url: metadata.thumbnail_url || `https://img.youtube.com/vi/${metadata.video_id || extractVideoId(link.url)}/mqdefault.jpg`,
+                        position: link.position,
+                        metadata: metadata
+                    });
+                });
+                
+                // Sort videos by position
+                Object.keys(playlists).forEach(playlistId => {
+                    playlists[playlistId].videos.sort((a, b) => a.position - b.position);
+                    console.log(`Playlist ${playlists[playlistId].name} has ${playlists[playlistId].videos.length} videos`);
+                });
+                
+                displayPlaylistTabs();
+                
+                // Show first playlist if exists
+                const playlistIds = Object.keys(playlists);
+                if (playlistIds.length > 0) {
+                    showPlaylist(playlistIds[0]);
+                } else {
+                    document.getElementById('videos-container').innerHTML = 
+                        '<div class="empty-state"><h3>아직 재생목록이 없습니다</h3><p>위에서 YouTube 링크를 추가해보세요!</p></div>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading playlists:', error);
+                showStatus('재생목록 불러오기 실패', 'error');
+            }
+        }
+
+        // Display playlist tabs
+        function displayPlaylistTabs() {
+            const tabsContainer = document.getElementById('playlist-tabs');
+            tabsContainer.innerHTML = '';
+            
+            Object.keys(playlists).forEach(playlistId => {
+                const tab = document.createElement('div');
+                tab.className = 'playlist-tab';
+                tab.innerHTML = `
+                    <span class="play-btn" onclick="playPlaylist('${playlistId}', event)" title="재생목록 재생">▶</span>
+                    ${playlists[playlistId].name}
+                    <span class="delete-btn" onclick="deletePlaylist('${playlistId}', event)">✕</span>
+                `;
+                tab.onclick = (e) => {
+                    if (!e.target.classList.contains('delete-btn') && !e.target.classList.contains('play-btn')) {
+                        showPlaylist(playlistId);
+                    }
+                };
+                
+                tabsContainer.appendChild(tab);
+            });
+        }
+        
+        // Play playlist in player
+        function playPlaylist(playlistId, event) {
+            event.stopPropagation();
+            window.open('youtube-playlist-player.html', '_blank');
+        }
+
+        // Show specific playlist
+        function showPlaylist(playlistId) {
+            currentPlaylist = playlistId;
+            
+            // Update active tab
+            document.querySelectorAll('.playlist-tab').forEach((tab, index) => {
+                tab.classList.toggle('active', Object.keys(playlists)[index] === playlistId);
+            });
+            
+            // Display videos
+            const container = document.getElementById('videos-container');
+            const playlist = playlists[playlistId];
+            
+            if (!playlist || playlist.videos.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>이 재생목록은 비어있습니다</h3></div>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="video-grid">
+                    ${playlist.videos.map(video => `
+                        <div class="video-card" onclick="playVideo('${video.video_id}')">
+                            <img class="video-thumbnail" 
+                                 src="https://img.youtube.com/vi/${video.video_id}/mqdefault.jpg" 
+                                 alt="${video.title}"
+                                 loading="lazy"
+                                 onerror="this.src='https://img.youtube.com/vi/${video.video_id}/default.jpg'">
+                            <div class="video-info">
+                                <div class="video-title">${video.title}</div>
+                                <div class="video-channel">YouTube 동영상</div>
+                                <div class="video-stats">
+                                    <span>조회수 정보 없음</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Fetch real titles for videos
+            fetchVideoTitles(playlist.videos);
+        }
+
+        // Fetch real video titles using noembed
+        async function fetchVideoTitles(videos) {
+            for (const video of videos) {
+                try {
+                    const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${video.video_id}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.title) {
+                            // Update UI
+                            const videoCard = document.querySelector(`.video-card[onclick="playVideo('${video.video_id}')"]`);
+                            if (videoCard) {
+                                const titleEl = videoCard.querySelector('.video-title');
+                                if (titleEl) titleEl.textContent = data.title;
+                                
+                                const channelEl = videoCard.querySelector('.video-channel');
+                                if (channelEl && data.author_name) {
+                                    channelEl.textContent = data.author_name;
+                                }
+                            }
+                            
+                            // Update in database
+                            const updatedMetadata = {
+                                ...video.metadata,
+                                channel_name: data.author_name || 'Unknown'
+                            };
+                            await supabase
+                                .from('links')
+                                .update({ 
+                                    name: data.title,
+                                    description: JSON.stringify(updatedMetadata)
+                                })
+                                .eq('id', video.id);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching video info:', error);
+                }
+                
+                // Delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        // Play video in modal
+        function playVideo(videoId) {
+            const modal = document.getElementById('video-modal');
+            const iframe = document.getElementById('video-iframe');
+            
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            modal.style.display = 'flex';
+        }
+
+        // Close modal
+        function closeModal(event) {
+            if (!event || event.target.id === 'video-modal' || event.target.classList.contains('close-modal')) {
+                const modal = document.getElementById('video-modal');
+                const iframe = document.getElementById('video-iframe');
+                
+                modal.style.display = 'none';
+                iframe.src = '';
+            }
+        }
+
+        // Delete playlist
+        async function deletePlaylist(playlistId, event) {
+            event.stopPropagation();
+            
+            // Check authentication first
+            if (!currentUser) {
+                showStatus('재생목록을 삭제하려면 로그인이 필요합니다', 'error');
+                loginWithGoogle();
+                return;
+            }
+            
+            if (!confirm('이 재생목록을 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                // Delete all videos in this playlist from links table
+                const playlist = playlists[playlistId];
+                const videoIds = playlist.videos.map(v => v.id);
+                
+                const { error } = await supabase
+                    .from('links')
+                    .delete()
+                    .in('id', videoIds);
+                
+                if (error) throw error;
+                
+                showStatus('재생목록이 삭제되었습니다', 'success');
+                await loadPlaylists();
+                
+            } catch (error) {
+                console.error('Error deleting playlist:', error);
+                showStatus('재생목록 삭제 실패', 'error');
+            }
+        }
+
+        // Clear input
+        function clearInput() {
+            document.getElementById('new-playlist-name').value = '';
+            document.getElementById('existing-playlist').value = '';
+            document.getElementById('playlist-input').value = '';
+            document.getElementById('manual-input').value = '';
+            // Reset to new mode
+            document.querySelector('input[name="mode"][value="new"]').checked = true;
+            handleModeChange();
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const container = document.getElementById('status-container');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.textContent = message;
+            
+            container.innerHTML = '';
+            container.appendChild(statusDiv);
+            
+            setTimeout(() => {
+                statusDiv.style.opacity = '0';
+                setTimeout(() => container.innerHTML = '', 500);
+            }, 3000);
+        }
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                currentUser = user;
+                updateAuthUI();
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        }
+
+        // Update auth UI
+        function updateAuthUI() {
+            const authText = document.getElementById('auth-text');
+            const authBtn = document.getElementById('auth-btn');
+            
+            if (currentUser) {
+                authText.textContent = `로그인됨: ${currentUser.email}`;
+                authBtn.textContent = '로그아웃';
+            } else {
+                authText.textContent = '로그인하지 않음';
+                authBtn.textContent = '로그인';
+            }
+        }
+
+        // Toggle authentication
+        async function toggleAuth() {
+            if (currentUser) {
+                // Logout
+                await supabase.auth.signOut();
+                currentUser = null;
+                updateAuthUI();
+                showStatus('로그아웃되었습니다', 'success');
+            } else {
+                // Login with Google directly
+                loginWithGoogle();
+            }
+        }
+
+        // Show login modal
+        function showLoginModal() {
+            const modalHTML = `
+                <div id="login-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1001;">
+                    <div style="background: #1a1a1a; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #333;">
+                        <h3 style="margin-bottom: 20px; color: #ff0000;">로그인</h3>
+                        <input type="email" id="login-email" placeholder="이메일" style="width: 100%; margin-bottom: 10px; padding: 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 6px; color: #fff;">
+                        <input type="password" id="login-password" placeholder="비밀번호" style="width: 100%; margin-bottom: 20px; padding: 10px; background: #0a0a0a; border: 1px solid #333; border-radius: 6px; color: #fff;">
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="doLogin()">로그인</button>
+                            <button class="btn btn-secondary" onclick="closeLoginModal()">취소</button>
+                        </div>
+                        <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                            💡 재생목록 추가는 인증된 사용자만 가능합니다
+                        </p>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            document.getElementById('login-email').focus();
+        }
+
+        // Close login modal
+        function closeLoginModal() {
+            const modal = document.getElementById('login-modal');
+            if (modal) modal.remove();
+        }
+
+        // Do login
+        async function doLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!email || !password) {
+                showStatus('이메일과 비밀번호를 입력하세요', 'error');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                currentUser = data.user;
+                updateAuthUI();
+                closeLoginModal();
+                showStatus('로그인 성공!', 'success');
+                
+            } catch (error) {
+                showStatus('로그인 실패: ' + error.message, 'error');
+            }
+        }
+
+        // Google로 로그인
+        async function loginWithGoogle() {
+            const statusContainer = document.getElementById('status-container');
+            
+            try {
+                showStatus('Google 로그인 중...', 'warning');
+                
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href.split('?')[0].split('#')[0],
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        },
+                        skipBrowserRedirect: false
+                    }
+                });
+                
+                if (error) throw error;
+                
+                // OAuth는 자동으로 리다이렉트됨
+                
+            } catch (error) {
+                console.error('Google 로그인 오류:', error);
+                showStatus('Google 로그인 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // Listen for auth changes
+        supabase?.auth.onAuthStateChange((event, session) => {
+            currentUser = session?.user || null;
+            updateAuthUI();
+        });
+    </script>
+</body>
+</html>

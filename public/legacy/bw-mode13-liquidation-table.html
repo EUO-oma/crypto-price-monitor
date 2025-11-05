@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BW - Liquidation Matrix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'SF Mono', monospace;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.3;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .symbol-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .symbol-btn {
+            background: #111;
+            border: 1px solid #222;
+            color: #666;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        
+        .symbol-btn.active {
+            border-color: #fff;
+            color: #fff;
+            background: #222;
+        }
+        
+        .symbol-btn:hover {
+            border-color: #444;
+            color: #aaa;
+        }
+        
+        .position-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        
+        .position-btn {
+            background: #111;
+            border: 1px solid #222;
+            color: #666;
+            padding: 8px 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .position-btn.active.long {
+            border-color: #0f0;
+            color: #0f0;
+            background: #0a1f0a;
+        }
+        
+        .position-btn.active.short {
+            border-color: #f00;
+            color: #f00;
+            background: #1f0a0a;
+        }
+        
+        .current-price {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .price-display {
+            font-size: 36px;
+            font-weight: 100;
+            margin-bottom: 5px;
+        }
+        
+        .price-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .matrix-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+        
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+        
+        .matrix-table th,
+        .matrix-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #222;
+            font-size: 14px;
+        }
+        
+        .matrix-table th {
+            background: #111;
+            color: #888;
+            font-weight: normal;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .matrix-table th.leverage-header {
+            background: #1a1a1a;
+            color: #fff;
+        }
+        
+        .matrix-table td {
+            background: #0a0a0a;
+            transition: all 0.2s;
+        }
+        
+        .matrix-table td.price-cell {
+            background: #111;
+            color: #888;
+            font-weight: bold;
+        }
+        
+        .matrix-table td.liquidation {
+            cursor: pointer;
+        }
+        
+        .matrix-table td.liquidation:hover {
+            background: #1a1a1a;
+            color: #fff;
+        }
+        
+        .matrix-table td.safe {
+            color: #0f0;
+            opacity: 0.6;
+        }
+        
+        .matrix-table td.warning {
+            color: #ff0;
+            opacity: 0.8;
+        }
+        
+        .matrix-table td.danger {
+            color: #f00;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        .matrix-table td.current {
+            background: #1f1f0a;
+            border-color: #ff0;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+            font-size: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #333;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .back-link:hover {
+            color: #fff;
+        }
+        
+        .info-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .price-display {
+                font-size: 28px;
+            }
+            
+            .matrix-table {
+                font-size: 12px;
+            }
+            
+            .matrix-table th,
+            .matrix-table td {
+                padding: 8px 6px;
+            }
+            
+            .symbol-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="bw-mode.html" class="back-link">← back</a>
+    
+    <div class="header">liquidation matrix</div>
+    
+    <div class="symbol-selector">
+        <button class="symbol-btn active" onclick="selectSymbol('BTCUSDT')">BTC</button>
+        <button class="symbol-btn" onclick="selectSymbol('ETHUSDT')">ETH</button>
+        <button class="symbol-btn" onclick="selectSymbol('SOLUSDT')">SOL</button>
+        <button class="symbol-btn" onclick="selectSymbol('XRPUSDT')">XRP</button>
+        <button class="symbol-btn" onclick="selectSymbol('AVAXUSDT')">AVAX</button>
+    </div>
+    
+    <div class="position-toggle">
+        <button class="position-btn long active" onclick="setPosition('long')">LONG POSITION</button>
+        <button class="position-btn short" onclick="setPosition('short')">SHORT POSITION</button>
+    </div>
+    
+    <div class="current-price">
+        <div class="price-display" id="current-price">-</div>
+        <div class="price-label">current price</div>
+    </div>
+    
+    <div class="matrix-container">
+        <table class="matrix-table" id="matrix-table">
+            <!-- Table will be populated by JavaScript -->
+        </table>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #0f0; opacity: 0.6;"></div>
+            <span>Safe (>20%)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff0; opacity: 0.8;"></div>
+            <span>Warning (10-20%)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #f00;"></div>
+            <span>Danger (<10%)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #1f1f0a;"></div>
+            <span>Current Price Range</span>
+        </div>
+    </div>
+    
+    <div class="info-text">
+        Click any liquidation price to copy<br>
+        Maintenance margin: 0.4% (Binance)
+    </div>
+
+    <script>
+        let currentSymbol = 'BTCUSDT';
+        let currentPosition = 'long';
+        let currentPrice = 0;
+        let ws = null;
+        
+        const maintenanceMargin = 0.004; // 0.4%
+        const leverages = [1, 2, 3, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 125];
+        
+        function selectSymbol(symbol) {
+            currentSymbol = symbol;
+            document.querySelectorAll('.symbol-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            connectWebSocket();
+        }
+        
+        function setPosition(position) {
+            currentPosition = position;
+            document.querySelectorAll('.position-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.position-btn.${position}`).classList.add('active');
+            if (currentPrice > 0) {
+                updateMatrix();
+            }
+        }
+        
+        function calculateLiquidationPrice(entryPrice, leverage, position) {
+            if (position === 'long') {
+                return entryPrice * (1 - 1/leverage + maintenanceMargin);
+            } else {
+                return entryPrice * (1 + 1/leverage - maintenanceMargin);
+            }
+        }
+        
+        function calculateDistance(currentPrice, targetPrice, position) {
+            if (position === 'long') {
+                return ((currentPrice - targetPrice) / currentPrice) * 100;
+            } else {
+                return ((targetPrice - currentPrice) / currentPrice) * 100;
+            }
+        }
+        
+        function generatePriceRanges(currentPrice) {
+            const ranges = [];
+            const percentages = [-20, -15, -10, -7, -5, -3, -2, -1, 0, 1, 2, 3, 5, 7, 10, 15, 20];
+            
+            percentages.forEach(pct => {
+                ranges.push({
+                    percentage: pct,
+                    price: currentPrice * (1 + pct / 100)
+                });
+            });
+            
+            return ranges;
+        }
+        
+        function formatPrice(price, symbol) {
+            const decimals = symbol === 'XRPUSDT' ? 4 : 2;
+            return price.toLocaleString('en-US', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
+        
+        function copyToClipboard(text) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            
+            // Visual feedback
+            event.target.style.background = '#2a2a2a';
+            setTimeout(() => {
+                event.target.style.background = '';
+            }, 200);
+        }
+        
+        function updateMatrix() {
+            const table = document.getElementById('matrix-table');
+            table.innerHTML = '';
+            
+            // Create header
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = '<th>Entry Price</th>';
+            leverages.forEach(lev => {
+                headerRow.innerHTML += `<th class="leverage-header">${lev}x</th>`;
+            });
+            table.appendChild(headerRow);
+            
+            // Generate price ranges
+            const priceRanges = generatePriceRanges(currentPrice);
+            
+            priceRanges.forEach(range => {
+                const row = document.createElement('tr');
+                
+                // Price cell
+                const priceCell = document.createElement('td');
+                priceCell.className = 'price-cell';
+                if (Math.abs(range.percentage) < 0.5) {
+                    priceCell.classList.add('current');
+                }
+                priceCell.innerHTML = `
+                    <div>${range.percentage > 0 ? '+' : ''}${range.percentage}%</div>
+                    <div>$${formatPrice(range.price, currentSymbol)}</div>
+                `;
+                row.appendChild(priceCell);
+                
+                // Liquidation prices for each leverage
+                leverages.forEach(leverage => {
+                    const cell = document.createElement('td');
+                    const liquidationPrice = calculateLiquidationPrice(range.price, leverage, currentPosition);
+                    const distance = calculateDistance(currentPrice, liquidationPrice, currentPosition);
+                    
+                    cell.className = 'liquidation';
+                    cell.textContent = `$${formatPrice(liquidationPrice, currentSymbol)}`;
+                    cell.onclick = () => copyToClipboard(liquidationPrice.toFixed(currentSymbol === 'XRPUSDT' ? 4 : 2));
+                    
+                    // Color coding based on distance
+                    if (distance < 10) {
+                        cell.classList.add('danger');
+                    } else if (distance < 20) {
+                        cell.classList.add('warning');
+                    } else {
+                        cell.classList.add('safe');
+                    }
+                    
+                    // Highlight if liquidation price is near current price
+                    const priceDiff = Math.abs((liquidationPrice - currentPrice) / currentPrice) * 100;
+                    if (priceDiff < 2) {
+                        cell.style.background = '#2f1f1f';
+                    }
+                    
+                    row.appendChild(cell);
+                });
+                
+                table.appendChild(row);
+            });
+        }
+        
+        function connectWebSocket() {
+            if (ws) ws.close();
+            
+            const stream = currentSymbol.toLowerCase() + '@ticker';
+            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${stream}`);
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                currentPrice = parseFloat(data.c);
+                
+                document.getElementById('current-price').textContent = 
+                    '$' + formatPrice(currentPrice, currentSymbol);
+                
+                updateMatrix();
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                setTimeout(connectWebSocket, 5000);
+            };
+            
+            ws.onclose = () => {
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+        
+        // Initialize
+        connectWebSocket();
+    </script>
+</body>
+</html>

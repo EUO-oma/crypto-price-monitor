@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>즐겨찾기 모음 - CRYPTO × LIVE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #333;
+        }
+        
+        h1 {
+            font-size: 2em;
+            color: #fff;
+        }
+        
+        .back-btn {
+            padding: 10px 20px;
+            background: #1a1a1a;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        /* GPT Links Section */
+        .gpt-section {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+        }
+        
+        .gpt-section h2 {
+            color: #aaa;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #gpt-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .link-btn {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 15px 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .link-btn:hover {
+            background: #2a2a2a;
+            border-color: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* YouTube Live Section */
+        .youtube-section {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+        }
+        
+        .youtube-section h2 {
+            color: #aaa;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #youtube-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .youtube-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            text-decoration: none;
+            color: #fff;
+            display: block;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .youtube-card:hover {
+            background: #2a2a2a;
+            border-color: #555;
+            transform: translateY(-2px);
+        }
+        
+        .live-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff0000;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        /* Favorite Sites Section */
+        .favorite-section {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+        }
+        
+        .favorite-section h2 {
+            color: #aaa;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #favorite-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        /* Fun YouTube Section */
+        .fun-youtube-section {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+        }
+        
+        .fun-youtube-section .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .fun-youtube-section h2 {
+            color: #aaa;
+            margin: 0;
+            font-weight: 400;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .fun-youtube-view-btn {
+            padding: 6px 12px;
+            background: transparent;
+            color: #999;
+            border: 1px solid #444;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+        
+        .fun-youtube-view-btn.active {
+            background: #fff;
+            color: #000;
+        }
+        
+        .fun-youtube-view-btn:hover {
+            border-color: #666;
+        }
+        
+        /* List View */
+        #fun-youtube-links-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: transparent;
+        }
+        
+        .list-item {
+            background: #1a1a1a;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .list-item:hover {
+            background: #2a2a2a;
+            border-color: #555;
+            transform: translateX(5px);
+        }
+        
+        .list-item .thumbnail {
+            width: 120px;
+            height: 67px;
+            object-fit: cover;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        
+        .list-item .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 0;
+        }
+        
+        .list-item .title {
+            font-size: 14px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .list-item .channel {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .list-item .metadata {
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .list-item .metadata span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* Grid View */
+        #fun-youtube-links-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            background: transparent;
+        }
+        
+        .grid-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .grid-item:hover {
+            background: #2a2a2a;
+            border-color: #555;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+        
+        .grid-item .thumbnail {
+            width: 100%;
+            height: 157px;
+            object-fit: cover;
+        }
+        
+        .grid-item .content {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .grid-item .title {
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.4;
+            max-height: 2.8em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .grid-item .channel {
+            font-size: 12px;
+            color: #888;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .grid-item .metadata {
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .grid-item .metadata span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* Custom Category Sections */
+        .custom-category {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+        }
+        
+        .custom-category h2 {
+            color: #aaa;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .custom-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .loading::after {
+            content: "...";
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60%, 100% { content: "..."; }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: #1a1a1a;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            #gpt-links,
+            #youtube-links,
+            #favorite-links,
+            .custom-links {
+                grid-template-columns: 1fr;
+            }
+            
+            #fun-youtube-links-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .back-btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .list-item .thumbnail {
+                width: 100px;
+                height: 56px;
+            }
+            
+            .list-item {
+                gap: 10px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 즐겨찾기 모음</h1>
+            <a href="index.html" class="back-btn">← 메인으로</a>
+        </div>
+        
+        <!-- GPT Links Section -->
+        <div class="gpt-section">
+            <h2>🤖 GPT Links</h2>
+            <div id="gpt-links" class="loading">
+                GPT 링크 로딩 중
+            </div>
+        </div>
+        
+        <!-- YouTube Live Section -->
+        <div class="youtube-section">
+            <h2>📺 YouTube Live</h2>
+            <div id="youtube-links" class="loading">
+                YouTube Live 링크 로딩 중
+            </div>
+        </div>
+        
+        <!-- Favorite Sites Section -->
+        <div class="favorite-section">
+            <h2>⭐ Favorite Sites</h2>
+            <div id="favorite-links" class="loading">
+                즐겨찾기 로딩 중
+            </div>
+        </div>
+        
+        <!-- Fun YouTube Section -->
+        <div class="fun-youtube-section">
+            <div class="section-header">
+                <h2>🎮 Fun YouTube</h2>
+                <div class="view-toggle">
+                    <button onclick="toggleFunYoutubeView('list')" class="fun-youtube-view-btn active" data-view="list">
+                        List
+                    </button>
+                    <button onclick="toggleFunYoutubeView('grid')" class="fun-youtube-view-btn" data-view="grid">
+                        Grid
+                    </button>
+                </div>
+            </div>
+            <div id="fun-youtube-links-list" class="loading">
+                Fun YouTube 로딩 중
+            </div>
+            <div id="fun-youtube-links-grid">
+                <!-- Grid view content -->
+            </div>
+        </div>
+        
+        <!-- Custom Category Sections -->
+        <div id="custom-category-sections"></div>
+    </div>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Toggle Fun YouTube view
+        function toggleFunYoutubeView(view) {
+            const listView = document.getElementById('fun-youtube-links-list');
+            const gridView = document.getElementById('fun-youtube-links-grid');
+            const buttons = document.querySelectorAll('.fun-youtube-view-btn');
+            
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.view === view) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            if (view === 'list') {
+                listView.style.display = 'flex';
+                gridView.style.display = 'none';
+            } else {
+                listView.style.display = 'none';
+                gridView.style.display = 'grid';
+            }
+            
+            localStorage.setItem('funYoutubeView', view);
+        }
+        
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        let supabase = null;
+        
+        // Initialize Supabase
+        function initializeSupabase() {
+            if (!window.supabase) {
+                console.error('Supabase library not loaded');
+                return false;
+            }
+            
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase client initialized');
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize Supabase:', error);
+                return false;
+            }
+        }
+        
+        // Create link HTML for GPT/Favorite sections
+        function createLinkButton(link) {
+            return `
+                <a href="${link.url}" target="_blank" class="link-btn">
+                    <span>${link.icon || '🔗'}</span>
+                    <span>${link.name}</span>
+                </a>
+            `;
+        }
+        
+        // Create YouTube card HTML
+        function createYoutubeCard(link) {
+            const isLive = link.is_live || false;
+            return `
+                <a href="${link.url}" target="_blank" class="youtube-card">
+                    ${isLive ? '<div class="live-indicator">LIVE</div>' : ''}
+                    <h3>${link.icon || '📺'} ${link.name}</h3>
+                </a>
+            `;
+        }
+        
+        // Extract YouTube video ID from URL
+        function extractYouTubeVideoId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+        
+        // Get YouTube channel name from URL
+        function getYouTubeChannelName(url) {
+            // Extract channel name from URL patterns
+            if (url.includes('@')) {
+                const match = url.match(/@([^/]+)/); 
+                return match ? match[1] : 'YouTube Channel';
+            } else if (url.includes('/c/')) {
+                const match = url.match(/\/c\/([^/]+)/); 
+                return match ? match[1] : 'YouTube Channel';
+            } else if (url.includes('/channel/')) {
+                return 'YouTube Channel';
+            }
+            return 'YouTube';
+        }
+        
+        // Format number with K/M suffix
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+        
+        // Format date to relative time
+        function formatRelativeTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            const months = Math.floor(diff / 2592000000);
+            const years = Math.floor(diff / 31536000000);
+            
+            if (years > 0) return years + '년 전';
+            if (months > 0) return months + '개월 전';
+            if (days > 0) return days + '일 전';
+            if (hours > 0) return hours + '시간 전';
+            if (minutes > 0) return minutes + '분 전';
+            return '방금 전';
+        }
+        
+        // Fetch YouTube video metadata using noembed service
+        async function fetchYouTubeTitle(videoId, videoUrl) {
+            try {
+                // Use noembed service to get video metadata without API key
+                const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`);
+                const data = await response.json();
+                
+                if (data.title) {
+                    // Update all elements with this video ID
+                    const elements = document.querySelectorAll(`[data-video-id="${videoId}"]`);
+                    elements.forEach(element => {
+                        const titleElement = element.querySelector('.title');
+                        if (titleElement) {
+                            titleElement.textContent = data.title;
+                        }
+                        const channelElement = element.querySelector('.channel');
+                        if (channelElement && data.author_name) {
+                            channelElement.textContent = data.author_name;
+                        }
+                        
+                        // Add metadata if available
+                        const metadataElement = element.querySelector('.metadata');
+                        if (metadataElement) {
+                            let metadataHTML = '';
+                            
+                            // Upload date (noembed provides this sometimes)
+                            if (data.upload_date) {
+                                metadataHTML += `<span>📅 ${formatRelativeTime(data.upload_date)}</span>`;
+                            }
+                            
+                            // Duration (if available)
+                            if (data.duration) {
+                                const minutes = Math.floor(data.duration / 60);
+                                const seconds = data.duration % 60;
+                                metadataHTML += `<span>⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}</span>`;
+                            }
+                            
+                            // Note: View count and likes are not available through noembed
+                            // You would need YouTube Data API for that
+                            metadataHTML += `<span>👁️ 조회수 확인 중...</span>`;
+                            
+                            metadataElement.innerHTML = metadataHTML;
+                        }
+                    });
+                }
+                
+                // Try alternative method to get more metadata
+                await fetchYouTubeMetadataAlternative(videoId);
+                
+            } catch (error) {
+                console.log('Could not fetch YouTube metadata:', error);
+            }
+        }
+        
+        // Alternative method to fetch YouTube metadata (limited without API key)
+        async function fetchYouTubeMetadataAlternative(videoId) {
+            try {
+                // This is a placeholder - in reality, you would need YouTube Data API
+                // for accurate view counts, likes, and upload dates
+                
+                // Update metadata with placeholder or cached data
+                const elements = document.querySelectorAll(`[data-video-id="${videoId}"]`);
+                elements.forEach(element => {
+                    const metadataElement = element.querySelector('.metadata');
+                    if (metadataElement && !metadataElement.innerHTML.includes('조회수')) {
+                        // If noembed didn't provide data, show placeholders
+                        metadataElement.innerHTML = `
+                            <span>📅 날짜 확인 중</span>
+                            <span>👁️ 조회수 확인 중</span>
+                        `;
+                    }
+                });
+            } catch (error) {
+                console.log('Metadata fetch error:', error);
+            }
+        }
+        
+        // Create Fun YouTube list item
+        function createFunYoutubeListItem(link) {
+            const videoId = extractYouTubeVideoId(link.url);
+            const thumbnailUrl = videoId 
+                ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+                : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="67" viewBox="0 0 120 67"%3E%3Crect width="120" height="67" fill="%23333"%2F%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23666" font-family="Arial" font-size="12"%3ENo thumbnail%3C%2Ftext%3E%3C%2Fsvg%3E';
+            
+            const channelName = getYouTubeChannelName(link.url);
+            
+            return `
+                <a href="${link.url}" target="_blank" class="list-item" data-video-id="${videoId || ''}">
+                    <img class="thumbnail" src="${thumbnailUrl}" alt="${link.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'67\' viewBox=\'0 0 120 67\'%3E%3Crect width=\'120\' height=\'67\' fill=\'%23333\'%2F%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23666\' font-family=\'Arial\' font-size=\'12\'%3ENo thumbnail%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                    <div class="content">
+                        <div class="title">${link.name}</div>
+                        <div class="channel">${channelName}</div>
+                        <div class="metadata"></div>
+                    </div>
+                </a>
+            `;
+        }
+        
+        // Create Fun YouTube grid item
+        function createFunYoutubeGridItem(link) {
+            const videoId = extractYouTubeVideoId(link.url);
+            const thumbnailUrl = videoId 
+                ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+                : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="280" height="157" viewBox="0 0 280 157"%3E%3Crect width="280" height="157" fill="%23333"%2F%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23666" font-family="Arial" font-size="14"%3ENo thumbnail%3C%2Ftext%3E%3C%2Fsvg%3E';
+            
+            const channelName = getYouTubeChannelName(link.url);
+            
+            return `
+                <a href="${link.url}" target="_blank" class="grid-item" data-video-id="${videoId || ''}">
+                    <img class="thumbnail" src="${thumbnailUrl}" alt="${link.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'280\' height=\'157\' viewBox=\'0 0 280 157\'%3E%3Crect width=\'280\' height=\'157\' fill=\'%23333\'%2F%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23666\' font-family=\'Arial\' font-size=\'14\'%3ENo thumbnail%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                    <div class="content">
+                        <div class="title">${link.name}</div>
+                        <div class="channel">${channelName}</div>
+                        <div class="metadata"></div>
+                    </div>
+                </a>
+            `;
+        }
+        
+        // Load and display links
+        async function loadLinksFromSupabase() {
+            if (!supabase) {
+                if (!initializeSupabase()) {
+                    showError('Failed to initialize Supabase');
+                    return;
+                }
+            }
+            
+            try {
+                // Load all links
+                const { data: links, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) throw error;
+                
+                // Clear loading states
+                document.getElementById('gpt-links').classList.remove('loading');
+                document.getElementById('youtube-links').classList.remove('loading');
+                document.getElementById('favorite-links').classList.remove('loading');
+                document.getElementById('fun-youtube-links-list').classList.remove('loading');
+                
+                // Filter and display links by category
+                const gptLinks = links.filter(link => link.category === 'gpt');
+                const youtubeLinks = links.filter(link => link.category === 'youtube');
+                const favoriteLinks = links.filter(link => link.category === 'favorite');
+                const funYoutubeLinks = links.filter(link => link.category === 'fun-youtube');
+                
+                // Display GPT links
+                const gptContainer = document.getElementById('gpt-links');
+                if (gptLinks.length > 0) {
+                    gptContainer.innerHTML = gptLinks.map(link => createLinkButton(link)).join('');
+                } else {
+                    gptContainer.innerHTML = '<div class="empty-state">GPT 링크가 없습니다</div>';
+                }
+                
+                // Display YouTube links
+                const youtubeContainer = document.getElementById('youtube-links');
+                if (youtubeLinks.length > 0) {
+                    youtubeContainer.innerHTML = youtubeLinks.map(link => createYoutubeCard(link)).join('');
+                } else {
+                    youtubeContainer.innerHTML = '<div class="empty-state">YouTube 링크가 없습니다</div>';
+                }
+                
+                // Display Favorite links
+                const favoriteContainer = document.getElementById('favorite-links');
+                if (favoriteLinks.length > 0) {
+                    favoriteContainer.innerHTML = favoriteLinks.map(link => createLinkButton(link)).join('');
+                } else {
+                    favoriteContainer.innerHTML = '<div class="empty-state">즐겨찾기가 없습니다</div>';
+                }
+                
+                // Display Fun YouTube links
+                const funListContainer = document.getElementById('fun-youtube-links-list');
+                const funGridContainer = document.getElementById('fun-youtube-links-grid');
+                
+                if (funYoutubeLinks.length > 0) {
+                    funListContainer.innerHTML = funYoutubeLinks.map(link => createFunYoutubeListItem(link)).join('');
+                    funGridContainer.innerHTML = funYoutubeLinks.map(link => createFunYoutubeGridItem(link)).join('');
+                    
+                    // Try to fetch actual YouTube titles
+                    funYoutubeLinks.forEach(link => {
+                        const videoId = extractYouTubeVideoId(link.url);
+                        if (videoId) {
+                            fetchYouTubeTitle(videoId, link.url);
+                        }
+                    });
+                } else {
+                    const emptyMsg = '<div class="empty-state">Fun YouTube 링크가 없습니다</div>';
+                    funListContainer.innerHTML = emptyMsg;
+                    funGridContainer.innerHTML = emptyMsg;
+                }
+                
+                // Load custom categories
+                await loadCustomCategories(links);
+                
+            } catch (error) {
+                console.error('Error loading links:', error);
+                showError('링크를 불러오는 데 실패했습니다');
+            }
+        }
+        
+        // Load custom categories
+        async function loadCustomCategories(allLinks) {
+            const container = document.getElementById('custom-category-sections');
+            container.innerHTML = '';
+            
+            // Get unique custom categories
+            const customCategories = [...new Set(allLinks
+                .filter(link => link.category && !['gpt', 'youtube', 'favorite', 'fun-youtube'].includes(link.category))
+                .map(link => link.category))];
+            
+            customCategories.forEach(category => {
+                const categoryLinks = allLinks.filter(link => link.category === category);
+                
+                if (categoryLinks.length > 0) {
+                    const section = document.createElement('div');
+                    section.className = 'custom-category';
+                    section.innerHTML = `
+                        <h2>📁 ${category}</h2>
+                        <div class="custom-links">
+                            ${categoryLinks.map(link => createLinkButton(link)).join('')}
+                        </div>
+                    `;
+                    container.appendChild(section);
+                }
+            });
+        }
+        
+        // Show error message
+        function showError(message) {
+            const containers = ['gpt-links', 'youtube-links', 'favorite-links', 'fun-youtube-links-list'];
+            containers.forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.innerHTML = `<div class="empty-state">❌ ${message}</div>`;
+                }
+            });
+        }
+        
+        // Initialize page
+        async function initializePage() {
+            // Load saved view preference
+            const savedView = localStorage.getItem('funYoutubeView') || 'list';
+            toggleFunYoutubeView(savedView);
+            
+            // Wait for Supabase library and load links
+            if (window.supabase && window.supabase.createClient) {
+                await loadLinksFromSupabase();
+            } else {
+                // Wait for library to load
+                setTimeout(async () => {
+                    await loadLinksFromSupabase();
+                }, 1000);
+            }
+        }
+        
+        // Load page when DOM is ready
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

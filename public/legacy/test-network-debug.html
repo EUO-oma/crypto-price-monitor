@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>네트워크 디버깅</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section {
+            background: #111;
+            border: 1px solid #0f0;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0a0;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .warning { color: #ff0; }
+        .info { color: #0ff; }
+    </style>
+</head>
+<body>
+    <h1>🔍 네트워크 디버깅 도구</h1>
+    
+    <div class="section">
+        <h2>1. 브라우저 정보</h2>
+        <pre id="browser-info"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>2. 네트워크 테스트</h2>
+        <button onclick="testAllEndpoints()">모든 엔드포인트 테스트</button>
+        <pre id="network-log"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>3. DNS 및 연결성 테스트</h2>
+        <button onclick="testDNS()">DNS 테스트</button>
+        <pre id="dns-log"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>4. 대안 솔루션</h2>
+        <button onclick="showAlternatives()">대안 보기</button>
+        <pre id="alt-log"></pre>
+    </div>
+
+    <script>
+        // 브라우저 정보 표시
+        function showBrowserInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                onLine: navigator.onLine,
+                cookieEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack,
+                protocol: window.location.protocol,
+                host: window.location.host || 'localhost',
+                pathname: window.location.pathname,
+                // 보안 컨텍스트 확인
+                secureContext: window.isSecureContext,
+                // Service Worker 지원
+                serviceWorkerSupported: 'serviceWorker' in navigator
+            };
+            
+            document.getElementById('browser-info').textContent = JSON.stringify(info, null, 2);
+            
+            // 경고 표시
+            if (window.location.protocol === 'file:') {
+                log('browser-info', '\n⚠️ file:// 프로토콜 감지됨! http://localhost:8000 사용 필요', 'error');
+            }
+        }
+        
+        function log(targetId, message, type = 'info') {
+            const el = document.getElementById(targetId);
+            const time = new Date().toLocaleTimeString();
+            el.innerHTML += `<span class="${type}">[${time}] ${message}</span>\n`;
+        }
+        
+        // 모든 엔드포인트 테스트
+        async function testAllEndpoints() {
+            const logId = 'network-log';
+            document.getElementById(logId).innerHTML = '';
+            
+            const endpoints = [
+                {
+                    name: 'Supabase Main',
+                    url: 'https://intyabzhvtkxgldmvpvr.supabase.co',
+                    method: 'HEAD'
+                },
+                {
+                    name: 'Supabase REST API',
+                    url: 'https://intyabzhvtkxgldmvpvr.supabase.co/rest/v1/',
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0'
+                    }
+                },
+                {
+                    name: 'Google',
+                    url: 'https://www.google.com/favicon.ico'
+                },
+                {
+                    name: 'Cloudflare DNS',
+                    url: 'https://1.1.1.1/favicon.ico'
+                },
+                {
+                    name: 'GitHub API',
+                    url: 'https://api.github.com'
+                }
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    log(logId, `테스트: ${endpoint.name}...`);
+                    
+                    const options = {
+                        method: endpoint.method || 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache'
+                    };
+                    
+                    if (endpoint.headers) {
+                        options.headers = endpoint.headers;
+                    }
+                    
+                    const startTime = performance.now();
+                    const response = await fetch(endpoint.url, options);
+                    const endTime = performance.now();
+                    const duration = Math.round(endTime - startTime);
+                    
+                    log(logId, `  ✓ ${endpoint.name}: ${response.status} (${duration}ms)`, 'success');
+                    
+                } catch (error) {
+                    log(logId, `  ✗ ${endpoint.name}: ${error.message}`, 'error');
+                    
+                    // 상세 오류 분석
+                    if (error.message.includes('Load failed')) {
+                        log(logId, '    → 네트워크 수준에서 차단됨', 'error');
+                    } else if (error.message.includes('CORS')) {
+                        log(logId, '    → CORS 정책 위반', 'error');
+                    } else if (error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+                        log(logId, '    → DNS 해석 실패', 'error');
+                    }
+                }
+            }
+        }
+        
+        // DNS 테스트
+        async function testDNS() {
+            const logId = 'dns-log';
+            document.getElementById(logId).innerHTML = '';
+            
+            log(logId, 'DNS 및 연결성 테스트 시작...', 'info');
+            
+            // 1. navigator.connection 정보 (지원하는 경우)
+            if ('connection' in navigator) {
+                const conn = navigator.connection;
+                log(logId, `\n네트워크 타입: ${conn.effectiveType || 'unknown'}`);
+                log(logId, `다운링크: ${conn.downlink || 'unknown'} Mbps`);
+                log(logId, `RTT: ${conn.rtt || 'unknown'} ms`);
+            }
+            
+            // 2. 이미지 로딩 테스트
+            log(logId, '\n이미지 로딩 테스트:');
+            const testUrls = [
+                'https://intyabzhvtkxgldmvpvr.supabase.co/favicon.ico',
+                'https://www.google.com/favicon.ico',
+                'https://github.com/favicon.ico'
+            ];
+            
+            for (const url of testUrls) {
+                const img = new Image();
+                const promise = new Promise((resolve, reject) => {
+                    img.onload = () => resolve('loaded');
+                    img.onerror = () => reject('failed');
+                    setTimeout(() => reject('timeout'), 5000);
+                });
+                
+                img.src = url;
+                
+                try {
+                    await promise;
+                    log(logId, `  ✓ ${new URL(url).hostname}`, 'success');
+                } catch (e) {
+                    log(logId, `  ✗ ${new URL(url).hostname}: ${e}`, 'error');
+                }
+            }
+            
+            // 3. 가능한 원인 분석
+            log(logId, '\n\n🔎 가능한 원인:', 'warning');
+            log(logId, '1. ISP나 네트워크에서 Supabase 도메인 차단');
+            log(logId, '2. DNS 서버가 Supabase 도메인을 해석하지 못함');
+            log(logId, '3. 방화벽이나 보안 소프트웨어가 차단');
+            log(logId, '4. 프록시나 VPN 설정 문제');
+            
+            // 4. 해결 방법
+            log(logId, '\n\n💡 시도해볼 방법:', 'success');
+            log(logId, '1. DNS 서버 변경: 8.8.8.8 (Google) 또는 1.1.1.1 (Cloudflare)');
+            log(logId, '2. 다른 네트워크로 시도 (모바일 핫스팟 등)');
+            log(logId, '3. VPN 연결/해제 시도');
+            log(logId, '4. hosts 파일 확인: /etc/hosts');
+        }
+        
+        // 대안 솔루션
+        function showAlternatives() {
+            const logId = 'alt-log';
+            document.getElementById(logId).innerHTML = '';
+            
+            log(logId, '🚀 대안 솔루션:', 'success');
+            log(logId, '\n1. 로컬 JSON 서버 사용:');
+            log(logId, '   npm install -g json-server');
+            log(logId, '   json-server --watch db.json');
+            
+            log(logId, '\n2. Firebase 사용:');
+            log(logId, '   Firebase Realtime Database는 대부분 차단되지 않음');
+            
+            log(logId, '\n3. 로컬 스토리지 먼저 구현:');
+            log(logId, '   localStorage를 사용한 오프라인 버전 구현');
+            log(logId, '   나중에 Supabase와 동기화');
+            
+            log(logId, '\n4. 백엔드 프록시 서버:');
+            log(logId, '   자체 서버를 통해 Supabase API 중계');
+            
+            log(logId, '\n5. 다른 Supabase 프로젝트 생성:');
+            log(logId, '   새 프로젝트를 다른 리전에 생성');
+            
+            log(logId, '\n\n📋 즉시 사용 가능한 대안:', 'warning');
+            log(logId, 'localStorage 기반 버전을 먼저 만들고,');
+            log(logId, '네트워크 문제 해결 후 Supabase 연동하는 것을 추천합니다.');
+        }
+        
+        // 페이지 로드시 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            showBrowserInfo();
+        });
+    </script>
+</body>
+</html>

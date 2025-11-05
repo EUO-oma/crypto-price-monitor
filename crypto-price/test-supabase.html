@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 연결 테스트</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #0f0;
+            background: #001100;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0a0;
+        }
+        .error {
+            color: #f00;
+        }
+        .success {
+            color: #0f0;
+        }
+        .warning {
+            color: #ff0;
+        }
+        pre {
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Supabase 연결 테스트</h1>
+    
+    <div class="test-section">
+        <h2>1. 환경 변수 확인</h2>
+        <div id="env-check">확인 중...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Supabase 연결 테스트</h2>
+        <button onclick="testConnection()">연결 테스트</button>
+        <div id="connection-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Links 테이블 읽기 테스트</h2>
+        <button onclick="testReadLinks()">읽기 테스트</button>
+        <div id="read-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 직접 SQL 실행 (RLS 정책 수정)</h2>
+        <button onclick="showRLSFix()">RLS 수정 SQL 보기</button>
+        <div id="rls-sql" style="display:none;">
+            <p class="warning">아래 SQL을 Supabase SQL Editor에 복사하세요:</p>
+            <pre>
+-- 기존 정책 삭제
+DROP POLICY IF EXISTS "Enable read access for all users" ON links;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON links;
+DROP POLICY IF EXISTS "Enable update for authenticated users only" ON links;
+DROP POLICY IF EXISTS "Enable delete for authenticated users only" ON links;
+
+-- 새 정책 생성
+CREATE POLICY "Enable read access for all users" ON links
+    FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert for authenticated users" ON links
+    FOR INSERT TO authenticated WITH CHECK (true);
+
+CREATE POLICY "Enable update for authenticated users" ON links
+    FOR UPDATE TO authenticated USING (true);
+
+CREATE POLICY "Enable delete for authenticated users" ON links
+    FOR DELETE TO authenticated USING (true);
+
+-- 확인
+SELECT * FROM links;
+            </pre>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. 데이터 삽입 테스트 (샘플 데이터)</h2>
+        <button onclick="insertSampleData()">샘플 데이터 삽입</button>
+        <div id="insert-result"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-loader.js"></script>
+    <script>
+        // 환경 변수 확인
+        document.addEventListener('DOMContentLoaded', () => {
+            const envDiv = document.getElementById('env-check');
+            let html = '';
+            
+            if (typeof SUPABASE_URL !== 'undefined') {
+                html += `<p class="success">✓ SUPABASE_URL: ${SUPABASE_URL}</p>`;
+            } else {
+                html += `<p class="error">✗ SUPABASE_URL이 정의되지 않음</p>`;
+            }
+            
+            if (typeof SUPABASE_ANON_KEY !== 'undefined') {
+                html += `<p class="success">✓ SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY.substring(0, 20)}...</p>`;
+            } else {
+                html += `<p class="error">✗ SUPABASE_ANON_KEY가 정의되지 않음</p>`;
+            }
+            
+            if (typeof supabase !== 'undefined') {
+                html += `<p class="success">✓ Supabase 클라이언트 초기화됨</p>`;
+            } else {
+                html += `<p class="error">✗ Supabase 클라이언트 초기화 실패</p>`;
+            }
+            
+            envDiv.innerHTML = html;
+        });
+        
+        // 연결 테스트
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = '<p>테스트 중...</p>';
+            
+            try {
+                // 간단한 쿼리로 연결 테스트
+                const { data, error } = await window.supabaseClient.from('links')
+                    .select('count');
+                
+                if (error) {
+                    resultDiv.innerHTML = `<p class="error">❌ 연결 실패</p>
+                        <p class="error">에러: ${error.message}</p>
+                        <p class="error">코드: ${error.code}</p>
+                        <p class="error">상세: ${JSON.stringify(error, null, 2)}</p>`;
+                } else {
+                    resultDiv.innerHTML = `<p class="success">✅ 연결 성공!</p>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ 예외 발생: ${err.message}</p>`;
+            }
+        }
+        
+        // 읽기 테스트
+        async function testReadLinks() {
+            const resultDiv = document.getElementById('read-result');
+            resultDiv.innerHTML = '<p>읽기 시도 중...</p>';
+            
+            try {
+                const { data: links, error } = await window.supabaseClient.from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<p class="error">❌ 읽기 실패</p>
+                        <p class="error">에러: ${error.message}</p>
+                        <p class="error">코드: ${error.code}</p>`;
+                    
+                    if (error.code === 'PGRST301') {
+                        resultDiv.innerHTML += `<p class="warning">⚠️ RLS 정책 문제일 가능성이 높습니다.</p>
+                            <p class="warning">위의 "RLS 수정 SQL 보기" 버튼을 클릭하세요.</p>`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<p class="success">✅ 읽기 성공!</p>
+                        <p class="success">총 ${links ? links.length : 0}개의 링크를 찾았습니다.</p>`;
+                    
+                    if (links && links.length > 0) {
+                        resultDiv.innerHTML += '<p>데이터:</p><pre>' + JSON.stringify(links, null, 2) + '</pre>';
+                    }
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ 예외 발생: ${err.message}</p>`;
+            }
+        }
+        
+        // RLS SQL 보기
+        function showRLSFix() {
+            const sqlDiv = document.getElementById('rls-sql');
+            sqlDiv.style.display = sqlDiv.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 샘플 데이터 삽입
+        async function insertSampleData() {
+            const resultDiv = document.getElementById('insert-result');
+            resultDiv.innerHTML = '<p>삽입 시도 중...</p>';
+            
+            const sampleData = [
+                { name: '사또', url: 'https://www.youtube.com/@live-streamersatto/live', category: 'youtube', position: 1 },
+                { name: '짭구', url: 'https://www.youtube.com/@zzap9/live', category: 'youtube', position: 2 },
+                { name: 'CoinSect.io', url: 'https://coinsect.io', category: 'favorite', position: 1 },
+                { name: 'ChatGPT', url: 'https://chat.openai.com', category: 'gpt', position: 1 }
+            ];
+            
+            try {
+                const { data, error } = await window.supabaseClient.from('links')
+                    .insert(sampleData)
+                    .select();
+                
+                if (error) {
+                    if (error.code === '42501') {
+                        resultDiv.innerHTML = `<p class="warning">⚠️ 권한 없음 - 로그인이 필요합니다</p>
+                            <p>관리자 페이지에서 로그인 후 추가하세요.</p>`;
+                    } else {
+                        resultDiv.innerHTML = `<p class="error">❌ 삽입 실패: ${error.message}</p>`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<p class="success">✅ 샘플 데이터 삽입 성공!</p>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">❌ 예외 발생: ${err.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

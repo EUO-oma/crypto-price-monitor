@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun YouTube Sync</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn.secondary {
+            background: #2196F3;
+        }
+
+        .btn.secondary:hover {
+            background: #1976D2;
+        }
+
+        .btn.danger {
+            background: #f44336;
+        }
+
+        .btn.danger:hover {
+            background: #d32f2f;
+        }
+
+        .status {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .status.loading {
+            border-color: #2196F3;
+            background: #0a1a2a;
+        }
+
+        .status.success {
+            border-color: #4CAF50;
+            background: #0a2a0a;
+        }
+
+        .status.error {
+            border-color: #f44336;
+            background: #2a0a0a;
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .video-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .video-card:hover {
+            border-color: #4CAF50;
+            background: #1f1f1f;
+        }
+
+        .video-card.syncing {
+            border-color: #2196F3;
+            background: #0a1a2a;
+        }
+
+        .video-card.synced {
+            border-color: #4CAF50;
+        }
+
+        .video-info {
+            display: flex;
+            gap: 15px;
+            align-items: start;
+        }
+
+        .video-thumbnail {
+            width: 120px;
+            height: 68px;
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-details {
+            flex: 1;
+        }
+
+        .video-title {
+            font-size: 1em;
+            color: #fff;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-title.changed {
+            color: #4CAF50;
+        }
+
+        .video-meta {
+            font-size: 0.85em;
+            color: #888;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .sync-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            background: #333;
+            color: #aaa;
+        }
+
+        .sync-status.synced {
+            background: #0a4a0a;
+            color: #4CAF50;
+        }
+
+        .sync-status.changed {
+            background: #4a2a0a;
+            color: #ff9800;
+        }
+
+        .video-url {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .mini-btn {
+            padding: 5px 10px;
+            font-size: 0.85em;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mini-btn:hover {
+            background: #444;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            background: #333;
+            height: 6px;
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span>📺</span>
+            <span>Fun YouTube Sync</span>
+            <span>🔄</span>
+        </h1>
+
+        <div id="auth-status" style="margin-bottom: 20px; text-align: center; color: #666;">
+            <span id="auth-text">로그인하지 않음</span>
+            <button id="auth-btn" class="btn secondary" style="margin-left: 10px; padding: 8px 16px; font-size: 14px;" onclick="toggleAuth()">로그인</button>
+        </div>
+
+        <div id="status" class="status">
+            준비 중...
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="loadVideos()">
+                <span>📥</span> YouTube 링크 불러오기
+            </button>
+            <button class="btn secondary" onclick="syncAllTitles()" id="sync-all-btn" disabled>
+                <span>🔄</span> 모든 제목 동기화
+            </button>
+            <button class="btn secondary" onclick="saveToDatabase()" id="save-btn" disabled>
+                <span>💾</span> 변경사항 저장
+            </button>
+            <button class="btn danger" onclick="resetAll()">
+                <span>🔄</span> 초기화
+            </button>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="total-videos">0</div>
+                <div class="stat-label">전체 동영상</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="synced-videos">0</div>
+                <div class="stat-label">동기화 완료</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="changed-videos">0</div>
+                <div class="stat-label">제목 변경됨</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="failed-videos">0</div>
+                <div class="stat-label">동기화 실패</div>
+            </div>
+        </div>
+
+        <div class="progress-bar" id="progress-bar" style="display: none;">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+
+        <div id="videos-container">
+            <div class="empty-state">
+                <h3>YouTube 링크를 불러오려면</h3>
+                <p>위의 "YouTube 링크 불러오기" 버튼을 클릭하세요</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // Global variables
+        let supabase = null;
+        let youtubeVideos = [];
+        let syncedData = {};
+        let originalData = {};
+        let currentUser = null;
+
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+
+        // YouTube API configuration
+        const YOUTUBE_API_KEY = 'AIzaSyD5pNW1YlGSVRtrcvCJqUV7R2jVwzBSn8E'; // 실제 API 키로 교체 필요
+
+        // Initialize Supabase
+        function initializeSupabase() {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                return true;
+            } catch (error) {
+                console.error('Supabase 초기화 실패:', error);
+                return false;
+            }
+        }
+
+        // Extract YouTube video ID from URL
+        function extractVideoId(url) {
+            // YouTube Shorts 처리
+            if (url.includes('/shorts/')) {
+                const match = url.match(/shorts\/([^#&?]*)/);
+                return match ? match[1] : null;
+            }
+
+            // 일반 YouTube URL 패턴들
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^#&?]*).*/,
+                /^([^#&?]*).*/
+            ];
+
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+            return null;
+        }
+
+        // Update status
+        function updateStatus(message, type = '') {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${type}`;
+            statusEl.innerHTML = message;
+        }
+
+        // Update statistics
+        function updateStats() {
+            const total = youtubeVideos.length;
+            const synced = Object.keys(syncedData).length;
+            const changed = Object.keys(syncedData).filter(id => 
+                syncedData[id]?.title !== originalData[id]?.name
+            ).length;
+            const failed = Object.keys(syncedData).filter(id => 
+                syncedData[id]?.error === true
+            ).length;
+
+            document.getElementById('total-videos').textContent = total;
+            document.getElementById('synced-videos').textContent = synced;
+            document.getElementById('changed-videos').textContent = changed;
+            document.getElementById('failed-videos').textContent = failed;
+
+            // Update progress
+            if (total > 0) {
+                const progress = (synced / total) * 100;
+                document.getElementById('progress-fill').style.width = progress + '%';
+            }
+        }
+
+        // Create video card
+        function createVideoCard(video) {
+            const videoId = extractVideoId(video.url);
+            const syncData = syncedData[video.id];
+            const isChanged = syncData?.title && syncData.title !== video.name;
+            const isSynced = !!syncData;
+
+            return `
+                <div class="video-card ${isSynced ? 'synced' : ''}" id="video-${video.id}">
+                    <div class="video-info">
+                        <div class="video-thumbnail">
+                            ${videoId ? `<img src="https://img.youtube.com/vi/${videoId}/default.jpg" alt="Thumbnail">` : ''}
+                        </div>
+                        <div class="video-details">
+                            <div class="video-title ${isChanged ? 'changed' : ''}" id="title-${video.id}">
+                                ${syncData?.title || video.name}
+                            </div>
+                            <div class="video-meta">
+                                <span class="sync-status ${isSynced ? (isChanged ? 'changed' : 'synced') : ''}">
+                                    ${isSynced ? (isChanged ? '제목 변경됨' : '동기화됨') : '미동기화'}
+                                </span>
+                                ${syncData?.channel ? `<span>• ${syncData.channel}</span>` : ''}
+                            </div>
+                            <div class="video-url">${video.url}</div>
+                        </div>
+                    </div>
+                    <div class="video-actions">
+                        <button class="mini-btn" onclick="syncSingleVideo(${video.id})">
+                            동기화
+                        </button>
+                        <button class="mini-btn" onclick="window.open('${video.url}', '_blank')">
+                            YouTube에서 보기
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load YouTube videos from database
+        async function loadVideos() {
+            updateStatus('<div class="loading-spinner"></div> YouTube 링크 불러오는 중...', 'loading');
+
+            if (!supabase && !initializeSupabase()) {
+                updateStatus('❌ Supabase 초기화 실패', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .eq('category', 'fun-youtube')
+                    .order('position', { ascending: true });
+
+                if (error) throw error;
+
+                youtubeVideos = data || [];
+                originalData = {};
+                syncedData = {};
+
+                // Store original data
+                youtubeVideos.forEach(video => {
+                    originalData[video.id] = { ...video };
+                });
+
+                // Render videos
+                const container = document.getElementById('videos-container');
+                if (youtubeVideos.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><h3>YouTube 링크가 없습니다</h3></div>';
+                } else {
+                    container.innerHTML = '<div class="videos-grid">' + 
+                        youtubeVideos.map(video => createVideoCard(video)).join('') + 
+                        '</div>';
+                }
+
+                updateStatus(`✅ ${youtubeVideos.length}개의 YouTube 링크를 불러왔습니다`, 'success');
+                document.getElementById('sync-all-btn').disabled = youtubeVideos.length === 0;
+                document.getElementById('stats').style.display = 'grid';
+                updateStats();
+
+            } catch (error) {
+                updateStatus(`❌ 로딩 실패: ${error.message}`, 'error');
+                console.error('Error loading videos:', error);
+            }
+        }
+
+        // Fetch YouTube video info using API
+        async function fetchYouTubeInfo(videoId) {
+            try {
+                // YouTube Data API v3 사용
+                const response = await fetch(
+                    `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('YouTube API 요청 실패');
+                }
+
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    const video = data.items[0].snippet;
+                    return {
+                        title: video.title,
+                        channel: video.channelTitle,
+                        description: video.description,
+                        publishedAt: video.publishedAt
+                    };
+                }
+                
+                throw new Error('동영상을 찾을 수 없습니다');
+            } catch (error) {
+                console.error('YouTube API 오류:', error);
+                
+                // API 키가 없거나 오류 발생 시 대체 방법
+                // 웹 스크래핑 프록시 서비스 사용
+                try {
+                    const proxyResponse = await fetch(
+                        `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`
+                    );
+                    
+                    if (proxyResponse.ok) {
+                        const data = await proxyResponse.json();
+                        
+                        // noembed가 실패한 경우 원본 제목 유지
+                        if (!data.title || data.error) {
+                            throw new Error('Proxy failed');
+                        }
+                        
+                        return {
+                            title: data.title,
+                            channel: data.author_name || 'Unknown Channel',
+                            description: '',
+                            publishedAt: ''
+                        };
+                    }
+                } catch (proxyError) {
+                    console.error('Proxy 오류:', proxyError);
+                }
+                
+                throw error;
+            }
+        }
+
+        // Sync single video
+        async function syncSingleVideo(videoId) {
+            const video = youtubeVideos.find(v => v.id === videoId);
+            if (!video) return;
+
+            // 이미 성공적으로 동기화된 경우 스킵
+            if (syncedData[videoId] && !syncedData[videoId].error) {
+                console.log(`Video ${videoId} already synced, skipping...`);
+                return;
+            }
+
+            const card = document.getElementById(`video-${videoId}`);
+            card.classList.add('syncing');
+
+            try {
+                const youtubeId = extractVideoId(video.url);
+                if (!youtubeId) {
+                    throw new Error('유효하지 않은 YouTube URL');
+                }
+
+                const info = await fetchYouTubeInfo(youtubeId);
+                
+                syncedData[videoId] = {
+                    ...info,
+                    id: videoId,
+                    originalName: video.name,
+                    synced: true
+                };
+
+                // Update UI
+                document.getElementById(`title-${videoId}`).textContent = info.title;
+                document.getElementById(`title-${videoId}`).classList.toggle('changed', 
+                    info.title !== video.name);
+
+                card.classList.remove('syncing');
+                card.classList.add('synced');
+
+                updateStats();
+                document.getElementById('save-btn').disabled = false;
+
+            } catch (error) {
+                console.error('동기화 오류:', error);
+                
+                // 오류 발생 시 원본 제목 유지하고 오류 표시
+                syncedData[videoId] = { 
+                    error: true,
+                    errorMessage: error.message,
+                    title: video.name // 원본 제목 유지
+                };
+                
+                // UI에 오류 상태 표시
+                const statusEl = card.querySelector('.sync-status');
+                if (statusEl) {
+                    statusEl.textContent = '동기화 실패';
+                    statusEl.className = 'sync-status';
+                    statusEl.style.background = '#4a0a0a';
+                    statusEl.style.color = '#f44336';
+                }
+                
+                card.classList.remove('syncing');
+                updateStats();
+            }
+        }
+
+        // Sync all videos
+        async function syncAllTitles() {
+            if (youtubeVideos.length === 0) return;
+
+            // 동기화가 필요한 비디오만 필터링
+            const videosToSync = youtubeVideos.filter(video => {
+                const syncData = syncedData[video.id];
+                // 이미 성공적으로 동기화되었고 제목이 변경된 경우는 스킵
+                return !syncData || syncData.error;
+            });
+
+            if (videosToSync.length === 0) {
+                updateStatus('✅ 모든 동영상이 이미 동기화되어 있습니다', 'success');
+                return;
+            }
+
+            updateStatus(`<div class="loading-spinner"></div> ${videosToSync.length}개 동영상 동기화 중...`, 'loading');
+            document.getElementById('progress-bar').style.display = 'block';
+            document.getElementById('sync-all-btn').disabled = true;
+
+            let completed = 0;
+            const total = videosToSync.length;
+
+            for (const video of videosToSync) {
+                await syncSingleVideo(video.id);
+                completed++;
+                
+                // Update progress
+                const progress = (completed / total) * 100;
+                document.getElementById('progress-fill').style.width = progress + '%';
+                
+                // Add delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            document.getElementById('sync-all-btn').disabled = false;
+            
+            const skippedCount = youtubeVideos.length - videosToSync.length;
+            if (skippedCount > 0) {
+                updateStatus(`✅ ${completed}개 동기화 완료 (${skippedCount}개는 이미 동기화됨)`, 'success');
+            } else {
+                updateStatus(`✅ ${completed}개 동영상 동기화 완료`, 'success');
+            }
+            
+            setTimeout(() => {
+                document.getElementById('progress-bar').style.display = 'none';
+            }, 2000);
+        }
+
+        // Save changes to database
+        async function saveToDatabase() {
+            // Check authentication first
+            if (!currentUser) {
+                updateStatus('변경사항을 저장하려면 로그인이 필요합니다', 'error');
+                loginWithGoogle();
+                return;
+            }
+            
+            const changedVideos = Object.keys(syncedData).filter(id => {
+                const synced = syncedData[id];
+                const original = originalData[id];
+                return synced?.title && synced.title !== original?.name && !synced.error;
+            });
+
+            if (changedVideos.length === 0) {
+                updateStatus('변경사항이 없습니다', 'success');
+                return;
+            }
+
+            updateStatus('<div class="loading-spinner"></div> 변경사항 저장 중...', 'loading');
+
+            try {
+                let savedCount = 0;
+                let errorCount = 0;
+
+                for (const videoId of changedVideos) {
+                    const synced = syncedData[videoId];
+                    console.log(`Saving video ${videoId}:`, synced.title);
+                    
+                    const { data, error } = await supabase
+                        .from('links')
+                        .update({ 
+                            name: synced.title,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', parseInt(videoId)) // ID를 정수로 변환
+                        .select();
+
+                    if (error) {
+                        console.error(`Error saving ${videoId}:`, error);
+                        errorCount++;
+                    } else {
+                        console.log(`Saved ${videoId}:`, data);
+                        savedCount++;
+                        originalData[videoId].name = synced.title;
+                    }
+                }
+
+                if (errorCount > 0) {
+                    updateStatus(`⚠️ ${savedCount}개 저장 완료, ${errorCount}개 실패`, 'warning');
+                } else {
+                    updateStatus(`✅ ${savedCount}개의 제목이 업데이트되었습니다`, 'success');
+                }
+                
+                document.getElementById('save-btn').disabled = true;
+
+                // Refresh display
+                setTimeout(() => loadVideos(), 1500);
+
+            } catch (error) {
+                updateStatus(`❌ 저장 실패: ${error.message}`, 'error');
+                console.error('Save error:', error);
+            }
+        }
+
+        // Reset all
+        function resetAll() {
+            if (confirm('모든 변경사항을 취소하고 다시 시작하시겠습니까?')) {
+                syncedData = {};
+                loadVideos();
+            }
+        }
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                currentUser = user;
+                updateAuthUI();
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        }
+
+        // Update auth UI
+        function updateAuthUI() {
+            const authText = document.getElementById('auth-text');
+            const authBtn = document.getElementById('auth-btn');
+            
+            if (currentUser) {
+                authText.textContent = `로그인됨: ${currentUser.email}`;
+                authBtn.textContent = '로그아웃';
+            } else {
+                authText.textContent = '로그인하지 않음';
+                authBtn.textContent = '로그인';
+            }
+        }
+
+        // Toggle authentication
+        async function toggleAuth() {
+            if (currentUser) {
+                // Logout
+                await supabase.auth.signOut();
+                currentUser = null;
+                updateAuthUI();
+                updateStatus('로그아웃되었습니다', 'success');
+            } else {
+                // Login with Google directly
+                loginWithGoogle();
+            }
+        }
+
+        // Google로 로그인
+        async function loginWithGoogle() {
+            try {
+                updateStatus('Google 로그인 중...', 'loading');
+                
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href.split('?')[0].split('#')[0],
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        },
+                        skipBrowserRedirect: false
+                    }
+                });
+                
+                if (error) throw error;
+                
+                // OAuth는 자동으로 리다이렉트됨
+                
+            } catch (error) {
+                console.error('Google 로그인 오류:', error);
+                updateStatus(`Google 로그인 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (window.supabase && window.supabase.createClient) {
+                initializeSupabase();
+                
+                // Check for OAuth callback
+                if (window.location.hash && window.location.hash.includes('access_token')) {
+                    console.log('OAuth 콜백 처리 중...');
+                    updateStatus('로그인 처리 중...', 'loading');
+                    // Supabase가 자동으로 처리하도록 대기
+                    setTimeout(async () => {
+                        await checkAuth();
+                        // Clear the hash
+                        window.history.replaceState(null, '', window.location.pathname);
+                        updateStatus('✅ 로그인 완료! YouTube 링크를 불러오세요', 'success');
+                    }, 1000);
+                } else {
+                    await checkAuth();
+                    updateStatus('✅ 준비 완료. YouTube 링크를 불러오세요', 'success');
+                }
+                
+                // Listen for auth changes
+                supabase.auth.onAuthStateChange((event, session) => {
+                    currentUser = session?.user || null;
+                    updateAuthUI();
+                });
+            } else {
+                setTimeout(async () => {
+                    if (window.supabase && window.supabase.createClient) {
+                        initializeSupabase();
+                        await checkAuth();
+                        
+                        // Listen for auth changes
+                        supabase.auth.onAuthStateChange((event, session) => {
+                            currentUser = session?.user || null;
+                            updateAuthUI();
+                        });
+                        
+                        updateStatus('✅ 준비 완료. YouTube 링크를 불러오세요', 'success');
+                    } else {
+                        updateStatus('❌ Supabase 라이브러리 로딩 실패', 'error');
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

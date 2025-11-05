@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Info Hub - 정보 게시판</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-color: #4caf50;
+            --secondary-color: #2196f3;
+            --accent-color: #ff6b6b;
+            --dark-bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --hover-bg: #2a2a2a;
+            --border-color: #333;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+        }
+        
+        body {
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Background Effect */
+        .bg-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.05;
+            background: radial-gradient(circle at 20% 50%, var(--primary-color) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, var(--secondary-color) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 20%, var(--accent-color) 0%, transparent 50%);
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(26, 26, 26, 0.8) 100%);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .theme-toggle,
+        .admin-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--hover-bg);
+            border-color: var(--primary-color);
+        }
+        
+        .admin-toggle:hover {
+            background: var(--hover-bg);
+            border-color: var(--accent-color);
+        }
+        
+        .admin-toggle.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+        
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Section */
+        .section {
+            margin-bottom: 50px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+        
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+        
+        /* Card */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.02) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .card:hover::before {
+            opacity: 1;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--hover-bg);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        
+        .card-description {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .card-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--hover-bg);
+            border-radius: 20px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-right: 8px;
+        }
+        
+        .card-badge.new {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .card-badge.hot {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        /* Special Cards */
+        .card.featured {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(33, 150, 243, 0.1) 100%);
+            border-color: var(--primary-color);
+        }
+        
+        .card.admin {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 80px;
+            padding: 40px 20px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-color);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card {
+            animation: fadeIn 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+        .card:nth-child(5) { animation-delay: 0.5s; }
+        .card:nth-child(6) { animation-delay: 0.6s; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2em;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--hover-bg);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            margin-bottom: 8px;
+        }
+        
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-effect"></div>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="logo-text">Info Hub</div>
+            </div>
+            
+            <div class="header-actions">
+                <button class="admin-toggle tooltip" data-tooltip="관리자 모드" onclick="toggleAdminMode()" style="margin-right: 10px;">
+                    <i class="fas fa-lock"></i>
+                </button>
+                <button class="theme-toggle tooltip" data-tooltip="다크모드" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>모든 정보를 한곳에서</h1>
+        <p>엔터테인먼트, 도구, 관리 기능까지 다양한 서비스를 제공하는 통합 정보 허브입니다</p>
+    </section>
+    
+    <div class="container">
+        <!-- Entertainment Section -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon" style="color: #ff6b6b;">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+                <h2 class="section-title">엔터테인먼트</h2>
+            </div>
+            
+            <div class="card-grid">
+                <a href="youtube-playlist-player.html" class="card featured">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #ff0000;">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <h3 class="card-title">YouTube 플레이어</h3>
+                    </div>
+                    <p class="card-description">재생목록 기반의 YouTube 뮤직 플레이어로 음악을 즐기세요</p>
+                    <span class="card-badge hot">인기</span>
+                    <span class="card-badge">음악</span>
+                </a>
+                
+                <a href="fun-youtube.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #B71C1C;">
+                            <i class="fab fa-youtube"></i>
+                        </div>
+                        <h3 class="card-title">Fun YouTube</h3>
+                    </div>
+                    <p class="card-description">재미있는 YouTube 영상 컬렉션을 탐색하세요</p>
+                    <span class="card-badge">동영상</span>
+                </a>
+                
+                <a href="anonymous-chat.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #9c27b0;">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3 class="card-title">익명 채팅</h3>
+                    </div>
+                    <p class="card-description">실시간 익명 채팅으로 자유롭게 대화하세요</p>
+                    <span class="card-badge">채팅</span>
+                </a>
+                
+                <a href="anime-board.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #e50914;">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        <h3 class="card-title">애니 추천 보드</h3>
+                    </div>
+                    <p class="card-description">넷플릭스와 각종 플랫폼의 애니메이션 추천 게시판</p>
+                    <span class="card-badge new">신규</span>
+                    <span class="card-badge">리뷰</span>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Tools Section -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon" style="color: #4caf50;">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h2 class="section-title">도구</h2>
+            </div>
+            
+            <div class="card-grid">
+                <a href="calculator.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #ff9800;">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <h3 class="card-title">계산기</h3>
+                    </div>
+                    <p class="card-description">다양한 계산 기능을 제공하는 온라인 계산기</p>
+                    <span class="card-badge">유틸리티</span>
+                </a>
+                
+                <a href="world-clock.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #2196f3;">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <h3 class="card-title">세계시계</h3>
+                    </div>
+                    <p class="card-description">전 세계 주요 도시의 현재 시간을 확인하세요</p>
+                    <span class="card-badge">시간</span>
+                </a>
+                
+                <a href="schedule-manager.html" class="card featured">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #4caf50;">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h3 class="card-title">일정 관리</h3>
+                    </div>
+                    <p class="card-description">일정을 등록하고 캘린더로 관리하세요</p>
+                    <span class="card-badge new">신규</span>
+                    <span class="card-badge">캘린더</span>
+                </a>
+                
+                <a href="simple-links.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #00bcd4;">
+                            <i class="fas fa-bookmark"></i>
+                        </div>
+                        <h3 class="card-title">북마크</h3>
+                    </div>
+                    <p class="card-description">자주 방문하는 사이트를 편리하게 관리하세요</p>
+                    <span class="card-badge">링크</span>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Data & Charts Section (Hidden by default - Admin only) -->
+        <section class="section admin-only" style="display: none;">
+            <div class="section-header">
+                <div class="section-icon" style="color: #2196f3;">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2 class="section-title">데이터 & 차트 (관리자 전용)</h2>
+            </div>
+            
+            <div class="card-grid">
+                <a href="bitcoin-chart.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #f7931a;">
+                            <i class="fab fa-bitcoin"></i>
+                        </div>
+                        <h3 class="card-title">비트코인 차트</h3>
+                    </div>
+                    <p class="card-description">실시간 비트코인 가격 차트와 분석 도구</p>
+                    <span class="card-badge">차트</span>
+                </a>
+                
+                <a href="chart.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #4caf50;">
+                            <i class="fas fa-chart-area"></i>
+                        </div>
+                        <h3 class="card-title">일반 차트</h3>
+                    </div>
+                    <p class="card-description">다양한 데이터를 시각화하는 차트 도구</p>
+                    <span class="card-badge">데이터</span>
+                </a>
+                
+                <a href="triple-chart.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #ff5722;">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3 class="card-title">트리플 차트</h3>
+                    </div>
+                    <p class="card-description">세 가지 데이터를 동시에 비교 분석</p>
+                    <span class="card-badge">비교</span>
+                </a>
+                
+                <a href="triple-chart-nasdaq.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #3f51b5;">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h3 class="card-title">BTC/ETH/NASDAQ</h3>
+                    </div>
+                    <p class="card-description">암호화폐와 나스닥 지수 비교 차트</p>
+                    <span class="card-badge">금융</span>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Admin Section -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon" style="color: #ff6b6b;">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h2 class="section-title">관리자</h2>
+            </div>
+            
+            <div class="card-grid">
+                <a href="admin-simple.html" class="card admin">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #607d8b;">
+                            <i class="fas fa-user-cog"></i>
+                        </div>
+                        <h3 class="card-title">관리자 패널</h3>
+                    </div>
+                    <p class="card-description">링크와 콘텐츠를 관리하는 기본 관리자 도구</p>
+                    <span class="card-badge">관리</span>
+                </a>
+                
+                <a href="admin-simple-v2.html" class="card admin">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #795548;">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h3 class="card-title">관리자 패널 v2</h3>
+                    </div>
+                    <p class="card-description">개선된 카테고리 관리 기능을 가진 관리자 도구</p>
+                    <span class="card-badge">관리</span>
+                </a>
+                
+                <a href="youtube-playlist-gallery.html" class="card admin">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #d32f2f;">
+                            <i class="fas fa-photo-video"></i>
+                        </div>
+                        <h3 class="card-title">YouTube 갤러리</h3>
+                    </div>
+                    <p class="card-description">YouTube 재생목록을 갤러리로 관리</p>
+                    <span class="card-badge">갤러리</span>
+                </a>
+                
+                <a href="fun-youtube-sync.html" class="card admin">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #c2185b;">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <h3 class="card-title">YouTube 동기화</h3>
+                    </div>
+                    <p class="card-description">YouTube 콘텐츠 동기화 도구</p>
+                    <span class="card-badge">동기화</span>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Special Section -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon" style="color: #9c27b0;">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h2 class="section-title">특별 기능</h2>
+            </div>
+            
+            <div class="card-grid">
+                <a href="bw-mode.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #000;">
+                            <i class="fas fa-circle-half-stroke"></i>
+                        </div>
+                        <h3 class="card-title">BW 모드</h3>
+                    </div>
+                    <p class="card-description">흑백 테마의 특별한 인터페이스 경험</p>
+                    <span class="card-badge">테마</span>
+                </a>
+                
+                <a href="realtime-tick-chart.html" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="color: #00bcd4;">
+                            <i class="fas fa-pulse"></i>
+                        </div>
+                        <h3 class="card-title">실시간 틱 차트</h3>
+                    </div>
+                    <p class="card-description">실시간 데이터 스트리밍 차트</p>
+                    <span class="card-badge">실시간</span>
+                </a>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="https://github.com/EUO-oma/crypto-price-monitor">GitHub</a>
+            <a href="#privacy">개인정보처리방침</a>
+            <a href="#terms">이용약관</a>
+            <a href="#contact">문의하기</a>
+        </div>
+        <p>&copy; 2024 Info Hub. Made with ❤️ by EUO</p>
+    </footer>
+    
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            const root = document.documentElement;
+            const isDark = root.style.getPropertyValue('--dark-bg') === '#0a0a0a';
+            
+            if (isDark) {
+                // Light theme
+                root.style.setProperty('--dark-bg', '#f5f5f5');
+                root.style.setProperty('--card-bg', '#ffffff');
+                root.style.setProperty('--hover-bg', '#f0f0f0');
+                root.style.setProperty('--border-color', '#e0e0e0');
+                root.style.setProperty('--text-primary', '#000000');
+                root.style.setProperty('--text-secondary', '#666666');
+                document.querySelector('.theme-toggle i').className = 'fas fa-sun';
+            } else {
+                // Dark theme
+                root.style.setProperty('--dark-bg', '#0a0a0a');
+                root.style.setProperty('--card-bg', '#1a1a1a');
+                root.style.setProperty('--hover-bg', '#2a2a2a');
+                root.style.setProperty('--border-color', '#333');
+                root.style.setProperty('--text-primary', '#ffffff');
+                root.style.setProperty('--text-secondary', '#aaaaaa');
+                document.querySelector('.theme-toggle i').className = 'fas fa-moon';
+            }
+        }
+        
+        // Admin mode toggle
+        function toggleAdminMode() {
+            const adminToggle = document.querySelector('.admin-toggle');
+            const adminSections = document.querySelectorAll('.admin-only');
+            
+            adminToggle.classList.toggle('active');
+            const isActive = adminToggle.classList.contains('active');
+            
+            adminSections.forEach(section => {
+                section.style.display = isActive ? 'block' : 'none';
+            });
+            
+            // Update icon
+            const icon = adminToggle.querySelector('i');
+            icon.className = isActive ? 'fas fa-lock-open' : 'fas fa-lock';
+            
+            // Save admin mode state to localStorage
+            localStorage.setItem('adminMode', isActive);
+        }
+        
+        // Add some interactive effects
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                this.style.setProperty('--x', `${x}px`);
+                this.style.setProperty('--y', `${y}px`);
+            });
+        });
+        
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+        
+        // Restore admin mode state on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedAdminMode = localStorage.getItem('adminMode') === 'true';
+            if (savedAdminMode) {
+                toggleAdminMode();
+            }
+        });
+    </script>
+</body>
+</html>

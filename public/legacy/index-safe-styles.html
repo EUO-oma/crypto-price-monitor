@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>안전한 스타일 버전</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid #1a1a1a;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4facfe;
+            margin-bottom: 40px;
+        }
+
+        .status {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #aaa;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .link-card {
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #333;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .link-card:hover {
+            transform: translateY(-3px);
+            border-color: #555;
+            background: #2a2a2a;
+        }
+
+        .error {
+            color: #f87171;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .success { color: #4ade80; }
+        .loading { color: #60a5fa; }
+
+        .debug-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 안전한 스타일 시스템 테스트</h1>
+        
+        <div id="status" class="status loading">초기화 중...</div>
+        
+        <div class="section">
+            <h2>🤖 GPT Links</h2>
+            <div id="gpt-links" class="links-grid">
+                <div class="loading">로딩 중...</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📺 YouTube Links</h2>
+            <div id="youtube-links" class="links-grid">
+                <div class="loading">로딩 중...</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>⭐ Favorite Links</h2>
+            <div id="favorite-links" class="links-grid">
+                <div class="loading">로딩 중...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="debug-panel" class="debug-panel"></div>
+    
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 디버그 로그
+        const debugLog = (message, type = 'info') => {
+            console.log(`[${type}] ${message}`);
+            const panel = document.getElementById('debug-panel');
+            const time = new Date().toLocaleTimeString();
+            panel.innerHTML += `<div>[${time}] ${message}</div>`;
+            panel.scrollTop = panel.scrollHeight;
+        };
+        
+        // 상태 업데이트
+        function updateStatus(message, type = 'loading') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+        
+        // 안전한 스타일 가져오기
+        function getSafeCardStyles(category) {
+            debugLog(`스타일 가져오기: ${category}`);
+            
+            const defaults = {
+                fontSize: 16,
+                bgColor: '#1a1a1a',
+                textColor: '#ffffff',
+                borderColor: '#333333'
+            };
+            
+            try {
+                // localStorage 체크
+                const stored = localStorage.getItem('linkCardStyles');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed[category]) {
+                        debugLog(`커스텀 스타일 발견: ${category}`);
+                        return { ...defaults, ...parsed[category] };
+                    }
+                }
+            } catch (e) {
+                debugLog(`스타일 로드 오류: ${e.message}`, 'error');
+            }
+            
+            return defaults;
+        }
+        
+        // DOM 요소로 링크 생성
+        function createLinkElement(link, styles) {
+            const element = document.createElement('a');
+            element.href = link.url || '#';
+            element.target = '_blank';
+            element.className = 'link-card';
+            element.textContent = link.name || '이름 없음';
+            
+            // 스타일 적용 (안전하게)
+            if (styles.bgColor) element.style.backgroundColor = styles.bgColor;
+            if (styles.textColor) element.style.color = styles.textColor;
+            if (styles.fontSize) element.style.fontSize = `${styles.fontSize}px`;
+            if (styles.borderColor) element.style.borderColor = styles.borderColor;
+            
+            return element;
+        }
+        
+        // 링크 렌더링
+        function renderLinks(containerId, links, category) {
+            debugLog(`렌더링: ${containerId} (${links.length}개)`);
+            
+            const container = document.getElementById(containerId);
+            if (!container) {
+                debugLog(`컨테이너 없음: ${containerId}`, 'error');
+                return;
+            }
+            
+            // 초기화
+            container.innerHTML = '';
+            
+            if (links.length === 0) {
+                container.innerHTML = '<div class="error">링크가 없습니다</div>';
+                return;
+            }
+            
+            // 스타일 가져오기
+            const styles = getSafeCardStyles(category);
+            
+            // DOM 요소로 생성
+            links.forEach(link => {
+                try {
+                    const element = createLinkElement(link, styles);
+                    container.appendChild(element);
+                } catch (e) {
+                    debugLog(`링크 생성 실패: ${e.message}`, 'error');
+                }
+            });
+            
+            debugLog(`✅ ${containerId} 완료`);
+        }
+        
+        // 메인 로드 함수
+        async function loadLinks() {
+            updateStatus('Supabase 연결 중...', 'loading');
+            
+            try {
+                // Wait for config to load
+                const waitForConfig = () => {
+                    return new Promise((resolve) => {
+                        if (window.APP_CONFIG?.SUPABASE?.URL) {
+                            resolve();
+                        } else {
+                            window.addEventListener('configLoaded', resolve, { once: true });
+                            setTimeout(resolve, 2000); // Fallback
+                        }
+                    });
+                };
+                
+                await waitForConfig();
+                
+                // Get configuration
+                const supabaseUrl = window.APP_CONFIG?.SUPABASE?.URL;
+                const supabaseKey = window.APP_CONFIG?.SUPABASE?.ANON_KEY;
+                
+                if (!supabaseUrl || !supabaseKey) {
+                    updateStatus('❌ Supabase configuration not found', 'error');
+                    return;
+                }
+                
+                // Supabase 클라이언트
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                
+                debugLog('Supabase 클라이언트 생성됨');
+                updateStatus('링크 데이터 조회 중...', 'loading');
+                
+                // 데이터 조회
+                const { data: links, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('position');
+                
+                if (error) throw error;
+                
+                debugLog(`데이터 조회 성공: ${links.length}개`);
+                
+                // 카테고리별 분류
+                const categories = {
+                    gpt: links.filter(l => l.category === 'gpt'),
+                    youtube: links.filter(l => l.category === 'youtube'),
+                    favorite: links.filter(l => l.category === 'favorite')
+                };
+                
+                // 렌더링
+                renderLinks('gpt-links', categories.gpt, 'gpt');
+                renderLinks('youtube-links', categories.youtube, 'youtube');
+                renderLinks('favorite-links', categories.favorite, 'favorite');
+                
+                updateStatus(`✅ ${links.length}개 링크 로드 완료`, 'success');
+                
+            } catch (error) {
+                debugLog(`오류 발생: ${error.message}`, 'error');
+                updateStatus(`❌ 오류: ${error.message}`, 'error');
+            }
+        }
+        
+        // 시작
+        window.addEventListener('DOMContentLoaded', async () => {
+            debugLog('페이지 로드 완료');
+            
+            // Supabase 대기
+            let attempts = 0;
+            while (!window.supabase && attempts < 10) {
+                debugLog('Supabase 라이브러리 대기 중...');
+                await new Promise(resolve => setTimeout(resolve, 300));
+                attempts++;
+            }
+            
+            if (!window.supabase) {
+                updateStatus('❌ Supabase 라이브러리 로드 실패', 'error');
+                return;
+            }
+            
+            debugLog('Supabase 준비 완료');
+            await loadLinks();
+        });
+    </script>
+</body>
+</html>

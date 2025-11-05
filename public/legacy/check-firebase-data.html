@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 데이터 확인</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+        }
+        pre {
+            background: #111;
+            padding: 20px;
+            border: 1px solid #0f0;
+            overflow: auto;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase 데이터 직접 확인</h1>
+    
+    <button onclick="checkAllData()">전체 데이터 확인</button>
+    <button onclick="checkRecentData()">최근 10개 데이터 확인</button>
+    <button onclick="testPriceHistory()">price-history.html 로직 테스트</button>
+    
+    <pre id="output">대기 중...</pre>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+        
+        let database;
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            database = firebase.database();
+            document.getElementById('output').textContent = 'Firebase 연결 완료! 버튼을 클릭하세요.';
+        } catch (error) {
+            document.getElementById('output').textContent = 'Firebase 초기화 오류: ' + error.message;
+        }
+        
+        async function checkAllData() {
+            try {
+                document.getElementById('output').textContent = '데이터 로딩 중...';
+                
+                const snapshot = await database.ref('prices').once('value');
+                const data = snapshot.val();
+                
+                if (!data) {
+                    document.getElementById('output').textContent = '데이터가 없습니다!';
+                    return;
+                }
+                
+                const dates = Object.keys(data).sort().reverse();
+                document.getElementById('output').textContent = 
+                    `총 ${dates.length}개의 데이터\n\n` +
+                    `최신 날짜: ${dates[0]}\n` +
+                    `가장 오래된 날짜: ${dates[dates.length - 1]}\n\n` +
+                    `전체 데이터:\n` +
+                    JSON.stringify(data, null, 2);
+                    
+            } catch (error) {
+                document.getElementById('output').textContent = '오류: ' + error.message + '\n\n' + error.stack;
+            }
+        }
+        
+        async function checkRecentData() {
+            try {
+                document.getElementById('output').textContent = '최근 데이터 로딩 중...';
+                
+                const snapshot = await database.ref('prices').orderByChild('date').limitToLast(10).once('value');
+                const data = snapshot.val();
+                
+                if (!data) {
+                    document.getElementById('output').textContent = '데이터가 없습니다!';
+                    return;
+                }
+                
+                const sortedData = Object.values(data).sort((a, b) => b.date.localeCompare(a.date));
+                
+                let output = '최근 10개 데이터:\n\n';
+                sortedData.forEach(item => {
+                    output += `날짜: ${item.date}\n`;
+                    output += `BTC: $${item.btc?.toLocaleString() || '-'} (고: $${item.btc_high?.toLocaleString() || '-'}, 저: $${item.btc_low?.toLocaleString() || '-'})\n`;
+                    output += `ETH: $${item.eth?.toLocaleString() || '-'} (고: $${item.eth_high?.toLocaleString() || '-'}, 저: $${item.eth_low?.toLocaleString() || '-'})\n`;
+                    output += `SOL: $${item.sol?.toLocaleString() || '-'} (고: $${item.sol_high?.toLocaleString() || '-'}, 저: $${item.sol_low?.toLocaleString() || '-'})\n`;
+                    output += '---\n\n';
+                });
+                
+                document.getElementById('output').textContent = output;
+                
+            } catch (error) {
+                document.getElementById('output').textContent = '오류: ' + error.message + '\n\n' + error.stack;
+            }
+        }
+        
+        async function testPriceHistory() {
+            try {
+                document.getElementById('output').textContent = 'price-history.html 로직 테스트 중...\n\n';
+                
+                const snapshot = await database.ref('prices').once('value');
+                const allData = snapshot.val();
+                
+                if (!allData) {
+                    document.getElementById('output').textContent += '❌ 데이터가 없습니다!';
+                    return;
+                }
+                
+                let output = '✅ Firebase 연결 성공\n';
+                output += `✅ 총 ${Object.keys(allData).length}개 데이터 발견\n\n`;
+                
+                // BTC 데이터 추출 테스트
+                const priceData = [];
+                Object.entries(allData).forEach(([date, dateData]) => {
+                    output += `\n날짜 ${date} 데이터 구조:\n`;
+                    output += JSON.stringify(dateData, null, 2) + '\n';
+                    
+                    // 새로운 구조 확인
+                    if (dateData.btc !== undefined) {
+                        priceData.push({
+                            date: date,
+                            symbol: 'BTCUSDT',
+                            high_price: dateData.btc_high || dateData.btc,
+                            low_price: dateData.btc_low || dateData.btc,
+                            price: dateData.btc
+                        });
+                        output += `✅ BTC 데이터 발견: $${dateData.btc}\n`;
+                    } else {
+                        output += `❌ BTC 데이터 없음\n`;
+                    }
+                });
+                
+                output += `\n\n추출된 BTC 데이터 개수: ${priceData.length}`;
+                
+                document.getElementById('output').textContent = output;
+                
+            } catch (error) {
+                document.getElementById('output').textContent = '오류: ' + error.message + '\n\n' + error.stack;
+            }
+        }
+    </script>
+</body>
+</html>

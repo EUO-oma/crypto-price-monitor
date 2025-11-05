@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC/ETH/SOL Triple Chart Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .footer {
+            background: #0a0a0a;
+            padding: 15px 20px;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .title {
+            font-size: 1.5em;
+            font-weight: bold;
+            background: linear-gradient(90deg, #f7931a 0%, #627eea 50%, #00FFA3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            color: #aaa;
+            border: 1px solid #333;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .charts-container {
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            margin: 0;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            height: 33.33%;  /* 3등분 */
+            overflow: hidden;
+            position: relative;
+            margin: 0;
+            padding: 0;
+            aspect-ratio: 1 / 0.6;  /* 가로:세로 = 1:0.6 */
+        }
+        
+        #btc-chart, #eth-chart, #sol-chart {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .chart-wrapper:not(:last-child) {
+            border-bottom: 1px solid #222;  /* 마지막 차트 제외하고 구분선 */
+        }
+
+        .chart-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .btc-label {
+            color: #f7931a;
+        }
+
+        .eth-label {
+            color: #627eea;
+        }
+        
+        .sol-label {
+            color: #00FFA3;
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 1.2em;
+            }
+            
+            .charts-container {
+                flex: 1;
+            }
+            
+            .chart-wrapper {
+                height: 33.33%;
+                aspect-ratio: 1 / 0.6;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="charts-container">
+        <!-- 비트코인 차트 -->
+        <div class="chart-wrapper">
+            <div class="chart-label btc-label">₿ BTC/USDT</div>
+            <div id="btc-chart"></div>
+        </div>
+        
+        <!-- 이더리움 차트 -->
+        <div class="chart-wrapper">
+            <div class="chart-label eth-label">Ξ ETH/USDT</div>
+            <div id="eth-chart"></div>
+        </div>
+        
+        <!-- 솔라나 차트 -->
+        <div class="chart-wrapper">
+            <div class="chart-label sol-label">◎ SOL/USDT</div>
+            <div id="sol-chart"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="title">BTC / ETH / SOL Triple Chart</div>
+        <a href="index.html" class="back-btn">← 돌아가기</a>
+    </div>
+
+    <!-- TradingView Widget -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+        // 차트 설정 함수
+        function createChart(containerId, symbol, color) {
+            return new TradingView.widget({
+                "width": "100%",
+                "height": "100%",
+                "symbol": `BINANCE:${symbol}`,
+                "interval": "1",  // 1분봉
+                "timezone": "Asia/Seoul",
+                "theme": "dark",
+                "style": "1",  // Candlestick
+                "locale": "kr",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "allow_symbol_change": false,
+                "container_id": containerId,
+                "hide_side_toolbar": true,
+                "hide_drawing_toolbar": true,
+                "hide_top_toolbar": false,
+                "hide_legend": true,
+                "hide_volume": true,  // 볼륨 제거
+                "withdateranges": false,
+                "details": false,
+                "show_popup_button": false,
+                "studies": [],  // 보조지표 없음
+                "overrides": {
+                    "mainSeriesProperties.candleStyle.upColor": color,
+                    "mainSeriesProperties.candleStyle.downColor": "#666",
+                    "mainSeriesProperties.candleStyle.borderUpColor": color,
+                    "mainSeriesProperties.candleStyle.borderDownColor": "#666",
+                    "mainSeriesProperties.candleStyle.wickUpColor": color,
+                    "mainSeriesProperties.candleStyle.wickDownColor": "#666"
+                }
+            });
+        }
+
+        // 페이지 로드 시 차트 생성
+        window.addEventListener('DOMContentLoaded', function() {
+            // 비트코인 차트 생성
+            createChart('btc-chart', 'BTCUSDT', '#f7931a');
+            
+            // 이더리움 차트 생성
+            setTimeout(() => {
+                createChart('eth-chart', 'ETHUSDT', '#627eea');
+            }, 1000);  // 1초 딜레이로 순차 로드
+            
+            // 솔라나 차트 생성
+            setTimeout(() => {
+                createChart('sol-chart', 'SOLUSDT', '#00FFA3');
+            }, 2000);  // 2초 딜레이로 순차 로드
+        });
+
+        // 화면 크기 변경 시 대응
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                location.reload();  // 간단하게 리로드로 처리
+            }, 500);
+        });
+    </script>
+</body>
+</html>

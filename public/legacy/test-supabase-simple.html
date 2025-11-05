@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 간단 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+        }
+        .log {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .error { color: #f44336; }
+        .success { color: #4caf50; }
+    </style>
+</head>
+<body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    <h1>Supabase 연결 테스트</h1>
+    
+    <button onclick="testDirectAPI()">Direct API 테스트</button>
+    <button onclick="testWithCDN()">CDN 버전 테스트</button>
+    <button onclick="testWithScript()">Script 태그 테스트</button>
+    
+    <div id="log" class="log"></div>
+
+    <!-- Script 태그로 Supabase 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script type="module">
+        import { DebugLogger } from './debug-logger.js';
+        
+        let debugLogger;
+        
+        function log(message, type = '') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="${type}">[${time}] ${message}</div>`;
+            
+            // 디버그 로거에도 기록
+            if (debugLogger) {
+                if (type === 'error') {
+                    debugLogger.error(message);
+                } else if (type === 'success') {
+                    debugLogger.success(message);
+                } else {
+                    debugLogger.info(message);
+                }
+            }
+        }
+
+        // 1. Direct API 테스트
+        async function testDirectAPI() {
+            log('Direct API 테스트 시작...');
+            
+            try {
+                // Wait for config
+                const waitForConfig = () => {
+                    return new Promise((resolve) => {
+                        if (window.APP_CONFIG?.SUPABASE?.URL) {
+                            resolve();
+                        } else {
+                            window.addEventListener('configLoaded', resolve, { once: true });
+                            setTimeout(resolve, 2000);
+                        }
+                    });
+                };
+                
+                await waitForConfig();
+                
+                const supabaseUrl = window.APP_CONFIG?.SUPABASE?.URL || 'https://intyabzhvtkxgldmvpvr.supabase.co';
+                const supabaseKey = window.APP_CONFIG?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
+                
+                if (!supabaseUrl || !supabaseKey) {
+                    log('Direct API 에러: Supabase configuration not found', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`${supabaseUrl}/rest/v1/price_history?select=*&limit=1`, {
+                    headers: {
+                        'apikey': supabaseKey,
+                        'Authorization': `Bearer ${supabaseKey}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                log('Direct API 성공!', 'success');
+                log(JSON.stringify(data, null, 2));
+                
+            } catch (error) {
+                log(`Direct API 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // 2. CDN 버전 테스트
+        async function testWithCDN() {
+            log('CDN 버전 테스트 시작...');
+            
+            try {
+                // import를 동적으로 실행
+                // Wait for config to load
+                const waitForConfig = () => {
+                    return new Promise((resolve) => {
+                        if (window.APP_CONFIG?.SUPABASE?.URL) {
+                            resolve();
+                        } else {
+                            window.addEventListener('configLoaded', resolve, { once: true });
+                            setTimeout(resolve, 2000); // Fallback
+                        }
+                    });
+                };
+                
+                await waitForConfig();
+                
+                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+                
+                // Get configuration
+                const supabaseUrl = window.APP_CONFIG?.SUPABASE?.URL;
+                const supabaseKey = window.APP_CONFIG?.SUPABASE?.ANON_KEY;
+                
+                if (!supabaseUrl || !supabaseKey) {
+                    log('CDN 버전 에러: Supabase configuration not found', 'error');
+                    return;
+                }
+                
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                
+                const { data, error } = await supabase
+                    .from('price_history')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) {
+                    log(`CDN 버전 에러: ${error.message}`, 'error');
+                } else {
+                    log('CDN 버전 성공!', 'success');
+                    log(JSON.stringify(data, null, 2));
+                }
+                
+            } catch (error) {
+                log(`CDN 버전 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // 3. Script 태그 테스트
+        async function testWithScript() {
+            log('Script 태그 테스트 시작...');
+            
+            try {
+                if (typeof window.supabase === 'undefined') {
+                    log('window.supabase가 정의되지 않음', 'error');
+                    return;
+                }
+                
+                // Wait for config
+                const waitForConfig = () => {
+                    return new Promise((resolve) => {
+                        if (window.APP_CONFIG?.SUPABASE?.URL) {
+                            resolve();
+                        } else {
+                            window.addEventListener('configLoaded', resolve, { once: true });
+                            setTimeout(resolve, 2000);
+                        }
+                    });
+                };
+                
+                await waitForConfig();
+                
+                // Get configuration
+                const supabaseUrl = window.APP_CONFIG?.SUPABASE?.URL;
+                const supabaseKey = window.APP_CONFIG?.SUPABASE?.ANON_KEY;
+                
+                if (!supabaseUrl || !supabaseKey) {
+                    log('Script 태그 에러: Supabase configuration not found', 'error');
+                    return;
+                }
+                
+                const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                
+                // 디버그 로거 초기화
+                if (!debugLogger && window.supabase) {
+                    debugLogger = new DebugLogger(supabaseClient, 'supabase-test');
+                    await debugLogger.info('디버그 로거 초기화 완료');
+                }
+                
+                supabaseClient
+                    .from('price_history')
+                    .select('*')
+                    .limit(1)
+                    .then(({ data, error }) => {
+                        if (error) {
+                            log(`Script 태그 에러: ${error.message}`, 'error');
+                        } else {
+                            log('Script 태그 성공!', 'success');
+                            log(JSON.stringify(data, null, 2));
+                        }
+                    });
+                    
+            } catch (error) {
+                log(`Script 태그 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // 전역 함수로 노출
+        window.testDirectAPI = testDirectAPI;
+        window.testWithCDN = testWithCDN;
+        window.testWithScript = testWithScript;
+
+        // 페이지 로드 완료시
+        window.addEventListener('DOMContentLoaded', () => {
+            log('페이지 로드 완료. 테스트 버튼을 클릭하세요.');
+            
+            // Supabase 로드 상태 확인
+            setTimeout(() => {
+                if (window.supabase) {
+                    log('window.supabase 사용 가능', 'success');
+                } else {
+                    log('window.supabase를 찾을 수 없음', 'error');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

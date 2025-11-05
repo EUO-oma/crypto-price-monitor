@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Chat - 익명 채팅방</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .chat-header {
+            background: #0a0a0a;
+            padding: 15px 20px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 5px;
+            border-radius: 8px;
+        }
+        
+        .back-button:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .online-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(76, 175, 80, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .online-count {
+            font-size: 14px;
+            color: #4caf50;
+        }
+        
+        /* Chat Container */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #050505;
+            scroll-behavior: smooth;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Messages */
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .message-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .message-username {
+            font-weight: 600;
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #555;
+        }
+        
+        .message-text {
+            background: #1a1a1a;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid #222;
+            line-height: 1.5;
+            word-wrap: break-word;
+            max-width: 85%;
+        }
+        
+        .message.own {
+            flex-direction: row-reverse;
+        }
+        
+        .message.own .message-content {
+            align-items: flex-end;
+        }
+        
+        .message.own .message-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #fff;
+        }
+        
+        .message.own .message-header {
+            flex-direction: row-reverse;
+        }
+        
+        /* System Messages */
+        .system-message {
+            text-align: center;
+            margin: 20px 0;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            display: inline-block;
+            margin-left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            color: #666;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Input Area */
+        .input-container {
+            background: #0a0a0a;
+            padding: 15px 20px;
+            border-top: 1px solid #222;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 24px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+        
+        .input-wrapper:focus-within {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .message-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            resize: none;
+            max-height: 100px;
+            line-height: 1.4;
+        }
+        
+        .message-input::placeholder {
+            color: #666;
+        }
+        
+        .emoji-button {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .emoji-button:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .send-button:active {
+            transform: scale(0.95);
+        }
+        
+        .send-button svg {
+            width: 20px;
+            height: 20px;
+            color: #fff;
+        }
+        
+        /* Emoji Picker */
+        .emoji-picker {
+            position: absolute;
+            bottom: 70px;
+            left: 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 12px;
+            display: none;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .emoji-picker.show {
+            display: grid;
+        }
+        
+        .emoji-item {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .emoji-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.2);
+        }
+        
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 0;
+            font-size: 14px;
+            color: #666;
+            min-height: 20px;
+        }
+        
+        .typing-dots {
+            display: inline-flex;
+            gap: 3px;
+        }
+        
+        .typing-dots span {
+            width: 4px;
+            height: 4px;
+            background: #666;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.3; transform: scale(1); }
+            30% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        /* Welcome Screen */
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.3s ease;
+        }
+        
+        .welcome-content {
+            text-align: center;
+            padding: 40px;
+            background: #0a0a0a;
+            border-radius: 20px;
+            border: 1px solid #222;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .welcome-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .welcome-subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .username-input {
+            width: 100%;
+            padding: 12px 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        .username-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .join-button {
+            width: 100%;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .join-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .join-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* 아바타 선택기 스타일 */
+        .avatar-selector {
+            margin: 20px 0;
+        }
+        
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .avatar-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 10px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .avatar-option:hover {
+            border-color: #555;
+            transform: translateY(-2px);
+        }
+        
+        .avatar-option.selected {
+            border-color: #4caf50;
+            background: #1a2e1a;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+        
+        .avatar-image {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin-bottom: 8px;
+            object-fit: cover;
+            background: #2a2a2a;
+        }
+        
+        .avatar-name {
+            font-size: 12px;
+            color: #888;
+            font-weight: 500;
+        }
+        
+        .avatar-symbol {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .shuffle-button {
+            background: #333;
+            border: 1px solid #555;
+            color: #ccc;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .shuffle-button:hover {
+            background: #444;
+            border-color: #666;
+        }
+        
+        /* 메시지에 아바타 표시 */
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 12px;
+            object-fit: cover;
+            background: #2a2a2a;
+            flex-shrink: 0;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .chat-header {
+                padding: 12px 16px;
+            }
+            
+            .chat-container {
+                padding: 16px;
+            }
+            
+            .message-text {
+                max-width: 100%;
+            }
+            
+            .emoji-picker {
+                width: calc(100% - 40px);
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .avatar-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            
+            .avatar-option {
+                padding: 12px 8px;
+            }
+            
+            .avatar-image {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-content">
+            <h1 class="welcome-title">🌐 익명 채팅방</h1>
+            <p class="welcome-subtitle">자유롭게 대화를 나눠보세요</p>
+            
+            <!-- 사용자 이름 입력 -->
+            <input type="text" class="username-input" id="usernameInput" placeholder="닉네임을 입력하세요" maxlength="20">
+            
+            <p style="color: #888; font-size: 14px; margin: 20px 0 10px 0;">크립토 아바타를 선택하세요</p>
+            
+            <!-- 코인 아바타 선택기 -->
+            <div class="avatar-selector" id="avatarSelector">
+                <div class="avatar-grid" id="avatarGrid">
+                    <!-- 코인 아바타들이 여기에 동적으로 추가됨 -->
+                </div>
+                <button class="shuffle-button" onclick="shuffleAvatars()">🎲 다른 코인 보기</button>
+            </div>
+            
+            <button class="join-button" id="joinButton" onclick="joinChat()" disabled>채팅 참여하기</button>
+        </div>
+    </div>
+
+    <!-- Chat Header -->
+    <div class="chat-header">
+        <div class="header-left">
+            <button class="back-button" onclick="window.close()">←</button>
+            <h1 class="chat-title">익명 채팅방</h1>
+            <button class="back-button" onclick="location.reload()" title="새로고침" style="margin-left: 10px;">🔄</button>
+        </div>
+        <div class="online-indicator">
+            <div class="online-dot"></div>
+            <span class="online-count" id="onlineCount">1명 온라인</span>
+        </div>
+    </div>
+    
+    <!-- Chat Messages -->
+    <div class="chat-container" id="chatContainer">
+        <!-- Messages will be dynamically added here -->
+    </div>
+    
+    <!-- Typing Indicator -->
+    <div class="typing-indicator" id="typingIndicator" style="padding: 0 20px;">
+        <span id="typingUsers"></span>
+    </div>
+    
+    <!-- Input Area -->
+    <div class="input-container">
+        <div class="input-wrapper">
+            <button class="emoji-button" onclick="toggleEmojiPicker()">😊</button>
+            <textarea class="message-input" id="messageInput" placeholder="메시지를 입력하세요..." rows="1"></textarea>
+        </div>
+        <button class="send-button" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    </div>
+    
+    <!-- Emoji Picker -->
+    <div class="emoji-picker" id="emojiPicker">
+        <div class="emoji-item" onclick="insertEmoji('😊')">😊</div>
+        <div class="emoji-item" onclick="insertEmoji('😂')">😂</div>
+        <div class="emoji-item" onclick="insertEmoji('❤️')">❤️</div>
+        <div class="emoji-item" onclick="insertEmoji('👍')">👍</div>
+        <div class="emoji-item" onclick="insertEmoji('🎉')">🎉</div>
+        <div class="emoji-item" onclick="insertEmoji('🔥')">🔥</div>
+        <div class="emoji-item" onclick="insertEmoji('💯')">💯</div>
+        <div class="emoji-item" onclick="insertEmoji('🤔')">🤔</div>
+        <div class="emoji-item" onclick="insertEmoji('😎')">😎</div>
+        <div class="emoji-item" onclick="insertEmoji('🙏')">🙏</div>
+        <div class="emoji-item" onclick="insertEmoji('💪')">💪</div>
+        <div class="emoji-item" onclick="insertEmoji('🚀')">🚀</div>
+        <div class="emoji-item" onclick="insertEmoji('💎')">💎</div>
+        <div class="emoji-item" onclick="insertEmoji('🌟')">🌟</div>
+        <div class="emoji-item" onclick="insertEmoji('✨')">✨</div>
+        <div class="emoji-item" onclick="insertEmoji('🎯')">🎯</div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="coin-images-db.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Variables
+        let currentUser = null;
+        let onlineUsers = new Map();
+        let typingTimeout = null;
+        let isTyping = false;
+        const avatarEmojis = ['🦊', '🐻', '🐼', '🦁', '🐯', '🐨', '🐵', '🦄', '🐸', '🐧', '🦋', '🐢'];
+        const userAvatars = new Map();
+        let selectedAvatar = null;
+        let currentAvatars = [];
+        
+        // Initialize avatars on page load
+        function initializeAvatars() {
+            shuffleAvatars();
+            
+            // Enable username input
+            document.getElementById('usernameInput').addEventListener('input', checkFormValidity);
+        }
+        
+        // Shuffle and display new avatars
+        function shuffleAvatars() {
+            currentAvatars = getRandomCoins(6);
+            const avatarGrid = document.getElementById('avatarGrid');
+            avatarGrid.innerHTML = '';
+            
+            currentAvatars.forEach((coin, index) => {
+                const avatarEl = document.createElement('div');
+                avatarEl.className = 'avatar-option';
+                avatarEl.onclick = () => selectAvatar(coin);
+                
+                avatarEl.innerHTML = `
+                    <img class="avatar-image" src="${coin.image}" alt="${coin.name}" 
+                         onerror="this.src='https://via.placeholder.com/48?text=${coin.symbol}'">
+                    <div class="avatar-name">${coin.name}</div>
+                    <div class="avatar-symbol">${coin.symbol}</div>
+                `;
+                
+                avatarGrid.appendChild(avatarEl);
+            });
+        }
+        
+        // Select an avatar
+        function selectAvatar(coin) {
+            selectedAvatar = coin;
+            
+            // Update UI
+            document.querySelectorAll('.avatar-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Check if we can enable join button
+            checkFormValidity();
+        }
+        
+        // Check if form is valid
+        function checkFormValidity() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const joinButton = document.getElementById('joinButton');
+            
+            if (username && selectedAvatar) {
+                joinButton.disabled = false;
+            } else {
+                joinButton.disabled = true;
+            }
+        }
+        
+        // Join chat
+        async function joinChat() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) {
+                alert('닉네임을 입력해주세요!');
+                return;
+            }
+            
+            if (!selectedAvatar) {
+                alert('아바타를 선택해주세요!');
+                return;
+            }
+            
+            currentUser = {
+                id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9),
+                username: username,
+                avatar: selectedAvatar.symbol,
+                avatarImage: selectedAvatar.image,
+                avatarColor: selectedAvatar.color
+            };
+            
+            console.log('User created:', currentUser);
+            
+            // Hide welcome screen
+            document.getElementById('welcomeScreen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('welcomeScreen').style.display = 'none';
+            }, 300);
+            
+            // Initialize chat
+            await initializeChat();
+        }
+        
+        // Initialize chat
+        async function initializeChat() {
+            try {
+                console.log('Initializing chat for user:', currentUser);
+                
+                // Set user online
+                const userRef = database.ref(`users/${currentUser.id}`);
+                await userRef.set({
+                    username: currentUser.username,
+                    avatar: currentUser.avatar,
+                    avatarImage: currentUser.avatarImage,
+                    avatarColor: currentUser.avatarColor,
+                    lastSeen: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                console.log('User set online');
+                
+                // Remove user on disconnect
+                userRef.onDisconnect().remove();
+                
+                // Listen for messages
+                database.ref('messages').limitToLast(50).on('child_added', (snapshot) => {
+                    const message = snapshot.val();
+                    console.log('New message received:', message);
+                    displayMessage(message);
+                }, (error) => {
+                    console.error('Error listening for messages:', error);
+                });
+                
+                // Listen for online users
+                database.ref('users').on('value', (snapshot) => {
+                    onlineUsers.clear();
+                    snapshot.forEach((childSnapshot) => {
+                        const user = childSnapshot.val();
+                        onlineUsers.set(childSnapshot.key, user);
+                    });
+                    updateOnlineCount();
+                });
+                
+                // Listen for typing indicators
+                database.ref('typing').on('value', (snapshot) => {
+                    const typingUsers = [];
+                    snapshot.forEach((childSnapshot) => {
+                        const userId = childSnapshot.key;
+                        if (userId !== currentUser.id && childSnapshot.val()) {
+                            const user = onlineUsers.get(userId);
+                            if (user) {
+                                typingUsers.push(user.username);
+                            }
+                        }
+                    });
+                    updateTypingIndicator(typingUsers);
+                });
+                
+                // Add system message
+                displaySystemMessage(`${currentUser.username}님이 입장하셨습니다.`);
+                
+                console.log('Chat initialized successfully');
+            } catch (error) {
+                console.error('Error initializing chat:', error);
+                alert('Failed to connect to chat. Please refresh and try again.');
+            }
+        }
+        
+        // Send message
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const text = messageInput.value.trim();
+            
+            if (!text) {
+                console.log('No text to send');
+                return;
+            }
+            
+            if (!currentUser) {
+                console.log('No current user');
+                alert('Please join the chat first!');
+                return;
+            }
+            
+            const message = {
+                userId: currentUser.id,
+                username: currentUser.username,
+                avatar: currentUser.avatar,
+                avatarImage: currentUser.avatarImage,
+                avatarColor: currentUser.avatarColor,
+                text: text,
+                timestamp: Date.now()
+            };
+            
+            console.log('Sending message:', message);
+            
+            try {
+                // Save to Firebase
+                await database.ref('messages').push(message);
+                console.log('Message sent successfully');
+                
+                // Clear input
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                
+                // Stop typing indicator
+                setTyping(false);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            }
+        }
+        
+        // Display message
+        function displayMessage(message) {
+            const container = document.getElementById('chatContainer');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${message.userId === currentUser?.id ? 'own' : ''}`;
+            
+            const time = new Date(message.timestamp).toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const avatarImage = message.avatarImage || 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png';
+            const avatarColor = message.avatarColor || '#f7931a';
+            
+            messageEl.innerHTML = `
+                <img class="message-avatar" src="${avatarImage}" alt="${message.username}" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                     onload="this.nextElementSibling.style.display='none'">
+                <div class="message-avatar" style="background: ${avatarColor}; color: white; font-weight: bold; font-size: 12px; display: none; align-items: center; justify-content: center;">
+                    ${message.username.charAt(0)}
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-username">${message.username}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-text">${escapeHtml(message.text)}</div>
+                </div>
+            `;
+            
+            container.appendChild(messageEl);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Display system message
+        function displaySystemMessage(text) {
+            const container = document.getElementById('chatContainer');
+            const messageEl = document.createElement('div');
+            messageEl.className = 'system-message';
+            messageEl.textContent = text;
+            container.appendChild(messageEl);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Update online count
+        function updateOnlineCount() {
+            const count = onlineUsers.size;
+            document.getElementById('onlineCount').textContent = `${count}명 온라인`;
+        }
+        
+        // Update typing indicator
+        function updateTypingIndicator(users) {
+            const indicator = document.getElementById('typingUsers');
+            if (users.length === 0) {
+                indicator.innerHTML = '';
+            } else if (users.length === 1) {
+                indicator.innerHTML = `${users[0]}님이 입력중입니다 <span class="typing-dots"><span></span><span></span><span></span></span>`;
+            } else {
+                indicator.innerHTML = `여러명이 입력중입니다 <span class="typing-dots"><span></span><span></span><span></span></span>`;
+            }
+        }
+        
+        // Set typing status
+        function setTyping(typing) {
+            if (!currentUser) return;
+            
+            if (typing && !isTyping) {
+                database.ref(`typing/${currentUser.id}`).set(true);
+                isTyping = true;
+            } else if (!typing && isTyping) {
+                database.ref(`typing/${currentUser.id}`).remove();
+                isTyping = false;
+            }
+        }
+        
+        // Toggle emoji picker
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            picker.classList.toggle('show');
+        }
+        
+        // Insert emoji
+        function insertEmoji(emoji) {
+            const input = document.getElementById('messageInput');
+            input.value += emoji;
+            input.focus();
+            toggleEmojiPicker();
+        }
+        
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Event listeners
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        document.getElementById('messageInput').addEventListener('input', (e) => {
+            // Auto resize textarea
+            e.target.style.height = 'auto';
+            e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
+            
+            // Handle typing indicator
+            setTyping(true);
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                setTyping(false);
+            }, 2000);
+        });
+        
+        
+        // Close emoji picker when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.emoji-button') && !e.target.closest('.emoji-picker')) {
+                document.getElementById('emojiPicker').classList.remove('show');
+            }
+        });
+        
+        // Focus input on load  
+        window.addEventListener('load', () => {
+            // 코인 아바타 초기화
+            initializeAvatars();
+            
+            // Check Firebase connection
+            database.ref('.info/connected').on('value', (snapshot) => {
+                const connected = snapshot.val();
+                console.log('Firebase connection status:', connected);
+                if (!connected) {
+                    console.warn('Not connected to Firebase');
+                }
+            });
+        });
+        
+        // Debug: Log all Firebase errors
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e);
+        });
+        
+        // Debug: Log unhandled promise rejections
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e);
+        });
+    </script>
+</body>
+</html>

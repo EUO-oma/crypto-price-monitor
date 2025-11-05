@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>긴급 수정 스크립트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #121212;
+            color: #fff;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #1e1e1e;
+        }
+        .success { border-color: #4caf50; }
+        .error { border-color: #f44336; }
+        .warning { border-color: #ff9800; }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        pre {
+            background: #0d0d0d;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>일정관리 시스템 긴급 진단</h1>
+    
+    <div id="results"></div>
+    
+    <button onclick="runDiagnostics()">진단 시작</button>
+    <button onclick="location.href='/'">메인 페이지로</button>
+    <button onclick="fixMainPage()">메인 페이지 강제 수정</button>
+    
+    <h2>수동 명령어 (브라우저 콘솔에서 실행)</h2>
+    <pre>
+// 1. 로딩 스피너 강제 제거
+document.getElementById('loadingDiv').style.display = 'none';
+
+// 2. 빈 상태 표시
+document.getElementById('emptyState').style.display = 'block';
+
+// 3. 수동으로 일정 로드
+loadSchedules();
+
+// 4. 현재 상태 확인
+console.log({
+    loadingDiv: document.getElementById('loadingDiv').style.display,
+    listView: document.getElementById('listView').style.display,
+    emptyState: document.getElementById('emptyState').style.display,
+    schedules: window.schedules,
+    supabase: !!window.supabase
+});
+    </pre>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        function addResult(message, type = 'status') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        async function runDiagnostics() {
+            document.getElementById('results').innerHTML = '';
+            
+            // 1. Supabase 라이브러리 체크
+            if (typeof window.supabase === 'undefined') {
+                addResult('❌ Supabase 라이브러리가 로드되지 않았습니다.', 'error');
+                return;
+            } else {
+                addResult('✅ Supabase 라이브러리 로드됨', 'success');
+            }
+            
+            // 2. 메인 페이지를 iframe으로 로드하여 진단
+            addResult('메인 페이지 분석 중...', 'warning');
+            
+            const iframe = document.createElement('iframe');
+            iframe.src = '/';
+            iframe.style.width = '100%';
+            iframe.style.height = '300px';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            iframe.onload = () => {
+                const win = iframe.contentWindow;
+                const doc = iframe.contentDocument;
+                
+                // 3. 전역 변수 체크
+                const globalVars = {
+                    supabase: !!win.supabase,
+                    schedules: win.schedules,
+                    currentView: win.currentView,
+                    currentFilter: win.currentFilter,
+                    filteredSchedules: win.filteredSchedules
+                };
+                
+                addResult(`전역 변수 상태:<br><pre>${JSON.stringify(globalVars, null, 2)}</pre>`, 'status');
+                
+                // 4. DOM 요소 체크
+                const elements = {
+                    loadingDiv: doc.getElementById('loadingDiv'),
+                    listView: doc.getElementById('listView'),
+                    emptyState: doc.getElementById('emptyState'),
+                    searchInput: doc.getElementById('searchInput')
+                };
+                
+                let domStatus = '<h3>DOM 요소 상태:</h3><ul>';
+                for (const [name, elem] of Object.entries(elements)) {
+                    if (elem) {
+                        const display = win.getComputedStyle(elem).display;
+                        domStatus += `<li>✅ ${name}: display=${display}</li>`;
+                    } else {
+                        domStatus += `<li>❌ ${name}: NOT FOUND</li>`;
+                    }
+                }
+                domStatus += '</ul>';
+                
+                addResult(domStatus, 'status');
+                
+                // 5. 콘솔 에러 체크
+                const originalError = win.console.error;
+                const errors = [];
+                win.console.error = function(...args) {
+                    errors.push(args.join(' '));
+                    originalError.apply(console, args);
+                };
+                
+                // 6. 함수 존재 체크
+                const functions = [
+                    'initializeSupabase',
+                    'loadSchedules',
+                    'displaySchedules',
+                    'applyFilters',
+                    'createScheduleCard'
+                ];
+                
+                let funcStatus = '<h3>함수 존재 여부:</h3><ul>';
+                for (const func of functions) {
+                    if (typeof win[func] === 'function') {
+                        funcStatus += `<li>✅ ${func}</li>`;
+                    } else {
+                        funcStatus += `<li>❌ ${func}</li>`;
+                    }
+                }
+                funcStatus += '</ul>';
+                
+                addResult(funcStatus, 'status');
+                
+                // 7. 수동으로 함수 호출 시도
+                try {
+                    if (win.loadSchedules) {
+                        addResult('loadSchedules() 함수 수동 호출 시도...', 'warning');
+                        win.loadSchedules();
+                    }
+                } catch (error) {
+                    addResult(`❌ loadSchedules() 호출 중 에러: ${error.message}`, 'error');
+                }
+                
+                document.body.removeChild(iframe);
+            };
+        }
+        
+        function fixMainPage() {
+            // 메인 페이지로 이동하면서 수정 스크립트 실행
+            const script = `
+                // 로딩 스피너 제거
+                const loadingDiv = document.getElementById('loadingDiv');
+                if (loadingDiv) {
+                    loadingDiv.parentNode.removeChild(loadingDiv);
+                }
+                
+                // 빈 상태 표시
+                const emptyState = document.getElementById('emptyState');
+                if (emptyState) {
+                    emptyState.style.display = 'block';
+                }
+                
+                // 리스트 뷰 표시
+                const listView = document.getElementById('listView');
+                if (listView) {
+                    listView.style.display = 'grid';
+                }
+                
+                console.log('Emergency fix applied!');
+            `;
+            
+            localStorage.setItem('emergencyFix', script);
+            location.href = '/';
+        }
+        
+        // 자동 진단 실행
+        window.addEventListener('load', () => {
+            setTimeout(runDiagnostics, 1000);
+        });
+    </script>
+</body>
+</html>

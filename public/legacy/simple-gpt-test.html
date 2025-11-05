@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple GPT Links Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        .link-item {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        
+        .link-item a {
+            color: #4facfe;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .link-item a:hover {
+            color: #6bb6ff;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .success { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+        .error { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+        .info { background: rgba(33, 150, 243, 0.2); color: #2196f3; }
+        
+        button {
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #3d8bfe;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 15px;
+            background: #333;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← 메인으로</a>
+    
+    <h1>🔍 Simple GPT Links Test</h1>
+    <p>섹션 3 문제 해결을 위한 초간단 GPT 링크 추출 테스트</p>
+    
+    <div class="test-section">
+        <h3>1. Supabase 연결 테스트</h3>
+        <button onclick="testConnection()">연결 테스트</button>
+        <div id="connection-status" class="status info">테스트 버튼을 클릭하세요</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. 초간단 GPT 링크 추출</h3>
+        <button onclick="simpleGptTest()">GPT 링크만 가져오기</button>
+        <div id="gpt-status" class="status info">테스트 버튼을 클릭하세요</div>
+        <div id="gpt-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. 원시 데이터 확인</h3>
+        <button onclick="showRawData()">원시 데이터 보기</button>
+        <div id="raw-status" class="status info">테스트 버튼을 클릭하세요</div>
+        <pre id="raw-data" style="background: #0a0a0a; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 11px;"></pre>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        let supabaseClient = null;
+        
+        // 1. Supabase 연결 테스트
+        async function testConnection() {
+            const statusEl = document.getElementById('connection-status');
+            statusEl.innerHTML = '<span class="info">연결 시도 중...</span>';
+            
+            try {
+                // Supabase 초기화
+                const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                // 간단한 연결 테스트
+                const { data, error } = await supabaseClient.from('links').select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                statusEl.innerHTML = '<span class="success">✅ Supabase 연결 성공!</span>';
+                console.log('Supabase 연결 성공');
+                
+            } catch (error) {
+                statusEl.innerHTML = `<span class="error">❌ 연결 실패: ${error.message}</span>`;
+                console.error('Supabase 연결 실패:', error);
+            }
+        }
+        
+        // 2. 초간단 GPT 링크 추출
+        async function simpleGptTest() {
+            const statusEl = document.getElementById('gpt-status');
+            const resultsEl = document.getElementById('gpt-results');
+            
+            statusEl.innerHTML = '<span class="info">GPT 링크 추출 중...</span>';
+            resultsEl.innerHTML = '';
+            
+            try {
+                if (!supabaseClient) {
+                    await testConnection();
+                    if (!supabaseClient) {
+                        throw new Error('Supabase 연결이 필요합니다');
+                    }
+                }
+                
+                // 가장 간단한 쿼리: GPT 카테고리만
+                const { data: gptLinks, error } = await supabaseClient
+                    .from('links')
+                    .select('*')
+                    .eq('category', 'gpt')
+                    .order('position', { ascending: true });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                console.log('GPT 링크 데이터:', gptLinks);
+                
+                if (!gptLinks || gptLinks.length === 0) {
+                    statusEl.innerHTML = '<span class="error">❌ GPT 링크가 없습니다</span>';
+                    resultsEl.innerHTML = '<div class="link-item">GPT 카테고리에 링크가 없습니다.</div>';
+                    return;
+                }
+                
+                statusEl.innerHTML = `<span class="success">✅ GPT 링크 ${gptLinks.length}개 발견!</span>`;
+                
+                // 초간단 렌더링
+                resultsEl.innerHTML = '';
+                gptLinks.forEach((link, index) => {
+                    const linkDiv = document.createElement('div');
+                    linkDiv.className = 'link-item';
+                    linkDiv.innerHTML = `
+                        <strong>${index + 1}.</strong> 
+                        <a href="${link.url || '#'}" target="_blank">${link.name || '이름 없음'}</a>
+                        <br><small>ID: ${link.id}, Position: ${link.position}</small>
+                    `;
+                    resultsEl.appendChild(linkDiv);
+                });
+                
+            } catch (error) {
+                statusEl.innerHTML = `<span class="error">❌ 추출 실패: ${error.message}</span>`;
+                console.error('GPT 링크 추출 실패:', error);
+            }
+        }
+        
+        // 3. 원시 데이터 확인
+        async function showRawData() {
+            const statusEl = document.getElementById('raw-status');
+            const dataEl = document.getElementById('raw-data');
+            
+            statusEl.innerHTML = '<span class="info">원시 데이터 가져오는 중...</span>';
+            dataEl.textContent = '';
+            
+            try {
+                if (!supabaseClient) {
+                    await testConnection();
+                    if (!supabaseClient) {
+                        throw new Error('Supabase 연결이 필요합니다');
+                    }
+                }
+                
+                // 모든 링크 데이터 가져오기
+                const { data: allLinks, error } = await supabaseClient
+                    .from('links')
+                    .select('*')
+                    .order('id', { ascending: true });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                statusEl.innerHTML = `<span class="success">✅ 전체 링크 ${allLinks ? allLinks.length : 0}개</span>`;
+                
+                // JSON 형태로 표시
+                dataEl.textContent = JSON.stringify(allLinks, null, 2);
+                
+                // 카테고리별 개수 표시
+                if (allLinks && allLinks.length > 0) {
+                    const categories = {};
+                    allLinks.forEach(link => {
+                        const cat = link.category || 'unknown';
+                        categories[cat] = (categories[cat] || 0) + 1;
+                    });
+                    
+                    statusEl.innerHTML += '<br>카테고리별: ' + Object.entries(categories)
+                        .map(([cat, count]) => `${cat}(${count})`)
+                        .join(', ');
+                }
+                
+            } catch (error) {
+                statusEl.innerHTML = `<span class="error">❌ 데이터 로드 실패: ${error.message}</span>`;
+                console.error('원시 데이터 로드 실패:', error);
+            }
+        }
+        
+        // 페이지 로드시 자동 연결 테스트
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Simple GPT Test 페이지 로드됨');
+            
+            // 2초 후 자동으로 연결 테스트
+            setTimeout(() => {
+                testConnection();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

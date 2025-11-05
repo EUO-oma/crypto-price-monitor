@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>코인 이미지 DB 업로드</title>
+    <style>
+        body {
+            font-family: 'SF Pro Display', sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+        
+        .button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            background: #45a049;
+        }
+        
+        .button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .log {
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪙 코인 이미지 데이터베이스 업로드</h1>
+        <p>Firebase에 코인 이미지 정보를 업로드합니다.</p>
+        
+        <button class="button" onclick="uploadToFirebase()" id="uploadBtn">
+            📤 Firebase에 업로드
+        </button>
+        
+        <button class="button" onclick="testCoinImages()" id="testBtn">
+            🧪 이미지 링크 테스트
+        </button>
+        
+        <button class="button" onclick="clearLog()">
+            🧹 로그 지우기
+        </button>
+        
+        <div class="log" id="log"></div>
+    </div>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="coin-images-db.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            logDiv.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        async function uploadToFirebase() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '업로드 중...';
+            
+            try {
+                log('Firebase에 코인 이미지 데이터 업로드를 시작합니다...', 'info');
+                
+                if (typeof getCoinImageDataForFirebase !== 'function') {
+                    throw new Error('코인 데이터베이스를 찾을 수 없습니다.');
+                }
+                
+                const coinData = getCoinImageDataForFirebase();
+                log(`총 ${Object.keys(coinData.coins).length}개의 코인 정보를 업로드합니다.`, 'info');
+                
+                // Firebase에 업로드
+                await database.ref('coin-images').set(coinData);
+                
+                log('✅ Firebase 업로드 완료!', 'success');
+                log(`업로드된 코인 수: ${Object.keys(coinData.coins).length}`, 'success');
+                log(`버전: ${coinData.version}`, 'info');
+                log(`업데이트 시간: ${coinData.lastUpdated}`, 'info');
+                
+                // 업로드된 데이터 검증
+                const verification = await database.ref('coin-images').once('value');
+                const uploadedData = verification.val();
+                
+                if (uploadedData && uploadedData.coins) {
+                    log(`✅ 검증 완료: ${Object.keys(uploadedData.coins).length}개 코인 확인됨`, 'success');
+                } else {
+                    log('⚠️ 검증 실패: 업로드된 데이터를 확인할 수 없습니다.', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ 업로드 실패: ${error.message}`, 'error');
+                console.error('Upload error:', error);
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '📤 Firebase에 업로드';
+            }
+        }
+        
+        async function testCoinImages() {
+            const testBtn = document.getElementById('testBtn');
+            testBtn.disabled = true;
+            testBtn.textContent = '테스트 중...';
+            
+            try {
+                log('코인 이미지 링크 테스트를 시작합니다...', 'info');
+                
+                if (typeof COIN_IMAGES_ARRAY === 'undefined') {
+                    throw new Error('코인 데이터베이스를 찾을 수 없습니다.');
+                }
+                
+                let successCount = 0;
+                let failCount = 0;
+                
+                for (const coin of COIN_IMAGES_ARRAY.slice(0, 10)) { // 처음 10개만 테스트
+                    try {
+                        const response = await fetch(coin.image, { method: 'HEAD' });
+                        if (response.ok) {
+                            log(`✅ ${coin.symbol} (${coin.name}): 이미지 OK`, 'success');
+                            successCount++;
+                        } else {
+                            log(`❌ ${coin.symbol} (${coin.name}): HTTP ${response.status}`, 'error');
+                            failCount++;
+                        }
+                    } catch (error) {
+                        log(`❌ ${coin.symbol} (${coin.name}): ${error.message}`, 'error');
+                        failCount++;
+                    }
+                    
+                    // 딜레이 추가 (너무 빠른 요청 방지)
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                
+                log(`\n📊 테스트 완료: 성공 ${successCount}개, 실패 ${failCount}개`, 'info');
+                
+            } catch (error) {
+                log(`❌ 테스트 실패: ${error.message}`, 'error');
+                console.error('Test error:', error);
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🧪 이미지 링크 테스트';
+            }
+        }
+        
+        // 페이지 로드 시 상태 확인
+        window.addEventListener('load', () => {
+            log('코인 이미지 DB 업로드 도구가 준비되었습니다.', 'info');
+            
+            if (typeof COIN_IMAGES_DB !== 'undefined') {
+                const coinCount = Object.keys(COIN_IMAGES_DB).length;
+                log(`로드된 코인 데이터: ${coinCount}개`, 'success');
+                
+                // 몇 개 예시 표시
+                const examples = Object.keys(COIN_IMAGES_DB).slice(0, 3);
+                log(`예시: ${examples.join(', ')}`, 'info');
+            } else {
+                log('⚠️ 코인 데이터베이스를 찾을 수 없습니다. coin-images-db.js 파일을 확인해주세요.', 'error');
+            }
+            
+            // Firebase 연결 상태 확인
+            database.ref('.info/connected').on('value', (snapshot) => {
+                const connected = snapshot.val();
+                if (connected) {
+                    log('🔥 Firebase 연결됨', 'success');
+                } else {
+                    log('🔥 Firebase 연결 끊어짐', 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

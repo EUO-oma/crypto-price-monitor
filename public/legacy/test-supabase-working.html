@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 작동 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+        }
+        .log {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .error { color: #f44336; }
+        .success { color: #4caf50; }
+    </style>
+</head>
+<body>
+    <h1>Supabase 작동 테스트 (Script 태그 방식)</h1>
+    
+    <button onclick="testConnection()">연결 테스트</button>
+    <button onclick="testInsert()">데이터 삽입 테스트</button>
+    <button onclick="testSelect()">데이터 조회 테스트</button>
+    
+    <div id="log" class="log"></div>
+
+    <!-- Supabase를 전통적인 script 태그로 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 전역 변수로 supabase client 선언
+        let supabaseClient;
+        
+        function log(message, type = '') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="${type}">[${time}] ${message}</div>`;
+        }
+        
+        // 페이지 로드 완료 후 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            log('페이지 로드 완료');
+            
+            // Supabase가 로드되었는지 확인
+            if (typeof window.supabase !== 'undefined') {
+                log('Supabase 라이브러리 로드 성공', 'success');
+                
+                try {
+                    // Supabase 클라이언트 초기화
+                    supabaseClient = window.supabase.createClient(
+                        'https://intyabzhvtkxgldmvpvr.supabase.co',
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0'
+                    );
+                    log('Supabase 클라이언트 초기화 성공', 'success');
+                } catch (error) {
+                    log('Supabase 클라이언트 초기화 실패: ' + error.message, 'error');
+                }
+            } else {
+                log('Supabase 라이브러리를 찾을 수 없습니다', 'error');
+            }
+        });
+        
+        // 연결 테스트
+        async function testConnection() {
+            log('연결 테스트 시작...');
+            
+            if (!supabaseClient) {
+                log('Supabase 클라이언트가 초기화되지 않았습니다', 'error');
+                return;
+            }
+            
+            try {
+                // price_history 테이블에서 1개 데이터 가져오기
+                const { data, error } = await supabaseClient
+                    .from('price_history')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) {
+                    log('연결 오류: ' + JSON.stringify(error, null, 2), 'error');
+                } else {
+                    log('연결 성공!', 'success');
+                    log('데이터: ' + JSON.stringify(data, null, 2));
+                }
+            } catch (err) {
+                log('예외 발생: ' + err.message, 'error');
+                log('Stack: ' + err.stack, 'error');
+            }
+        }
+        
+        // 데이터 삽입 테스트
+        async function testInsert() {
+            log('데이터 삽입 테스트 시작...');
+            
+            if (!supabaseClient) {
+                log('Supabase 클라이언트가 초기화되지 않았습니다', 'error');
+                return;
+            }
+            
+            try {
+                // debug_logs 테이블이 있다면 사용, 없으면 다른 방법 시도
+                const testData = {
+                    level: 'info',
+                    source: 'test-script',
+                    message: 'Script 태그 방식 테스트',
+                    data: { test: true, timestamp: new Date().toISOString() }
+                };
+                
+                const { data, error } = await supabaseClient
+                    .from('debug_logs')
+                    .insert([testData]);
+                
+                if (error) {
+                    log('삽입 오류: ' + JSON.stringify(error, null, 2), 'error');
+                    
+                    // debug_logs 테이블이 없을 수도 있으므로 price_history로 대체 테스트
+                    if (error.message.includes('debug_logs')) {
+                        log('debug_logs 테이블이 없습니다. 테이블을 먼저 생성하세요.', 'error');
+                    }
+                } else {
+                    log('데이터 삽입 성공!', 'success');
+                    if (data) {
+                        log('삽입된 데이터: ' + JSON.stringify(data, null, 2));
+                    }
+                }
+            } catch (err) {
+                log('예외 발생: ' + err.message, 'error');
+            }
+        }
+        
+        // 데이터 조회 테스트
+        async function testSelect() {
+            log('데이터 조회 테스트 시작...');
+            
+            if (!supabaseClient) {
+                log('Supabase 클라이언트가 초기화되지 않았습니다', 'error');
+                return;
+            }
+            
+            try {
+                // 모든 테이블 목록 가져오기는 불가능하므로 
+                // 알려진 테이블들을 테스트
+                const tables = ['price_history', 'messages', 'debug_logs'];
+                
+                for (const table of tables) {
+                    try {
+                        const { count, error } = await supabaseClient
+                            .from(table)
+                            .select('*', { count: 'exact', head: true });
+                        
+                        if (error) {
+                            log(`${table}: 접근 불가 - ${error.message}`, 'error');
+                        } else {
+                            log(`${table}: ${count || 0}개 레코드`, 'success');
+                        }
+                    } catch (err) {
+                        log(`${table}: 오류 - ${err.message}`, 'error');
+                    }
+                }
+            } catch (err) {
+                log('예외 발생: ' + err.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

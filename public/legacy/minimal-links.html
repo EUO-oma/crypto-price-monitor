@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>최소 링크 페이지</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4facfe;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        h2 {
+            color: #fbbf24;
+            margin-bottom: 15px;
+        }
+        
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .link-card {
+            background: #2a2a2a;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #fff;
+            border: 1px solid #444;
+            display: block;
+            transition: all 0.3s;
+        }
+        
+        .link-card:hover {
+            background: #3a3a3a;
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .error { color: #f87171; }
+        .success { color: #4ade80; }
+        .loading { color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 최소 링크 페이지</h1>
+        
+        <div id="status" class="status loading">로딩 중...</div>
+        
+        <div class="section">
+            <h2>GPT Links</h2>
+            <div id="gpt-links" class="links-grid">
+                <div>로딩 중...</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>YouTube Links</h2>
+            <div id="youtube-links" class="links-grid">
+                <div>로딩 중...</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Favorite Links</h2>
+            <div id="favorite-links" class="links-grid">
+                <div>로딩 중...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        console.log('=== 최소 링크 페이지 시작 ===');
+        
+        // Wait for config
+        async function waitForConfig() {
+            return new Promise((resolve) => {
+                if (window.APP_CONFIG?.SUPABASE?.URL) {
+                    resolve();
+                } else {
+                    window.addEventListener('configLoaded', resolve, { once: true });
+                    setTimeout(resolve, 2000); // Fallback
+                }
+            });
+        }
+        
+        // Get Supabase configuration
+        function getSupabaseConfig() {
+            return {
+                url: window.APP_CONFIG?.SUPABASE?.URL || 'https://ddfnxbkiewolgweivomv.supabase.co',
+                key: window.APP_CONFIG?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8'
+            };
+        }
+        
+        // 상태 업데이트
+        function updateStatus(message, type = 'loading') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            console.log(`상태: ${message}`);
+        }
+        
+        // 링크 로드
+        async function loadLinks() {
+            updateStatus('Configuration loading...', 'loading');
+            
+            try {
+                // Wait for config
+                await waitForConfig();
+                
+                const config = getSupabaseConfig();
+                if (!config.url || !config.key) {
+                    updateStatus('❌ Supabase configuration not found', 'error');
+                    return;
+                }
+                
+                updateStatus('Supabase 초기화 중...', 'loading');
+                
+                // Supabase 클라이언트 생성
+                const supabase = window.supabase.createClient(config.url, config.key);
+                console.log('Supabase 클라이언트 생성됨');
+                
+                updateStatus('링크 데이터 조회 중...', 'loading');
+                
+                // 링크 조회
+                const { data: links, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .order('position');
+                
+                if (error) {
+                    throw error;
+                }
+                
+                console.log(`총 ${links.length}개 링크 조회됨`);
+                
+                // 카테고리별 분류
+                const gptLinks = links.filter(l => l.category === 'gpt');
+                const youtubeLinks = links.filter(l => l.category === 'youtube');
+                const favoriteLinks = links.filter(l => l.category === 'favorite');
+                
+                // 렌더링
+                renderLinks('gpt-links', gptLinks);
+                renderLinks('youtube-links', youtubeLinks);
+                renderLinks('favorite-links', favoriteLinks);
+                
+                updateStatus(`✅ ${links.length}개 링크 로드 완료`, 'success');
+                
+            } catch (error) {
+                console.error('링크 로드 실패:', error);
+                updateStatus(`❌ 오류: ${error.message}`, 'error');
+                
+                // 모든 섹션에 오류 메시지 표시
+                ['gpt-links', 'youtube-links', 'favorite-links'].forEach(id => {
+                    document.getElementById(id).innerHTML = '<div class="error">로드 실패</div>';
+                });
+            }
+        }
+        
+        // 링크 렌더링
+        function renderLinks(containerId, links) {
+            const container = document.getElementById(containerId);
+            
+            if (links.length === 0) {
+                container.innerHTML = '<div>링크가 없습니다</div>';
+                return;
+            }
+            
+            container.innerHTML = links.map(link => 
+                `<a href="${link.url}" target="_blank" class="link-card">${link.name}</a>`
+            ).join('');
+            
+            console.log(`${containerId}: ${links.length}개 렌더링 완료`);
+        }
+        
+        // 시작
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM 로드 완료');
+            
+            // Supabase 라이브러리 대기
+            let attempts = 0;
+            while (!window.supabase && attempts < 10) {
+                console.log('Supabase 라이브러리 대기 중...');
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+            }
+            
+            if (!window.supabase) {
+                updateStatus('❌ Supabase 라이브러리 로드 실패', 'error');
+                return;
+            }
+            
+            console.log('Supabase 라이브러리 준비됨');
+            
+            // 링크 로드
+            await loadLinks();
+        });
+    </script>
+</body>
+</html>

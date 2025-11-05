@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Chart - 1분봉</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: #0a0a0a;
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .symbol-selector {
+            display: flex;
+            gap: 15px;
+        }
+
+        .symbol-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .symbol-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .symbol-btn.active {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        /* 모바일용 드롭다운 스타일 */
+        .mobile-selector {
+            display: none;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .coin-dropdown {
+            padding: 8px 12px;
+            background: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 120px;
+        }
+        
+        .coin-dropdown:focus {
+            outline: none;
+            border-color: #555;
+        }
+        
+        .home-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            color: #aaa;
+            border: 1px solid #333;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .home-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .back-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            color: #aaa;
+            border: 1px solid #333;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+        
+        .compare-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            color: #aaa;
+            border: 1px solid #333;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+        
+        .compare-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+        
+        .compare-btn.active {
+            background: #f7931a;
+            color: #000;
+            border-color: #f7931a;
+        }
+        
+        /* 모바일에서만 드롭다운 표시 */
+        @media (max-width: 768px) {
+            .symbol-selector {
+                display: none;
+            }
+            
+            .mobile-selector {
+                display: flex;
+                flex: 1;
+            }
+            
+            .back-btn {
+                display: none;
+            }
+            
+            .compare-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        .coin-title {
+            display: none;  /* 기본적으로 숨김 (PC에서는 표시 안함) */
+            padding: 10px 20px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #333;
+            text-align: right;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            flex: 1;
+            padding: 0;  /* 패딩 제거 */
+            display: flex;
+            justify-content: center;
+            align-items: stretch;  /* 전체 높이 사용 */
+            width: 100%;
+            margin: 0;
+            min-height: 500px;  /* 최소 높이 보장 */
+        }
+
+        #tradingview-widget {
+            width: 100%;  /* 전체 너비 사용 */
+            aspect-ratio: 1 / 1.2;  /* 기본 가로:세로 = 1:1.2 비율 */
+            min-height: 500px;
+            max-height: 900px;
+            resize: vertical;  /* 세로 크기 조정 가능 */
+            overflow: auto;
+            position: relative;
+        }
+        
+        /* 크기 조정 핸들 스타일 */
+        #tradingview-widget::-webkit-resizer {
+            background-color: #444;
+            border-radius: 5px;
+        }
+        
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;  /* 헤더 패딩 축소 */
+            }
+            
+            .coin-title {
+                display: block;  /* 모바일에서만 표시 */
+                padding: 8px 15px;
+                font-size: 1em;
+            }
+            
+            .chart-container {
+                padding-top: 0;  /* 모바일에서도 상단 여백 제거 */
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+            
+            #tradingview-widget {
+                aspect-ratio: 1 / 1.2;  /* 모바일에서도 1:1.2 비율 */
+                min-height: 450px;
+                max-height: 700px;
+                margin-top: 5px;  /* 차트 상단 여백 최소화 */
+                resize: vertical;  /* 세로 크기 조정 가능 */
+                overflow: auto;
+            }
+            
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <!-- PC용 버튼 선택 -->
+        <div class="symbol-selector">
+            <button class="symbol-btn active" onclick="changeSymbol('BTCUSDT')">BTC<span style="color: #666; font-size: 0.9em;">USDT</span></button>
+            <button class="symbol-btn" onclick="changeSymbol('ETHUSDT')">ETH<span style="color: #666; font-size: 0.9em;">USDT</span></button>
+            <button class="symbol-btn" onclick="changeSymbol('XRPUSDT')">XRP<span style="color: #666; font-size: 0.9em;">USDT</span></button>
+            <button class="symbol-btn" onclick="changeSymbol('SOLUSDT')">SOL<span style="color: #666; font-size: 0.9em;">USDT</span></button>
+            <button class="symbol-btn" onclick="changeSymbol('AVAXUSDT')">AVAX<span style="color: #666; font-size: 0.9em;">USDT</span></button>
+            <button class="symbol-btn" onclick="changeSymbol('NASDAQ')">NASDAQ</button>
+        </div>
+        
+        <!-- 모바일용 드롭다운 선택 -->
+        <div class="mobile-selector">
+            <a href="index.html" class="home-btn">🏠 홈</a>
+            <select class="coin-dropdown" id="mobile-coin-select" onchange="changeSymbol(this.value)">
+                <option value="BTCUSDT">BTC/USDT</option>
+                <option value="ETHUSDT">ETH/USDT</option>
+                <option value="XRPUSDT">XRP/USDT</option>
+                <option value="SOLUSDT">SOL/USDT</option>
+                <option value="AVAXUSDT">AVAX/USDT</option>
+                <option value="NASDAQ">NASDAQ 100</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; align-items: center;">
+            <button class="compare-btn" id="compare-btn" onclick="toggleBTCCompare()">
+                ₿ BTC 비교
+            </button>
+            <a href="index.html" class="back-btn">← 돌아가기</a>
+        </div>
+    </div>
+
+    <!-- 코인 이름 표시 섹션 -->
+    <div class="coin-title">
+        <span id="coin-name">Bitcoin / TetherUS</span>
+        <span id="coin-symbol" style="color: #888; font-size: 0.9em;">BTCUSDT</span>
+        <!-- 높이 조절 버튼 (모바일용) -->
+        <div class="height-controls" style="float: left;">
+            <button onclick="adjustChartHeight('increase')" style="padding: 5px 10px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 3px; margin-right: 5px;">📈 +</button>
+            <button onclick="adjustChartHeight('decrease')" style="padding: 5px 10px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 3px;">📉 -</button>
+        </div>
+    </div>
+    
+    <!-- 차트 컨테이너 -->
+    <div class="chart-container">
+        <div id="tradingview-widget"></div>
+    </div>
+    
+    <!-- 볼륨 막대는 TradingView 위젯 내부에 포함됨 -->
+
+    <!-- TradingView Widget -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+        let currentSymbol = 'BTCUSDT';
+        let widget = null;
+        let ws = null;
+        let btcCompareEnabled = false;
+
+        // URL 파라미터에서 심볼 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const symbolParam = urlParams.get('symbol');
+        if (symbolParam) {
+            currentSymbol = symbolParam.toUpperCase();
+            // 모바일 드롭다운 초기값 설정
+            const mobileSelect = document.getElementById('mobile-coin-select');
+            if (mobileSelect) {
+                mobileSelect.value = currentSymbol;
+            }
+        }
+
+        function initChart(symbol) {
+            // 기존 차트 제거
+            document.getElementById('tradingview-widget').innerHTML = '';
+            
+            // NASDAQ인 경우 TradingView 심볼 변경
+            let tradingViewSymbol = symbol === 'NASDAQ' ? 'NASDAQ:NDX' : `BINANCE:${symbol}`;
+            
+            // 모바일 여부 확인
+            const isMobile = window.innerWidth <= 768;
+            
+            // 비교 심볼 설정
+            let compareSymbols = [];
+            let studies = [];
+            
+            if (btcCompareEnabled && symbol !== 'BTCUSDT') {
+                compareSymbols = [{
+                    "symbol": "BINANCE:BTCUSDT",
+                    "position": "SameScale"
+                }];
+                
+                // 비교 모드일 때는 두 개의 볼륨 지표 추가
+                studies = [
+                    "Volume@tv-basicstudies",  // 현재 코인 볼륨
+                    {
+                        "id": "Volume@tv-basicstudies",
+                        "inputs": {},
+                        "styles": {
+                            "volume": {
+                                "color_0": "#3f51b5",  // 파란색 (하락)
+                                "color_1": "#ff4081",  // 분홍색 (상승)
+                                "transparency": 40
+                            }
+                        }
+                    }
+                ];
+            } else {
+                // 일반 모드일 때는 하나의 볼륨 지표
+                studies = ["Volume@tv-basicstudies"];
+            }
+            
+            // 새 차트 생성
+            widget = new TradingView.widget({
+                "width": "100%",
+                "height": "100%",
+                "symbol": tradingViewSymbol,
+                "interval": symbol === 'NASDAQ' ? "5" : "1",  // NASDAQ은 5분봉, 크립토는 1분봉
+                "timezone": "Asia/Seoul",
+                "theme": "dark",
+                "style": "1",  // Candlestick
+                "locale": "kr",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "allow_symbol_change": false,
+                "container_id": "tradingview-widget",
+                "hide_side_toolbar": isMobile ? true : false,  // 모바일에서는 사이드바 숨김
+                "hide_drawing_toolbar": isMobile ? true : false,  // 모바일에서는 그리기 도구 숨김
+                "hide_top_toolbar": false,
+                "hide_legend": isMobile ? true : false,  // 모바일에서만 레전드 숨김
+                "withdateranges": !isMobile,  // 모바일에서는 날짜 범위 선택 숨김
+                "details": false,  // 상세 정보 숨김 (겹침 방지)
+                "studies": studies,  // 동적으로 설정된 볼륨 지표
+                "studies_overrides": btcCompareEnabled && symbol !== 'BTCUSDT' ? {
+                    // 비교 모드일 때 - 현재 코인은 기본색, BTC는 파란/분홍
+                    "volume.volume.transparency": 30,
+                    "volume.volume.color.0": "#ef5350",  // 하락 빨간색
+                    "volume.volume.color.1": "#26a69a",  // 상승 청록색
+                    "volume.volume ma.color": "#FFD700",
+                    "volume.volume ma.transparency": 70,
+                    "volume.volume ma.linewidth": 2,
+                    "volume.options.priceScaleId": "volume",
+                    "volume@tv-basicstudies.height": 30,  // 볼륨 높이 30%
+                    "volume.palettes.volumePalette.colors.0.color": "#ef5350",
+                    "volume.palettes.volumePalette.colors.1.color": "#26a69a",
+                    "volume_1.volume.transparency": 40,
+                    "volume_1.volume.color.0": "#3f51b5",  // BTC 하락 파란색
+                    "volume_1.volume.color.1": "#ff4081",  // BTC 상승 분홍색
+                    "volume_1.options.priceScaleId": "volume_btc"
+                } : {
+                    // 일반 모드일 때
+                    "volume.volume.transparency": 30,
+                    "volume.volume.color.0": "#ef5350",  // 하락 빨간색
+                    "volume.volume.color.1": "#26a69a",  // 상승 청록색
+                    "volume.volume ma.color": "#FFD700",
+                    "volume.volume ma.transparency": 70,
+                    "volume.volume ma.linewidth": 2,
+                    "volume.options.priceScaleId": "volume",
+                    "volume@tv-basicstudies.height": 30,  // 볼륨 높이 30%
+                    "volume.palettes.volumePalette.colors.0.color": "#ef5350",
+                    "volume.palettes.volumePalette.colors.1.color": "#26a69a"
+                },
+                "compare_symbols": compareSymbols,  // 비교 심볼 추가
+                "show_popup_button": !isMobile,  // 모바일에서는 팝업 버튼 숨김
+                "popup_width": "1000",
+                "popup_height": "650"
+            });
+
+            // 버튼 활성화 상태 업데이트 (PC)
+            document.querySelectorAll('.symbol-btn').forEach(btn => {
+                btn.classList.remove('active');
+                let btnText = btn.textContent.replace('USDT', '');
+                if (symbol === 'NASDAQ' && btnText === 'NASDAQ') {
+                    btn.classList.add('active');
+                } else if (btnText === symbol.replace('USDT', '')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // 드롭다운 선택 상태 업데이트 (모바일)
+            const mobileSelect = document.getElementById('mobile-coin-select');
+            if (mobileSelect) {
+                mobileSelect.value = symbol;
+            }
+            
+            // 코인 이름 업데이트
+            updateCoinTitle(symbol);
+
+            // WebSocket 연결 업데이트 (NASDAQ 제외)
+            if (symbol !== 'NASDAQ') {
+                connectWebSocket(symbol.toLowerCase());
+            } else {
+                // NASDAQ인 경우 WebSocket 종료만
+                if (ws) {
+                    ws.close();
+                    ws = null;
+                }
+            }
+        }
+
+        function changeSymbol(symbol) {
+            currentSymbol = symbol;
+            // URL 업데이트 (페이지 새로고침 없이)
+            window.history.pushState({}, '', `?symbol=${symbol}`);
+            
+            // BTC 비교 버튼 표시/숨김 처리
+            const compareBtn = document.getElementById('compare-btn');
+            if (compareBtn) {
+                if (symbol === 'BTCUSDT') {
+                    compareBtn.style.display = 'none';
+                    btcCompareEnabled = false;
+                } else {
+                    compareBtn.style.display = 'inline-block';
+                }
+            }
+            
+            initChart(symbol);
+        }
+
+        function connectWebSocket(symbol) {
+            // 기존 WebSocket 연결 종료
+            if (ws) {
+                ws.close();
+            }
+
+            // Binance WebSocket 연결
+            ws = new WebSocket(`wss://fstream.binance.com/ws/${symbol}@ticker`);
+            
+            ws.onmessage = function(event) {
+                // WebSocket 데이터 수신 (현재 사용하지 않음)
+                const data = JSON.parse(event.data);
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        // 차트 높이 조절 함수
+        function adjustChartHeight(action) {
+            const chartWidget = document.getElementById('tradingview-widget');
+            if (!chartWidget) return;
+            
+            const currentHeight = chartWidget.offsetHeight;
+            let newHeight;
+            
+            if (action === 'increase') {
+                newHeight = Math.min(currentHeight + 50, 900);  // 50px씩 증가, 최대 900px
+            } else {
+                newHeight = Math.max(currentHeight - 50, 400);  // 50px씩 감소, 최소 400px
+            }
+            
+            chartWidget.style.height = newHeight + 'px';
+            
+            // localStorage에 저장
+            localStorage.setItem('chartHeight', newHeight);
+        }
+        
+        // 저장된 차트 높이 불러오기
+        function loadChartHeight() {
+            const savedHeight = localStorage.getItem('chartHeight');
+            if (savedHeight) {
+                const chartWidget = document.getElementById('tradingview-widget');
+                if (chartWidget) {
+                    chartWidget.style.height = savedHeight + 'px';
+                }
+            }
+        }
+        
+        // 코인 이름 업데이트 함수
+        function updateCoinTitle(symbol) {
+            const coinNameEl = document.getElementById('coin-name');
+            const coinSymbolEl = document.getElementById('coin-symbol');
+            
+            const coinNames = {
+                'BTCUSDT': 'Bitcoin / TetherUS',
+                'ETHUSDT': 'Ethereum / TetherUS',
+                'XRPUSDT': 'Ripple / TetherUS',
+                'SOLUSDT': 'Solana / TetherUS',
+                'AVAXUSDT': 'Avalanche / TetherUS',
+                'NASDAQ': 'NASDAQ 100 Index'
+            };
+            
+            if (coinNameEl) {
+                coinNameEl.textContent = coinNames[symbol] || symbol;
+            }
+            if (coinSymbolEl) {
+                coinSymbolEl.textContent = symbol;
+            }
+        }
+        
+        // BTC 비교 토글 함수
+        function toggleBTCCompare() {
+            btcCompareEnabled = !btcCompareEnabled;
+            const compareBtn = document.getElementById('compare-btn');
+            
+            if (btcCompareEnabled) {
+                compareBtn.classList.add('active');
+                compareBtn.innerHTML = '₿ BTC 비교 ON';
+            } else {
+                compareBtn.classList.remove('active');
+                compareBtn.innerHTML = '₿ BTC 비교';
+            }
+            
+            // 현재 심볼이 BTC가 아닌 경우에만 차트 재초기화
+            if (currentSymbol !== 'BTCUSDT') {
+                initChart(currentSymbol);
+            }
+        }
+        
+        // 페이지 로드 시 차트 초기화
+        window.addEventListener('DOMContentLoaded', function() {
+            initChart(currentSymbol);
+            
+            // 저장된 차트 높이 불러오기
+            setTimeout(loadChartHeight, 500);  // 차트 로드 후 적용
+            
+            // BTC인 경우 비교 버튼 숨기기
+            if (currentSymbol === 'BTCUSDT') {
+                const compareBtn = document.getElementById('compare-btn');
+                if (compareBtn) {
+                    compareBtn.style.display = 'none';
+                }
+            }
+        });
+        
+        // 화면 크기 변경 시 차트 재초기화 (모바일/PC 전환 대응)
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                const currentIsMobile = window.innerWidth <= 768;
+                const prevIsMobile = widget && widget._options && widget._options.hide_side_toolbar;
+                
+                // 모바일/PC 모드가 변경된 경우에만 차트 재초기화
+                if (currentIsMobile !== prevIsMobile) {
+                    initChart(currentSymbol);
+                }
+            }, 250);
+        });
+    </script>
+</body>
+</html>

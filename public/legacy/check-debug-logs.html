@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디버그 로그 체크 (Claude용)</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+        }
+        pre {
+            background: #111;
+            padding: 20px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0a0;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .warning { color: #ff0; }
+        .info { color: #0ff; }
+    </style>
+</head>
+<body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    <h1>🤖 디버그 로그 체크 (Claude가 읽을 수 있는 형식)</h1>
+    
+    <div>
+        <button onclick="getRecentLogs()">최근 로그 50개</button>
+        <button onclick="getErrorLogs()">에러 로그만</button>
+        <button onclick="getTodayLogs()">오늘 로그</button>
+        <button onclick="getBySource('fetch-historical')">Historical Fetch 로그</button>
+        <button onclick="getBySource('supabase-test')">연결 테스트 로그</button>
+    </div>
+    
+    <pre id="output">로그를 불러오려면 버튼을 클릭하세요...</pre>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        // Wait for config to load
+        function waitForConfig() {
+            return new Promise((resolve) => {
+                if (window.APP_CONFIG?.SUPABASE?.URL) {
+                    resolve();
+                } else {
+                    window.addEventListener('configLoaded', resolve);
+                }
+            });
+        }
+
+        await waitForConfig();
+        
+        // Use environment variables from config
+        const supabaseUrl = window.APP_CONFIG.SUPABASE.URL;
+        const supabaseKey = window.APP_CONFIG.SUPABASE.ANON_KEY;
+        
+        if (!supabaseUrl || !supabaseKey) {
+            console.error('❌ Supabase configuration not found');
+            document.getElementById('output').innerHTML = '<span class="error">❌ Supabase configuration not found. Please check your environment variables.</span>';
+            throw new Error('Missing Supabase configuration');
+        }
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        function formatLog(log) {
+            const time = new Date(log.created_at).toLocaleString('ko-KR');
+            const data = log.data ? JSON.stringify(log.data, null, 2) : '';
+            return `[${time}] [${log.level.toUpperCase()}] [${log.source}] ${log.message}${data ? '\nDATA: ' + data : ''}`;
+        }
+
+        window.getRecentLogs = async function() {
+            const output = document.getElementById('output');
+            output.textContent = 'Loading...';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('debug_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+                
+                if (error) throw error;
+                
+                output.innerHTML = `<h3>최근 로그 ${data.length}개</h3>\n`;
+                output.innerHTML += data.map(log => {
+                    const className = log.level;
+                    return `<span class="${className}">${formatLog(log)}</span>`;
+                }).join('\n\n');
+                
+            } catch (error) {
+                output.innerHTML = `<span class="error">ERROR: ${error.message}</span>`;
+            }
+        };
+
+        window.getErrorLogs = async function() {
+            const output = document.getElementById('output');
+            output.textContent = 'Loading...';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('debug_logs')
+                    .select('*')
+                    .eq('level', 'error')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+                
+                if (error) throw error;
+                
+                output.innerHTML = `<h3>에러 로그 ${data.length}개</h3>\n`;
+                output.innerHTML += data.map(log => {
+                    return `<span class="error">${formatLog(log)}</span>`;
+                }).join('\n\n');
+                
+            } catch (error) {
+                output.innerHTML = `<span class="error">ERROR: ${error.message}</span>`;
+            }
+        };
+
+        window.getTodayLogs = async function() {
+            const output = document.getElementById('output');
+            output.textContent = 'Loading...';
+            
+            try {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const { data, error } = await supabase
+                    .from('debug_logs')
+                    .select('*')
+                    .gte('created_at', today.toISOString())
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                output.innerHTML = `<h3>오늘 로그 ${data.length}개</h3>\n`;
+                output.innerHTML += data.map(log => {
+                    const className = log.level;
+                    return `<span class="${className}">${formatLog(log)}</span>`;
+                }).join('\n\n');
+                
+            } catch (error) {
+                output.innerHTML = `<span class="error">ERROR: ${error.message}</span>`;
+            }
+        };
+
+        window.getBySource = async function(source) {
+            const output = document.getElementById('output');
+            output.textContent = 'Loading...';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('debug_logs')
+                    .select('*')
+                    .eq('source', source)
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+                
+                if (error) throw error;
+                
+                output.innerHTML = `<h3>${source} 로그 ${data.length}개</h3>\n`;
+                output.innerHTML += data.map(log => {
+                    const className = log.level;
+                    return `<span class="${className}">${formatLog(log)}</span>`;
+                }).join('\n\n');
+                
+            } catch (error) {
+                output.innerHTML = `<span class="error">ERROR: ${error.message}</span>`;
+            }
+        };
+
+        // 페이지 로드시 최근 로그 자동 로드
+        window.addEventListener('DOMContentLoaded', () => {
+            getRecentLogs();
+        });
+    </script>
+</body>
+</html>

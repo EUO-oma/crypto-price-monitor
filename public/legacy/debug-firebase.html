@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 데이터 디버그</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+        }
+        pre {
+            background: #111;
+            padding: 20px;
+            border: 1px solid #0f0;
+            overflow: auto;
+            max-height: 600px;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Firebase 데이터 구조 확인</h1>
+    
+    <button onclick="checkFirebaseData()">Firebase 데이터 확인</button>
+    <button onclick="checkPricesStructure()">가격 데이터 구조 확인</button>
+    <button onclick="migrateDataStructure()">데이터 구조 마이그레이션</button>
+    
+    <pre id="output"></pre>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+        
+        let database;
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        database = firebase.database();
+        
+        const output = document.getElementById('output');
+        
+        function log(message, data = null) {
+            output.innerHTML += message + '\n';
+            if (data) {
+                output.innerHTML += JSON.stringify(data, null, 2) + '\n';
+            }
+            output.innerHTML += '\n';
+        }
+        
+        async function checkFirebaseData() {
+            output.innerHTML = '';
+            log('Firebase 전체 데이터 구조 확인 중...');
+            
+            try {
+                const snapshot = await database.ref('/').once('value');
+                const data = snapshot.val();
+                
+                if (!data) {
+                    log('데이터가 없습니다!', 'error');
+                    return;
+                }
+                
+                log('최상위 키들:', Object.keys(data));
+                
+                // prices 구조 확인
+                if (data.prices) {
+                    const pricesKeys = Object.keys(data.prices);
+                    log(`prices 하위 키 개수: ${pricesKeys.length}`);
+                    log('prices 첫 5개 키:', pricesKeys.slice(0, 5));
+                    
+                    // 첫 번째 항목 구조 확인
+                    const firstKey = pricesKeys[0];
+                    log(`첫 번째 항목 (${firstKey}) 구조:`, data.prices[firstKey]);
+                }
+                
+            } catch (error) {
+                log('에러:', error.message);
+            }
+        }
+        
+        async function checkPricesStructure() {
+            output.innerHTML = '';
+            log('가격 데이터 상세 구조 확인 중...');
+            
+            try {
+                const snapshot = await database.ref('prices').once('value');
+                const prices = snapshot.val();
+                
+                if (!prices) {
+                    log('prices 데이터가 없습니다!');
+                    return;
+                }
+                
+                // 데이터 구조 분석
+                const keys = Object.keys(prices);
+                log(`총 ${keys.length}개의 항목`);
+                
+                // 날짜 형식인지 확인
+                const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+                const isDateKeys = keys.every(key => datePattern.test(key));
+                
+                if (isDateKeys) {
+                    log('✅ 날짜 키 구조 (YYYY-MM-DD)');
+                    
+                    // 최근 날짜 데이터 확인
+                    const sortedDates = keys.sort((a, b) => b.localeCompare(a));
+                    const recentDate = sortedDates[0];
+                    log(`최근 날짜: ${recentDate}`);
+                    log('최근 날짜 데이터:', prices[recentDate]);
+                } else {
+                    log('❌ 날짜 키 구조가 아님');
+                    
+                    // 다른 구조인 경우
+                    const sampleKey = keys[0];
+                    const sampleData = prices[sampleKey];
+                    log(`샘플 키: ${sampleKey}`);
+                    log('샘플 데이터:', sampleData);
+                    
+                    // 플랫 구조인지 확인
+                    if (sampleData && sampleData.date) {
+                        log('📋 플랫 구조로 저장된 것으로 보임 (각 항목에 date 필드)');
+                    }
+                }
+                
+            } catch (error) {
+                log('에러:', error.message);
+            }
+        }
+        
+        async function migrateDataStructure() {
+            output.innerHTML = '';
+            log('데이터 구조 마이그레이션 시작...');
+            
+            try {
+                const snapshot = await database.ref('prices').once('value');
+                const prices = snapshot.val();
+                
+                if (!prices) {
+                    log('마이그레이션할 데이터가 없습니다!');
+                    return;
+                }
+                
+                const keys = Object.keys(prices);
+                const firstData = prices[keys[0]];
+                
+                // 현재 구조 확인
+                if (firstData && firstData.date) {
+                    log('플랫 구조에서 날짜 기반 구조로 마이그레이션...');
+                    
+                    const newStructure = {};
+                    
+                    // 데이터 재구성
+                    Object.values(prices).forEach(item => {
+                        if (item.date) {
+                            if (!newStructure[item.date]) {
+                                newStructure[item.date] = {};
+                            }
+                            
+                            // 심볼별로 구성
+                            const symbol = item.symbol || 'UNKNOWN';
+                            newStructure[item.date][symbol] = {
+                                symbol: symbol,
+                                date: item.date,
+                                high_price: item.btc_high || item.high_price || item.btc || 0,
+                                low_price: item.btc_low || item.low_price || item.btc || 0,
+                                price: item.btc || item.price || 0,
+                                updated_at: item.collected_at || item.updated_at || new Date().toISOString()
+                            };
+                            
+                            // ETH 데이터가 있으면
+                            if (item.eth) {
+                                newStructure[item.date]['ETHUSDT'] = {
+                                    symbol: 'ETHUSDT',
+                                    date: item.date,
+                                    high_price: item.eth_high || item.eth,
+                                    low_price: item.eth_low || item.eth,
+                                    price: item.eth,
+                                    updated_at: item.collected_at || new Date().toISOString()
+                                };
+                            }
+                            
+                            // SOL 데이터가 있으면
+                            if (item.sol) {
+                                newStructure[item.date]['SOLUSDT'] = {
+                                    symbol: 'SOLUSDT',
+                                    date: item.date,
+                                    high_price: item.sol_high || item.sol,
+                                    low_price: item.sol_low || item.sol,
+                                    price: item.sol,
+                                    updated_at: item.collected_at || new Date().toISOString()
+                                };
+                            }
+                        }
+                    });
+                    
+                    log('새 구조:', Object.keys(newStructure).slice(0, 3));
+                    
+                    // 확인
+                    if (confirm('정말로 데이터 구조를 마이그레이션하시겠습니까?')) {
+                        // 백업
+                        await database.ref('prices_backup').set(prices);
+                        log('✅ 백업 완료: prices_backup');
+                        
+                        // 새 구조로 덮어쓰기
+                        await database.ref('prices').set(newStructure);
+                        log('✅ 마이그레이션 완료!');
+                        log('price-history.html 페이지를 새로고침하세요.');
+                    }
+                    
+                } else {
+                    log('이미 올바른 구조입니다.');
+                }
+                
+            } catch (error) {
+                log('마이그레이션 에러:', error.message);
+            }
+        }
+    </script>
+</body>
+</html>

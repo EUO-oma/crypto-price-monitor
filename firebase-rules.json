@@ -1,0 +1,52 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    
+    "prices": {
+      ".read": true,
+      ".write": "auth != null || (data.exists() && data.child('apiKey').val() === newData.child('apiKey').val())",
+      "$crypto": {
+        ".validate": "newData.hasChildren(['price', 'timestamp', 'symbol'])",
+        "price": {
+          ".validate": "newData.isNumber() && newData.val() > 0"
+        },
+        "timestamp": {
+          ".validate": "newData.isNumber()"
+        },
+        "symbol": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "apiKey": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        }
+      }
+    },
+    
+    "alerts": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$userId": {
+        ".read": "$userId === auth.uid",
+        ".write": "$userId === auth.uid",
+        "$alertId": {
+          ".validate": "newData.hasChildren(['crypto', 'type', 'value', 'enabled'])"
+        }
+      }
+    },
+    
+    "users": {
+      ".read": "auth != null",
+      "$userId": {
+        ".read": "$userId === auth.uid",
+        ".write": "$userId === auth.uid",
+        ".validate": "newData.hasChildren(['email', 'createdAt'])"
+      }
+    },
+    
+    "config": {
+      ".read": true,
+      ".write": "auth != null && auth.token.admin === true"
+    }
+  }
+}

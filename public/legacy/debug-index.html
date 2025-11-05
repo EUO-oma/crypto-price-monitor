@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index.html 디버그</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+        }
+        .section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        .info { color: #60a5fa; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        pre {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .code-error {
+            background: #7f1d1d;
+            color: #fecaca;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Index.html JavaScript 디버그</h1>
+    
+    <div class="section">
+        <h2>1. 브라우저 콘솔 에러</h2>
+        <button onclick="checkConsoleErrors()">콘솔 에러 확인</button>
+        <div id="console-errors"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. 전역 변수 상태</h2>
+        <button onclick="checkGlobalVariables()">전역 변수 검사</button>
+        <div id="global-vars"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. 함수 존재 여부</h2>
+        <button onclick="checkFunctions()">함수 검사</button>
+        <div id="functions"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. Supabase 상태</h2>
+        <button onclick="checkSupabaseStatus()">Supabase 검사</button>
+        <div id="supabase-status"></div>
+    </div>
+    
+    <div class="section">
+        <h2>5. 문법 오류 검사</h2>
+        <button onclick="testSyntax()">문법 테스트</button>
+        <div id="syntax-test"></div>
+    </div>
+    
+    <div class="section">
+        <h2>6. Index.html 로드 테스트</h2>
+        <button onclick="loadIndexPage()">Index.html 로드</button>
+        <button onclick="openIndexInNewTab()">새 탭에서 열기</button>
+        <iframe id="index-frame" src="" style="width: 100%; height: 400px; border: 1px solid #444; margin-top: 20px; display: none;"></iframe>
+        <div id="load-result"></div>
+    </div>
+
+    <script>
+        // 콘솔 에러 수집
+        let consoleErrors = [];
+        window.addEventListener('error', (event) => {
+            consoleErrors.push({
+                message: event.message,
+                source: event.filename,
+                line: event.lineno,
+                column: event.colno,
+                error: event.error
+            });
+        });
+
+        // 1. 콘솔 에러 확인
+        function checkConsoleErrors() {
+            const result = document.getElementById('console-errors');
+            
+            if (consoleErrors.length === 0) {
+                result.innerHTML = '<p class="success">✅ 콘솔 에러 없음</p>';
+            } else {
+                let html = '<p class="error">❌ 콘솔 에러 발견:</p>';
+                consoleErrors.forEach((err, i) => {
+                    html += `<div class="code-error">
+                        <strong>에러 ${i + 1}:</strong> ${err.message}<br>
+                        <small>파일: ${err.source}<br>
+                        위치: 라인 ${err.line}, 컬럼 ${err.column}</small>
+                    </div>`;
+                });
+                result.innerHTML = html;
+            }
+        }
+        
+        // 2. 전역 변수 확인
+        function checkGlobalVariables() {
+            const result = document.getElementById('global-vars');
+            
+            const varsToCheck = [
+                'supabase',
+                'window.supabase',
+                'window.supabaseClient',
+                'LinksModule',
+                'binanceBtcWs',
+                'binanceEthWs',
+                'binanceSolWs',
+                'binanceXrpWs',
+                'binanceAvaxWs'
+            ];
+            
+            let html = '<h3>전역 변수 상태:</h3><pre>';
+            varsToCheck.forEach(varName => {
+                try {
+                    const value = eval(varName);
+                    const type = typeof value;
+                    const exists = value !== undefined;
+                    html += `${varName}: ${exists ? '✅' : '❌'} (${type})\n`;
+                } catch (e) {
+                    html += `${varName}: ❌ (접근 불가)\n`;
+                }
+            });
+            html += '</pre>';
+            
+            result.innerHTML = html;
+        }
+        
+        // 3. 함수 확인
+        function checkFunctions() {
+            const result = document.getElementById('functions');
+            
+            const functionsToCheck = [
+                'loadLinksFromSupabase',
+                'openChatPopup',
+                'connectBinance',
+                'updateTime',
+                'savePriceHistory',
+                'loadBTCHistory',
+                'loadETHHistory',
+                'loadSOLHistory'
+            ];
+            
+            let html = '<h3>함수 존재 여부:</h3><pre>';
+            functionsToCheck.forEach(funcName => {
+                try {
+                    const func = window[funcName];
+                    const exists = typeof func === 'function';
+                    html += `${funcName}: ${exists ? '✅' : '❌'}\n`;
+                } catch (e) {
+                    html += `${funcName}: ❌ (에러)\n`;
+                }
+            });
+            html += '</pre>';
+            
+            result.innerHTML = html;
+        }
+        
+        // 4. Supabase 상태 확인
+        async function checkSupabaseStatus() {
+            const result = document.getElementById('supabase-status');
+            result.innerHTML = '<p class="info">🔄 Supabase 확인 중...</p>';
+            
+            // Supabase 라이브러리 로드 확인
+            let html = '<h3>Supabase 상태:</h3>';
+            
+            if (!window.supabase) {
+                html += '<p class="error">❌ Supabase 라이브러리가 로드되지 않음</p>';
+            } else {
+                html += '<p class="success">✅ Supabase 라이브러리 로드됨</p>';
+                
+                try {
+                    const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                    
+                    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    html += '<p class="success">✅ Supabase 클라이언트 생성 가능</p>';
+                    
+                    // 연결 테스트
+                    const { data, error } = await supabaseClient
+                        .from('links')
+                        .select('count', { count: 'exact', head: true });
+                    
+                    if (error) {
+                        html += `<p class="error">❌ 데이터베이스 연결 실패: ${error.message}</p>`;
+                    } else {
+                        html += '<p class="success">✅ 데이터베이스 연결 성공</p>';
+                    }
+                } catch (e) {
+                    html += `<p class="error">❌ Supabase 초기화 실패: ${e.message}</p>`;
+                }
+            }
+            
+            result.innerHTML = html;
+        }
+        
+        // 5. 문법 테스트
+        function testSyntax() {
+            const result = document.getElementById('syntax-test');
+            
+            // 일반적인 문법 오류 패턴 테스트
+            const tests = [
+                {
+                    name: '따옴표 매칭 테스트',
+                    code: `const test = 'hello world'; return true;`
+                },
+                {
+                    name: '중첩 따옴표 테스트',
+                    code: `const test = "hello 'world'"; return true;`
+                },
+                {
+                    name: '템플릿 리터럴 테스트',
+                    code: `const test = \`hello \${1 + 1} world\`; return test === 'hello 2 world';`
+                },
+                {
+                    name: '함수 정의 테스트',
+                    code: `function test() { return true; } return test();`
+                },
+                {
+                    name: '비동기 함수 테스트',
+                    code: `async function test() { return Promise.resolve(true); } return true;`
+                }
+            ];
+            
+            let html = '<h3>문법 테스트 결과:</h3>';
+            tests.forEach(test => {
+                try {
+                    const func = new Function(test.code);
+                    const result = func();
+                    html += `<p class="success">✅ ${test.name}: ${result ? '성공' : '실패'}</p>`;
+                } catch (e) {
+                    html += `<p class="error">❌ ${test.name}: ${e.message}</p>`;
+                }
+            });
+            
+            result.innerHTML = html;
+        }
+        
+        // 6. Index.html 로드
+        function loadIndexPage() {
+            const iframe = document.getElementById('index-frame');
+            const result = document.getElementById('load-result');
+            
+            iframe.style.display = 'block';
+            iframe.src = 'index.html';
+            
+            result.innerHTML = '<p class="info">🔄 Index.html 로딩 중... (개발자 도구 콘솔을 확인하세요)</p>';
+            
+            // iframe 로드 완료 감지
+            iframe.onload = () => {
+                result.innerHTML = '<p class="success">✅ Index.html 로드 완료</p>';
+                
+                // iframe 내부 에러 확인 시도
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const errors = iframeDoc.querySelectorAll('.error');
+                    if (errors.length > 0) {
+                        result.innerHTML += `<p class="warning">⚠️ 페이지 내 에러 요소 ${errors.length}개 발견</p>`;
+                    }
+                } catch (e) {
+                    console.log('iframe 접근 제한');
+                }
+            };
+            
+            iframe.onerror = (e) => {
+                result.innerHTML = `<p class="error">❌ Index.html 로드 실패: ${e.message || '알 수 없는 오류'}</p>`;
+            };
+        }
+        
+        function openIndexInNewTab() {
+            window.open('index.html', '_blank');
+        }
+        
+        // 페이지 로드 시 기본 검사
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('디버그 페이지 준비 완료');
+        });
+    </script>
+</body>
+</html>

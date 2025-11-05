@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW Mode 5 - Target Alert</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .mode-number {
+            position: absolute;
+            bottom: 2px;
+            font-size: 10px;
+            color: #444;
+        }
+        
+        .alert-container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .coin-alert {
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            background: #0a0a0a;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .coin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .coin-name {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .current-price {
+            font-size: 28px;
+            font-weight: 500;
+        }
+        
+        .price-targets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .target-box {
+            padding: 10px;
+            border: 1px solid #222;
+            border-radius: 4px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .target-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .target-price {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .target-diff {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        /* Alert states */
+        .alert-buy-zone {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: #4caf50;
+        }
+        
+        .alert-buy-zone::before {
+            content: 'BUY ZONE';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4caf50;
+            color: #000;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 4px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        .alert-near-low {
+            background: rgba(255, 152, 0, 0.1);
+            border-color: #ff9800;
+        }
+        
+        .alert-near-low::before {
+            content: 'NEAR LOW';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff9800;
+            color: #000;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+        
+        .position-indicator {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #111;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .position-low {
+            color: #ff9800;
+        }
+        
+        .position-high {
+            color: #2196f3;
+        }
+        
+        .position-bar {
+            flex: 1;
+            height: 8px;
+            background: #222;
+            margin: 0 10px;
+            border-radius: 4px;
+            position: relative;
+        }
+        
+        .position-marker {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: left 0.3s ease;
+        }
+        
+        /* Size variations */
+        .size-xs { font-size: 12px; }
+        .size-xs .current-price { font-size: 20px; }
+        .size-s { font-size: 14px; }
+        .size-s .current-price { font-size: 24px; }
+        .size-m { font-size: 16px; }
+        .size-m .current-price { font-size: 28px; }
+        .size-l { font-size: 18px; }
+        .size-l .current-price { font-size: 32px; }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .alert-container {
+                gap: 20px;
+                max-width: 100%;
+            }
+            
+            .coin-alert {
+                padding: 15px;
+                border-radius: 6px;
+            }
+            
+            .coin-header {
+                margin-bottom: 15px;
+            }
+            
+            .coin-name {
+                font-size: 18px;
+            }
+            
+            .current-price {
+                font-size: 24px;
+            }
+            
+            .price-targets {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .target-box {
+                padding: 8px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .target-label {
+                text-align: left;
+                margin-bottom: 0;
+                flex: 1;
+            }
+            
+            .target-price {
+                font-size: 14px;
+                margin-bottom: 0;
+                margin: 0 10px;
+            }
+            
+            .target-diff {
+                font-size: 11px;
+                text-align: right;
+                min-width: 60px;
+            }
+            
+            .controls {
+                top: 10px;
+                right: 10px;
+                gap: 8px;
+            }
+            
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                border-radius: 8px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .position-indicator {
+                padding: 8px;
+                margin-top: 8px;
+            }
+            
+            .position-bar {
+                height: 6px;
+            }
+            
+            .position-marker {
+                width: 14px;
+                height: 14px;
+            }
+            
+            /* Adjust sizes for mobile */
+            .size-xs { font-size: 11px; }
+            .size-xs .current-price { font-size: 18px; }
+            .size-s { font-size: 13px; }
+            .size-s .current-price { font-size: 20px; }
+            .size-m { font-size: 14px; }
+            .size-m .current-price { font-size: 24px; }
+            .size-l { font-size: 16px; }
+            .size-l .current-price { font-size: 28px; }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .alert-container {
+                gap: 15px;
+            }
+            
+            .coin-alert {
+                padding: 12px;
+            }
+            
+            .coin-name {
+                font-size: 16px;
+            }
+            
+            .current-price {
+                font-size: 20px;
+            }
+            
+            .target-box {
+                padding: 6px;
+            }
+            
+            .target-label {
+                font-size: 10px;
+            }
+            
+            .target-price {
+                font-size: 13px;
+            }
+            
+            .target-diff {
+                font-size: 10px;
+                min-width: 50px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .mode-number {
+                font-size: 8px;
+            }
+            
+            .position-indicator {
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .coin-alert {
+                padding: 10px;
+            }
+            
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .controls {
+                gap: 4px;
+            }
+            
+            .coin-alert::before {
+                font-size: 8px;
+                padding: 2px 6px;
+            }
+            
+            .alert-near-low::before {
+                font-size: 8px;
+                padding: 2px 6px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn:active {
+                transform: scale(0.9);
+            }
+            
+            .target-box {
+                transition: background-color 0.1s ease;
+            }
+            
+            .target-box:active {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+        }
+    </style>
+</head>
+<body class="size-m">
+    <div class="controls">
+        <button class="control-btn" onclick="location.href='bw-mode4.html'" title="이전">←</button>
+        <button class="control-btn" onclick="location.href='bw-mode6.html'" title="다음">→</button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+    </div>
+    
+    <div class="alert-container">
+        <div class="coin-alert" id="btc-alert">
+            <div class="coin-header">
+                <span class="coin-name">BTC</span>
+                <span class="current-price" id="btc-price">------</span>
+            </div>
+            <div class="price-targets">
+                <div class="target-box">
+                    <div class="target-label">전날 최고가</div>
+                    <div class="target-price" id="btc-high">------</div>
+                    <div class="target-diff" id="btc-high-diff">------</div>
+                </div>
+                <div class="target-box">
+                    <div class="target-label">전날 최저가</div>
+                    <div class="target-price" id="btc-low" style="color: #ff9800;">------</div>
+                    <div class="target-diff" id="btc-low-diff">------</div>
+                </div>
+                <div class="target-box">
+                    <div class="target-label">최저가 -5%</div>
+                    <div class="target-price" id="btc-low-5" style="color: #4caf50;">------</div>
+                    <div class="target-diff" id="btc-low-5-diff">------</div>
+                </div>
+            </div>
+            <div class="position-indicator">
+                <span class="position-low">Low</span>
+                <div class="position-bar">
+                    <div class="position-marker" id="btc-position"></div>
+                </div>
+                <span class="position-high">High</span>
+            </div>
+        </div>
+        
+        <div class="coin-alert" id="eth-alert">
+            <div class="coin-header">
+                <span class="coin-name">ETH</span>
+                <span class="current-price" id="eth-price">------</span>
+            </div>
+            <div class="price-targets">
+                <div class="target-box">
+                    <div class="target-label">전날 최고가</div>
+                    <div class="target-price" id="eth-high">------</div>
+                    <div class="target-diff" id="eth-high-diff">------</div>
+                </div>
+                <div class="target-box">
+                    <div class="target-label">전날 최저가</div>
+                    <div class="target-price" id="eth-low" style="color: #ff9800;">------</div>
+                    <div class="target-diff" id="eth-low-diff">------</div>
+                </div>
+                <div class="target-box">
+                    <div class="target-label">최저가 -5%</div>
+                    <div class="target-price" id="eth-low-5" style="color: #4caf50;">------</div>
+                    <div class="target-diff" id="eth-low-5-diff">------</div>
+                </div>
+            </div>
+            <div class="position-indicator">
+                <span class="position-low">Low</span>
+                <div class="position-bar">
+                    <div class="position-marker" id="eth-position"></div>
+                </div>
+                <span class="position-high">High</span>
+            </div>
+        </div>
+        
+        <div class="coin-alert" id="sol-alert">
+            <div class="coin-header">
+                <span class="coin-name">SOL</span>
+                <span class="current-price" id="sol-price">------</span>
+            </div>
+            <div class="price-targets">
+                <div class="target-box">
+                    <div class="target-label">전날 최고가</div>
+                    <div class="target-price" id="sol-high">------</div>
+                    <div class="target-diff" id="sol-high-diff">------</div>
+                </div>
+                <div class="target-box">
+                    <div class="target-label">전날 최저가</div>
+                    <div class="target-price" id="sol-low" style="color: #ff9800;">------</div>
+                    <div class="target-diff" id="sol-low-diff">------</div>
+                </div>
+                <div class="target-box">
+                    <div class="target-label">최저가 -5%</div>
+                    <div class="target-price" id="sol-low-5" style="color: #4caf50;">------</div>
+                    <div class="target-diff" id="sol-low-5-diff">------</div>
+                </div>
+            </div>
+            <div class="position-indicator">
+                <span class="position-low">Low</span>
+                <div class="position-bar">
+                    <div class="position-marker" id="sol-position"></div>
+                </div>
+                <span class="position-high">High</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const sizes = ['xs', 's', 'm', 'l'];
+        let currentSizeIndex = 2;
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            localStorage.setItem('bwMode5Size', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwMode5Size');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-m');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        function formatNumber(num) {
+            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        
+        function updateCoin(coin, data) {
+            const currentPrice = parseFloat(data.c);
+            const low24h = parseFloat(data.l);
+            const high24h = parseFloat(data.h);
+            
+            // Calculate targets
+            const low5percent = low24h * 0.95;
+            
+            // Update display
+            document.getElementById(`${coin}-price`).textContent = formatNumber(currentPrice);
+            document.getElementById(`${coin}-high`).textContent = formatNumber(high24h);
+            document.getElementById(`${coin}-low`).textContent = formatNumber(low24h);
+            document.getElementById(`${coin}-low-5`).textContent = formatNumber(low5percent);
+            
+            // Calculate differences
+            const highDiff = ((currentPrice - high24h) / high24h * 100).toFixed(2);
+            const lowDiff = ((currentPrice - low24h) / low24h * 100).toFixed(2);
+            const low5Diff = ((currentPrice - low5percent) / low5percent * 100).toFixed(2);
+            
+            document.getElementById(`${coin}-high-diff`).textContent = `${highDiff > 0 ? '+' : ''}${highDiff}%`;
+            document.getElementById(`${coin}-low-diff`).textContent = `${lowDiff > 0 ? '+' : ''}${lowDiff}%`;
+            document.getElementById(`${coin}-low-5-diff`).textContent = `${low5Diff > 0 ? '+' : ''}${low5Diff}%`;
+            
+            // Update position indicator
+            const position = ((currentPrice - low24h) / (high24h - low24h)) * 100;
+            const marker = document.getElementById(`${coin}-position`);
+            marker.style.left = `${Math.max(0, Math.min(100, position))}%`;
+            
+            // Update alert status
+            const alertBox = document.getElementById(`${coin}-alert`);
+            alertBox.classList.remove('alert-buy-zone', 'alert-near-low');
+            
+            if (currentPrice <= low5percent) {
+                alertBox.classList.add('alert-buy-zone');
+            } else if (currentPrice <= low24h * 1.02) { // Within 2% of low
+                alertBox.classList.add('alert-near-low');
+            }
+        }
+        
+        function connectBinanceWebSocket(symbol, coin) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                updateCoin(coin, data);
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, coin);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Initialize WebSockets
+        function initializeWebSockets() {
+            connectBinanceWebSocket('BTCUSDT', 'btc');
+            connectBinanceWebSocket('ETHUSDT', 'eth');
+            connectBinanceWebSocket('SOLUSDT', 'sol');
+        }
+        
+        // Fallback API
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const coins = ['btc', 'eth', 'sol'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                results.forEach((data, index) => {
+                    if (data && data.lastPrice) {
+                        updateCoin(coins[index], {
+                            c: data.lastPrice,
+                            l: data.lowPrice,
+                            h: data.highPrice
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        // Initialize
+        initializeWebSockets();
+        setTimeout(fetchPricesAPI, 1000);
+    </script>
+    <script src="bw-navigation.js"></script>
+</body>
+</html>

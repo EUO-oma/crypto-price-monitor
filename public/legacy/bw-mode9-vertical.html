@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW Mode 9 - Vertical</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Main container */
+        .container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        /* Each coin section */
+        .coin-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        /* Coin label */
+        .coin-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.5);
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 3px 8px;
+            border-radius: 4px;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Color bars */
+        .color-bar {
+            flex: 1;
+            width: 100%;
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+        
+        /* Decimal separator */
+        .decimal-separator {
+            width: 100%;
+            height: 2px;
+            background-color: rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* Number to color mapping */
+        .color-0 { background-color: #808080; } /* 회색 - Gray */
+        .color-1 { background-color: #FFFFFF; } /* 흰색 - White */
+        .color-2 { background-color: #FF1744; } /* 빨강 - Bright Red */
+        .color-3 { background-color: #FF8C00; } /* 주황 - Dark Orange */
+        .color-4 { background-color: #FFFF00; } /* 노랑 - Yellow */
+        .color-5 { background-color: #90EE90; } /* 초록 - Light Green */
+        .color-6 { background-color: #5DADE2; } /* 하늘색 - Sky Blue */
+        .color-7 { background-color: #00008B; } /* 남청색 - Dark Blue */
+        .color-8 { background-color: #8B00FF; } /* 보라 - Violet */
+        .color-9 { background-color: #000000; } /* 검정 - Black */
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 18px;
+            color: #666;
+        }
+        
+        /* Dividers between coins */
+        .divider {
+            width: 1px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .nav-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+            
+            .coin-label {
+                font-size: 12px;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="bw-mode9-layouts.html" class="nav-btn" title="레이아웃">⋮</a>
+        <a href="bw-mode9.html" class="nav-btn" title="가로">━</a>
+        <a href="bw-mode9-card.html" class="nav-btn" title="카드">◈</a>
+        <a href="bw-mode9-grid.html" class="nav-btn" title="그리드">⚏</a>
+    </div>
+    
+    <div class="container">
+        <!-- BTC Section -->
+        <div class="coin-section">
+            <div class="coin-label">BTC</div>
+            <div id="btc-bars" class="loading">Loading BTC...</div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- ETH Section -->
+        <div class="coin-section">
+            <div class="coin-label">ETH</div>
+            <div id="eth-bars" class="loading">Loading ETH...</div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- SOL Section -->
+        <div class="coin-section">
+            <div class="coin-label">SOL</div>
+            <div id="sol-bars" class="loading">Loading SOL...</div>
+        </div>
+    </div>
+    
+    <script>
+        // WebSocket connections
+        let btcWs, ethWs, solWs;
+        let previousPrices = {
+            btc: '',
+            eth: '',
+            sol: ''
+        };
+        
+        function createColorBars(priceStr, coinType) {
+            const [integerPart, decimalPart] = priceStr.split('.');
+            const allDigits = integerPart + (decimalPart || '');
+            const hasDecimal = decimalPart !== undefined;
+            
+            let barsHtml = '';
+            const totalDigits = allDigits.length;
+            const decimalPosition = integerPart.length;
+            
+            for (let i = 0; i < totalDigits; i++) {
+                const digit = allDigits[i];
+                barsHtml += `<div class="color-bar color-${digit}"></div>`;
+                
+                // Add decimal separator after integer part
+                if (hasDecimal && i === decimalPosition - 1) {
+                    barsHtml += '<div class="decimal-separator"></div>';
+                }
+            }
+            
+            previousPrices[coinType] = allDigits;
+            return barsHtml;
+        }
+        
+        function connectBinanceWebSocket(symbol, elementId, coinType) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c);
+                const priceStr = price.toFixed(2);
+                
+                document.getElementById(elementId).innerHTML = createColorBars(priceStr, coinType);
+                document.getElementById(elementId).classList.remove('loading');
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => connectBinanceWebSocket(symbol, elementId, coinType), 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Fallback: Fetch prices via API
+        async function fetchPrices() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const url = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                data.forEach(ticker => {
+                    const price = parseFloat(ticker.lastPrice);
+                    const priceStr = price.toFixed(2);
+                    
+                    if (ticker.symbol === 'BTCUSDT') {
+                        document.getElementById('btc-bars').innerHTML = createColorBars(priceStr, 'btc');
+                        document.getElementById('btc-bars').classList.remove('loading');
+                    } else if (ticker.symbol === 'ETHUSDT') {
+                        document.getElementById('eth-bars').innerHTML = createColorBars(priceStr, 'eth');
+                        document.getElementById('eth-bars').classList.remove('loading');
+                    } else if (ticker.symbol === 'SOLUSDT') {
+                        document.getElementById('sol-bars').innerHTML = createColorBars(priceStr, 'sol');
+                        document.getElementById('sol-bars').classList.remove('loading');
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            // Connect WebSockets
+            btcWs = connectBinanceWebSocket('BTCUSDT', 'btc-bars', 'btc');
+            ethWs = connectBinanceWebSocket('ETHUSDT', 'eth-bars', 'eth');
+            solWs = connectBinanceWebSocket('SOLUSDT', 'sol-bars', 'sol');
+            
+            // Initial fetch
+            fetchPrices();
+            
+            // Backup fetching every 10 seconds
+            setInterval(fetchPrices, 10000);
+        });
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (btcWs) btcWs.close();
+            if (ethWs) ethWs.close();
+            if (solWs) solWs.close();
+        });
+    </script>
+    <script src="bw-navigation.js"></script>
+</body>
+</html>

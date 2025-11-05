@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Playlist Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .player-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+        }
+
+        .header {
+            padding: 20px;
+            background: #111;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            background: linear-gradient(135deg, #ff0000 0%, #ff4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .settings-btn {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-btn:hover {
+            background: #444;
+            border-color: #666;
+            transform: translateY(-1px);
+        }
+
+        .video-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+        }
+
+        #player {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            background: #1a1a1a;
+            padding: 15px 20px;
+            border-top: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .control-btn {
+            background: #333;
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: #444;
+            transform: scale(1.05);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #666;
+            transform: scale(1.1);
+        }
+
+        /* Fullscreen styles */
+        .container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+        }
+
+        .container.fullscreen .playlist-sidebar {
+            display: none;
+        }
+
+        .container.fullscreen .header {
+            display: none;
+        }
+
+        .container.fullscreen .controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 26, 26, 0.9);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .container.fullscreen:hover .controls {
+            opacity: 1;
+        }
+
+        .container.fullscreen .fullscreen-btn {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .container.fullscreen:hover .fullscreen-btn {
+            opacity: 1;
+        }
+
+        .now-playing {
+            flex: 1;
+            text-align: center;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .now-playing .title {
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        /* Playlist Dropdown Styles */
+        .playlist-dropdown {
+            position: relative;
+            margin-left: auto;
+        }
+
+        .playlist-dropdown-toggle {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            min-width: 200px;
+            justify-content: space-between;
+        }
+
+        .playlist-dropdown-toggle:hover {
+            background: #444;
+            border-color: #666;
+        }
+
+        .playlist-dropdown-toggle i {
+            transition: transform 0.3s;
+        }
+
+        .playlist-dropdown.active .playlist-dropdown-toggle i {
+            transform: rotate(180deg);
+        }
+
+        .playlist-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 450px;
+            max-width: 90vw;
+            max-height: 500px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-top: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .playlist-dropdown.active .playlist-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .playlist-header {
+            padding: 20px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+        }
+
+        .playlist-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .playlist-tab {
+            background: #222;
+            border: 1px solid #333;
+            color: #888;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .playlist-tab.active {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #fff;
+        }
+
+        .playlist-tab:hover {
+            background: #333;
+            color: #fff;
+        }
+
+        .playlist-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .playlist-item:hover {
+            background: #222;
+            border-color: #444;
+        }
+
+        .playlist-item.active {
+            background: #ff0000;
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+            border-color: #ff0000;
+        }
+
+        .playlist-item-thumbnail {
+            width: 60px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .playlist-item-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .playlist-item-title {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .playlist-item-channel {
+            font-size: 11px;
+            color: #888;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .playlist-item-duration {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 2px solid #333;
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 1.2em;
+            }
+
+            .controls {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .control-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .playlist-dropdown {
+                position: static;
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .playlist-dropdown-toggle {
+                width: 100%;
+            }
+
+            .playlist-dropdown-menu {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                border-radius: 20px 20px 0 0;
+                max-height: 70vh;
+            }
+        }
+
+        /* Custom scrollbar */
+        .playlist-items::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .playlist-items::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        .playlist-items::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .playlist-items::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+        
+        /* Custom scrollbar for playlist tabs */
+        .playlist-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .playlist-tabs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .playlist-tabs::-webkit-scrollbar-thumb {
+            background: #666;
+            border-radius: 2px;
+        }
+
+        .playlist-tabs::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="player-section">
+            <div class="header">
+                <h1>YouTube Playlist Player</h1>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <div class="playlist-dropdown" id="playlist-dropdown">
+                        <button class="playlist-dropdown-toggle" onclick="togglePlaylistDropdown()">
+                            <span id="current-playlist-name">재생목록 선택</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="playlist-dropdown-menu">
+                            <div class="playlist-header">
+                                <h3 style="margin-bottom: 10px; font-size: 16px;">재생목록</h3>
+                                <div class="playlist-tabs" id="playlist-tabs">
+                                    <div class="loading">재생목록 로딩 중</div>
+                                </div>
+                            </div>
+                            <div class="playlist-items" id="playlist-items">
+                                <div class="loading">동영상 목록을 불러오는 중...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="https://euo.netlify.app/youtube-playlist-gallery.html" class="settings-btn" target="_blank">
+                        <span>⚙️</span>
+                        <span>설정</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="video-container">
+                <div id="player"></div>
+                <button class="fullscreen-btn" id="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" id="prev-btn" onclick="playPrevious()">⏮️ 이전</button>
+                <button class="control-btn" id="play-pause-btn" onclick="togglePlayPause()">⏸️ 일시정지</button>
+                <button class="control-btn" id="next-btn" onclick="playNext()">다음 ⏭️</button>
+                <div class="now-playing">
+                    <div class="title" id="now-playing-title">재생목록을 불러오는 중...</div>
+                    <div class="playlist" id="now-playing-playlist"></div>
+                </div>
+                <button class="control-btn" id="shuffle-btn" onclick="toggleShuffle()">🔀 셔플</button>
+                <button class="control-btn" id="repeat-btn" onclick="toggleRepeat()">🔁 반복</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
+    <script>
+        // Global variables
+        let player;
+        let currentPlaylistId = null;
+        let currentVideoIndex = 0;
+        let playlists = {};
+        let currentPlaylist = [];
+        let isShuffled = false;
+        let repeatMode = 'none'; // none, one, all
+        let shuffledIndices = [];
+        
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // YouTube player ready callback
+        function onYouTubeIframeAPIReady() {
+            // Player will be created after playlists are loaded
+        }
+
+        // Create YouTube player
+        function createPlayer(videoId) {
+            if (player) {
+                player.destroy();
+            }
+            
+            player = new YT.Player('player', {
+                height: '100%',
+                width: '100%',
+                videoId: videoId,
+                playerVars: {
+                    autoplay: 1,
+                    controls: 1,
+                    modestbranding: 1,
+                    rel: 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            event.target.playVideo();
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.ENDED) {
+                handleVideoEnd();
+            } else if (event.data == YT.PlayerState.PLAYING) {
+                document.getElementById('play-pause-btn').textContent = '⏸️ 일시정지';
+            } else if (event.data == YT.PlayerState.PAUSED) {
+                document.getElementById('play-pause-btn').textContent = '▶️ 재생';
+            }
+        }
+
+        function onPlayerError(event) {
+            console.error('Player error:', event.data);
+            // Skip to next video on error
+            playNext();
+        }
+
+        // Handle video end
+        function handleVideoEnd() {
+            if (repeatMode === 'one') {
+                player.seekTo(0);
+                player.playVideo();
+            } else if (repeatMode === 'all' || currentVideoIndex < currentPlaylist.length - 1) {
+                playNext();
+            } else if (repeatMode === 'all' && currentVideoIndex >= currentPlaylist.length - 1) {
+                currentVideoIndex = 0;
+                playVideo(currentVideoIndex);
+            }
+        }
+
+        // Load playlists from Supabase
+        async function loadPlaylists() {
+            try {
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .eq('category', 'youtube-playlist')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                console.log('Loaded links from database:', data.length);
+                console.log('Raw data:', data);
+                
+                // Group by playlist
+                playlists = {};
+                data.forEach(link => {
+                    let metadata = {};
+                    try {
+                        metadata = JSON.parse(link.description || '{}');
+                    } catch (e) {
+                        console.error('Error parsing metadata for link:', link.name, e);
+                        metadata = { playlist_id: 'default', playlist_name: 'Unknown Playlist' };
+                    }
+                    
+                    const playlistId = metadata.playlist_id || 'default';
+                    const playlistName = metadata.playlist_name || 'Unknown Playlist';
+                    
+                    // Log each playlist being processed
+                    console.log(`Processing link: ${link.name}, Playlist: ${playlistName} (${playlistId})`);
+                    
+                    if (!playlists[playlistId]) {
+                        playlists[playlistId] = {
+                            name: playlistName,
+                            videos: []
+                        };
+                    }
+                    
+                    playlists[playlistId].videos.push({
+                        id: link.id,
+                        title: link.name,
+                        url: link.url,
+                        video_id: metadata.video_id || extractVideoId(link.url),
+                        channel_name: metadata.channel_name || metadata.channel_title || '',
+                        thumbnail_url: metadata.thumbnail_url || `https://img.youtube.com/vi/${metadata.video_id || extractVideoId(link.url)}/mqdefault.jpg`,
+                        position: link.position
+                    });
+                });
+                
+                // Sort videos by position
+                Object.keys(playlists).forEach(playlistId => {
+                    playlists[playlistId].videos.sort((a, b) => a.position - b.position);
+                });
+                
+                // Sort playlists by name for consistent ordering
+                const sortedPlaylistIds = Object.keys(playlists).sort((a, b) => 
+                    playlists[a].name.localeCompare(playlists[b].name, 'ko')
+                );
+                
+                console.log('Grouped playlists:', playlists);
+                console.log('Playlist IDs:', Object.keys(playlists));
+                console.log('Sorted Playlist IDs:', sortedPlaylistIds);
+                console.log('Playlist names:', sortedPlaylistIds.map(id => playlists[id].name));
+                
+                displayPlaylistTabs(sortedPlaylistIds);
+                
+                // Load first playlist
+                if (sortedPlaylistIds.length > 0) {
+                    loadPlaylist(sortedPlaylistIds[0]);
+                } else {
+                    document.getElementById('playlist-items').innerHTML = 
+                        '<div class="loading">재생목록이 없습니다</div>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading playlists:', error);
+                document.getElementById('playlist-items').innerHTML = 
+                    '<div class="loading">재생목록 로드 실패</div>';
+            }
+        }
+
+        // Extract video ID from YouTube URL
+        function extractVideoId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        // Display playlist tabs
+        function displayPlaylistTabs(sortedIds = null) {
+            const tabsContainer = document.getElementById('playlist-tabs');
+            tabsContainer.innerHTML = '';
+            
+            const playlistIds = sortedIds || Object.keys(playlists);
+            console.log('Displaying playlist tabs for:', playlistIds);
+            
+            playlistIds.forEach((playlistId, index) => {
+                const tab = document.createElement('div');
+                tab.className = 'playlist-tab';
+                tab.textContent = playlists[playlistId].name;
+                tab.onclick = () => {
+                    loadPlaylist(playlistId);
+                    closePlaylistDropdown();
+                };
+                
+                if (index === 0) tab.classList.add('active');
+                
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        // Toggle playlist dropdown
+        function togglePlaylistDropdown() {
+            const dropdown = document.getElementById('playlist-dropdown');
+            dropdown.classList.toggle('active');
+            
+            // Close dropdown when clicking outside
+            if (dropdown.classList.contains('active')) {
+                setTimeout(() => {
+                    document.addEventListener('click', closeDropdownOnOutsideClick);
+                }, 100);
+            }
+        }
+
+        // Close dropdown
+        function closePlaylistDropdown() {
+            const dropdown = document.getElementById('playlist-dropdown');
+            dropdown.classList.remove('active');
+            document.removeEventListener('click', closeDropdownOnOutsideClick);
+        }
+
+        // Close dropdown on outside click
+        function closeDropdownOnOutsideClick(event) {
+            const dropdown = document.getElementById('playlist-dropdown');
+            if (!dropdown.contains(event.target)) {
+                closePlaylistDropdown();
+            }
+        }
+
+        // Load specific playlist
+        function loadPlaylist(playlistId) {
+            currentPlaylistId = playlistId;
+            currentPlaylist = playlists[playlistId].videos;
+            currentVideoIndex = 0;
+            
+            // Update active tab
+            document.querySelectorAll('.playlist-tab').forEach((tab) => {
+                tab.classList.toggle('active', tab.textContent === playlists[playlistId].name);
+            });
+            
+            // Update playlist info
+            document.getElementById('now-playing-playlist').textContent = playlists[playlistId].name;
+            
+            // Update dropdown text
+            document.getElementById('current-playlist-name').textContent = playlists[playlistId].name;
+            
+            // Display playlist items
+            displayPlaylistItems();
+            
+            // Reset shuffle if active
+            if (isShuffled) {
+                createShuffledIndices();
+            }
+            
+            // Play first video
+            if (currentPlaylist.length > 0) {
+                playVideo(0);
+            }
+        }
+
+        // Display playlist items
+        function displayPlaylistItems() {
+            const container = document.getElementById('playlist-items');
+            container.innerHTML = '';
+            
+            currentPlaylist.forEach((video, index) => {
+                const item = document.createElement('div');
+                item.className = 'playlist-item';
+                item.onclick = () => playVideo(index);
+                
+                item.innerHTML = `
+                    <img class="playlist-item-thumbnail" 
+                         src="${video.thumbnail_url}" 
+                         alt="${video.title}"
+                         onerror="this.src='https://img.youtube.com/vi/${video.video_id}/default.jpg'">
+                    <div class="playlist-item-info">
+                        <div class="playlist-item-title">${video.title}</div>
+                        <div class="playlist-item-channel">${video.channel_name || 'YouTube'}</div>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        // Play video at index
+        function playVideo(index) {
+            if (index < 0 || index >= currentPlaylist.length) return;
+            
+            currentVideoIndex = index;
+            const actualIndex = isShuffled ? shuffledIndices[index] : index;
+            const video = currentPlaylist[actualIndex];
+            
+            // Update UI
+            document.querySelectorAll('.playlist-item').forEach((item, i) => {
+                item.classList.toggle('active', i === actualIndex);
+            });
+            
+            document.getElementById('now-playing-title').textContent = video.title;
+            
+            // Play video
+            if (player && player.loadVideoById) {
+                player.loadVideoById(video.video_id);
+            } else {
+                createPlayer(video.video_id);
+            }
+            
+            // Update button states
+            updateButtonStates();
+        }
+
+        // Control functions
+        function playPrevious() {
+            if (currentVideoIndex > 0) {
+                playVideo(currentVideoIndex - 1);
+            } else if (repeatMode === 'all') {
+                playVideo(currentPlaylist.length - 1);
+            }
+        }
+
+        function playNext() {
+            if (currentVideoIndex < currentPlaylist.length - 1) {
+                playVideo(currentVideoIndex + 1);
+            } else if (repeatMode === 'all') {
+                playVideo(0);
+            }
+        }
+
+        function togglePlayPause() {
+            if (player) {
+                if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+                    player.pauseVideo();
+                } else {
+                    player.playVideo();
+                }
+            }
+        }
+
+        function toggleShuffle() {
+            isShuffled = !isShuffled;
+            const btn = document.getElementById('shuffle-btn');
+            btn.style.background = isShuffled ? '#ff0000' : '#333';
+            
+            if (isShuffled) {
+                createShuffledIndices();
+            } else {
+                // Find current video's original position
+                const currentActualIndex = isShuffled ? shuffledIndices[currentVideoIndex] : currentVideoIndex;
+                currentVideoIndex = currentActualIndex;
+            }
+            
+            displayPlaylistItems();
+            updateActiveItem();
+        }
+
+        function toggleRepeat() {
+            const modes = ['none', 'all', 'one'];
+            const currentIndex = modes.indexOf(repeatMode);
+            repeatMode = modes[(currentIndex + 1) % modes.length];
+            
+            const btn = document.getElementById('repeat-btn');
+            switch(repeatMode) {
+                case 'none':
+                    btn.textContent = '🔁 반복';
+                    btn.style.background = '#333';
+                    break;
+                case 'all':
+                    btn.textContent = '🔁 전체반복';
+                    btn.style.background = '#ff0000';
+                    break;
+                case 'one':
+                    btn.textContent = '🔂 한곡반복';
+                    btn.style.background = '#ff0000';
+                    break;
+            }
+        }
+
+        function createShuffledIndices() {
+            shuffledIndices = [...Array(currentPlaylist.length).keys()];
+            // Fisher-Yates shuffle
+            for (let i = shuffledIndices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
+            }
+        }
+
+        function updateButtonStates() {
+            document.getElementById('prev-btn').disabled = 
+                currentVideoIndex === 0 && repeatMode !== 'all';
+            document.getElementById('next-btn').disabled = 
+                currentVideoIndex === currentPlaylist.length - 1 && repeatMode !== 'all';
+        }
+
+        function updateActiveItem() {
+            const actualIndex = isShuffled ? shuffledIndices[currentVideoIndex] : currentVideoIndex;
+            document.querySelectorAll('.playlist-item').forEach((item, i) => {
+                item.classList.toggle('active', i === actualIndex);
+            });
+        }
+
+        // Fullscreen functionality
+        let isFullscreen = false;
+        
+        function toggleFullscreen() {
+            const container = document.querySelector('.container');
+            const btn = document.getElementById('fullscreen-btn');
+            
+            isFullscreen = !isFullscreen;
+            
+            if (isFullscreen) {
+                container.classList.add('fullscreen');
+                btn.textContent = '⛶';
+                
+                // Try to enter browser fullscreen mode
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            } else {
+                exitFullscreen();
+            }
+        }
+        
+        function exitFullscreen() {
+            const container = document.querySelector('.container');
+            const btn = document.getElementById('fullscreen-btn');
+            
+            isFullscreen = false;
+            container.classList.remove('fullscreen');
+            btn.textContent = '⛶';
+            
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+        
+        // ESC key handler
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && isFullscreen) {
+                exitFullscreen();
+            }
+            
+            // Additional keyboard shortcuts
+            if (player && player.getPlayerState) {
+                switch(event.key) {
+                    case ' ':  // Spacebar
+                        event.preventDefault();
+                        togglePlayPause();
+                        break;
+                    case 'ArrowRight':
+                        event.preventDefault();
+                        playNext();
+                        break;
+                    case 'ArrowLeft':
+                        event.preventDefault();
+                        playPrevious();
+                        break;
+                    case 'f':
+                    case 'F':
+                        event.preventDefault();
+                        toggleFullscreen();
+                        break;
+                    case 's':
+                    case 'S':
+                        event.preventDefault();
+                        toggleShuffle();
+                        break;
+                    case 'r':
+                    case 'R':
+                        event.preventDefault();
+                        toggleRepeat();
+                        break;
+                }
+            }
+        });
+        
+        // Detect fullscreen change
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('msfullscreenchange', handleFullscreenChange);
+        
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.msFullscreenElement) {
+                // Exited fullscreen mode
+                const container = document.querySelector('.container');
+                const btn = document.getElementById('fullscreen-btn');
+                
+                isFullscreen = false;
+                container.classList.remove('fullscreen');
+                btn.textContent = '⛶';
+            }
+        }
+        
+        // Initialize
+        window.addEventListener('load', async function() {
+            await loadPlaylists();
+            
+            // Add mouse move handler for controls visibility in fullscreen
+            let hideControlsTimeout;
+            const container = document.querySelector('.container');
+            
+            container.addEventListener('mousemove', function() {
+                if (isFullscreen) {
+                    clearTimeout(hideControlsTimeout);
+                    const controls = document.querySelector('.controls');
+                    const fsBtn = document.querySelector('.fullscreen-btn');
+                    
+                    if (controls) controls.style.opacity = '1';
+                    if (fsBtn) fsBtn.style.opacity = '1';
+                    
+                    hideControlsTimeout = setTimeout(() => {
+                        if (isFullscreen && controls) controls.style.opacity = '0';
+                        if (isFullscreen && fsBtn) fsBtn.style.opacity = '0';
+                    }, 3000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

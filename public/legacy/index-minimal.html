@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Crypto Monitor</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 0 15px;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+            border-color: #444;
+        }
+        
+        .crypto-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 0 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .crypto-card {
+            background: #0d0d0d;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+        
+        .crypto-card:hover {
+            transform: translateY(-2px);
+            border-color: #444;
+        }
+        
+        .crypto-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .crypto-symbol {
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .crypto-price {
+            font-size: 32px;
+            font-weight: 600;
+            font-family: 'SF Mono', monospace;
+            margin-bottom: 8px;
+        }
+        
+        .crypto-change {
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .positive { color: #4caf50; }
+        .negative { color: #f44336; }
+        
+        .loading {
+            opacity: 0.5;
+        }
+        
+        /* BW Mode */
+        .bw-mode .crypto-price,
+        .bw-mode .crypto-symbol {
+            color: #fff !important;
+        }
+        
+        .bw-mode .crypto-change {
+            color: #000 !important;
+        }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            
+            .crypto-price {
+                font-size: 28px;
+            }
+        }
+        
+        /* Hidden footer */
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            opacity: 0.3;
+            font-size: 12px;
+        }
+        
+        .footer a {
+            color: #333;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Crypto Monitor</h1>
+            <div class="controls">
+                <button class="btn" onclick="adjustSize('decrease')">-</button>
+                <button class="btn" onclick="adjustSize('increase')">+</button>
+                <button class="btn" onclick="toggleBW()">BW</button>
+            </div>
+        </div>
+        
+        <div class="crypto-grid">
+            <!-- BTC -->
+            <div class="crypto-card">
+                <div class="crypto-header">
+                    <div class="crypto-symbol" style="color: #f7931a;">
+                        <span>₿</span>
+                        <span>BTC</span>
+                    </div>
+                </div>
+                <div class="crypto-price loading" id="btc-price" style="color: #f7931a;">Loading...</div>
+                <div class="crypto-change" id="btc-change">-</div>
+            </div>
+            
+            <!-- ETH -->
+            <div class="crypto-card">
+                <div class="crypto-header">
+                    <div class="crypto-symbol" style="color: #627eea;">
+                        <span>Ξ</span>
+                        <span>ETH</span>
+                    </div>
+                </div>
+                <div class="crypto-price loading" id="eth-price" style="color: #627eea;">Loading...</div>
+                <div class="crypto-change" id="eth-change">-</div>
+            </div>
+            
+            <!-- SOL -->
+            <div class="crypto-card">
+                <div class="crypto-header">
+                    <div class="crypto-symbol" style="color: #00ffa3;">
+                        <span>◉</span>
+                        <span>SOL</span>
+                    </div>
+                </div>
+                <div class="crypto-price loading" id="sol-price" style="color: #00ffa3;">Loading...</div>
+                <div class="crypto-change" id="sol-change">-</div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <a href="bw-mode.html">made by euo</a>
+    </footer>
+    
+    <script>
+        // Configuration
+        const COINS = ['btc', 'eth', 'sol'];
+        const SYMBOLS = {
+            btc: 'BTCUSDT',
+            eth: 'ETHUSDT',
+            sol: 'SOLUSDT'
+        };
+        
+        // State
+        let priceScale = 1;
+        let bwMode = false;
+        let combinedWs = null;
+        
+        // Format price
+        function formatPrice(price) {
+            const parts = price.toFixed(2).split('.');
+            const integerPart = parseInt(parts[0]).toLocaleString('en-US');
+            return `$${integerPart}.${parts[1]}`;
+        }
+        
+        // Update coin price
+        function updateCoin(symbol, price, change) {
+            const coin = symbol.replace('USDT', '').toLowerCase();
+            const priceEl = document.getElementById(`${coin}-price`);
+            const changeEl = document.getElementById(`${coin}-change`);
+            
+            if (priceEl) {
+                priceEl.textContent = formatPrice(price);
+                priceEl.classList.remove('loading');
+            }
+            
+            if (changeEl) {
+                const sign = change >= 0 ? '+' : '';
+                changeEl.textContent = `${sign}${change.toFixed(2)}%`;
+                changeEl.className = change >= 0 ? 'crypto-change positive' : 'crypto-change negative';
+            }
+        }
+        
+        // WebSocket connection
+        function connectWebSocket() {
+            const streams = Object.values(SYMBOLS).map(s => `${s.toLowerCase()}@ticker`);
+            const wsUrl = `wss://stream.binance.com/ws/${streams.join('/')}`;
+            
+            combinedWs = new WebSocket(wsUrl);
+            
+            combinedWs.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.s) {
+                    updateCoin(
+                        data.s,
+                        parseFloat(data.c),
+                        parseFloat(data.P)
+                    );
+                }
+            };
+            
+            combinedWs.onerror = () => {
+                setTimeout(connectWebSocket, 5000);
+            };
+            
+            combinedWs.onclose = () => {
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+        
+        // Initial API fetch
+        async function fetchPrices() {
+            try {
+                const symbols = Object.values(SYMBOLS);
+                const url = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(symbols))}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                data.forEach(ticker => {
+                    updateCoin(
+                        ticker.symbol,
+                        parseFloat(ticker.lastPrice),
+                        parseFloat(ticker.priceChangePercent)
+                    );
+                });
+            } catch (error) {
+                // Silent fail
+            }
+        }
+        
+        // Size adjustment
+        function adjustSize(action) {
+            const prices = document.querySelectorAll('.crypto-price');
+            
+            if (action === 'increase' && priceScale < 1.5) {
+                priceScale += 0.1;
+            } else if (action === 'decrease' && priceScale > 0.7) {
+                priceScale -= 0.1;
+            }
+            
+            prices.forEach(el => {
+                el.style.fontSize = `${32 * priceScale}px`;
+            });
+        }
+        
+        // BW Mode
+        function toggleBW() {
+            bwMode = !bwMode;
+            document.body.classList.toggle('bw-mode');
+        }
+        
+        // Initialize
+        fetchPrices();
+        connectWebSocket();
+        
+        // Refresh prices every 30s as backup
+        setInterval(fetchPrices, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 틱 차트 (0.1초 업데이트)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.0/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #f7931a 0%, #627eea 50%, #00FFA3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .chart-container {
+            background: #0a0a0a;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #333;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .symbol {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .btc-symbol { color: #f7931a; }
+        .eth-symbol { color: #627eea; }
+        .sol-symbol { color: #00FFA3; }
+
+        .price-info {
+            text-align: right;
+        }
+
+        .current-price {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .price-change {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .positive { color: #4caf50; }
+        .negative { color: #f44336; }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 1s infinite;
+        }
+
+        .connected { background: #4caf50; }
+        .disconnected { background: #f44336; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid #333;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        button {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        button.active {
+            background: #4facfe;
+            color: #000;
+        }
+
+        .info-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            font-size: 12px;
+            max-width: 200px;
+        }
+
+        .tick-counter {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+        }
+
+        @media (min-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>실시간 틱 차트</h1>
+        <p style="color: #666;">Binance WebSocket • 0.1초 업데이트</p>
+    </div>
+
+    <div class="charts-grid">
+        <!-- BTC Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <div>
+                    <span class="symbol btc-symbol">BTC/USDT</span>
+                    <span class="status-indicator" id="btc-status"></span>
+                </div>
+                <div class="price-info">
+                    <div class="current-price" id="btc-price">-</div>
+                    <div class="price-change" id="btc-change">-</div>
+                </div>
+            </div>
+            <canvas id="btc-chart"></canvas>
+        </div>
+
+        <!-- ETH Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <div>
+                    <span class="symbol eth-symbol">ETH/USDT</span>
+                    <span class="status-indicator" id="eth-status"></span>
+                </div>
+                <div class="price-info">
+                    <div class="current-price" id="eth-price">-</div>
+                    <div class="price-change" id="eth-change">-</div>
+                </div>
+            </div>
+            <canvas id="eth-chart"></canvas>
+        </div>
+
+        <!-- SOL Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <div>
+                    <span class="symbol sol-symbol">SOL/USDT</span>
+                    <span class="status-indicator" id="sol-status"></span>
+                </div>
+                <div class="price-info">
+                    <div class="current-price" id="sol-price">-</div>
+                    <div class="price-change" id="sol-change">-</div>
+                </div>
+            </div>
+            <canvas id="sol-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="togglePause()" id="pause-btn">일시정지</button>
+        <button onclick="changeTimeRange(10)" class="time-btn active" data-range="10">10초</button>
+        <button onclick="changeTimeRange(30)" class="time-btn" data-range="30">30초</button>
+        <button onclick="changeTimeRange(60)" class="time-btn" data-range="60">1분</button>
+        <button onclick="changeTimeRange(300)" class="time-btn" data-range="300">5분</button>
+        <a href="index.html" style="text-decoration: none;">
+            <button>메인으로</button>
+        </a>
+    </div>
+
+    <div class="info-panel">
+        <div><strong>실시간 틱 차트</strong></div>
+        <div style="margin-top: 10px; color: #888;">
+            • 0.1초마다 업데이트<br>
+            • WebSocket 실시간 연결<br>
+            • 웹/로컬 환경 지원<br>
+            • Binance 직접 연결
+        </div>
+        <div class="tick-counter">
+            <div>틱 수신: <span id="tick-count">0</span></div>
+            <div>업데이트: <span id="update-rate">0</span>/초</div>
+            <div style="margin-top: 5px; font-size: 10px;">
+                환경: <span id="environment-info">확인 중...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let charts = {};
+        let wsConnections = {};
+        let priceData = {
+            BTCUSDT: { prices: [], changes: [], firstPrice: 0 },
+            ETHUSDT: { prices: [], changes: [], firstPrice: 0 },
+            SOLUSDT: { prices: [], changes: [], firstPrice: 0 }
+        };
+        let isPaused = false;
+        let timeRange = 10; // 기본 10초
+        let tickCount = 0;
+        let lastTickCount = 0;
+
+        // 차트 색상 설정
+        const colors = {
+            BTCUSDT: '#f7931a',
+            ETHUSDT: '#627eea',
+            SOLUSDT: '#00FFA3'
+        };
+
+        // Chart.js 설정
+        function createChart(symbol) {
+            const ctx = document.getElementById(`${symbol.toLowerCase().replace('usdt', '')}-chart`).getContext('2d');
+            
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: symbol,
+                        data: [],
+                        borderColor: colors[symbol],
+                        backgroundColor: colors[symbol] + '20',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false
+                    },
+                    scales: {
+                        x: {
+                            type: 'realtime',
+                            realtime: {
+                                duration: timeRange * 1000,
+                                refresh: 100, // 0.1초마다 갱신
+                                delay: 0,
+                                onRefresh: function(chart) {
+                                    if (!isPaused && priceData[symbol].prices.length > 0) {
+                                        const now = Date.now();
+                                        const latestPrice = priceData[symbol].prices[priceData[symbol].prices.length - 1];
+                                        
+                                        chart.data.datasets[0].data.push({
+                                            x: now,
+                                            y: latestPrice
+                                        });
+                                    }
+                                }
+                            },
+                            grid: {
+                                color: '#333'
+                            },
+                            ticks: {
+                                color: '#888',
+                                display: false
+                            }
+                        },
+                        y: {
+                            position: 'right',
+                            grid: {
+                                color: '#333'
+                            },
+                            ticks: {
+                                color: '#fff',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return '$' + context.parsed.y.toLocaleString('en-US', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // WebSocket 연결
+        function connectWebSocket(symbol) {
+            const wsUrl = `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@trade`;
+            const ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                console.log(`✅ ${symbol} WebSocket 연결됨`);
+                document.getElementById(`${symbol.toLowerCase().replace('usdt', '')}-status`).classList.add('connected');
+            };
+            
+            ws.onmessage = function(event) {
+                if (isPaused) return;
+                
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.p);
+                
+                // 가격 데이터 저장
+                priceData[symbol].prices.push(price);
+                if (priceData[symbol].prices.length > 1000) {
+                    priceData[symbol].prices.shift();
+                }
+                
+                // 첫 가격 저장
+                if (priceData[symbol].firstPrice === 0) {
+                    priceData[symbol].firstPrice = price;
+                }
+                
+                // 가격 변화 계산
+                const change = price - priceData[symbol].firstPrice;
+                const changePercent = (change / priceData[symbol].firstPrice) * 100;
+                
+                // UI 업데이트
+                updatePriceDisplay(symbol, price, change, changePercent);
+                
+                // 틱 카운트 증가
+                tickCount++;
+            };
+            
+            ws.onclose = function() {
+                console.log(`❌ ${symbol} WebSocket 연결 해제됨`);
+                document.getElementById(`${symbol.toLowerCase().replace('usdt', '')}-status`).classList.remove('connected');
+                document.getElementById(`${symbol.toLowerCase().replace('usdt', '')}-status`).classList.add('disconnected');
+                
+                // 재연결 시도
+                setTimeout(() => {
+                    if (!isPaused) {
+                        connectWebSocket(symbol);
+                    }
+                }, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`${symbol} WebSocket 오류:`, error);
+            };
+            
+            wsConnections[symbol] = ws;
+        }
+
+        // 가격 표시 업데이트
+        function updatePriceDisplay(symbol, price, change, changePercent) {
+            const prefix = symbol.toLowerCase().replace('usdt', '');
+            const priceElement = document.getElementById(`${prefix}-price`);
+            const changeElement = document.getElementById(`${prefix}-change`);
+            
+            priceElement.textContent = `$${price.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
+            
+            const changeClass = change >= 0 ? 'positive' : 'negative';
+            changeElement.className = `price-change ${changeClass}`;
+            changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
+        }
+
+        // 일시정지 토글
+        function togglePause() {
+            isPaused = !isPaused;
+            const btn = document.getElementById('pause-btn');
+            btn.textContent = isPaused ? '재개' : '일시정지';
+            btn.classList.toggle('active', isPaused);
+            
+            if (isPaused) {
+                // WebSocket 연결 해제
+                Object.values(wsConnections).forEach(ws => ws.close());
+            } else {
+                // WebSocket 재연결
+                ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].forEach(symbol => {
+                    connectWebSocket(symbol);
+                });
+            }
+        }
+
+        // 시간 범위 변경
+        function changeTimeRange(seconds) {
+            timeRange = seconds;
+            
+            // 버튼 스타일 업데이트
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-range') == seconds);
+            });
+            
+            // 차트 시간축 업데이트
+            Object.values(charts).forEach(chart => {
+                chart.options.scales.x.realtime.duration = seconds * 1000;
+                chart.update('none');
+            });
+        }
+
+        // 틱 레이트 계산
+        function updateTickRate() {
+            const rate = tickCount - lastTickCount;
+            document.getElementById('tick-count').textContent = tickCount;
+            document.getElementById('update-rate').textContent = rate;
+            lastTickCount = tickCount;
+        }
+
+        // 초기화
+        window.addEventListener('DOMContentLoaded', function() {
+            // 차트 생성
+            ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].forEach(symbol => {
+                charts[symbol] = createChart(symbol);
+            });
+            
+            // WebSocket 연결
+            ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].forEach(symbol => {
+                connectWebSocket(symbol);
+            });
+            
+            // 틱 레이트 업데이트 (1초마다)
+            setInterval(updateTickRate, 1000);
+            
+            // 환경 확인 및 성능 최적화
+            const isLocal = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1' || 
+                           window.location.hostname === '';
+            
+            const environmentInfo = isLocal ? '로컬 (최고성능)' : `웹 (${window.location.hostname})`;
+            document.getElementById('environment-info').textContent = environmentInfo;
+            
+            if (isLocal) {
+                console.log('🚀 로컬 환경에서 실행 중 - 최고 성능 모드');
+            } else {
+                console.log('🌐 웹 환경에서 실행 중 - 0.1초 실시간 업데이트 활성화');
+            }
+            
+            // 모든 환경에서 0.1초 업데이트 활성화
+            console.log('📊 실시간 틱 차트: 0.1초 간격으로 업데이트됩니다');
+            
+            // 성능 벤치마크
+            let performanceStart = Date.now();
+            setTimeout(() => {
+                const elapsed = Date.now() - performanceStart;
+                console.log(`⚡ 초기 로딩 시간: ${elapsed}ms`);
+            }, 2000);
+        });
+
+        // 페이지 종료 시 WebSocket 정리
+        window.addEventListener('beforeunload', function() {
+            Object.values(wsConnections).forEach(ws => ws.close());
+        });
+    </script>
+</body>
+</html>

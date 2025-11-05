@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>하이브리드 저장소 - LocalStorage + Supabase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .status-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .online { border-left: 5px solid #4caf50; }
+        .offline { border-left: 5px solid #f44336; }
+        .syncing { border-left: 5px solid #ff9800; }
+        button {
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .sync-button {
+            background: #2196f3;
+        }
+        .sync-button:hover {
+            background: #1976d2;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        .info { color: #2196f3; }
+        #log {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 20px 0;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .data-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #2a2a2a;
+        }
+        tr:hover {
+            background: #2a2a2a;
+        }
+        .sync-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .sync-status.synced { background: #4caf50; }
+        .sync-status.pending { background: #ff9800; }
+        .sync-status.error { background: #f44336; }
+        .progress-bar {
+            background: #333;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            background: #4caf50;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 하이브리드 가격 수집기</h1>
+        <p>LocalStorage에 먼저 저장하고, Supabase가 연결되면 자동 동기화합니다.</p>
+        
+        <!-- 연결 상태 -->
+        <div class="status-card" id="connection-status">
+            <div>
+                <h3>연결 상태</h3>
+                <p>LocalStorage: <span class="success">✅ 항상 사용 가능</span></p>
+                <p>Supabase: <span id="supabase-status" class="error">❌ 연결 확인 중...</span></p>
+            </div>
+            <button onclick="testSupabaseConnection()" class="sync-button">연결 재시도</button>
+        </div>
+        
+        <!-- 동기화 상태 -->
+        <div class="status-card">
+            <div>
+                <h3>동기화 상태</h3>
+                <p>로컬 데이터: <span id="local-count">0</span>개</p>
+                <p>동기화 대기: <span id="pending-count">0</span>개</p>
+                <p>마지막 동기화: <span id="last-sync">없음</span></p>
+            </div>
+            <button onclick="syncToSupabase()" class="sync-button" id="sync-btn">
+                동기화 시작
+            </button>
+        </div>
+        
+        <!-- 진행 상황 -->
+        <div class="progress-bar" id="progress-bar" style="display: none;">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        
+        <!-- 컨트롤 버튼 -->
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="collectCurrentPrices()">현재 가격 수집</button>
+            <button onclick="collectHistoricalData()">30일 데이터 수집</button>
+            <button onclick="autoCollect()" id="auto-btn">자동 수집 시작</button>
+            <button onclick="exportLocalData()">로컬 데이터 백업</button>
+            <button onclick="importLocalData()">백업 데이터 복원</button>
+        </div>
+        
+        <!-- 로그 -->
+        <div id="log"></div>
+        
+        <!-- 데이터 표시 -->
+        <div class="data-grid">
+            <!-- 로컬 데이터 -->
+            <div class="data-section">
+                <h3>📱 로컬 저장소 (최근 10개)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>상태</th>
+                            <th>날짜</th>
+                            <th>BTC</th>
+                            <th>ETH</th>
+                            <th>SOL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="local-table">
+                        <tr><td colspan="5">데이터 없음</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Supabase 데이터 -->
+            <div class="data-section">
+                <h3>☁️ Supabase (최근 10개)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th>BTC</th>
+                            <th>ETH</th>
+                            <th>SOL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="supabase-table">
+                        <tr><td colspan="4">연결되지 않음</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 숨겨진 파일 입력 -->
+    <input type="file" id="file-input" style="display: none;" accept=".json">
+
+    <!-- Supabase 스크립트 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 설정
+        const STORAGE_KEY = 'crypto_price_history_hybrid';
+        const SUPABASE_URL = 'https://intyabzhvtkxgldmvpvr.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
+        
+        let supabaseClient = null;
+        let isSupabaseConnected = false;
+        let autoCollectInterval = null;
+        
+        // 로그 함수
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const className = type;
+            logEl.innerHTML = `<div class="${className}">[${time}] ${message}</div>` + logEl.innerHTML;
+            
+            // 로그가 너무 많으면 제거
+            const logs = logEl.children;
+            if (logs.length > 100) {
+                logEl.removeChild(logs[logs.length - 1]);
+            }
+        }
+        
+        // LocalStorage 함수들
+        function loadLocalData() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                log('로컬 데이터 로드 실패: ' + e.message, 'error');
+                return [];
+            }
+        }
+        
+        function saveLocalData(data) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                updateDisplay();
+            } catch (e) {
+                log('로컬 데이터 저장 실패: ' + e.message, 'error');
+            }
+        }
+        
+        // Supabase 연결 테스트
+        async function testSupabaseConnection() {
+            log('Supabase 연결 테스트 중...', 'info');
+            
+            try {
+                if (!window.supabase) {
+                    throw new Error('Supabase 라이브러리가 로드되지 않았습니다');
+                }
+                
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                // 간단한 쿼리로 연결 테스트
+                const { data, error } = await supabaseClient
+                    .from('price_history')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) throw error;
+                
+                isSupabaseConnected = true;
+                document.getElementById('supabase-status').innerHTML = '<span class="success">✅ 연결됨</span>';
+                log('Supabase 연결 성공!', 'success');
+                
+                // 연결되면 자동으로 대기중인 데이터 동기화 시도
+                checkPendingSync();
+                
+            } catch (error) {
+                isSupabaseConnected = false;
+                document.getElementById('supabase-status').innerHTML = '<span class="error">❌ 연결 실패</span>';
+                log('Supabase 연결 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 현재 가격 수집
+        async function collectCurrentPrices() {
+            log('현재 가격 수집 중...', 'info');
+            
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const prices = {};
+                
+                for (const symbol of symbols) {
+                    const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+                    const data = await response.json();
+                    
+                    prices[symbol] = {
+                        price: parseFloat(data.lastPrice),
+                        high: parseFloat(data.highPrice),
+                        low: parseFloat(data.lowPrice)
+                    };
+                }
+                
+                // 로컬에 저장
+                const localData = loadLocalData();
+                const today = new Date().toISOString().split('T')[0];
+                
+                const newEntry = {
+                    id: Date.now().toString(),
+                    date: today,
+                    btc: prices.BTCUSDT.price,
+                    btc_high: prices.BTCUSDT.high,
+                    btc_low: prices.BTCUSDT.low,
+                    eth: prices.ETHUSDT.price,
+                    eth_high: prices.ETHUSDT.high,
+                    eth_low: prices.ETHUSDT.low,
+                    sol: prices.SOLUSDT.price,
+                    sol_high: prices.SOLUSDT.high,
+                    sol_low: prices.SOLUSDT.low,
+                    collected_at: new Date().toISOString(),
+                    synced: false // 동기화 상태
+                };
+                
+                // 오늘 데이터 업데이트 또는 추가
+                const todayIndex = localData.findIndex(d => d.date === today);
+                if (todayIndex >= 0) {
+                    newEntry.id = localData[todayIndex].id; // ID 유지
+                    localData[todayIndex] = newEntry;
+                } else {
+                    localData.push(newEntry);
+                }
+                
+                localData.sort((a, b) => b.date.localeCompare(a.date));
+                saveLocalData(localData);
+                
+                log('가격 수집 완료!', 'success');
+                
+                // Supabase가 연결되어 있으면 즉시 동기화
+                if (isSupabaseConnected) {
+                    await syncSingleEntry(newEntry);
+                }
+                
+            } catch (error) {
+                log('가격 수집 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 30일 과거 데이터 수집
+        async function collectHistoricalData() {
+            log('30일 과거 데이터 수집 시작...', 'info');
+            
+            const progressBar = document.getElementById('progress-bar');
+            const progressFill = document.getElementById('progress-fill');
+            progressBar.style.display = 'block';
+            
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const endTime = new Date().getTime();
+                const startTime = endTime - (30 * 24 * 60 * 60 * 1000);
+                
+                const localData = loadLocalData();
+                const dataMap = new Map(localData.map(d => [d.date, d]));
+                
+                let totalProgress = 0;
+                const totalSteps = symbols.length;
+                
+                for (const symbol of symbols) {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}&limit=30`;
+                    const response = await fetch(url);
+                    const klines = await response.json();
+                    
+                    for (const kline of klines) {
+                        const date = new Date(kline[0]).toISOString().split('T')[0];
+                        
+                        if (!dataMap.has(date)) {
+                            dataMap.set(date, {
+                                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                                date: date,
+                                btc: 0,
+                                btc_high: 0,
+                                btc_low: 0,
+                                eth: 0,
+                                eth_high: 0,
+                                eth_low: 0,
+                                sol: 0,
+                                sol_high: 0,
+                                sol_low: 0,
+                                collected_at: new Date().toISOString(),
+                                synced: false
+                            });
+                        }
+                        
+                        const dayData = dataMap.get(date);
+                        const price = parseFloat(kline[4]); // 종가
+                        const high = parseFloat(kline[2]);
+                        const low = parseFloat(kline[3]);
+                        
+                        if (symbol === 'BTCUSDT') {
+                            dayData.btc = price;
+                            dayData.btc_high = high;
+                            dayData.btc_low = low;
+                        } else if (symbol === 'ETHUSDT') {
+                            dayData.eth = price;
+                            dayData.eth_high = high;
+                            dayData.eth_low = low;
+                        } else if (symbol === 'SOLUSDT') {
+                            dayData.sol = price;
+                            dayData.sol_high = high;
+                            dayData.sol_low = low;
+                        }
+                    }
+                    
+                    totalProgress++;
+                    progressFill.style.width = `${(totalProgress / totalSteps) * 100}%`;
+                }
+                
+                const allData = Array.from(dataMap.values());
+                allData.sort((a, b) => b.date.localeCompare(a.date));
+                
+                saveLocalData(allData);
+                log('30일 데이터 수집 완료!', 'success');
+                
+                // 자동 동기화 시도
+                if (isSupabaseConnected) {
+                    syncToSupabase();
+                }
+                
+            } catch (error) {
+                log('과거 데이터 수집 실패: ' + error.message, 'error');
+            } finally {
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                }, 2000);
+            }
+        }
+        
+        // Supabase로 단일 항목 동기화
+        async function syncSingleEntry(entry) {
+            if (!isSupabaseConnected || !supabaseClient) return false;
+            
+            try {
+                const supabaseData = {
+                    symbol: 'MULTI',
+                    date: entry.date,
+                    high_price: Math.max(entry.btc_high || 0, entry.eth_high || 0, entry.sol_high || 0),
+                    low_price: Math.min(entry.btc_low || 999999, entry.eth_low || 999999, entry.sol_low || 999999),
+                    price: entry.btc, // BTC를 대표 가격으로
+                    metadata: {
+                        btc: { price: entry.btc, high: entry.btc_high, low: entry.btc_low },
+                        eth: { price: entry.eth, high: entry.eth_high, low: entry.eth_low },
+                        sol: { price: entry.sol, high: entry.sol_high, low: entry.sol_low }
+                    }
+                };
+                
+                const { error } = await supabaseClient
+                    .from('price_history')
+                    .upsert(supabaseData, { onConflict: 'symbol,date' });
+                
+                if (!error) {
+                    entry.synced = true;
+                    return true;
+                }
+                
+                throw error;
+                
+            } catch (error) {
+                log(`동기화 실패 (${entry.date}): ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        // 전체 동기화
+        async function syncToSupabase() {
+            if (!isSupabaseConnected) {
+                log('Supabase가 연결되지 않았습니다. 먼저 연결을 확인하세요.', 'error');
+                return;
+            }
+            
+            const syncBtn = document.getElementById('sync-btn');
+            syncBtn.disabled = true;
+            syncBtn.textContent = '동기화 중...';
+            
+            const progressBar = document.getElementById('progress-bar');
+            const progressFill = document.getElementById('progress-fill');
+            progressBar.style.display = 'block';
+            
+            try {
+                const localData = loadLocalData();
+                const pendingData = localData.filter(d => !d.synced);
+                
+                if (pendingData.length === 0) {
+                    log('동기화할 데이터가 없습니다.', 'info');
+                    return;
+                }
+                
+                log(`${pendingData.length}개 항목 동기화 시작...`, 'info');
+                
+                let successCount = 0;
+                let totalCount = pendingData.length;
+                
+                // 배치 처리 (한 번에 10개씩)
+                for (let i = 0; i < pendingData.length; i += 10) {
+                    const batch = pendingData.slice(i, i + 10);
+                    const batchData = [];
+                    
+                    for (const entry of batch) {
+                        // 각 심볼별로 저장
+                        if (entry.btc > 0) {
+                            batchData.push({
+                                symbol: 'BTCUSDT',
+                                date: entry.date,
+                                high_price: entry.btc_high || entry.btc,
+                                low_price: entry.btc_low || entry.btc,
+                                price: entry.btc
+                            });
+                        }
+                        if (entry.eth > 0) {
+                            batchData.push({
+                                symbol: 'ETHUSDT',
+                                date: entry.date,
+                                high_price: entry.eth_high || entry.eth,
+                                low_price: entry.eth_low || entry.eth,
+                                price: entry.eth
+                            });
+                        }
+                        if (entry.sol > 0) {
+                            batchData.push({
+                                symbol: 'SOLUSDT',
+                                date: entry.date,
+                                high_price: entry.sol_high || entry.sol,
+                                low_price: entry.sol_low || entry.sol,
+                                price: entry.sol
+                            });
+                        }
+                    }
+                    
+                    if (batchData.length > 0) {
+                        const { error } = await supabaseClient
+                            .from('price_history')
+                            .upsert(batchData, { onConflict: 'symbol,date' });
+                        
+                        if (!error) {
+                            batch.forEach(entry => {
+                                entry.synced = true;
+                                successCount++;
+                            });
+                        } else {
+                            log(`배치 동기화 실패: ${error.message}`, 'error');
+                        }
+                    }
+                    
+                    progressFill.style.width = `${((i + batch.length) / totalCount) * 100}%`;
+                }
+                
+                saveLocalData(localData);
+                localStorage.setItem('last_sync', new Date().toISOString());
+                
+                log(`동기화 완료! ${successCount}/${totalCount} 성공`, 'success');
+                
+                // Supabase 데이터 새로고침
+                loadSupabaseData();
+                
+            } catch (error) {
+                log('동기화 중 오류: ' + error.message, 'error');
+            } finally {
+                syncBtn.disabled = false;
+                syncBtn.textContent = '동기화 시작';
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                }, 2000);
+            }
+        }
+        
+        // 대기중인 동기화 확인
+        function checkPendingSync() {
+            const localData = loadLocalData();
+            const pendingCount = localData.filter(d => !d.synced).length;
+            
+            if (pendingCount > 0) {
+                log(`${pendingCount}개의 동기화 대기 데이터가 있습니다.`, 'warning');
+            }
+        }
+        
+        // 자동 수집
+        function autoCollect() {
+            const btn = document.getElementById('auto-btn');
+            
+            if (autoCollectInterval) {
+                clearInterval(autoCollectInterval);
+                autoCollectInterval = null;
+                btn.textContent = '자동 수집 시작';
+                log('자동 수집 중지', 'info');
+            } else {
+                // 즉시 한 번 수집
+                collectCurrentPrices();
+                
+                // 5분마다 자동 수집
+                autoCollectInterval = setInterval(collectCurrentPrices, 5 * 60 * 1000);
+                btn.textContent = '자동 수집 중지';
+                log('자동 수집 시작 (5분 간격)', 'success');
+            }
+        }
+        
+        // 데이터 내보내기
+        function exportLocalData() {
+            const data = loadLocalData();
+            const exportData = {
+                version: '1.0',
+                exported_at: new Date().toISOString(),
+                data: data
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `crypto_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            log(`${data.length}개 데이터 백업 완료`, 'success');
+        }
+        
+        // 데이터 가져오기
+        function importLocalData() {
+            const fileInput = document.getElementById('file-input');
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                try {
+                    const text = await file.text();
+                    const importData = JSON.parse(text);
+                    
+                    if (!importData.version || !importData.data) {
+                        throw new Error('잘못된 백업 파일 형식');
+                    }
+                    
+                    const localData = loadLocalData();
+                    const existingDates = new Set(localData.map(d => d.date));
+                    
+                    let addedCount = 0;
+                    for (const item of importData.data) {
+                        if (!existingDates.has(item.date)) {
+                            item.synced = false; // 재동기화 필요
+                            localData.push(item);
+                            addedCount++;
+                        }
+                    }
+                    
+                    localData.sort((a, b) => b.date.localeCompare(a.date));
+                    saveLocalData(localData);
+                    
+                    log(`${addedCount}개 데이터 복원 완료`, 'success');
+                    
+                    // 자동 동기화 시도
+                    if (isSupabaseConnected && addedCount > 0) {
+                        syncToSupabase();
+                    }
+                    
+                } catch (error) {
+                    log('백업 파일 읽기 실패: ' + error.message, 'error');
+                }
+            };
+            fileInput.click();
+        }
+        
+        // Supabase 데이터 로드
+        async function loadSupabaseData() {
+            if (!isSupabaseConnected || !supabaseClient) {
+                document.getElementById('supabase-table').innerHTML = 
+                    '<tr><td colspan="4">연결되지 않음</td></tr>';
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('price_history')
+                    .select('*')
+                    .order('date', { ascending: false })
+                    .limit(30);
+                
+                if (error) throw error;
+                
+                // 날짜별로 그룹화
+                const groupedData = new Map();
+                for (const item of data) {
+                    if (!groupedData.has(item.date)) {
+                        groupedData.set(item.date, { 
+                            date: item.date,
+                            btc: 0,
+                            eth: 0,
+                            sol: 0
+                        });
+                    }
+                    
+                    const group = groupedData.get(item.date);
+                    if (item.symbol === 'BTCUSDT') group.btc = item.price;
+                    else if (item.symbol === 'ETHUSDT') group.eth = item.price;
+                    else if (item.symbol === 'SOLUSDT') group.sol = item.price;
+                }
+                
+                const tbody = document.getElementById('supabase-table');
+                const sortedData = Array.from(groupedData.values())
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .slice(0, 10);
+                
+                if (sortedData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4">데이터 없음</td></tr>';
+                } else {
+                    tbody.innerHTML = sortedData.map(d => `
+                        <tr>
+                            <td>${d.date}</td>
+                            <td>$${d.btc ? d.btc.toLocaleString() : '-'}</td>
+                            <td>$${d.eth ? d.eth.toLocaleString() : '-'}</td>
+                            <td>$${d.sol ? d.sol.toLocaleString() : '-'}</td>
+                        </tr>
+                    `).join('');
+                }
+                
+            } catch (error) {
+                document.getElementById('supabase-table').innerHTML = 
+                    `<tr><td colspan="4" class="error">로드 실패: ${error.message}</td></tr>`;
+            }
+        }
+        
+        // 화면 업데이트
+        function updateDisplay() {
+            const localData = loadLocalData();
+            
+            // 카운트 업데이트
+            document.getElementById('local-count').textContent = localData.length;
+            document.getElementById('pending-count').textContent = 
+                localData.filter(d => !d.synced).length;
+            
+            // 마지막 동기화 시간
+            const lastSync = localStorage.getItem('last_sync');
+            if (lastSync) {
+                const date = new Date(lastSync);
+                document.getElementById('last-sync').textContent = date.toLocaleString('ko-KR');
+            }
+            
+            // 로컬 테이블 업데이트
+            const tbody = document.getElementById('local-table');
+            const recentData = localData.slice(0, 10);
+            
+            if (recentData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">데이터 없음</td></tr>';
+            } else {
+                tbody.innerHTML = recentData.map(d => `
+                    <tr>
+                        <td>
+                            <span class="sync-status ${d.synced ? 'synced' : 'pending'}" 
+                                  title="${d.synced ? '동기화됨' : '대기중'}"></span>
+                        </td>
+                        <td>${d.date}</td>
+                        <td>$${d.btc ? d.btc.toLocaleString() : '-'}</td>
+                        <td>$${d.eth ? d.eth.toLocaleString() : '-'}</td>
+                        <td>$${d.sol ? d.sol.toLocaleString() : '-'}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+        
+        // 페이지 로드시 초기화
+        window.addEventListener('DOMContentLoaded', async () => {
+            updateDisplay();
+            await testSupabaseConnection();
+            
+            // 1분마다 Supabase 연결 재시도
+            setInterval(async () => {
+                if (!isSupabaseConnected) {
+                    await testSupabaseConnection();
+                }
+            }, 60000);
+            
+            log('하이브리드 저장소 준비 완료', 'success');
+        });
+    </script>
+</body>
+</html>

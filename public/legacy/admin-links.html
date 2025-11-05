@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 전용 링크 페이지</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 15px;
+            border: 1px solid #333;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .auth-container h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #f7931a;
+        }
+        
+        .auth-container p {
+            margin-bottom: 30px;
+            color: #888;
+            line-height: 1.6;
+        }
+        
+        .login-btn {
+            background: #f7931a;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .login-btn:hover {
+            background: #f9a33a;
+            transform: translateY(-2px);
+        }
+        
+        .home-btn {
+            margin-top: 20px;
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .home-btn:hover {
+            background: #444;
+        }
+        
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .error {
+            color: #f44336;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(244, 67, 54, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+    </style>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>🔐 관리자 인증</h1>
+        <p id="authMessage">인증 상태를 확인하고 있습니다...</p>
+        
+        <div class="loading show" id="loading">
+            <div style="border: 3px solid #333; border-top: 3px solid #f7931a; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <!-- 비로그인 상태에서만 표시 -->
+        <div id="loginSection" style="display: none;">
+            <button class="login-btn" onclick="signInWithGoogle()" style="width: 100%; margin-bottom: 10px;">
+                <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px;" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Google로 로그인
+            </button>
+            <br>
+            <a href="index.html" class="home-btn">홈으로 돌아가기</a>
+        </div>
+        
+        <!-- 로그인 상태에서만 표시 -->
+        <div id="loggedInSection" style="display: none;">
+            <p style="color: #4caf50; margin-bottom: 20px;">✅ <span id="userEmail"></span>로 로그인됨</p>
+            <button class="home-btn" onclick="signOut()" style="background: #f44336;">로그아웃</button>
+        </div>
+    </div>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-env.js"></script>
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    
+    <script>
+        // 전역 변수
+        let currentRedirectTo = null;
+        
+        // 페이지 로드 시 인증 확인
+        async function checkAuthStatus() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const loginSection = document.getElementById('loginSection');
+            const loggedInSection = document.getElementById('loggedInSection');
+            const authMessage = document.getElementById('authMessage');
+            const userEmail = document.getElementById('userEmail');
+            
+            // URL에서 리다이렉트 정보 가져오기
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectParam = urlParams.get('redirect');
+            
+            // 자기 자신으로 리다이렉트하는 것을 방지
+            if (redirectParam && !redirectParam.includes('admin-links.html')) {
+                currentRedirectTo = redirectParam;
+            } else {
+                currentRedirectTo = 'admin-v3.html';
+            }
+            
+            console.log('Redirect target:', currentRedirectTo);
+            
+            // 디버깅: 설정 확인
+            console.log('APP_CONFIG:', window.APP_CONFIG);
+            console.log('ENV_CONFIG:', window.ENV_CONFIG);
+            // 보안상 이메일 목록은 로그하지 않음
+            
+            try {
+                // 세션 확인 (auth-helper.js의 checkAuth 함수 사용)
+                const session = await window.checkAuth();
+                
+                if (session) {
+                    // 로그인됨
+                    userEmail.textContent = session.user.email;
+                    authMessage.textContent = '관리자 권한을 확인하고 있습니다...';
+                    
+                    // 관리자 권한 확인
+                    const isAdmin = await checkAdminAccess();
+                    
+                    // 디버그: 권한 확인 상세 정보
+                    console.log('🔍 Admin check debug:', {
+                        userEmail: session.user.email,
+                        isAdmin: isAdmin,
+                        allowedEmails: window.getConfig('ADMIN.ALLOWED_EMAILS'),
+                        devMode: window.getConfig('ADMIN.DEV_MODE'),
+                        configLoaded: !!window.APP_CONFIG
+                    });
+                    
+                    if (isAdmin) {
+                        // 관리자인 경우 원하는 페이지로 리다이렉트
+                        authMessage.textContent = '관리자 인증 성공! 리다이렉트 중...';
+                        // 즉시 리다이렉트 (타이머 제거)
+                        window.location.replace(currentRedirectTo);
+                        return; // 추가 처리 방지
+                    } else {
+                        // 로그인했지만 관리자가 아님
+                        loading.classList.remove('show');
+                        authMessage.textContent = '관리자 권한이 없습니다.';
+                        loggedInSection.style.display = 'block';
+                        
+                        // 상세 오류 메시지
+                        const allowedEmails = window.getConfig('ADMIN.ALLOWED_EMAILS') || [];
+                        error.innerHTML = `
+                            <div>현재 로그인: <strong>${session.user.email}</strong></div>
+                            <div style="margin-top: 10px;">허용된 이메일: ${allowedEmails.length > 0 ? allowedEmails.join(', ') : '없음'}</div>
+                            <div style="margin-top: 10px; font-size: 0.9em; color: #ff9800;">
+                                Netlify 환경변수 ADMIN_EMAILS를 확인하세요.
+                            </div>
+                        `;
+                        error.classList.add('show');
+                    }
+                } else {
+                    // 비로그인 상태
+                    loading.classList.remove('show');
+                    authMessage.textContent = '로그인이 필요합니다.';
+                    loginSection.style.display = 'block';
+                }
+            } catch (err) {
+                loading.classList.remove('show');
+                loginSection.style.display = 'block';
+                error.textContent = '인증 확인 중 오류가 발생했습니다: ' + err.message;
+                error.classList.add('show');
+                console.error('Auth check error:', err);
+            }
+        }
+        
+        // Google 로그인
+        async function signInWithGoogle() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            
+            loading.classList.add('show');
+            error.classList.remove('show');
+            
+            try {
+                const supabaseClient = window.getSupabaseClient();
+                if (!supabaseClient) {
+                    throw new Error('Supabase 클라이언트를 초기화할 수 없습니다.');
+                }
+                
+                // 원래 목적지를 세션에 저장
+                sessionStorage.setItem('adminRedirectTo', currentRedirectTo);
+                
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/auth-callback.html'
+                    }
+                });
+                
+                if (error) throw error;
+            } catch (error) {
+                loading.classList.remove('show');
+                error.textContent = '로그인 실패: ' + error.message;
+                error.classList.add('show');
+            }
+        }
+        
+        // 로그아웃
+        async function signOut() {
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+            
+            const error = await window.signOut();
+            if (!error) {
+                window.location.reload();
+            }
+        }
+        
+        // 페이지 로드 시 인증 확인
+        window.addEventListener('load', checkAuthStatus);
+    </script>
+</body>
+</html>

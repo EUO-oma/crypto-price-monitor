@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BW Navigation Help</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #fff;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #5DADE2;
+        }
+        
+        .shortcut {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .shortcut:last-child {
+            border-bottom: none;
+        }
+        
+        .key {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: inline-block;
+        }
+        
+        .gesture {
+            color: #90EE90;
+            font-weight: 500;
+        }
+        
+        .description {
+            color: #ccc;
+            font-size: 14px;
+        }
+        
+        .close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid #666;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .icon {
+            font-size: 24px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 0;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="close-btn" onclick="window.history.back()">×</button>
+    
+    <div class="container">
+        <h1>BW Navigation Guide</h1>
+        
+        <div class="section">
+            <h2>🎯 Navigation Features</h2>
+            <div class="feature">
+                <span class="icon">⚫</span>
+                <div>
+                    <strong>Bottom Navigation Dots</strong>
+                    <div class="description">Click dots to jump between modes</div>
+                </div>
+            </div>
+            <div class="feature">
+                <span class="icon">☰</span>
+                <div>
+                    <strong>Floating Menu Button</strong>
+                    <div class="description">Quick access to all pages</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>⌨️ Keyboard Shortcuts</h2>
+            <div class="shortcut">
+                <span class="key">←</span>
+                <span class="description">Previous mode</span>
+            </div>
+            <div class="shortcut">
+                <span class="key">→</span>
+                <span class="description">Next mode</span>
+            </div>
+            <div class="shortcut">
+                <span class="key">↑</span>
+                <span class="description">Go to main menu</span>
+            </div>
+            <div class="shortcut">
+                <span class="key">↓</span>
+                <span class="description">Go to table view</span>
+            </div>
+            <div class="shortcut">
+                <span class="key">1-9</span>
+                <span class="description">Jump to mode 1-9</span>
+            </div>
+            <div class="shortcut">
+                <span class="key">0</span>
+                <span class="description">Jump to mode 10</span>
+            </div>
+            <div class="shortcut">
+                <span class="key">H</span>
+                <span class="description">Go to home</span>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📱 Touch Gestures</h2>
+            <div class="shortcut">
+                <span class="gesture">Swipe Left →</span>
+                <span class="description">Next mode</span>
+            </div>
+            <div class="shortcut">
+                <span class="gesture">Swipe Right ←</span>
+                <span class="description">Previous mode</span>
+            </div>
+            <div class="shortcut">
+                <span class="gesture">Swipe Down ↓</span>
+                <span class="description">Go to menu</span>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🚀 Quick Tips</h2>
+            <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 10px;">• Use number keys for fastest navigation</li>
+                <li style="margin-bottom: 10px;">• Swipe on mobile for seamless browsing</li>
+                <li style="margin-bottom: 10px;">• Click floating menu (☰) for all options</li>
+                <li style="margin-bottom: 10px;">• Navigation dots show your current position</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

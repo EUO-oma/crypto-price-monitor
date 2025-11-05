@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>CRYPTO × LIVE 💹</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid #1a1a1a;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+
+        .exchange-section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #aaa;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .price-card {
+            background: #1a1a1a;
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            border: 1px solid #333;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+
+        .price-card:hover {
+            transform: translateY(-5px);
+            border-color: #555;
+        }
+
+        .symbol {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .price {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .timestamp {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #888;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+
+        .links a {
+            color: #888;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 0.9em;
+            transition: color 0.3s ease;
+        }
+
+        .links a:hover {
+            color: #aaa;
+            text-decoration: underline;
+        }
+
+        #status-message {
+            display: inline-block;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        .connected {
+            color: #4caf50;
+        }
+
+        .error {
+            color: #f44336;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* YouTube 라이브 인디케이터 애니메이션 */
+        @keyframes livePulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 0 5px rgba(255, 0, 0, 0);
+                transform: scale(1.2);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+                transform: scale(1);
+            }
+        }
+        
+        /* 커스텀 스크롤바 스타일 (웹킷 브라우저) */
+        #chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #chat-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            margin: 5px;
+        }
+        
+        #chat-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #444 0%, #222 100%);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        #chat-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #555 0%, #333 100%);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        #chat-container::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(180deg, #666 0%, #444 100%);
+        }
+        
+        /* Firefox 스크롤바 */
+        #chat-container {
+            scrollbar-width: thin;
+            scrollbar-color: #444 rgba(0, 0, 0, 0.4);
+        }
+        
+        /* 채팅 컨테이너 호버 시 스크롤바 더 선명하게 */
+        #chat-container:hover::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #555 0%, #333 100%);
+            box-shadow: 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 채팅 메시지 반응형 스타일 */
+        .message-content-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        
+        .my-message-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        
+        .message-time {
+            margin-bottom: 5px;
+            white-space: nowrap;
+        }
+        
+        /* 모바일 스타일 (화면 너비 768px 이하) */
+        @media (max-width: 768px) {
+            /* 모바일에서 전체 화면 활용 */
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            
+            .container {
+                border-radius: 0;
+                padding: 0;
+                max-width: 100%;
+                border: none;
+                box-shadow: none;
+            }
+            
+            /* 카드 섹션들 여백 제거 */
+            .cards {
+                padding: 10px 5px;
+                gap: 8px;
+            }
+            
+            .card {
+                margin: 0;
+                padding: 12px;
+            }
+            
+            /* 채팅 섹션 모바일 최적화 */
+            .chat-section {
+                padding: 10px !important;
+                margin-top: 15px !important;
+                border-radius: 0 !important;
+            }
+            
+            #chat-container {
+                border-radius: 10px !important;
+                height: 350px !important;
+                padding: 10px !important;
+            }
+            
+            /* 헤더 카드 모바일 최적화 */
+            .header-card {
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding: 15px !important;
+            }
+            
+            /* 테이블 섹션 패딩 줄이기 */
+            table {
+                margin: 0 5px;
+            }
+            
+            /* 링크 섹션 패딩 줄이기 */
+            div[style*="margin-top: 30px"] {
+                margin-top: 15px !important;
+                padding: 10px 5px !important;
+            }
+            
+            /* 모바일에서 스크롤바 숨기기 */
+            #chat-container::-webkit-scrollbar {
+                width: 4px;
+                opacity: 0.5;
+            }
+            
+            #chat-container::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.2);
+            }
+            
+            .message-content-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+            
+            .my-message-wrapper {
+                flex-direction: column-reverse;
+                align-items: flex-end;
+                gap: 2px;
+            }
+            
+            .message-time {
+                margin-bottom: 2px;
+                margin-left: 5px;
+                font-size: 10px !important;
+                opacity: 0.8;
+            }
+            
+            .my-message-wrapper .message-time {
+                margin-left: 0;
+                margin-right: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 카드 -->
+        <div class="header-card" style="
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            width: 100%;
+            box-sizing: border-box;
+        ">
+            <div style="text-align: center;">
+                <div style="margin-bottom: 15px;">
+                    <span style="
+                        background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #dda0dd);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        font-size: clamp(1.5em, 4vw, 2.5em);
+                        font-weight: 900;
+                        font-family: 'Courier New', monospace;
+                        letter-spacing: 2px;
+                        text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+                        display: inline-block;
+                        animation: glow 3s ease-in-out infinite;
+                    ">EUO.NETLIFY.APP</span>
+                </div>
+                <style>
+                    @keyframes glow {
+                        0%, 100% { filter: brightness(1) contrast(1); }
+                        50% { filter: brightness(1.2) contrast(1.1); }
+                    }
+                </style>
+                
+                <!-- 시계 카드들 -->
+                <div id="header-update-time" style="margin: 15px 0;"></div>
+                
+                <div style="margin-top: 10px;">
+                    <a href="https://www.weather.go.kr/w/weather/warning/status.do" target="_blank" style="
+                        color: #888; 
+                        text-decoration: none; 
+                        font-size: 0.85em;
+                        transition: color 0.3s;
+                    " onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#888'">
+                        🌦️ 날씨누리 특보현황
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="exchange-section">
+            <h2><a href="dual-chart.html" style="color: inherit; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.color='#f7931a'" onmouseout="this.style.color='inherit'">📈 Binance Futures</a></h2>
+            <div class="price-grid">
+                <a href="chart.html?symbol=BTCUSDT" class="price-card">
+                    <div class="symbol"><span style="color: #f7931a;">₿</span> BTC<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="price" id="binance-btc">読込中...</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                        <span style="color: #aaa;"><span id="btc-high">-</span></span>
+                        <span style="color: #aaa;"><span id="btc-low">-</span></span>
+                    </div>
+                </a>
+                <a href="chart.html?symbol=ETHUSDT" class="price-card">
+                    <div class="symbol"><span style="color: #627eea;">Ξ</span> ETH<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="price" id="binance-eth">読込中...</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                        <span style="color: #aaa;"><span id="eth-high">-</span></span>
+                        <span style="color: #aaa;"><span id="eth-low">-</span></span>
+                    </div>
+                </a>
+                <a href="chart.html?symbol=SOLUSDT" class="price-card">
+                    <div class="symbol"><span style="color: #00FFA3;">◎</span> SOL<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="price" id="binance-sol">読込中...</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                        <span style="color: #aaa;"><span id="sol-high">-</span></span>
+                        <span style="color: #aaa;"><span id="sol-low">-</span></span>
+                    </div>
+                </a>
+                <a href="chart.html?symbol=XRPUSDT" class="price-card">
+                    <div class="symbol"><span style="color: #00aae4;">✕</span> XRP<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="price" id="binance-xrp">読込中...</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                        <span style="color: #aaa;"><span id="xrp-high">-</span></span>
+                        <span style="color: #aaa;"><span id="xrp-low">-</span></span>
+                    </div>
+                </a>
+                <a href="chart.html?symbol=AVAXUSDT" class="price-card">
+                    <div class="symbol"><span style="color: #e84142;">🔺</span> AVAX<span style="color: #888; font-size: 0.9em;">USDT</span></div>
+                    <div class="price" id="binance-avax">読込中...</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                        <span style="color: #aaa;"><span id="avax-high">-</span></span>
+                        <span style="color: #aaa;"><span id="avax-low">-</span></span>
+                    </div>
+                </a>
+                <a href="chart.html?symbol=NASDAQ" class="price-card">
+                    <div class="symbol"><span style="color: #00a2e8;">📈</span> NASDAQ<span style="color: #888; font-size: 0.9em;">100</span></div>
+                    <div class="price" id="nasdaq-price">読込中...</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85em;">
+                        <span style="color: #aaa;">Day: <span id="nasdaq-change">-</span></span>
+                        <span style="color: #aaa;"><span id="nasdaq-percent">-</span></span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 익명 채팅 섹션 -->
+        <div class="chat-section" style="margin-top: 30px; padding: 20px 0; border-top: 1px solid #333; border-bottom: 1px solid #333;">
+            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                💬 Anonymous Chat
+            </h2>
+            <div id="chat-container" style="background: linear-gradient(to bottom, #1a1a1a, #0f0f0f); border-radius: 15px; padding: 10px; height: 400px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #333; scroll-behavior: smooth; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);">
+                <div id="chat-messages" style="display: flex; flex-direction: column; width: 100%;">
+                    <!-- 메시지들이 여기에 표시됩니다 -->
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" 
+                    id="chat-input" 
+                    placeholder="메시지를 입력하세요..." 
+                    maxlength="200" 
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    style="flex: 1; padding: 10px 15px; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 20px; font-size: 14px; -webkit-appearance: none; outline: none;"
+                    onfocus="this.style.borderColor='#555'" 
+                    onblur="this.style.borderColor='#333'">
+                <button type="button" 
+                    id="chat-send" 
+                    onclick="sendMessage()" 
+                    style="
+                        width: 40px; 
+                        height: 40px; 
+                        background: #000; 
+                        border: 1px solid #333; 
+                        border-radius: 50%; 
+                        cursor: pointer; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center;
+                        transition: all 0.2s;
+                        -webkit-appearance: none; 
+                        touch-action: manipulation;
+                        padding: 0;
+                    "
+                    onmouseover="this.style.transform='scale(1.1)'; this.style.background='#222'" 
+                    onmouseout="this.style.transform='scale(1)'; this.style.background='#000'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-left: 2px;">
+                        <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="#fff"/>
+                    </svg>
+                </button>
+            </div>
+            <div style="margin-top: 10px; font-size: 12px; color: #666; text-align: center;">
+                익명 채팅 • 메시지는 7일 후 자동 삭제됩니다 • 최대 100개 메시지 유지
+            </div>
+        </div>
+        
+        <div class="gpt-section" style="margin-top: 20px; padding-bottom: 20px;">
+            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                🤖 GPT Links
+            </h2>
+            <div id="gpt-links" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <!-- GPT 링크들이 여기에 동적으로 로드됩니다 -->
+            </div>
+        </div>
+        
+        <div class="youtube-section" style="margin-top: 20px; padding-bottom: 20px;">
+            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                <span style="color: #ff0000; font-weight: bold;">▶</span> YouTube Live
+            </h2>
+            <div id="youtube-links" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;">
+                <!-- YouTube 링크들이 여기에 동적으로 로드됩니다 -->
+            </div>
+        </div>
+        
+        <div class="favorite-section" style="margin-top: 20px; padding-bottom: 20px;">
+            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                ⭐ Favorite Sites
+            </h2>
+            <div id="favorite-links" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <!-- Favorite 링크들이 여기에 동적으로 로드됩니다 -->
+            </div>
+        </div>
+        
+        <!-- Fun YouTube 섹션 -->
+        <div class="fun-youtube-section" style="margin-top: 20px; padding-bottom: 20px;">
+            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                🎮 Fun YouTube
+            </h2>
+            <div id="fun-youtube-links" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <!-- Fun YouTube 링크들이 여기에 동적으로 로드됩니다 -->
+            </div>
+        </div>
+        
+        <!-- 커스텀 카테고리 섹션들이 여기에 동적으로 추가됩니다 -->
+        <div id="custom-category-sections"></div>
+        
+        <!-- BTC 10일 가격 기록 섹션 -->
+        <div class="btc-history-section" style="margin-top: 20px; padding: 20px; background: #0a0a0a; border-radius: 15px; border: 1px solid #333;">
+            <h3 style="color: #aaa; margin-bottom: 15px;">
+                <span style="color: #f7931a;">₿</span> BTC 최근 10일 기록
+            </h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #333;">
+                            <th style="padding: 10px; text-align: left; color: #888;">날짜</th>
+                            <th style="padding: 10px; text-align: right; color: #aaa;">최고가</th>
+                            <th style="padding: 10px; text-align: right; color: #aaa;">최저가</th>
+                            <th style="padding: 10px; text-align: right; color: #aaa;">종가</th>
+                        </tr>
+                    </thead>
+                    <tbody id="btc-history-tbody">
+                        <tr>
+                            <td colspan="4" style="padding: 20px; text-align: center; color: #666;">데이터 로딩 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- ETH 10일 가격 기록 섹션 -->
+        <div class="eth-history-section" style="margin-top: 20px; padding: 20px; background: #0a0a0a; border-radius: 15px; border: 1px solid #333;">
+            <h3 style="color: #aaa; margin-bottom: 15px;">
+                <span style="color: #627eea;">Ξ</span> ETH 최근 10일 기록
+            </h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #333;">
+                            <th style="padding: 10px; text-align: left; color: #888;">날짜</th>
+                            <th style="padding: 10px; text-align: right; color: #aaa;">최고가</th>
+                            <th style="padding: 10px; text-align: right; color: #aaa;">최저가</th>
+                            <th style="padding: 10px; text-align: right; color: #aaa;">종가</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eth-history-tbody">
+                        <tr>
+                            <td colspan="4" style="padding: 20px; text-align: center; color: #666;">데이터 로딩 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- SOL 10일 가격 기록 섹션 -->
+        <div class="sol-history-section" style="margin-top: 20px; padding: 20px; background: #0a0a0a; border-radius: 15px; border: 1px solid #333;">
+            <h3 style="color: #aaa; margin-bottom: 15px;">
+                <span style="color: #00FFA3;">◎</span> SOL 최근 10일 기록
+            </h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #333;">
+                            <th style="padding: 10px; text-align: left; color: #888;">날짜</th>
+                            <th style="padding: 10px; text-align: right; color: #aaa;">최고가</th>
+                            <th style="padding: 10px; text-align: right; color: #aaa;">최저가</th>
+                            <th style="padding: 10px; text-align: right; color: #aaa;">종가</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sol-history-tbody">
+                        <tr>
+                            <td colspan="4" style="padding: 20px; text-align: center; color: #666;">데이터 로딩 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-loader.js"></script>
+    <script>
+        let binanceBtcWs = null;
+        let binanceEthWs = null;
+        let binanceXrpWs = null;
+        let binanceSolWs = null;
+        let binanceAvaxWs = null;
+
+        function formatPrice(price) {
+            // null, undefined, 빈 문자열 처리
+            if (price === null || price === undefined || price === '') {
+                return '-';
+            }
+            
+            const num = parseFloat(price);
+            
+            // NaN 체크
+            if (isNaN(num)) {
+                return '-';
+            }
+            
+            const parts = num.toFixed(2).split('.');
+            const integerPart = parseInt(parts[0]).toLocaleString('en-US');
+            return `<span>${integerPart}</span><span style="color: #666; font-size: 0.8em;">.${parts[1]}</span>`;
+        }
+
+
+        function updateLastUpdate() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            const dateString = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+            
+            // Header update time with multiple timezones
+            const headerTimeElement = document.getElementById('header-update-time');
+            if (headerTimeElement) {
+                // Calculate different timezones
+                const korTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+                const euTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/London"}));
+                const usTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+                
+                // Format times
+                const formatTime = (date) => {
+                    const h = date.getHours();
+                    const m = date.getMinutes().toString().padStart(2, '0');
+                    const s = date.getSeconds().toString().padStart(2, '0');
+                    const ap = h >= 12 ? 'PM' : 'AM';
+                    const displayH = h % 12 || 12;
+                    return {hours: displayH, minutes: m, seconds: s, ampm: ap};
+                };
+                
+                const kor = formatTime(korTime);
+                const eu = formatTime(euTime);
+                const us = formatTime(usTime);
+                
+                // US Market hours (9:30 AM - 4:00 PM ET)
+                const marketHour = usTime.getHours();
+                const marketMin = usTime.getMinutes();
+                let marketStatus = '';
+                
+                if ((marketHour === 9 && marketMin >= 30) || (marketHour > 9 && marketHour < 16)) {
+                    marketStatus = '<span style="color: #4caf50;">🟢 Market Open</span>';
+                } else if (marketHour < 9 || (marketHour === 9 && marketMin < 30)) {
+                    const openTime = new Date(usTime);
+                    openTime.setHours(9, 30, 0);
+                    const diff = Math.floor((openTime - usTime) / 60000);
+                    if (diff > 0) {
+                        marketStatus = `<span style="color: #ff9800;">⏰ Opens in ${Math.floor(diff/60)}h ${diff%60}m</span>`;
+                    }
+                } else {
+                    marketStatus = '<span style="color: #f44336;">🔴 Market Closed</span>';
+                }
+                
+                headerTimeElement.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="
+                            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #dda0dd);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            background-clip: text;
+                            font-size: 1.2em;
+                            font-weight: bold;
+                            margin-bottom: 15px;
+                        ">${dateString}</div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin: 0 auto 10px;">
+                            <div style="
+                                background: #0a0a0a;
+                                color: white;
+                                padding: 15px 10px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid #333;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            " onclick="window.open('fullscreen-clock.html?tz=Asia/Seoul', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
+                                <div style="color: #888; font-size: 0.9em; margin-bottom: 8px; font-weight: bold;">KOR</div>
+                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
+                                    ${kor.hours}:${kor.minutes}<span style="font-size: 0.6em; color: #666;">:${kor.seconds}</span>
+                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${kor.ampm}</span>
+                                </div>
+                            </div>
+                            
+                            <div style="
+                                background: #0a0a0a;
+                                color: white;
+                                padding: 15px 10px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid #333;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            " onclick="window.open('fullscreen-clock.html?tz=Europe/London', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
+                                <div style="color: #888; font-size: 0.9em; margin-bottom: 8px; font-weight: bold;">LON</div>
+                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
+                                    ${eu.hours}:${eu.minutes}<span style="font-size: 0.6em; color: #666;">:${eu.seconds}</span>
+                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${eu.ampm}</span>
+                                </div>
+                            </div>
+                            
+                            <div style="
+                                background: #0a0a0a;
+                                color: white;
+                                padding: 15px 10px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid #333;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                            " onclick="window.open('fullscreen-clock.html?tz=America/New_York', '_blank')" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='#555'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#333'">
+                                <div style="color: #888; font-size: 0.9em; margin-bottom: 8px; font-weight: bold;">NYC</div>
+                                <div style="font-size: 1.4em; font-weight: bold; line-height: 1;">
+                                    ${us.hours}:${us.minutes}<span style="font-size: 0.6em; color: #666;">:${us.seconds}</span>
+                                    <span style="font-size: 0.5em; color: #666; margin-left: 3px;">${us.ampm}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="font-size: 0.85em; margin-top: 10px;">
+                            ${marketStatus}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Binance WebSocket
+        function connectBinance() {
+            const symbols = ['btcusdt', 'ethusdt', 'solusdt', 'xrpusdt', 'avaxusdt'];
+            
+            symbols.forEach(symbol => {
+                const ws = new WebSocket(`wss://fstream.binance.com/ws/${symbol}@ticker`);
+                
+
+                ws.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    if (data.c) {
+                        const price = data.c;
+                        const high = data.h;  // 24시간 최고가
+                        const low = data.l;   // 24시간 최저가
+                        
+                        // 심볼 이름 추출 (btc, eth, xrp 등)
+                        const coinName = symbol.replace('usdt', '');
+                        const fullSymbol = symbol.toUpperCase() + 'USDT';
+                        
+                        // 가격 기록 업데이트 (BTC, ETH, SOL만)
+                        if (fullSymbol === 'BTCUSDT' || fullSymbol === 'ETHUSDT' || fullSymbol === 'SOLUSDT') {
+                            if (currentPrices[fullSymbol]) {
+                                currentPrices[fullSymbol].current = parseFloat(price);
+                                currentPrices[fullSymbol].high = Math.max(currentPrices[fullSymbol].high || 0, parseFloat(high));
+                                currentPrices[fullSymbol].low = Math.min(currentPrices[fullSymbol].low || 999999999, parseFloat(low));
+                            }
+                        }
+                        
+                        // 가격 업데이트
+                        const priceElement = document.getElementById(`binance-${coinName}`);
+                        if (priceElement) {
+                            priceElement.innerHTML = formatPrice(price);
+                            priceElement.classList.remove('loading');
+                        }
+                        
+                        // 최고가/최저가 업데이트
+                        const highElement = document.getElementById(`${coinName}-high`);
+                        const lowElement = document.getElementById(`${coinName}-low`);
+                        if (highElement && high) {
+                            highElement.innerHTML = formatPrice(high);
+                        }
+                        if (lowElement && low) {
+                            lowElement.innerHTML = formatPrice(low);
+                        }
+                        
+                        // 가격 기록 저장 (매일 자정)
+                        if (symbol === 'btcusdt') {
+                            saveBTCDailyPrice(high, low, price);
+                        } else if (symbol === 'ethusdt') {
+                            saveETHDailyPrice(high, low, price);
+                        } else if (symbol === 'solusdt') {
+                            saveSOLDailyPrice(high, low, price);
+                        }
+                        
+                        updateLastUpdate();
+                    }
+                };
+
+                ws.onerror = function(error) {
+                    console.error('Binance WebSocket error:', error);
+                };
+
+                if (symbol === 'btcusdt') {
+                    binanceBtcWs = ws;
+                } else if (symbol === 'ethusdt') {
+                    binanceEthWs = ws;
+                } else if (symbol === 'xrpusdt') {
+                    binanceXrpWs = ws;
+                } else if (symbol === 'solusdt') {
+                    binanceSolWs = ws;
+                } else if (symbol === 'avaxusdt') {
+                    binanceAvaxWs = ws;
+                }
+            });
+        }
+
+        // 초기 로딩 클래스 추가
+        document.querySelectorAll('.price').forEach(el => {
+            el.classList.add('loading');
+        });
+
+        // WebSocket 연결 시작
+        connectBinance();
+        
+        // Supabase에서 링크 데이터 로드
+        async function loadLinksFromSupabase() {
+            console.log('Loading links from Supabase...');
+            console.log('Supabase URL:', typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'NOT DEFINED');
+            console.log('Supabase client:', typeof supabase !== 'undefined' ? 'Initialized' : 'NOT INITIALIZED');
+            
+            try {
+                const { data: links, error } = await window.supabaseClient.from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) {
+                    console.error('Supabase error:', error);
+                    console.error('Error details:', error.message, error.code);
+                    throw error;
+                }
+                
+                console.log('Links loaded:', links);
+                console.log('Total links count:', links ? links.length : 0);
+                
+                // 카테고리별로 링크 분류
+                const gptLinks = links ? links.filter(link => link.category === 'gpt') : [];
+                const youtubeLinks = links ? links.filter(link => link.category === 'youtube') : [];
+                const favoriteLinks = links ? links.filter(link => link.category === 'favorite') : [];
+                const funYoutubeLinks = links ? links.filter(link => link.category === 'fun-youtube') : [];
+                
+                // 커스텀 카테고리 처리
+                const customCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
+                const customCategoryLinks = {};
+                customCategories.forEach(cat => {
+                    customCategoryLinks[cat.id] = links ? links.filter(link => link.category === cat.id) : [];
+                });
+                
+                console.log('GPT links:', gptLinks.length);
+                console.log('YouTube links:', youtubeLinks.length);
+                console.log('Favorite links:', favoriteLinks.length);
+                console.log('Fun YouTube links:', funYoutubeLinks.length);
+                console.log('Custom categories:', customCategories);
+                
+                // GPT 링크 렌더링
+                const gptContainer = document.getElementById('gpt-links');
+                if (gptContainer) {
+                    if (gptLinks.length > 0) {
+                        gptContainer.innerHTML = gptLinks.map(link => `
+                            <a href="${link.url}" target="_blank" style="
+                                background: #1a1a1a;
+                                color: white;
+                                padding: 15px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid #333;
+                                text-decoration: none;
+                                transition: transform 0.3s ease;
+                                display: block;
+                            ">
+                                <div style="font-size: 1em;">${link.name}</div>
+                            </a>
+                        `).join('');
+                    } else {
+                        gptContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                    }
+                }
+                
+                // YouTube 링크 렌더링
+                const youtubeContainer = document.getElementById('youtube-links');
+                if (youtubeContainer) {
+                    if (youtubeLinks.length > 0) {
+                        youtubeContainer.innerHTML = youtubeLinks.map(link => `
+                        <a href="${link.url}" target="_blank" style="
+                            background: #1a1a1a;
+                            color: white;
+                            padding: 15px;
+                            border-radius: 10px;
+                            text-align: center;
+                            border: 1px solid #333;
+                            text-decoration: none;
+                            transition: transform 0.3s ease;
+                            display: block;
+                            position: relative;
+                        ">
+                            <div style="font-size: 1.1em; font-weight: bold;">${link.name}</div>
+                            <span class="live-indicator" data-channel-url="${link.url}" style="
+                                position: absolute;
+                                top: 5px;
+                                right: 5px;
+                                width: 10px;
+                                height: 10px;
+                                border-radius: 50%;
+                                background: #666;
+                                animation: none;
+                            "></span>
+                        </a>
+                        `).join('');
+                        
+                        // YouTube 라이브 상태 체크
+                        checkYouTubeLiveStatus();
+                    } else {
+                        youtubeContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                    }
+                }
+                
+                // Favorite 링크 렌더링
+                const favoriteContainer = document.getElementById('favorite-links');
+                if (favoriteContainer) {
+                    if (favoriteLinks.length > 0) {
+                        favoriteContainer.innerHTML = favoriteLinks.map(link => `
+                        <a href="${link.url}" target="_blank" style="
+                            background: #1a1a1a;
+                            color: white;
+                            padding: 15px;
+                            border-radius: 10px;
+                            text-align: center;
+                            border: 1px solid #333;
+                            text-decoration: none;
+                            transition: transform 0.3s ease;
+                            display: block;
+                        ">
+                            <div style="font-size: 1em;">${link.name}</div>
+                        </a>
+                        `).join('');
+                    } else {
+                        favoriteContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                    }
+                }
+                
+                // Fun YouTube 링크 렌더링
+                const funYoutubeContainer = document.getElementById('fun-youtube-links');
+                if (funYoutubeContainer) {
+                    if (funYoutubeLinks.length > 0) {
+                        funYoutubeContainer.innerHTML = funYoutubeLinks.map(link => `
+                        <a href="${link.url}" target="_blank" style="
+                            background: #1a1a1a;
+                            color: white;
+                            padding: 15px;
+                            border-radius: 10px;
+                            text-align: center;
+                            border: 1px solid #333;
+                            text-decoration: none;
+                            transition: transform 0.3s ease;
+                            display: block;
+                        ">
+                            <div style="font-size: 1em;">${link.name}</div>
+                        </a>
+                        `).join('');
+                    } else {
+                        funYoutubeContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                    }
+                }
+                
+                // 커스텀 카테고리 섹션 렌더링
+                const customSectionsContainer = document.getElementById('custom-category-sections');
+                if (customSectionsContainer && customCategories.length > 0) {
+                    customSectionsContainer.innerHTML = '';
+                    
+                    customCategories.forEach(category => {
+                        const categoryLinks = customCategoryLinks[category.id] || [];
+                        
+                        if (categoryLinks.length > 0) {
+                            const section = document.createElement('div');
+                            section.className = 'custom-category-section';
+                            section.style.cssText = 'margin-top: 20px; padding-bottom: 20px;';
+                            
+                            section.innerHTML = `
+                                <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                                    📌 ${category.name}
+                                </h2>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                                    ${categoryLinks.map(link => `
+                                        <a href="${link.url}" target="_blank" style="
+                                            background: #1a1a1a;
+                                            color: white;
+                                            padding: 15px;
+                                            border-radius: 10px;
+                                            text-align: center;
+                                            border: 1px solid #333;
+                                            text-decoration: none;
+                                            transition: transform 0.3s ease;
+                                            display: block;
+                                        ">
+                                            <div style="font-size: 1em;">${link.name}</div>
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            `;
+                            
+                            customSectionsContainer.appendChild(section);
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                console.error('링크 로드 실패:', error);
+                console.error('Error stack:', error.stack);
+                
+                // 에러 발생시 빈 컨테이너에 메시지 표시
+                const gptContainer = document.getElementById('gpt-links');
+                if (gptContainer && gptContainer.innerHTML === '') {
+                    gptContainer.innerHTML = '<div style="color: #666;">링크를 불러오는 중 오류가 발생했습니다. 콘솔을 확인하세요.</div>';
+                }
+            }
+        }
+        
+        // YouTube 라이브 상태 체크 함수
+        async function checkYouTubeLiveStatus() {
+            const indicators = document.querySelectorAll('.live-indicator');
+            
+            indicators.forEach(async (indicator) => {
+                const channelUrl = indicator.getAttribute('data-channel-url');
+                
+                // URL에서 채널 정보 추출
+                try {
+                    // CORS 제한으로 인해 직접 체크가 어려우므로,
+                    // 프록시 서버나 YouTube API를 사용해야 합니다.
+                    // 일단 시뮬레이션으로 구현
+                    
+                    // 실제 구현시 YouTube Data API v3 사용 필요
+                    // 여기서는 URL에 '/live'가 포함되어 있으면 라이브로 가정
+                    const isLive = channelUrl.includes('/live');
+                    
+                    if (isLive) {
+                        // 라이브 중 - 빨간색 원 + 깜빡임 애니메이션
+                        indicator.style.background = '#ff0000';
+                        indicator.style.animation = 'livePulse 1.5s infinite';
+                        indicator.title = '🔴 LIVE';
+                    } else {
+                        // 오프라인 - 회색 원
+                        indicator.style.background = '#666';
+                        indicator.style.animation = 'none';
+                        indicator.title = '⚫ Offline';
+                    }
+                } catch (error) {
+                    console.error('라이브 상태 확인 실패:', error);
+                }
+            });
+        }
+        
+        // BTC 가격 기록 저장 (하루에 한 번)
+        let btcDailyData = {};
+        let lastSavedDate = null;
+        
+        function saveBTCDailyPrice(high, low, close) {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            
+            // 오늘 데이터 업데이트
+            btcDailyData = {
+                high: high,
+                low: low,
+                close: close
+            };
+            
+            // 자정이 되면 DB에 저장
+            if (now.getHours() === 0 && now.getMinutes() < 1 && lastSavedDate !== today) {
+                saveBTCToSupabase(today, high, low, close);
+                lastSavedDate = today;
+            }
+        }
+        
+        // Supabase에 BTC 가격 저장
+        async function saveBTCToSupabase(date, high, low, close) {
+            try {
+                const { error } = await window.supabaseClient.from('price_history')
+                    .upsert({
+                        symbol: 'BTCUSDT',
+                        date: date,
+                        high_price: parseFloat(high),
+                        low_price: parseFloat(low),
+                        close_price: parseFloat(close)
+                    }, {
+                        onConflict: 'symbol,date'
+                    });
+                
+                if (!error) {
+                    loadBTCHistory(); // 저장 후 새로고침
+                }
+            } catch (err) {
+                console.error('BTC 가격 저장 실패:', err);
+            }
+        }
+        
+        // ETH 가격 기록 저장 (하루에 한 번)
+        let ethDailyData = {};
+        let ethLastSavedDate = null;
+        
+        function saveETHDailyPrice(high, low, close) {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            
+            ethDailyData = { high, low, close };
+            
+            if (now.getHours() === 0 && now.getMinutes() < 1 && ethLastSavedDate !== today) {
+                saveToSupabase('ETHUSDT', today, high, low, close);
+                ethLastSavedDate = today;
+            }
+        }
+        
+        // SOL 가격 기록 저장 (하루에 한 번)
+        let solDailyData = {};
+        let solLastSavedDate = null;
+        
+        function saveSOLDailyPrice(high, low, close) {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            
+            solDailyData = { high, low, close };
+            
+            if (now.getHours() === 0 && now.getMinutes() < 1 && solLastSavedDate !== today) {
+                saveToSupabase('SOLUSDT', today, high, low, close);
+                solLastSavedDate = today;
+            }
+        }
+        
+        // 현재 가격 추적
+        let currentPrices = {
+            BTCUSDT: { high: 0, low: 999999999, current: 0 },
+            ETHUSDT: { high: 0, low: 999999999, current: 0 },
+            SOLUSDT: { high: 0, low: 999999999, current: 0 }
+        };
+        
+        // 공통 Supabase 저장 함수
+        async function saveToSupabase(symbol, date, high, low, close) {
+            try {
+                const { error } = await window.supabaseClient.from('price_history')
+                    .upsert({
+                        symbol: symbol,
+                        date: date,
+                        high_price: parseFloat(high),
+                        low_price: parseFloat(low),
+                        price: parseFloat(close)  // close_price -> price로 수정
+                    }, {
+                        onConflict: 'symbol,date'
+                    });
+                
+                if (!error) {
+                    if (symbol === 'BTCUSDT') loadBTCHistory();
+                    else if (symbol === 'ETHUSDT') loadETHHistory();
+                    else if (symbol === 'SOLUSDT') loadSOLHistory();
+                }
+            } catch (err) {
+                console.error(`${symbol} 가격 저장 실패:`, err);
+            }
+        }
+        
+        // BTC 10일 가격 기록 불러오기
+        async function loadBTCHistory() {
+            console.log('BTC 기록 로드 시작');
+            try {
+                const { data, error } = await window.supabaseClient.from('price_history')
+                    .select('*')
+                    .eq('symbol', 'BTCUSDT')
+                    .order('date', { ascending: false })
+                    .limit(10);
+                
+                console.log('BTC 데이터:', data);
+                console.log('BTC 에러:', error);
+                
+                if (error) throw error;
+                
+                const tbody = document.getElementById('btc-history-tbody');
+                if (!tbody) {
+                    console.error('btc-history-tbody 요소를 찾을 수 없습니다');
+                    return;
+                }
+                
+                if (data && data.length > 0) {
+                    tbody.innerHTML = data.map(record => {
+                        // 가격 포맷 함수 (HTML 없이)
+                        const formatPriceSimple = (price) => {
+                            if (price === null || price === undefined || price === '') return '-';
+                            const num = parseFloat(price);
+                            if (isNaN(num)) return '-';
+                            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        };
+                        
+                        const dateObj = new Date(record.date + 'T00:00:00');
+                        const month = dateObj.getMonth() + 1;
+                        const day = dateObj.getDate();
+                        const dateStr = `${month}.${day}`;
+
+                        return `
+                        <tr style="border-bottom: 1px solid #222;">
+                            <td style="padding: 8px; color: #888;">${dateStr}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.high_price)}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.low_price)}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.price)}</td>
+                        </tr>`;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #666;">아직 기록된 데이터가 없습니다</td></tr>';
+                }
+            } catch (error) {
+                console.error('BTC 기록 로드 실패:', error);
+                const tbody = document.getElementById('btc-history-tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #666;">데이터를 불러올 수 없습니다</td></tr>';
+                }
+            }
+        }
+        
+        // ETH 10일 가격 기록 불러오기
+        async function loadETHHistory() {
+            try {
+                const { data, error } = await window.supabaseClient.from('price_history')
+                    .select('*')
+                    .eq('symbol', 'ETHUSDT')
+                    .order('date', { ascending: false })
+                    .limit(10);
+                
+                if (error) throw error;
+                
+                const tbody = document.getElementById('eth-history-tbody');
+                if (!tbody) return;
+                
+                if (data && data.length > 0) {
+                    tbody.innerHTML = data.map(record => {
+                        // 가격 포맷 함수 (HTML 없이)
+                        const formatPriceSimple = (price) => {
+                            if (price === null || price === undefined || price === '') return '-';
+                            const num = parseFloat(price);
+                            if (isNaN(num)) return '-';
+                            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        };
+                        
+                        const dateObj = new Date(record.date + 'T00:00:00');
+                        const month = dateObj.getMonth() + 1;
+                        const day = dateObj.getDate();
+                        const dateStr = `${month}.${day}`;
+
+                        return `
+                        <tr style="border-bottom: 1px solid #222;">
+                            <td style="padding: 8px; color: #888;">${dateStr}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.high_price)}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.low_price)}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.price)}</td>
+                        </tr>`;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #666;">아직 기록된 데이터가 없습니다</td></tr>';
+                }
+            } catch (error) {
+                console.error('ETH 기록 로드 실패:', error);
+            }
+        }
+        
+        // SOL 10일 가격 기록 불러오기
+        async function loadSOLHistory() {
+            try {
+                const { data, error } = await window.supabaseClient.from('price_history')
+                    .select('*')
+                    .eq('symbol', 'SOLUSDT')
+                    .order('date', { ascending: false })
+                    .limit(10);
+                
+                if (error) throw error;
+                
+                const tbody = document.getElementById('sol-history-tbody');
+                if (!tbody) return;
+                
+                if (data && data.length > 0) {
+                    tbody.innerHTML = data.map(record => {
+                        // 가격 포맷 함수 (HTML 없이)
+                        const formatPriceSimple = (price) => {
+                            if (price === null || price === undefined || price === '') return '-';
+                            const num = parseFloat(price);
+                            if (isNaN(num)) return '-';
+                            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        };
+                        
+                        const dateObj = new Date(record.date + 'T00:00:00');
+                        const month = dateObj.getMonth() + 1;
+                        const day = dateObj.getDate();
+                        const dateStr = `${month}.${day}`;
+
+                        return `
+                        <tr style="border-bottom: 1px solid #222;">
+                            <td style="padding: 8px; color: #888;">${dateStr}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.high_price)}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.low_price)}</td>
+                            <td style="padding: 8px; text-align: right; color: #fff;">$${formatPriceSimple(record.price)}</td>
+                        </tr>`;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #666;">아직 기록된 데이터가 없습니다</td></tr>';
+                }
+            } catch (error) {
+                console.error('SOL 기록 로드 실패:', error);
+            }
+        }
+        
+        // 채팅 기능
+        let chatChannel = null;
+        
+        // 브라우저 fingerprint 생성 (모바일 호환 버전)
+        function getBrowserFingerprint() {
+            // localStorage에서 기존 ID 확인 (영구 보존)
+            let storedId = localStorage.getItem('persistent_browser_id');
+            
+            if (storedId) {
+                console.log('기존 Browser ID 사용:', storedId);
+                return storedId;
+            }
+            
+            // 새 ID 생성 (처음 접속시)
+            try {
+                const isMobile = /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent);
+                const deviceType = isMobile ? 'M' : 'D'; // Mobile 또는 Desktop
+                const timestamp = Date.now().toString(36);
+                const randomStr = Math.random().toString(36).substring(2, 9);
+                
+                // 형식: M_timestamp_random 또는 D_timestamp_random
+                const newId = `${deviceType}_${timestamp}_${randomStr}`;
+                
+                // localStorage에 영구 저장
+                localStorage.setItem('persistent_browser_id', newId);
+                localStorage.setItem('browser_id', newId); // 호환성을 위해 두 곳에 저장
+                
+                console.log('새 Browser ID 생성:', newId, {
+                    디바이스: isMobile ? '모바일' : '데스크탑',
+                    화면: `${screen.width}x${screen.height}`,
+                    언어: navigator.language
+                });
+                
+                return newId;
+            } catch (e) {
+                // 에러 발생시 간단한 ID 생성
+                const fallbackId = 'F_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 5);
+                localStorage.setItem('persistent_browser_id', fallbackId);
+                console.error('Browser ID 생성 에러, fallback 사용:', fallbackId);
+                return fallbackId;
+            }
+        }
+        
+        // 채팅 메시지 로드
+        async function loadChatMessages() {
+            try {
+                console.log('채팅 메시지 로드 시작...');
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .select('*')
+                    .order('created_at', { ascending: true })
+                    .limit(100);
+                
+                if (error) {
+                    console.error('채팅 메시지 로드 실패:', error);
+                    const messagesContainer = document.getElementById('chat-messages');
+                    if (messagesContainer) {
+                        messagesContainer.innerHTML = `<div style="color: #f44; padding: 10px;">메시지 로드 실패: ${error.message}</div>`;
+                    }
+                    return;
+                }
+                
+                console.log('로드된 메시지:', data);
+                const messagesContainer = document.getElementById('chat-messages');
+                if (messagesContainer) {
+                    if (data && data.length > 0) {
+                        messagesContainer.innerHTML = data.map(msg => createMessageElement(msg)).join('');
+                    } else {
+                        messagesContainer.innerHTML = '<div style="color: #666; text-align: center; padding: 10px;">아직 메시지가 없습니다. 첫 메시지를 보내보세요!</div>';
+                    }
+                    scrollToBottom();
+                }
+            } catch (error) {
+                console.error('채팅 로드 중 오류:', error);
+                const messagesContainer = document.getElementById('chat-messages');
+                if (messagesContainer) {
+                    messagesContainer.innerHTML = `<div style="color: #f44; padding: 10px;">오류 발생: ${error.message}</div>`;
+                }
+            }
+        }
+        
+        // 코인 목록 - 안정적인 CDN 이미지 URL 사용  
+        const coinAvatars = [
+            { id: 'btc', name: 'Bitcoin', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/btc.png', color: '#f7931a' },
+            { id: 'eth', name: 'Ethereum', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/eth.png', color: '#627eea' },
+            { id: 'bnb', name: 'BNB', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/bnb.png', color: '#f3ba2f' },
+            { id: 'xrp', name: 'XRP', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/xrp.png', color: '#23292f' },
+            { id: 'sol', name: 'Solana', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/sol.png', color: '#14f195' },
+            { id: 'ada', name: 'Cardano', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/ada.png', color: '#0033ad' },
+            { id: 'doge', name: 'Dogecoin', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/doge.png', color: '#c3a634' },
+            { id: 'avax', name: 'Avalanche', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/avax.png', color: '#e84142' },
+            { id: 'dot', name: 'Polkadot', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/dot.png', color: '#e6007a' },
+            { id: 'matic', name: 'Polygon', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/matic.png', color: '#8247e5' },
+            { id: 'link', name: 'Chainlink', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/link.png', color: '#2a5ada' },
+            { id: 'uni', name: 'Uniswap', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/uni.png', color: '#ff007a' },
+            { id: 'atom', name: 'Cosmos', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/atom.png', color: '#2e3148' },
+            { id: 'ltc', name: 'Litecoin', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/ltc.png', color: '#bfbbbb' },
+            { id: 'xlm', name: 'Stellar', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/xlm.png', color: '#14b8a6' },
+            { id: 'algo', name: 'Algorand', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/algo.png', color: '#000000' },
+            { id: 'vet', name: 'VeChain', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/vet.png', color: '#15bdff' },
+            { id: 'icp', name: 'ICP', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/icp.png', color: '#29abe2' },
+            { id: 'fil', name: 'Filecoin', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/fil.png', color: '#0090ff' },
+            { id: 'sand', name: 'Sandbox', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/sand.png', color: '#04adef' },
+            { id: 'mana', name: 'Decentraland', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/mana.png', color: '#ff2d55' },
+            { id: 'trx', name: 'Tron', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/trx.png', color: '#ff0013' },
+            { id: 'near', name: 'NEAR', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/near.png', color: '#000000' },
+            { id: 'mkr', name: 'Maker', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/mkr.png', color: '#1aab9b' },
+            { id: 'aave', name: 'Aave', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/aave.png', color: '#b6509e' },
+            { id: 'crv', name: 'Curve', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/crv.png', color: '#fffc33' },
+            { id: 'grt', name: 'The Graph', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/grt.png', color: '#6f4cff' },
+            { id: 'shib', name: 'Shiba Inu', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/shib.png', color: '#fda32b' },
+            { id: 'ftm', name: 'Fantom', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/ftm.png', color: '#1969ff' },
+            { id: 'eos', name: 'EOS', image: 'https://cdn.jsdelivr.net/gh/Pymmdrza/Cryptocurrency_Logos@mainx/PNG/eos.png', color: '#000000' }
+        ];
+        
+        // 사용자별 고정 코인 아바타 할당
+        const userAvatarMap = {}; // 사용자 ID -> 코인 아바타 맵핑
+        const usedAvatarIndices = new Set(); // 이미 사용된 아바타 인덱스
+        
+        function getCoinAvatar(userId) {
+            // userId가 없거나 유효하지 않은 경우 기본값(비트코인) 반환
+            if (!userId || userId === 'undefined' || userId === 'null') {
+                return coinAvatars[0]; // 기본값은 비트코인
+            }
+            
+            // 이미 할당된 아바타가 있으면 반환
+            if (userAvatarMap[userId]) {
+                return userAvatarMap[userId];
+            }
+            
+            // 새로운 사용자에게 코인 할당
+            let avatarIndex;
+            
+            // 아직 사용 안 된 코인이 있으면 순차적으로 할당
+            if (usedAvatarIndices.size < coinAvatars.length) {
+                for (let i = 0; i < coinAvatars.length; i++) {
+                    if (!usedAvatarIndices.has(i)) {
+                        avatarIndex = i;
+                        break;
+                    }
+                }
+            } else {
+                // 모든 코인이 사용 중이면 해시 기반 할당
+                let hashNum = 0;
+                for (let i = 0; i < Math.min(userId.length, 10); i++) {
+                    hashNum += userId.charCodeAt(i) * (i + 1);
+                }
+                avatarIndex = hashNum % coinAvatars.length;
+            }
+            
+            // avatarIndex가 유효하지 않은 경우 기본값 사용
+            if (avatarIndex === undefined || avatarIndex < 0 || avatarIndex >= coinAvatars.length) {
+                avatarIndex = 0;
+            }
+            
+            // 아바타 할당 및 저장
+            const avatar = coinAvatars[avatarIndex];
+            userAvatarMap[userId] = avatar;
+            usedAvatarIndices.add(avatarIndex);
+            
+            // localStorage에도 저장 (영구 보존)
+            try {
+                const savedMappings = JSON.parse(localStorage.getItem('userCoinAvatars') || '{}');
+                savedMappings[userId] = avatarIndex;
+                localStorage.setItem('userCoinAvatars', JSON.stringify(savedMappings));
+            } catch (e) {
+                console.error('아바타 맵핑 저장 실패:', e);
+            }
+            
+            return avatar;
+        }
+        
+        // 페이지 로드 시 저장된 맵핑 복원
+        function loadSavedAvatarMappings() {
+            try {
+                const savedMappings = JSON.parse(localStorage.getItem('userCoinAvatars') || '{}');
+                for (const [userId, avatarIndex] of Object.entries(savedMappings)) {
+                    if (avatarIndex < coinAvatars.length) {
+                        userAvatarMap[userId] = coinAvatars[avatarIndex];
+                        usedAvatarIndices.add(avatarIndex);
+                    }
+                }
+                console.log('코인 아바타 맵핑 복원:', Object.keys(userAvatarMap).length, '명');
+            } catch (e) {
+                console.error('아바타 맵핑 로드 실패:', e);
+            }
+        }
+        
+        // 메시지 요소 생성 (카카오톡 스타일)
+        function createMessageElement(message) {
+            const time = new Date(message.created_at).toLocaleTimeString('ko-KR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            // 현재 브라우저의 fingerprint와 비교
+            const currentBrowserId = getBrowserFingerprint();
+            const isMyMessage = message.browser_id === currentBrowserId || 
+                               message.browser_id === localStorage.getItem('chat_browser_id');
+            
+            // 브라우저 ID 저장 (일관성 유지)
+            if (isMyMessage && message.browser_id) {
+                localStorage.setItem('chat_browser_id', message.browser_id);
+            }
+            
+            // 디바이스 정보 표시 텍스트
+            let deviceInfo = '';
+            if (message.device_type || message.browser_name) {
+                const parts = [];
+                if (message.device_type) {
+                    const icon = message.device_type === 'Mobile' ? '📱' : 
+                                message.device_type === 'Tablet' ? '📋' : '💻';
+                    parts.push(icon + ' ' + message.device_type);
+                }
+                if (message.browser_name) parts.push(message.browser_name);
+                if (message.os_name) parts.push(message.os_name);
+                if (parts.length > 0) {
+                    deviceInfo = parts.join(' · ');
+                }
+            }
+            
+            // 사용자의 코인 아바타 가져오기 (browser_id 기반)
+            const userIdentifier = message.browser_id || message.ip_hash || `user_${message.id}`;
+            const coinAvatar = getCoinAvatar(userIdentifier);
+            
+            if (isMyMessage) {
+                // 내 메시지 (좌측 정렬로 변경) - 전체 너비 사용
+                return `
+                    <div data-message-id="${message.id}" style="
+                        display: flex;
+                        margin-bottom: 10px;
+                        width: 100%;
+                    ">
+                        <div style="
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            margin-right: 8px;
+                            background: ${coinAvatar.color || '#fff'};
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            overflow: hidden;
+                            position: relative;
+                            flex-shrink: 0;
+                        ">
+                            <img src="${coinAvatar.image}"
+                                style="
+                                    width: 100%;
+                                    height: 100%;
+                                    object-fit: contain;
+                                    padding: 4px;
+                                "
+                                alt="${coinAvatar.name}"
+                                onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIGZpbGw9IiNmN2EwMGMiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7CpzwvdGV4dD48L3N2Zz4='">
+                        </div>
+                        <div style="
+                            flex-grow: 1;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            min-width: 0;
+                            width: calc(100% - 44px);
+                        ">
+                            <div class="message-bubble" style="
+                                background: #1a1a1a;
+                                color: #fff;
+                                padding: 8px 12px;
+                                border-radius: 15px;
+                                border-top-left-radius: 4px;
+                                font-size: 14px;
+                                line-height: 1.4;
+                                word-wrap: break-word;
+                                border: 1px solid #444;
+                                flex-grow: 1;
+                                min-width: 0;
+                            ">
+                                ${escapeHtml(message.message)}
+                            </div>
+                            <span class="message-time" style="color: #666; font-size: 11px; flex-shrink: 0; width: 45px;">
+                                ${time}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 다른 사람 메시지 (왼쪽 정렬)
+                return `
+                    <div data-message-id="${message.id}" style="
+                        display: flex;
+                        margin-bottom: 10px;
+                        width: 100%;
+                    ">
+                        <div style="
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            margin-right: 8px;
+                            background: ${coinAvatar.color || '#fff'};
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            overflow: hidden;
+                            position: relative;
+                            flex-shrink: 0;
+                        ">
+                            <img src="${coinAvatar.image}"
+                                style="
+                                    width: 100%;
+                                    height: 100%;
+                                    object-fit: contain;
+                                    padding: 4px;
+                                "
+                                alt="${coinAvatar.name}"
+                                onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIGZpbGw9IiNmN2EwMGMiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7CpzwvdGV4dD48L3N2Zz4='">
+                        </div>
+                        <div style="
+                            flex-grow: 1;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 2px;
+                            min-width: 0;
+                            width: calc(100% - 44px);
+                        ">
+                            ${deviceInfo ? `<div style="color: #888; font-size: 11px; margin-left: 5px;">${deviceInfo}</div>` : ''}
+                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                                <div class="message-bubble" style="
+                                    background: #000;
+                                    color: #fff;
+                                    padding: 8px 12px;
+                                    border-radius: 15px;
+                                    border-top-left-radius: 4px;
+                                    font-size: 14px;
+                                    line-height: 1.4;
+                                    word-wrap: break-word;
+                                    border: 1px solid #333;
+                                    flex-grow: 1;
+                                    min-width: 0;
+                                ">
+                                    ${escapeHtml(message.message)}
+                                </div>
+                                <span class="message-time" style="color: #666; font-size: 11px; flex-shrink: 0; width: 45px;">
+                                    ${time}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // HTML 이스케이프
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 스크롤을 맨 아래로
+        function scrollToBottom() {
+            const container = document.getElementById('chat-container');
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+        
+        // 메시지 전송 (디버깅 포함)
+        async function sendMessage() {
+            console.log('sendMessage 함수 시작');
+            
+            const input = document.getElementById('chat-input');
+            const sendButton = document.getElementById('chat-send');
+            
+            console.log('입력 요소:', input);
+            console.log('버튼 요소:', sendButton);
+            console.log('입력값:', input?.value);
+            
+            if (!input || !input.value.trim()) {
+                console.log('입력값이 비어있음');
+                return;
+            }
+            
+            const message = input.value.trim();
+            console.log('전송할 메시지:', message);
+            
+            // UI 상태 변경
+            if (sendButton) {
+                sendButton.disabled = true;
+                sendButton.style.opacity = '0.5';
+            }
+            
+            try {
+                console.log('Supabase 전송 시작');
+                
+                // browser_id 생성 (기존 함수 사용하여 일관성 유지)
+                const browserId = getBrowserFingerprint();
+                console.log('메시지 전송시 Browser ID:', browserId);
+                
+                // 메시지 전송
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .insert([{ 
+                        message: message,
+                        browser_id: browserId
+                    }])
+                    .select();
+                
+                console.log('Supabase 응답:', { data, error });
+                
+                if (error) {
+                    console.error('전송 에러 상세:', error);
+                    
+                    // 테이블 구조 문제일 수 있으므로 browser_id 없이 재시도
+                    console.log('browser_id 없이 재시도');
+                    const { data: retryData, error: retryError } = await window.supabaseClient.from('messages')
+                        .insert([{ message: message }])
+                        .select();
+                    
+                    if (retryError) {
+                        console.error('재시도도 실패:', retryError);
+                        alert(`메시지 전송 실패\n에러: ${retryError.message}\n\n관리자에게 문의하세요.`);
+                    } else {
+                        console.log('재시도 성공:', retryData);
+                        input.value = '';
+                        await loadChatMessages();
+                    }
+                } else {
+                    console.log('전송 성공:', data);
+                    input.value = '';
+                    await loadChatMessages();
+                }
+                
+            } catch (error) {
+                console.error('예외 발생:', error);
+                alert('메시지 전송 중 오류가 발생했습니다: ' + error.message);
+            } finally {
+                // 버튼 재활성화
+                if (sendButton) {
+                    sendButton.disabled = false;
+                    sendButton.style.opacity = '1';
+                }
+            }
+        }
+        
+        // 실시간 구독 설정
+        function subscribeToChatUpdates() {
+            console.log('채팅 실시간 구독 시작');
+            
+            // 기존 채널 구독 해제
+            if (chatChannel) {
+                chatChannel.unsubscribe();
+            }
+            
+            chatChannel = window.supabaseClient.channel('chat-channel-' + Date.now())
+                .on('postgres_changes', 
+                    { event: 'INSERT', schema: 'public', table: 'messages' },
+                    (payload) => {
+                        console.log('새 메시지 수신:', payload);
+                        const messagesContainer = document.getElementById('chat-messages');
+                        if (messagesContainer && payload.new) {
+                            // 이미 표시된 메시지인지 확인
+                            const existingMessage = document.querySelector(`[data-message-id="${payload.new.id}"]`);
+                            if (!existingMessage) {
+                                messagesContainer.innerHTML += createMessageElement(payload.new);
+                                scrollToBottom();
+                            }
+                            
+                            // 100개 이상이면 오래된 메시지 제거
+                            const messages = messagesContainer.children;
+                            while (messages.length > 100) {
+                                messages[0].remove();
+                            }
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('채팅 구독 상태:', status);
+                });
+        
+            // 20초마다 메시지 새로고침 (fallback)
+            setInterval(async () => {
+                await loadChatMessages();
+            }, 20000);
+        }
+        
+        // 채팅 이벤트 리스너 설정
+        function setupChatListeners() {
+            console.log('채팅 리스너 설정 시작');
+            
+            const input = document.getElementById('chat-input');
+            const button = document.getElementById('chat-send');
+            
+            if (input) {
+                console.log('입력 필드 이벤트 설정');
+                
+                // Enter 키 처리
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        console.log('Enter 키 감지');
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+            
+            // 버튼 클릭 이벤트 (추가 보장)
+            if (button) {
+                console.log('버튼 이벤트 설정');
+                
+                // 기존 onclick 제거하고 새로 추가
+                button.onclick = null;
+                
+                // 클릭 이벤트
+                button.addEventListener('click', (e) => {
+                    console.log('버튼 클릭 이벤트');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    sendMessage();
+                });
+                
+                // 터치 이벤트 (모바일)
+                button.addEventListener('touchend', (e) => {
+                    console.log('버튼 터치 이벤트');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    sendMessage();
+                });
+            }
+        }
+        
+        // 나스닥 지수 가져오기 (Yahoo Finance API 대체)
+        async function fetchNasdaqData() {
+            try {
+                // Alpha Vantage 무료 API 사용 (일일 제한 있음)
+                // 또는 다른 방법: finnhub.io, twelvedata.com 등
+                
+                // 간단한 대체 방법: 고정값 표시 또는 외부 API
+                // 여기서는 예시로 고정값 표시
+                const nasdaqElement = document.getElementById('nasdaq-price');
+                const changeElement = document.getElementById('nasdaq-change');
+                const percentElement = document.getElementById('nasdaq-percent');
+                
+                // 실시간 API가 필요하면 나중에 추가 가능
+                // 예시 데이터 (실제로는 API를 통해 가져와야 함)
+                if (nasdaqElement) {
+                    // 랜덤 변동 시뮬레이션 (임시)
+                    const basePrice = 20000;
+                    const variation = Math.random() * 200 - 100;
+                    const currentPrice = basePrice + variation;
+                    const change = variation;
+                    const changePercent = (variation / basePrice * 100);
+                    
+                    nasdaqElement.innerHTML = formatPrice(currentPrice.toFixed(2));
+                    nasdaqElement.classList.remove('loading');
+                    
+                    if (changeElement && percentElement) {
+                        changeElement.innerHTML = `${change >= 0 ? '+' : ''}${change.toFixed(2)}`;
+                        changeElement.style.color = change >= 0 ? '#4caf50' : '#f44336';
+                        
+                        percentElement.innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
+                        percentElement.style.color = changePercent >= 0 ? '#4caf50' : '#f44336';
+                    }
+                }
+            } catch (error) {
+                console.error('NASDAQ 데이터 로드 실패:', error);
+                const nasdaqElement = document.getElementById('nasdaq-price');
+                if (nasdaqElement) {
+                    nasdaqElement.innerHTML = 'N/A';
+                    nasdaqElement.classList.remove('loading');
+                }
+            }
+        }
+        
+        // 페이지 로드시 링크 데이터 가져오기
+        window.addEventListener('DOMContentLoaded', () => {
+            // 저장된 아바타 맵핑 복원
+            loadSavedAvatarMappings();
+            
+            loadLinksFromSupabase();
+            loadBTCHistory(); // BTC 가격 기록 로드
+            loadETHHistory(); // ETH 가격 기록 로드
+            loadSOLHistory(); // SOL 가격 기록 로드
+            
+            // 나스닥 데이터 로드
+            fetchNasdaqData();
+            // 1분마다 나스닥 업데이트 (실제 API 사용 시)
+            setInterval(fetchNasdaqData, 60000);
+            
+            // 채팅 기능 초기화
+            loadChatMessages();
+            setupChatListeners();
+            subscribeToChatUpdates();
+            
+            // 실시간 업데이트 구독 (선택사항)
+            const subscription = window.supabaseClient.channel('links-channel')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'links' }, 
+                    () => {
+                        loadLinksFromSupabase(); // 변경사항 발생시 자동 새로고침
+                    }
+                )
+                .subscribe();
+            
+            // 가격 기록 실시간 업데이트
+            const priceHistorySubscription = window.supabaseClient.channel('price-history-channel')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'price_history' },
+                    (payload) => {
+                        if (payload.new && payload.new.symbol === 'BTCUSDT') loadBTCHistory();
+                        if (payload.new && payload.new.symbol === 'ETHUSDT') loadETHHistory();
+                        if (payload.new && payload.new.symbol === 'SOLUSDT') loadSOLHistory();
+                    }
+                )
+                .subscribe();
+        });
+        
+        // 5분마다 YouTube 라이브 상태 재확인
+        setInterval(() => {
+            checkYouTubeLiveStatus();
+        }, 300000);
+
+        // 연결 상태 체크 (30초마다)
+        setInterval(() => {
+            if (binanceBtcWs && binanceBtcWs.readyState !== WebSocket.OPEN) {
+                connectBinance();
+            }
+        }, 30000);
+        
+        // 가격 기록 저장 함수 (5분마다 자동 실행)
+        async function savePriceHistory() {
+            const today = new Date().toISOString().split('T')[0];
+            console.log('가격 기록 자동 저장:', today, currentPrices);
+            
+            // BTC 저장
+            if (currentPrices.BTCUSDT && currentPrices.BTCUSDT.current > 0) {
+                await saveToSupabase('BTCUSDT', today, 
+                    currentPrices.BTCUSDT.high, 
+                    currentPrices.BTCUSDT.low, 
+                    currentPrices.BTCUSDT.current);
+            }
+            
+            // ETH 저장
+            if (currentPrices.ETHUSDT && currentPrices.ETHUSDT.current > 0) {
+                await saveToSupabase('ETHUSDT', today,
+                    currentPrices.ETHUSDT.high, 
+                    currentPrices.ETHUSDT.low, 
+                    currentPrices.ETHUSDT.current);
+            }
+            
+            // SOL 저장
+            if (currentPrices.SOLUSDT && currentPrices.SOLUSDT.current > 0) {
+                await saveToSupabase('SOLUSDT', today,
+                    currentPrices.SOLUSDT.high, 
+                    currentPrices.SOLUSDT.low, 
+                    currentPrices.SOLUSDT.current);
+            }
+        }
+        
+        // 5분마다 실행
+        setInterval(savePriceHistory, 300000);
+        
+        // 초기 실행 (20초 후 - WebSocket 연결 후)
+        setTimeout(savePriceHistory, 20000);
+    </script>
+    
+    <!-- 관리자 설정 버튼 -->
+    <a href="../admin-links.html" class="settings-btn" title="관리자 설정">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24M22 12h-6m-6 0H1"></path>
+        </svg>
+    </a>
+    
+    <style>
+        .settings-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+        
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+            transform: rotate(90deg);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+        }
+        
+        .settings-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .settings-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .settings-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+</body>
+</html>

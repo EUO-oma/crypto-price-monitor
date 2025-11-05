@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingView 가격 연동 테스트</title>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #1a1a1a;
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .chart-section {
+            flex: 2;
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+
+        .price-section {
+            flex: 1;
+            background: #0a0a0a;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+
+        .price-card {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+            transition: all 0.3s ease;
+        }
+
+        .price-card:hover {
+            border-color: #555;
+            transform: translateY(-2px);
+        }
+
+        .symbol {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        .price {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .price.up {
+            color: #4caf50;
+        }
+
+        .price.down {
+            color: #f44336;
+        }
+
+        .price.neutral {
+            color: #fff;
+        }
+
+        .change {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .timestamp {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        #tradingview_widget {
+            height: 500px;
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        .symbol-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .symbol-btn {
+            padding: 8px 16px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .symbol-btn:hover,
+        .symbol-btn.active {
+            background: #4facfe;
+            border-color: #4facfe;
+        }
+
+        .connection-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .connected {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border: 1px solid #4caf50;
+        }
+
+        .disconnected {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 15px;
+            background: #333;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid #555;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-link:hover {
+            background: #555;
+            border-color: #777;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .chart-section {
+                order: 2;
+            }
+            
+            .price-section {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← 메인으로</a>
+    
+    <div class="header">
+        <h1>📈 TradingView 가격 연동 테스트</h1>
+        <div class="status">실시간 차트 데이터를 메인 페이지 가격과 연동하는 테스트</div>
+    </div>
+
+    <div class="container">
+        <div class="chart-section">
+            <div class="controls">
+                <h3 style="margin-bottom: 15px;">📊 TradingView 차트</h3>
+                <div class="symbol-selector">
+                    <button class="symbol-btn active" onclick="loadSymbol('BINANCE:BTCUSDT')">BTC/USDT</button>
+                    <button class="symbol-btn" onclick="loadSymbol('BINANCE:ETHUSDT')">ETH/USDT</button>
+                    <button class="symbol-btn" onclick="loadSymbol('BINANCE:SOLUSDT')">SOL/USDT</button>
+                    <button class="symbol-btn" onclick="loadSymbol('BINANCE:XRPUSDT')">XRP/USDT</button>
+                </div>
+            </div>
+            <div id="tradingview_widget"></div>
+        </div>
+
+        <div class="price-section">
+            <h3 style="margin-bottom: 15px;">💰 실시간 가격</h3>
+            
+            <div id="connection-status" class="connection-status disconnected">
+                연결 중...
+            </div>
+
+            <div class="price-card">
+                <div class="symbol">₿ BTC/USDT</div>
+                <div class="price neutral" id="btc-price">로딩 중...</div>
+                <div class="change" id="btc-change">-</div>
+                <div class="timestamp" id="btc-timestamp">-</div>
+            </div>
+
+            <div class="price-card">
+                <div class="symbol">Ξ ETH/USDT</div>
+                <div class="price neutral" id="eth-price">로딩 중...</div>
+                <div class="change" id="eth-change">-</div>
+                <div class="timestamp" id="eth-timestamp">-</div>
+            </div>
+
+            <div class="price-card">
+                <div class="symbol">◎ SOL/USDT</div>
+                <div class="price neutral" id="sol-price">로딩 중...</div>
+                <div class="change" id="sol-change">-</div>
+                <div class="timestamp" id="sol-timestamp">-</div>
+            </div>
+
+            <div class="price-card">
+                <div class="symbol">🪙 XRP/USDT</div>
+                <div class="price neutral" id="xrp-price">로딩 중...</div>
+                <div class="change" id="xrp-change">-</div>
+                <div class="timestamp" id="xrp-timestamp">-</div>
+            </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 10px; border: 1px solid #333;">
+                <h4 style="color: #aaa; margin-bottom: 10px;">🔗 연동 테스트</h4>
+                <button onclick="sendToMainPage()" style="
+                    width: 100%;
+                    padding: 10px;
+                    background: #4facfe;
+                    color: #fff;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.background='#3d8bfe'" onmouseout="this.style.background='#4facfe'">
+                    메인 페이지로 가격 전송
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSymbol = 'BINANCE:BTCUSDT';
+        let widget = null;
+        let priceData = {};
+        let wsConnections = {};
+
+        // TradingView 위젯 초기화
+        function initTradingView(symbol = 'BINANCE:BTCUSDT') {
+            if (widget) {
+                widget.remove();
+            }
+
+            widget = new TradingView.widget({
+                autosize: true,
+                symbol: symbol,
+                interval: "1",
+                timezone: "Asia/Seoul",
+                theme: "dark",
+                style: "1",
+                locale: "ko",
+                toolbar_bg: "#1a1a1a",
+                enable_publishing: false,
+                hide_top_toolbar: false,
+                hide_legend: false,
+                save_image: false,
+                container_id: "tradingview_widget",
+                studies: [
+                    "Volume@tv-basicstudies"
+                ],
+                overrides: {
+                    "paneProperties.background": "#1a1a1a",
+                    "paneProperties.vertGridProperties.color": "#333",
+                    "paneProperties.horzGridProperties.color": "#333",
+                    "symbolWatermarkProperties.transparency": 90,
+                    "scalesProperties.textColor": "#AAA"
+                }
+            });
+
+            console.log('TradingView 위젯 초기화:', symbol);
+        }
+
+        // 심볼 변경
+        function loadSymbol(symbol) {
+            currentSymbol = symbol;
+            
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.symbol-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 차트 업데이트
+            initTradingView(symbol);
+            
+            console.log('심볼 변경:', symbol);
+        }
+
+        // Binance WebSocket 연결
+        function connectBinanceWS() {
+            const symbols = ['btcusdt', 'ethusdt', 'solusdt', 'xrpusdt'];
+            
+            symbols.forEach(symbol => {
+                const ws = new WebSocket(`wss://stream.binance.com/ws/${symbol}@ticker`);
+                
+                ws.onopen = function() {
+                    console.log(`WebSocket 연결됨: ${symbol}`);
+                    updateConnectionStatus(true);
+                };
+                
+                ws.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    updatePriceDisplay(symbol.toUpperCase(), data);
+                };
+                
+                ws.onerror = function(error) {
+                    console.error(`WebSocket 오류 (${symbol}):`, error);
+                    updateConnectionStatus(false);
+                };
+                
+                ws.onclose = function() {
+                    console.log(`WebSocket 연결 종료: ${symbol}`);
+                    // 5초 후 재연결 시도
+                    setTimeout(() => connectBinanceWS(), 5000);
+                };
+                
+                wsConnections[symbol] = ws;
+            });
+        }
+
+        // 연결 상태 업데이트
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connection-status');
+            if (connected) {
+                statusEl.textContent = '✅ 실시간 연결됨';
+                statusEl.className = 'connection-status connected';
+            } else {
+                statusEl.textContent = '❌ 연결 끊김';
+                statusEl.className = 'connection-status disconnected';
+            }
+        }
+
+        // 가격 표시 업데이트
+        function updatePriceDisplay(symbol, data) {
+            const symbolLower = symbol.toLowerCase();
+            const price = parseFloat(data.c);
+            const change = parseFloat(data.P);
+            const changeAmount = parseFloat(data.p);
+            
+            // 가격 데이터 저장
+            priceData[symbol] = {
+                price: price,
+                change: change,
+                changeAmount: changeAmount,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            // UI 업데이트
+            const priceEl = document.getElementById(`${symbolLower.replace('usdt', '')}-price`);
+            const changeEl = document.getElementById(`${symbolLower.replace('usdt', '')}-change`);
+            const timestampEl = document.getElementById(`${symbolLower.replace('usdt', '')}-timestamp`);
+            
+            if (priceEl) {
+                priceEl.textContent = `$${price.toLocaleString()}`;
+                
+                // 가격 변화에 따른 색상
+                priceEl.className = 'price';
+                if (change > 0) {
+                    priceEl.classList.add('up');
+                } else if (change < 0) {
+                    priceEl.classList.add('down');
+                } else {
+                    priceEl.classList.add('neutral');
+                }
+            }
+            
+            if (changeEl) {
+                changeEl.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}% (${changeAmount >= 0 ? '+' : ''}$${changeAmount.toFixed(2)})`;
+            }
+            
+            if (timestampEl) {
+                timestampEl.textContent = `업데이트: ${new Date().toLocaleTimeString()}`;
+            }
+        }
+
+        // 메인 페이지로 가격 전송
+        function sendToMainPage() {
+            if (window.opener) {
+                // popup으로 열린 경우
+                window.opener.postMessage({
+                    type: 'TRADINGVIEW_PRICE_UPDATE',
+                    data: priceData
+                }, '*');
+                
+                alert('메인 페이지로 가격 데이터를 전송했습니다!');
+            } else if (window.parent && window.parent !== window) {
+                // iframe으로 열린 경우
+                window.parent.postMessage({
+                    type: 'TRADINGVIEW_PRICE_UPDATE',
+                    data: priceData
+                }, '*');
+                
+                alert('메인 페이지로 가격 데이터를 전송했습니다!');
+            } else {
+                // 별도 탭/창으로 열린 경우
+                console.log('전송할 가격 데이터:', priceData);
+                alert('메인 페이지가 연결되지 않았습니다. 팝업이나 iframe으로 열어주세요.');
+            }
+        }
+
+        // 페이지 로드시 초기화
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 TradingView 테스트 페이지 로딩 시작');
+            
+            // TradingView 위젯 초기화
+            initTradingView();
+            
+            // Binance WebSocket 연결
+            connectBinanceWS();
+            
+            console.log('✅ 모든 시스템 초기화 완료');
+        });
+
+        // 정리
+        window.addEventListener('beforeunload', function() {
+            Object.values(wsConnections).forEach(ws => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                }
+            });
+            
+            if (widget) {
+                widget.remove();
+            }
+        });
+    </script>
+</body>
+</html>

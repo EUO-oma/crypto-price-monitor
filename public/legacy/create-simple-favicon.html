@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crypto Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .icon-container {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .icon-container canvas {
+            display: block;
+            margin: 0 auto 10px;
+            border: 1px solid #ddd;
+        }
+        .icon-container a {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .icon-container a:hover {
+            background: #0056b3;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crypto Price Monitor - Icon Generator</h1>
+    <p>각 아이콘의 '다운로드' 버튼을 클릭하여 저장하세요.</p>
+    
+    <h2>파비콘 아이콘</h2>
+    <div id="favicon-icons"></div>
+    
+    <h2>Apple Touch Icons</h2>
+    <div id="apple-icons"></div>
+    
+    <h2>Android Chrome Icons</h2>
+    <div id="android-icons"></div>
+    
+    <h2>Windows Tile</h2>
+    <div id="windows-icons"></div>
+    
+    <h2>Social Media Images</h2>
+    <div id="social-icons"></div>
+    
+    <script>
+        function createIcon(size, isSquare = false) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // 검은 배경
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, size, size);
+            
+            // 둥근 모서리 (큰 아이콘에만)
+            if (size >= 120 && !isSquare) {
+                const radius = size * 0.15;
+                ctx.globalCompositeOperation = 'destination-out';
+                
+                // 모서리 잘라내기
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(radius, 0);
+                ctx.arc(radius, radius, radius, -Math.PI/2, -Math.PI, false);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(size, 0);
+                ctx.lineTo(size - radius, 0);
+                ctx.arc(size - radius, radius, radius, -Math.PI/2, 0, false);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, size);
+                ctx.lineTo(0, size - radius);
+                ctx.arc(radius, size - radius, radius, Math.PI, Math.PI/2, true);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(size, size);
+                ctx.lineTo(size - radius, size);
+                ctx.arc(size - radius, size - radius, radius, 0, Math.PI/2, false);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.globalCompositeOperation = 'source-over';
+            }
+            
+            // 그라데이션 원
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const circleRadius = size * 0.35;
+            
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, circleRadius);
+            gradient.addColorStop(0, '#f7931a');
+            gradient.addColorStop(0.5, '#627eea');
+            gradient.addColorStop(1, '#00FFA3');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // C 문자
+            ctx.fillStyle = '#000000';
+            const fontSize = size * 0.5;
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('C', centerX, centerY);
+            
+            // 차트 라인 (큰 아이콘에만)
+            if (size >= 144) {
+                ctx.strokeStyle = '#00FFA3';
+                ctx.lineWidth = Math.max(2, size * 0.015);
+                ctx.globalAlpha = 0.7;
+                
+                ctx.beginPath();
+                ctx.moveTo(size * 0.2, size * 0.75);
+                ctx.lineTo(size * 0.35, size * 0.65);
+                ctx.lineTo(size * 0.5, size * 0.7);
+                ctx.lineTo(size * 0.65, size * 0.6);
+                ctx.lineTo(size * 0.8, size * 0.65);
+                ctx.stroke();
+                
+                ctx.globalAlpha = 1;
+            }
+            
+            return canvas;
+        }
+        
+        function createOGImage(width, height) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // 검은 배경
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, width, height);
+            
+            // CRYPTO 텍스트
+            ctx.fillStyle = '#f7931a';
+            ctx.font = 'bold 120px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('CRYPTO', width / 2, height / 2 - 80);
+            
+            // × LIVE 텍스트
+            ctx.fillStyle = '#627eea';
+            ctx.font = 'bold 80px Arial';
+            ctx.fillText('× LIVE', width / 2, height / 2 + 40);
+            
+            // 차트 라인
+            ctx.strokeStyle = '#00FFA3';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(200, 450);
+            ctx.lineTo(350, 400);
+            ctx.lineTo(500, 420);
+            ctx.lineTo(650, 370);
+            ctx.lineTo(800, 390);
+            ctx.lineTo(950, 340);
+            ctx.stroke();
+            
+            return canvas;
+        }
+        
+        function addDownloadLink(container, canvas, filename) {
+            const div = document.createElement('div');
+            div.className = 'icon-container';
+            
+            div.appendChild(canvas);
+            
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.textContent = `다운로드 (${canvas.width}x${canvas.height})`;
+            
+            const label = document.createElement('div');
+            label.style.fontSize = '12px';
+            label.style.color = '#666';
+            label.style.marginTop = '5px';
+            label.textContent = filename;
+            
+            div.appendChild(link);
+            div.appendChild(label);
+            
+            container.appendChild(div);
+        }
+        
+        // 파비콘 생성
+        const faviconSizes = [
+            { size: 16, name: 'favicon-16x16.png' },
+            { size: 32, name: 'favicon-32x32.png' }
+        ];
+        
+        const faviconContainer = document.getElementById('favicon-icons');
+        faviconSizes.forEach(({ size, name }) => {
+            const canvas = createIcon(size, true);
+            addDownloadLink(faviconContainer, canvas, name);
+        });
+        
+        // Apple Touch Icons
+        const appleSizes = [
+            { size: 57, name: 'apple-touch-icon-57x57.png' },
+            { size: 60, name: 'apple-touch-icon-60x60.png' },
+            { size: 72, name: 'apple-touch-icon-72x72.png' },
+            { size: 76, name: 'apple-touch-icon-76x76.png' },
+            { size: 114, name: 'apple-touch-icon-114x114.png' },
+            { size: 120, name: 'apple-touch-icon-120x120.png' },
+            { size: 144, name: 'apple-touch-icon-144x144.png' },
+            { size: 152, name: 'apple-touch-icon-152x152.png' },
+            { size: 180, name: 'apple-touch-icon.png' }
+        ];
+        
+        const appleContainer = document.getElementById('apple-icons');
+        appleSizes.forEach(({ size, name }) => {
+            const canvas = createIcon(size);
+            addDownloadLink(appleContainer, canvas, name);
+        });
+        
+        // Android Chrome Icons
+        const androidSizes = [
+            { size: 192, name: 'android-chrome-192x192.png' },
+            { size: 512, name: 'android-chrome-512x512.png' }
+        ];
+        
+        const androidContainer = document.getElementById('android-icons');
+        androidSizes.forEach(({ size, name }) => {
+            const canvas = createIcon(size);
+            addDownloadLink(androidContainer, canvas, name);
+        });
+        
+        // Windows Tile
+        const windowsContainer = document.getElementById('windows-icons');
+        const mstile = createIcon(144, true);
+        addDownloadLink(windowsContainer, mstile, 'mstile-144x144.png');
+        
+        // Social Media Images
+        const socialContainer = document.getElementById('social-icons');
+        const ogImage = createOGImage(1200, 630);
+        addDownloadLink(socialContainer, ogImage, 'og-image.png');
+        
+        const twitterCard = createOGImage(1200, 630);
+        addDownloadLink(socialContainer, twitterCard, 'twitter-card.png');
+    </script>
+</body>
+</html>

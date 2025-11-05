@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Clock</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid #1a1a1a;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+
+        .clock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .clock-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .clock-card:hover {
+            transform: translateY(-5px);
+            border-color: #555;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .city-name {
+            color: #888;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .flag {
+            width: 24px;
+            height: 18px;
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #fff;
+            margin: 10px 0;
+        }
+
+        .time .seconds {
+            font-size: 0.6em;
+            color: #666;
+        }
+
+        .date {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .market-status {
+            margin-top: 15px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .market-open {
+            color: #4caf50;
+        }
+
+        .market-closed {
+            color: #f44336;
+        }
+
+        .market-pre {
+            color: #ff9800;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-link a {
+            color: #4facfe;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: #00f2fe;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="clock-grid" id="clock-grid">
+            <!-- Clocks will be inserted here -->
+        </div>
+        
+        <div class="back-link">
+            <a href="index.html">← Back to Main</a>
+        </div>
+    </div>
+
+    <script>
+        const timezones = [
+            { name: 'Seoul', tz: 'Asia/Seoul', flag: 'kr' },
+            { name: 'Tokyo', tz: 'Asia/Tokyo', flag: 'jp' },
+            { name: 'Sydney', tz: 'Australia/Sydney', flag: 'au' },
+            { name: 'Singapore', tz: 'Asia/Singapore', flag: 'sg' },
+            { name: 'Dubai', tz: 'Asia/Dubai', flag: 'ae' },
+            { name: 'London', tz: 'Europe/London', flag: 'gb' },
+            { name: 'Frankfurt', tz: 'Europe/Berlin', flag: 'de' },
+            { name: 'New York', tz: 'America/New_York', flag: 'us' },
+            { name: 'Los Angeles', tz: 'America/Los_Angeles', flag: 'us' }
+        ];
+
+        function formatTime(date) {
+            const h = date.getHours().toString().padStart(2, '0');
+            const m = date.getMinutes().toString().padStart(2, '0');
+            const s = date.getSeconds().toString().padStart(2, '0');
+            return { hours: h, minutes: m, seconds: s };
+        }
+
+        function formatDate(date) {
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function getMarketStatus(cityName, date) {
+            const hour = date.getHours();
+            const minute = date.getMinutes();
+            const day = date.getDay(); // 0 = Sunday, 6 = Saturday
+            
+            // Skip weekends for stock markets
+            if (day === 0 || day === 6) {
+                return { status: 'closed', text: '🔴 Market Closed (Weekend)' };
+            }
+            
+            // Check market hours based on city
+            if (cityName === 'New York') {
+                // NYSE: 9:30 AM - 4:00 PM ET
+                if (hour === 9 && minute >= 30 || (hour > 9 && hour < 16)) {
+                    return { status: 'open', text: '🟢 NYSE Open' };
+                } else if (hour === 9 && minute < 30) {
+                    const minsUntilOpen = 30 - minute;
+                    return { status: 'pre', text: `⏰ NYSE Opens in ${minsUntilOpen}m` };
+                } else {
+                    return { status: 'closed', text: '🔴 NYSE Closed' };
+                }
+            } else if (cityName === 'Tokyo') {
+                // TSE: 9:00 AM - 3:00 PM JST
+                if (hour >= 9 && hour < 15) {
+                    return { status: 'open', text: '🟢 TSE Open' };
+                } else {
+                    return { status: 'closed', text: '🔴 TSE Closed' };
+                }
+            } else if (cityName === 'London') {
+                // LSE: 8:00 AM - 4:30 PM GMT
+                if (hour === 8 || (hour > 8 && hour < 16) || (hour === 16 && minute < 30)) {
+                    return { status: 'open', text: '🟢 LSE Open' };
+                } else {
+                    return { status: 'closed', text: '🔴 LSE Closed' };
+                }
+            } else if (cityName === 'Frankfurt') {
+                // XETRA: 9:00 AM - 5:30 PM CET
+                if (hour >= 9 && (hour < 17 || (hour === 17 && minute < 30))) {
+                    return { status: 'open', text: '🟢 XETRA Open' };
+                } else {
+                    return { status: 'closed', text: '🔴 XETRA Closed' };
+                }
+            }
+            
+            return { status: 'na', text: '' };
+        }
+
+        function createClockCard(timezone) {
+            const card = document.createElement('div');
+            card.className = 'clock-card';
+            card.onclick = () => window.open(`fullscreen-clock.html?tz=${timezone.tz}`, '_blank');
+            
+            card.innerHTML = `
+                <div class="city-name">
+                    <img src="https://flagcdn.com/24x18/${timezone.flag}.png" alt="${timezone.name}" class="flag">
+                    <span>${timezone.name}</span>
+                </div>
+                <div class="time" id="time-${timezone.name.replace(/\s+/g, '-')}">--:--<span class="seconds">:--</span></div>
+                <div class="date" id="date-${timezone.name.replace(/\s+/g, '-')}">---</div>
+                <div class="market-status" id="market-${timezone.name.replace(/\s+/g, '-')}"></div>
+            `;
+            
+            return card;
+        }
+
+        function updateClocks() {
+            timezones.forEach(timezone => {
+                const now = new Date();
+                const localTime = new Date(now.toLocaleString("en-US", {timeZone: timezone.tz}));
+                const time = formatTime(localTime);
+                const date = formatDate(localTime);
+                const marketStatus = getMarketStatus(timezone.name, localTime);
+                
+                const timeEl = document.getElementById(`time-${timezone.name.replace(/\s+/g, '-')}`);
+                const dateEl = document.getElementById(`date-${timezone.name.replace(/\s+/g, '-')}`);
+                const marketEl = document.getElementById(`market-${timezone.name.replace(/\s+/g, '-')}`);
+                
+                if (timeEl) {
+                    timeEl.innerHTML = `${time.hours}:${time.minutes}<span class="seconds">:${time.seconds}</span>`;
+                }
+                if (dateEl) {
+                    dateEl.textContent = date;
+                }
+                if (marketEl && marketStatus.text) {
+                    marketEl.textContent = marketStatus.text;
+                    marketEl.className = `market-status market-${marketStatus.status}`;
+                }
+            });
+        }
+
+        // Initialize
+        const clockGrid = document.getElementById('clock-grid');
+        timezones.forEach(timezone => {
+            clockGrid.appendChild(createClockCard(timezone));
+        });
+
+        // Start updating
+        updateClocks();
+        setInterval(updateClocks, 1000);
+    </script>
+</body>
+</html>

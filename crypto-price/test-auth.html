@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인증 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        
+        h2 {
+            color: #81C784;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .status.success {
+            background: #2E7D32;
+            color: #E8F5E9;
+        }
+        
+        .status.error {
+            background: #C62828;
+            color: #FFEBEE;
+        }
+        
+        .status.info {
+            background: #1565C0;
+            color: #E3F2FD;
+        }
+        
+        .status.warning {
+            background: #F57C00;
+            color: #FFF3E0;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        .result-box {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #555;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .test-item {
+            margin: 15px 0;
+        }
+        
+        .test-item strong {
+            display: inline-block;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔒 Supabase 인증 테스트 페이지</h1>
+    
+    <div class="test-section">
+        <h2>1. Supabase 연결 상태</h2>
+        <div id="connection-test" class="result-box">테스트 중...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 현재 세션 정보</h2>
+        <div id="session-test" class="result-box">확인 중...</div>
+        <button onclick="refreshSession()">세션 새로고침</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 인증 테스트</h2>
+        <div class="test-item">
+            <button onclick="testGoogleLogin()">Google 로그인 테스트</button>
+            <button onclick="testLogout()">로그아웃 테스트</button>
+        </div>
+        <div id="auth-test" class="result-box">대기 중...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 데이터베이스 권한 테스트</h2>
+        <div class="test-item">
+            <button onclick="testReadLinks()">읽기 권한 테스트</button>
+            <button onclick="testInsertLink()">쓰기 권한 테스트</button>
+            <button onclick="testUpdateLink()">수정 권한 테스트</button>
+            <button onclick="testDeleteLink()">삭제 권한 테스트</button>
+        </div>
+        <div id="db-test" class="result-box">대기 중...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. RLS 정책 확인</h2>
+        <button onclick="checkRLSPolicies()">RLS 정책 확인</button>
+        <div id="rls-test" class="result-box">대기 중...</div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="index.html" style="color: #81C784;">← 메인 페이지</a>
+        <a href="login.html" style="color: #81C784; margin-left: 20px;">로그인 페이지 →</a>
+        <a href="admin-v3.html" style="color: #81C784; margin-left: 20px;">관리자 페이지 →</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    <script>
+        // 페이지 로드시 테스트 실행
+        window.addEventListener('DOMContentLoaded', async () => {
+            await testConnection();
+            await checkSession();
+        });
+
+        // Supabase 연결 테스트
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-test');
+            try {
+                const { data, error } = await window.supabaseClient.from('links').select('count');
+                if (error && error.code !== 'PGRST116') {
+                    throw error;
+                }
+                resultDiv.innerHTML = `✅ Supabase 연결 성공!
+URL: ${SUPABASE_URL}
+테이블 접근: 가능`;
+                resultDiv.className = 'result-box status success';
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Supabase 연결 실패!
+오류: ${error.message}`;
+                resultDiv.className = 'result-box status error';
+            }
+        }
+
+        // 세션 확인
+        async function checkSession() {
+            const resultDiv = document.getElementById('session-test');
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (session) {
+                    resultDiv.innerHTML = `✅ 로그인 상태
+이메일: ${session.user.email}
+ID: ${session.user.id}
+Provider: ${session.user.app_metadata.provider}
+만료시간: ${new Date(session.expires_at * 1000).toLocaleString('ko-KR')}`;
+                    resultDiv.className = 'result-box status success';
+                } else {
+                    resultDiv.innerHTML = `⚠️ 로그인되지 않음`;
+                    resultDiv.className = 'result-box status warning';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ 세션 확인 실패: ${error.message}`;
+                resultDiv.className = 'result-box status error';
+            }
+        }
+
+        // 세션 새로고침
+        async function refreshSession() {
+            await checkSession();
+        }
+
+        // Google 로그인 테스트
+        async function testGoogleLogin() {
+            const resultDiv = document.getElementById('auth-test');
+            try {
+                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href
+                    }
+                });
+                if (error) throw error;
+                resultDiv.innerHTML = `🔄 Google 로그인 페이지로 이동 중...`;
+                resultDiv.className = 'result-box status info';
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Google 로그인 실패: ${error.message}`;
+                resultDiv.className = 'result-box status error';
+            }
+        }
+
+        // 로그아웃 테스트
+        async function testLogout() {
+            const resultDiv = document.getElementById('auth-test');
+            try {
+                const { error } = await window.supabaseClient.auth.signOut();
+                if (error) throw error;
+                resultDiv.innerHTML = `✅ 로그아웃 성공`;
+                resultDiv.className = 'result-box status success';
+                await checkSession();
+            } catch (error) {
+                resultDiv.innerHTML = `❌ 로그아웃 실패: ${error.message}`;
+                resultDiv.className = 'result-box status error';
+            }
+        }
+
+        // 읽기 권한 테스트
+        async function testReadLinks() {
+            const resultDiv = document.getElementById('db-test');
+            try {
+                const { data, error } = await window.supabaseClient.from('links')
+                    .select('*')
+                    .limit(5);
+                if (error) throw error;
+                resultDiv.innerHTML = `✅ 읽기 성공! ${data.length}개 링크 조회됨`;
+                resultDiv.className = 'result-box status success';
+            } catch (error) {
+                resultDiv.innerHTML = `❌ 읽기 실패: ${error.message}`;
+                resultDiv.className = 'result-box status error';
+            }
+        }
+
+        // 쓰기 권한 테스트
+        async function testInsertLink() {
+            const resultDiv = document.getElementById('db-test');
+            const session = await checkAuth();
+            
+            if (!session) {
+                resultDiv.innerHTML = `⚠️ 로그인이 필요합니다`;
+                resultDiv.className = 'result-box status warning';
+                return;
+            }
+            
+            try {
+                const testData = {
+                    name: 'Test Link',
+                    url: 'https://test.com',
+                    category: 'youtube',
+                    sort_order: 9999
+                };
+                
+                const { data, error } = await window.supabaseClient.from('links')
+                    .insert([testData])
+                    .select();
+                    
+                if (error) throw error;
+                resultDiv.innerHTML = `✅ 쓰기 성공! 테스트 링크 추가됨 (ID: ${data[0].id})`;
+                resultDiv.className = 'result-box status success';
+            } catch (error) {
+                resultDiv.innerHTML = `❌ 쓰기 실패: ${error.message}
+(로그인한 사용자만 가능)`;
+                resultDiv.className = 'result-box status error';
+            }
+        }
+
+        // 수정 권한 테스트
+        async function testUpdateLink() {
+            const resultDiv = document.getElementById('db-test');
+            const session = await checkAuth();
+            
+            if (!session) {
+                resultDiv.innerHTML = `⚠️ 로그인이 필요합니다`;
+                resultDiv.className = 'result-box status warning';
+                return;
+            }
+            
+            try {
+                // 먼저 테스트 링크 찾기
+                const { data: links } = await window.supabaseClient.from('links')
+                    .select('*')
+                    .eq('name', 'Test Link')
+                    .limit(1);
+                    
+                if (!links || links.length === 0) {
+                    resultDiv.innerHTML = `⚠️ 수정할 테스트 링크가 없습니다. 먼저 쓰기 테스트를 실행하세요.`;
+                    resultDiv.className = 'result-box status warning';
+                    return;
+                }
+                
+                const { error } = await window.supabaseClient.from('links')
+                    .update({ name: 'Test Link (Updated)' })
+                    .eq('id', links[0].id);
+                    
+                if (error) throw error;
+                resultDiv.innerHTML = `✅ 수정 성공! 테스트 링크 업데이트됨`;
+                resultDiv.className = 'result-box status success';
+            } catch (error) {
+                resultDiv.innerHTML = `❌ 수정 실패: ${error.message}
+(로그인한 사용자만 가능)`;
+                resultDiv.className = 'result-box status error';
+            }
+        }
+
+        // 삭제 권한 테스트
+        async function testDeleteLink() {
+            const resultDiv = document.getElementById('db-test');
+            const session = await checkAuth();
+            
+            if (!session) {
+                resultDiv.innerHTML = `⚠️ 로그인이 필요합니다`;
+                resultDiv.className = 'result-box status warning';
+                return;
+            }
+            
+            try {
+                // 테스트 링크 모두 삭제
+                const { error } = await window.supabaseClient.from('links')
+                    .delete()
+                    .or('name.eq.Test Link,name.eq.Test Link (Updated)');
+                    
+                if (error) throw error;
+                resultDiv.innerHTML = `✅ 삭제 성공! 테스트 링크 제거됨`;
+                resultDiv.className = 'result-box status success';
+            } catch (error) {
+                resultDiv.innerHTML = `❌ 삭제 실패: ${error.message}
+(로그인한 사용자만 가능)`;
+                resultDiv.className = 'result-box status error';
+            }
+        }
+
+        // RLS 정책 확인
+        async function checkRLSPolicies() {
+            const resultDiv = document.getElementById('rls-test');
+            resultDiv.innerHTML = `ℹ️ RLS 정책 정보:
+
+1. SELECT (읽기): 모든 사용자 허용
+   - 메인 페이지에서 링크를 볼 수 있음
+
+2. INSERT (추가): 로그인한 사용자만
+   - Google 로그인 필요
+
+3. UPDATE (수정): 로그인한 사용자만
+   - Google 로그인 필요
+
+4. DELETE (삭제): 로그인한 사용자만
+   - Google 로그인 필요
+
+RLS 정책을 변경하려면 Supabase Dashboard의 
+SQL Editor에서 rls-policies.sql 파일을 실행하세요.`;
+            resultDiv.className = 'result-box status info';
+        }
+    </script>
+</body>
+</html>

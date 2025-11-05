@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모바일 채팅 디버그</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #000;
+            color: #0f0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #0f0;
+            background: #001100;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 5px;
+            background: #0f0;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .log {
+            background: #000;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .info { color: #ff0; }
+    </style>
+</head>
+<body>
+    <h1>모바일 채팅 디버그</h1>
+    
+    <div class="test-section">
+        <h2>1. Supabase 연결 테스트</h2>
+        <button onclick="testConnection()">연결 테스트</button>
+        <div id="connection-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 간단한 메시지 전송</h2>
+        <input type="text" id="simple-message" placeholder="테스트 메시지" value="모바일 테스트">
+        <button onclick="simpleSend()">간단 전송</button>
+        <div id="simple-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 전체 채팅 테스트</h2>
+        <form id="chat-form" onsubmit="return false;">
+            <input type="text" id="chat-message" placeholder="메시지 입력">
+            <button type="button" onclick="fullSend()">버튼 클릭</button>
+            <button type="submit" onclick="fullSend()">Submit 버튼</button>
+        </form>
+        <div id="full-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 이벤트 테스트</h2>
+        <button id="event-btn">이벤트 테스트</button>
+        <div id="event-log" class="log"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-loader.js"></script>
+    <script>
+        // 로그 함수
+        function log(elementId, message, type = 'info') {
+            const logDiv = document.getElementById(elementId);
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="${type}">[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // 1. 연결 테스트
+        async function testConnection() {
+            log('connection-log', 'Supabase 연결 테스트 시작...', 'info');
+            
+            try {
+                // Supabase 객체 확인
+                if (!window.supabaseClient) {
+                    log('connection-log', 'Supabase 객체가 없습니다!', 'error');
+                    return;
+                }
+                
+                log('connection-log', 'Supabase URL: ' + (typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : 'undefined'), 'info');
+                
+                // 간단한 쿼리
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .select('count');
+                
+                if (error) {
+                    log('connection-log', '에러: ' + JSON.stringify(error), 'error');
+                } else {
+                    log('connection-log', '연결 성공!', 'success');
+                }
+            } catch (e) {
+                log('connection-log', '예외: ' + e.message, 'error');
+            }
+        }
+        
+        // 2. 간단한 전송
+        async function simpleSend() {
+            const input = document.getElementById('simple-message');
+            const message = input.value;
+            
+            log('simple-log', '전송 시도: ' + message, 'info');
+            
+            try {
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .insert([{ message: message }])
+                    .select();
+                
+                if (error) {
+                    log('simple-log', '에러: ' + JSON.stringify(error), 'error');
+                } else {
+                    log('simple-log', '전송 성공!', 'success');
+                    log('simple-log', '응답: ' + JSON.stringify(data), 'info');
+                }
+            } catch (e) {
+                log('simple-log', '예외: ' + e.message, 'error');
+                log('simple-log', '스택: ' + e.stack, 'error');
+            }
+        }
+        
+        // 3. 전체 전송
+        async function fullSend() {
+            const input = document.getElementById('chat-message');
+            const message = input.value || '테스트 메시지';
+            
+            log('full-log', '전송 시작...', 'info');
+            log('full-log', '메시지: ' + message, 'info');
+            
+            try {
+                // Browser ID 생성 테스트
+                let browserId;
+                try {
+                    browserId = 'mobile-' + Date.now();
+                    log('full-log', 'Browser ID: ' + browserId, 'info');
+                } catch (e) {
+                    log('full-log', 'Browser ID 에러: ' + e.message, 'error');
+                }
+                
+                // 전송
+                log('full-log', 'Supabase 호출...', 'info');
+                
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .insert([{ 
+                        message: message,
+                        browser_id: browserId
+                    }])
+                    .select();
+                
+                if (error) {
+                    log('full-log', '전송 실패!', 'error');
+                    log('full-log', '에러 코드: ' + error.code, 'error');
+                    log('full-log', '에러 메시지: ' + error.message, 'error');
+                    log('full-log', '전체 에러: ' + JSON.stringify(error), 'error');
+                } else {
+                    log('full-log', '전송 성공!', 'success');
+                    input.value = '';
+                }
+            } catch (e) {
+                log('full-log', '예외 발생!', 'error');
+                log('full-log', e.message, 'error');
+                log('full-log', e.stack, 'error');
+            }
+        }
+        
+        // 4. 이벤트 테스트
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('event-btn');
+            if (btn) {
+                // Click 이벤트
+                btn.addEventListener('click', () => {
+                    log('event-log', 'Click 이벤트 발생', 'success');
+                });
+                
+                // Touch 이벤트
+                btn.addEventListener('touchstart', () => {
+                    log('event-log', 'TouchStart 이벤트 발생', 'info');
+                });
+                
+                btn.addEventListener('touchend', (e) => {
+                    log('event-log', 'TouchEnd 이벤트 발생', 'info');
+                    e.preventDefault();
+                });
+                
+                // Form 이벤트
+                const form = document.getElementById('chat-form');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        log('event-log', 'Form Submit 이벤트 발생', 'success');
+                        return false;
+                    });
+                }
+            }
+            
+            // 자동으로 연결 테스트
+            testConnection();
+        });
+    </script>
+</body>
+</html>

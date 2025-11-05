@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW Mode 10 - Dice</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .price-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        .price-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 15px;
+            width: 100%;
+            line-height: 1.4;
+            padding-left: 50%;
+            transform: translateX(-200px);
+        }
+        
+        .price {
+            font-size: 48px;
+            font-weight: 300;
+            transition: font-size 0.3s ease;
+            display: flex;
+            align-items: baseline;
+            font-variant-numeric: tabular-nums;
+            gap: 4px;
+        }
+        
+        /* Dice styles */
+        .dice {
+            display: inline-flex;
+            width: 42px;
+            height: 42px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            margin: 0 3px;
+            position: relative;
+            padding: 6px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            border: 3px solid #000;
+            cursor: help;
+            transition: all 0.2s ease;
+        }
+        
+        .dice:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Dice dot */
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #000;
+            border-radius: 50%;
+        }
+        
+        /* Dice layouts */
+        .dice-1 { 
+            justify-content: center; 
+            align-items: center;
+        }
+        
+        .dice-2 .dot:first-child { position: absolute; top: 6px; left: 6px; }
+        .dice-2 .dot:last-child { position: absolute; bottom: 6px; right: 6px; }
+        
+        .dice-3 .dot:nth-child(1) { position: absolute; top: 6px; left: 6px; }
+        .dice-3 .dot:nth-child(2) { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .dice-3 .dot:nth-child(3) { position: absolute; bottom: 6px; right: 6px; }
+        
+        .dice-4 { justify-content: space-between; }
+        
+        .dice-5 .dot:nth-child(1) { position: absolute; top: 6px; left: 6px; }
+        .dice-5 .dot:nth-child(2) { position: absolute; top: 6px; right: 6px; }
+        .dice-5 .dot:nth-child(3) { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .dice-5 .dot:nth-child(4) { position: absolute; bottom: 6px; left: 6px; }
+        .dice-5 .dot:nth-child(5) { position: absolute; bottom: 6px; right: 6px; }
+        
+        .dice-6 { 
+            justify-content: space-between;
+            padding: 6px 8px;
+        }
+        .dice-6 .dot { margin: 2px 0; }
+        
+        /* Color box for non-dice numbers (0, 7, 8, 9) */
+        .color-box {
+            display: inline-block;
+            width: 42px;
+            height: 42px;
+            border-radius: 6px;
+            margin: 0 3px;
+            vertical-align: middle;
+            border: 3px solid rgba(0, 0, 0, 0.9);
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: help;
+        }
+        
+        .color-box:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Tooltip */
+        .dice::after,
+        .color-box::after {
+            content: attr(data-number);
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dice:hover::after,
+        .color-box:hover::after {
+            opacity: 1;
+        }
+        
+        /* Color mapping for non-dice numbers */
+        .color-0 { background-color: #808080; } /* 회색 - Gray */
+        .color-7 { background-color: #0000FF; } /* 파란색 - Blue */
+        .color-8 { background-color: #9370DB; } /* 연한남색 - Medium Purple */
+        .color-9 { background-color: #4B0082; } /* 보라색 - Violet */
+        
+        .price-decimal {
+            font-size: 0.7em;
+            color: #666;
+            display: flex;
+            gap: 2px;
+        }
+        
+        .price-decimal .dice,
+        .price-decimal .color-box {
+            width: 28px;
+            height: 28px;
+        }
+        
+        .price-decimal .dice .dot {
+            width: 5px;
+            height: 5px;
+        }
+        
+        /* Size variations */
+        .size-xs .price { font-size: 16px; }
+        .size-xs .dice, .size-xs .color-box { width: 14px; height: 14px; }
+        .size-xs .dice[style*="width: 48px"] { width: 19px !important; height: 19px !important; }
+        .size-xs .price-decimal .dice, .size-xs .price-decimal .color-box { width: 9px; height: 9px; }
+        .size-xs .dot { width: 2px; height: 2px; }
+        
+        .size-s .price { font-size: 20px; }
+        .size-s .dice, .size-s .color-box { width: 18px; height: 18px; }
+        .size-s .dice[style*="width: 48px"] { width: 24px !important; height: 24px !important; }
+        .size-s .price-decimal .dice, .size-s .price-decimal .color-box { width: 12px; height: 12px; }
+        .size-s .dot { width: 3px; height: 3px; }
+        
+        .size-m .price { font-size: 28px; }
+        .size-m .dice, .size-m .color-box { width: 25px; height: 25px; }
+        .size-m .dice[style*="width: 48px"] { width: 33px !important; height: 33px !important; }
+        .size-m .price-decimal .dice, .size-m .price-decimal .color-box { width: 17px; height: 17px; }
+        .size-m .dot { width: 4px; height: 4px; }
+        
+        .size-l .price { font-size: 36px; }
+        .size-l .dice, .size-l .color-box { width: 32px; height: 32px; }
+        .size-l .dice[style*="width: 48px"] { width: 43px !important; height: 43px !important; }
+        .size-l .price-decimal .dice, .size-l .price-decimal .color-box { width: 21px; height: 21px; }
+        .size-l .dot { width: 6px; height: 6px; }
+        
+        .size-xl .price { font-size: 44px; }
+        .size-xl .dice, .size-xl .color-box { width: 39px; height: 39px; }
+        .size-xl .dice[style*="width: 48px"] { width: 52px !important; height: 52px !important; }
+        .size-xl .price-decimal .dice, .size-xl .price-decimal .color-box { width: 26px; height: 26px; }
+        .size-xl .dot { width: 7px; height: 7px; }
+        
+        .size-xxl .price { font-size: 56px; }
+        .size-xxl .dice, .size-xxl .color-box { width: 49px; height: 49px; }
+        .size-xxl .dice[style*="width: 48px"] { width: 65px !important; height: 65px !important; }
+        .size-xxl .price-decimal .dice, .size-xxl .price-decimal .color-box { width: 33px; height: 33px; }
+        .size-xxl .dot { width: 9px; height: 9px; }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Secure mode */
+        .secure-mode .dice,
+        .secure-mode .color-box {
+            background: transparent !important;
+            border: 1px solid #444;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .secure-mode .dice .dot {
+            display: none;
+        }
+        
+        .secure-mode .dice::before,
+        .secure-mode .color-box::before {
+            content: attr(data-number);
+        }
+        
+        .secure-mode .dice::after,
+        .secure-mode .color-box::after {
+            display: none;
+        }
+        
+        /* Individual hide buttons */
+        .hide-btn {
+            background: transparent;
+            border: 1px solid #222;
+            color: #444;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            padding: 0;
+            position: relative;
+            margin-top: 8px;
+        }
+        
+        .hide-btn:hover {
+            border-color: #444;
+            color: #666;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .hide-btn.hidden {
+            color: #222;
+        }
+        
+        .dot-icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+        
+        .price.hidden {
+            opacity: 0;
+        }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .price-container {
+                gap: 30px;
+                padding: 15px;
+            }
+            
+            .price-item {
+                padding-left: 40%;
+                transform: translateX(-120px);
+                gap: 12px;
+            }
+            
+            .controls {
+                top: 10px;
+                right: 10px;
+                gap: 8px;
+            }
+            
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                border-radius: 8px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .hide-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            
+            .price {
+                font-size: 28px;
+                gap: 3px;
+            }
+            
+            .dice {
+                width: 32px;
+                height: 32px;
+                border-radius: 6px;
+                margin: 0 2px;
+                padding: 4px;
+                gap: 3px;
+                border-width: 2px;
+            }
+            
+            .dot {
+                width: 6px;
+                height: 6px;
+            }
+            
+            .color-box {
+                width: 32px;
+                height: 32px;
+                border-radius: 5px;
+                margin: 0 2px;
+                border-width: 2px;
+            }
+            
+            .price-decimal {
+                font-size: 0.7em;
+            }
+            
+            .price-decimal .dice,
+            .price-decimal .color-box {
+                width: 22px;
+                height: 22px;
+            }
+            
+            .price-decimal .dice .dot {
+                width: 4px;
+                height: 4px;
+            }
+            
+            /* Adjust dice layouts for mobile */
+            .dice-2 .dot:first-child { top: 4px; left: 4px; }
+            .dice-2 .dot:last-child { bottom: 4px; right: 4px; }
+            
+            .dice-3 .dot:nth-child(1) { top: 4px; left: 4px; }
+            .dice-3 .dot:nth-child(3) { bottom: 4px; right: 4px; }
+            
+            .dice-5 .dot:nth-child(1) { top: 4px; left: 4px; }
+            .dice-5 .dot:nth-child(2) { top: 4px; right: 4px; }
+            .dice-5 .dot:nth-child(4) { bottom: 4px; left: 4px; }
+            .dice-5 .dot:nth-child(5) { bottom: 4px; right: 4px; }
+            
+            .dice-6 { padding: 4px 6px; }
+            .dice-6 .dot { margin: 1px 0; }
+            
+            /* Adjust sizes for mobile */
+            .size-xs .dice, .size-xs .color-box { width: 11px; height: 11px; }
+            .size-xs .dice[style*="width: 48px"] { width: 14px !important; height: 14px !important; }
+            .size-xs .price-decimal .dice, .size-xs .price-decimal .color-box { width: 7px; height: 7px; }
+            .size-xs .dot { width: 1.5px; height: 1.5px; }
+            
+            .size-s .dice, .size-s .color-box { width: 14px; height: 14px; }
+            .size-s .dice[style*="width: 48px"] { width: 18px !important; height: 18px !important; }
+            .size-s .price-decimal .dice, .size-s .price-decimal .color-box { width: 9px; height: 9px; }
+            .size-s .dot { width: 2px; height: 2px; }
+            
+            .size-m .dice, .size-m .color-box { width: 19px; height: 19px; }
+            .size-m .dice[style*="width: 48px"] { width: 25px !important; height: 25px !important; }
+            .size-m .price-decimal .dice, .size-m .price-decimal .color-box { width: 13px; height: 13px; }
+            .size-m .dot { width: 3px; height: 3px; }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .price-container {
+                gap: 25px;
+                padding: 10px;
+            }
+            
+            .price-item {
+                padding-left: 50%;
+                transform: translateX(-100px);
+                gap: 10px;
+            }
+            
+            .controls {
+                gap: 6px;
+                flex-wrap: wrap;
+                max-width: 200px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .price {
+                font-size: 20px;
+                gap: 2px;
+            }
+            
+            .dice {
+                width: 24px;
+                height: 24px;
+                border-radius: 5px;
+                margin: 0 1px;
+            }
+            
+            .dot {
+                width: 4px;
+                height: 4px;
+            }
+            
+            .color-box {
+                width: 24px;
+                height: 24px;
+            }
+            
+            .price-decimal .dice,
+            .price-decimal .color-box {
+                width: 16px;
+                height: 16px;
+            }
+            
+            .price-decimal .dice .dot {
+                width: 3px;
+                height: 3px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .price-item {
+                padding-left: 35%;
+                transform: translateX(-60px);
+            }
+            
+            .controls {
+                gap: 4px;
+            }
+            
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .price {
+                font-size: 16px;
+            }
+            
+            .dice {
+                width: 20px;
+                height: 20px;
+                border-radius: 4px;
+            }
+            
+            .color-box {
+                width: 20px;
+                height: 20px;
+                border-radius: 4px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .control-btn:active, .hide-btn:active {
+                transform: scale(0.9);
+            }
+            
+            .dice:active, .color-box:active {
+                transform: scale(0.95);
+            }
+        }
+    </style>
+</head>
+<body class="size-m">
+    <div class="controls">
+        <button class="control-btn" id="securityToggle" onclick="toggleSecurity()" title="보안 모드">
+            <span class="eye-icon">👁</span>
+        </button>
+        <button class="control-btn" onclick="location.href='bw-mode9.html'" title="이전">←</button>
+        <button class="control-btn" onclick="location.href='bw-mode1.html'" title="다음">→</button>
+        <button class="control-btn" onclick="location.href='bw-mode.html'" title="메뉴">☰</button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+    </div>
+    
+    <div class="price-container">
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('btc')" id="btc-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="btc-price">Loading...</div>
+        </div>
+        
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('eth')" id="eth-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="eth-price">Loading...</div>
+        </div>
+        
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('sol')" id="sol-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="sol-price">Loading...</div>
+        </div>
+    </div>
+    
+    <script>
+        // Size control
+        const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
+        let currentSizeIndex = 2; // Start with 'm'
+        
+        // Security mode
+        let isSecureMode = false;
+        
+        // Hidden coins tracker
+        const hiddenCoins = {
+            btc: false,
+            eth: false,
+            sol: false
+        };
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            // Remove all size classes
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            
+            // Add current size class
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            // Save preference
+            localStorage.setItem('bwPriceSize10', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwPriceSize10');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-m');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        // Binance WebSocket connections
+        let btcWs, ethWs, solWs;
+        
+        function createDice(number) {
+            const dice = document.createElement('span');
+            dice.className = `dice dice-${number}`;
+            dice.setAttribute('data-number', number);
+            
+            // Create dots based on number
+            for (let i = 0; i < number; i++) {
+                const dot = document.createElement('span');
+                dot.className = 'dot';
+                dice.appendChild(dot);
+            }
+            
+            return dice.outerHTML;
+        }
+        
+        function formatPriceWithDice(price) {
+            // Format price as string with 2 decimals
+            const priceStr = price.toFixed(2);
+            const [integerPart, decimalPart] = priceStr.split('.');
+            
+            // Convert each digit
+            let boxesHtml = '';
+            
+            // Integer part
+            const integerDigits = integerPart.split('');
+            for (let i = 0; i < integerDigits.length; i++) {
+                const digit = parseInt(integerDigits[i]);
+                const isLarge = (i === 2 || i === 3);
+                const sizeStyle = isLarge ? 'style="width: 48px; height: 48px;"' : '';
+                
+                if (digit >= 1 && digit <= 6) {
+                    // Use dice for 1-6
+                    const diceHtml = `<span class="dice dice-${digit}" data-number="${digit}" ${sizeStyle}>`;
+                    let dotsHtml = '';
+                    for (let j = 0; j < digit; j++) {
+                        dotsHtml += '<span class="dot"></span>';
+                    }
+                    boxesHtml += diceHtml + dotsHtml + '</span>';
+                } else {
+                    // Use color boxes for 0, 7, 8, 9
+                    boxesHtml += `<span class="color-box color-${digit}" data-number="${digit}" ${sizeStyle}></span>`;
+                }
+            }
+            
+            // Decimal part
+            if (decimalPart) {
+                boxesHtml += '<span class="price-decimal">';
+                for (let digit of decimalPart) {
+                    const d = parseInt(digit);
+                    if (d >= 1 && d <= 6) {
+                        const diceHtml = `<span class="dice dice-${d}" data-number="${d}">`;
+                        let dotsHtml = '';
+                        for (let j = 0; j < d; j++) {
+                            dotsHtml += '<span class="dot"></span>';
+                        }
+                        boxesHtml += diceHtml + dotsHtml + '</span>';
+                    } else {
+                        boxesHtml += `<span class="color-box color-${d}" data-number="${d}"></span>`;
+                    }
+                }
+                boxesHtml += '</span>';
+            }
+            
+            return boxesHtml;
+        }
+        
+        function toggleSecurity() {
+            isSecureMode = !isSecureMode;
+            const btn = document.getElementById('securityToggle');
+            
+            if (isSecureMode) {
+                document.body.classList.add('secure-mode');
+                btn.querySelector('.eye-icon').textContent = '🔒';
+            } else {
+                document.body.classList.remove('secure-mode');
+                btn.querySelector('.eye-icon').textContent = '👁';
+            }
+        }
+        
+        function connectBinanceWebSocket(symbol, elementId) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+                document.getElementById(elementId).classList.remove('loading');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c); // Current price
+                
+                // Don't update if coin is hidden
+                const coinType = symbol.replace('USDT', '').toLowerCase();
+                if (!hiddenCoins[coinType]) {
+                    document.getElementById(elementId).innerHTML = formatPriceWithDice(price);
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, elementId);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Initialize WebSocket connections
+        function initializeWebSockets() {
+            btcWs = connectBinanceWebSocket('BTCUSDT', 'btc-price');
+            ethWs = connectBinanceWebSocket('ETHUSDT', 'eth-price');
+            solWs = connectBinanceWebSocket('SOLUSDT', 'sol-price');
+        }
+        
+        // Fallback: Fetch prices via API
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                if (results[0] && !hiddenCoins.btc) {
+                    const btcPrice = parseFloat(results[0].lastPrice);
+                    document.getElementById('btc-price').innerHTML = formatPriceWithDice(btcPrice);
+                    document.getElementById('btc-price').classList.remove('loading');
+                }
+                if (results[1] && !hiddenCoins.eth) {
+                    const ethPrice = parseFloat(results[1].lastPrice);
+                    document.getElementById('eth-price').innerHTML = formatPriceWithDice(ethPrice);
+                    document.getElementById('eth-price').classList.remove('loading');
+                }
+                if (results[2] && !hiddenCoins.sol) {
+                    const solPrice = parseFloat(results[2].lastPrice);
+                    document.getElementById('sol-price').innerHTML = formatPriceWithDice(solPrice);
+                    document.getElementById('sol-price').classList.remove('loading');
+                }
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            // Try WebSocket first
+            initializeWebSockets();
+            
+            // Also fetch via API as backup
+            fetchPricesAPI();
+            
+            // Update API prices every 10 seconds as fallback
+            setInterval(fetchPricesAPI, 10000);
+        });
+        
+        // Toggle hide for individual coins
+        function toggleHide(coin) {
+            hiddenCoins[coin] = !hiddenCoins[coin];
+            const priceEl = document.getElementById(`${coin}-price`);
+            const btnEl = document.getElementById(`${coin}-hide`);
+            
+            if (hiddenCoins[coin]) {
+                priceEl.classList.add('hidden');
+                btnEl.classList.add('hidden');
+            } else {
+                priceEl.classList.remove('hidden');
+                btnEl.classList.remove('hidden');
+            }
+        }
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (btcWs) btcWs.close();
+            if (ethWs) ethWs.close();
+            if (solWs) solWs.close();
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === '=') {
+                adjustSize('increase');
+            } else if (e.key === '-' || e.key === '_') {
+                adjustSize('decrease');
+            }
+        });
+    </script>
+    <script src="bw-navigation.js"></script>
+</body>
+</html>

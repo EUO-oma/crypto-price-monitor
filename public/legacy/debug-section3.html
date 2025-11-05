@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section 3 Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .debug-section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .link-card {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #333;
+            text-decoration: none;
+            color: #fff;
+            transition: transform 0.3s ease;
+        }
+        
+        .link-card:hover {
+            transform: translateY(-3px);
+            border-color: #555;
+        }
+        
+        .status {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+    </style>
+</head>
+<body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    <h1>🗄️ Section 3 Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h2>1. Supabase 연결 상태</h2>
+        <div id="connection-status" class="status">확인 중...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>2. 데이터 로드 테스트</h2>
+        <button onclick="testDataLoad()" style="background: #4facfe; color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">데이터 로드 테스트</button>
+        <div id="data-status" class="status">테스트 버튼을 클릭하세요</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>3. GPT Links</h2>
+        <div id="gpt-links" class="links-grid">
+            <div style="color: #666;">로딩 중...</div>
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>4. YouTube Links</h2>
+        <div id="youtube-links" class="links-grid">
+            <div style="color: #666;">로딩 중...</div>
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>5. Favorite Links</h2>
+        <div id="favorite-links" class="links-grid">
+            <div style="color: #666;">로딩 중...</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        let supabaseClient = null;
+        let debugLog = [];
+        
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const logEntry = `[${time}] ${message}`;
+            debugLog.push(logEntry);
+            console.log(logEntry);
+            
+            const statusDiv = document.getElementById('connection-status');
+            statusDiv.innerHTML = debugLog.map(entry => `<span class="${type}">${entry}</span>`).join('\n');
+        }
+        
+        async function initSupabase() {
+            try {
+                log('Supabase 라이브러리 확인 중...', 'info');
+                
+                if (!window.supabase) {
+                    log('❌ Supabase 라이브러리가 로드되지 않았습니다', 'error');
+                    return false;
+                }
+                
+                log('✅ Supabase 라이브러리 로드됨', 'success');
+                
+                // Wait for config to load
+                const waitForConfig = () => {
+                    return new Promise((resolve) => {
+                        if (window.APP_CONFIG?.SUPABASE?.URL) {
+                            resolve();
+                        } else {
+                            window.addEventListener('configLoaded', resolve, { once: true });
+                            setTimeout(resolve, 2000); // Fallback
+                        }
+                    });
+                };
+                
+                await waitForConfig();
+                
+                // Get configuration from environment
+                const SUPABASE_URL = window.APP_CONFIG?.SUPABASE?.URL || 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const SUPABASE_KEY = window.APP_CONFIG?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                if (!SUPABASE_URL || !SUPABASE_KEY) {
+                    log('❌ Supabase configuration not found', 'error');
+                    return false;
+                }
+                
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                log('✅ Supabase 클라이언트 생성됨', 'success');
+                
+                // 연결 테스트
+                const { data, error } = await supabaseClient.from('links').select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    log(`❌ Supabase 연결 실패: ${error.message}`, 'error');
+                    return false;
+                }
+                
+                log('✅ Supabase 데이터베이스 연결 성공', 'success');
+                return true;
+                
+            } catch (error) {
+                log(`❌ 초기화 오류: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function testDataLoad() {
+            const statusDiv = document.getElementById('data-status');
+            statusDiv.innerHTML = '<span class="info">데이터 로드 중...</span>';
+            
+            try {
+                if (!supabaseClient) {
+                    const connected = await initSupabase();
+                    if (!connected) {
+                        statusDiv.innerHTML = '<span class="error">Supabase 연결 실패</span>';
+                        return;
+                    }
+                }
+                
+                const { data: links, error } = await supabaseClient
+                    .from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) {
+                    statusDiv.innerHTML = `<span class="error">❌ 데이터 로드 실패: ${error.message}</span>`;
+                    return;
+                }
+                
+                const totalLinks = links ? links.length : 0;
+                const gptCount = links ? links.filter(l => l.category === 'gpt').length : 0;
+                const youtubeCount = links ? links.filter(l => l.category === 'youtube').length : 0;
+                const favoriteCount = links ? links.filter(l => l.category === 'favorite').length : 0;
+                
+                statusDiv.innerHTML = `
+                    <span class="success">✅ 데이터 로드 성공!</span>
+                    <span class="info">전체 링크: ${totalLinks}개</span>
+                    <span class="info">GPT: ${gptCount}개</span>
+                    <span class="info">YouTube: ${youtubeCount}개</span>
+                    <span class="info">Favorite: ${favoriteCount}개</span>
+                `;
+                
+                // 실제 링크 렌더링
+                renderLinks(links);
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ 예외 발생: ${error.message}</span>`;
+            }
+        }
+        
+        function renderLinks(links) {
+            if (!links || links.length === 0) {
+                ['gpt-links', 'youtube-links', 'favorite-links'].forEach(id => {
+                    document.getElementById(id).innerHTML = '<div style="color: #666;">링크가 없습니다</div>';
+                });
+                return;
+            }
+            
+            // GPT 링크
+            const gptLinks = links.filter(l => l.category === 'gpt');
+            const gptContainer = document.getElementById('gpt-links');
+            if (gptLinks.length > 0) {
+                gptContainer.innerHTML = gptLinks.map(link => `
+                    <a href="${link.url || '#'}" target="_blank" class="link-card">
+                        ${link.name || '이름 없음'}
+                    </a>
+                `).join('');
+            } else {
+                gptContainer.innerHTML = '<div style="color: #666;">GPT 링크가 없습니다</div>';
+            }
+            
+            // YouTube 링크
+            const youtubeLinks = links.filter(l => l.category === 'youtube');
+            const youtubeContainer = document.getElementById('youtube-links');
+            if (youtubeLinks.length > 0) {
+                youtubeContainer.innerHTML = youtubeLinks.map(link => `
+                    <a href="${link.url || '#'}" target="_blank" class="link-card">
+                        ${link.name || '이름 없음'}
+                    </a>
+                `).join('');
+            } else {
+                youtubeContainer.innerHTML = '<div style="color: #666;">YouTube 링크가 없습니다</div>';
+            }
+            
+            // Favorite 링크
+            const favoriteLinks = links.filter(l => l.category === 'favorite');
+            const favoriteContainer = document.getElementById('favorite-links');
+            if (favoriteLinks.length > 0) {
+                favoriteContainer.innerHTML = favoriteLinks.map(link => `
+                    <a href="${link.url || '#'}" target="_blank" class="link-card">
+                        ${link.name || '이름 없음'}
+                    </a>
+                `).join('');
+            } else {
+                favoriteContainer.innerHTML = '<div style="color: #666;">Favorite 링크가 없습니다</div>';
+            }
+        }
+        
+        // 자동 초기화
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Wait for config to load first
+            const waitForConfig = () => {
+                return new Promise((resolve) => {
+                    if (window.APP_CONFIG?.SUPABASE?.URL) {
+                        resolve();
+                    } else {
+                        window.addEventListener('configLoaded', resolve, { once: true });
+                        setTimeout(resolve, 3000); // Fallback
+                    }
+                });
+            };
+            
+            await waitForConfig();
+            await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay
+            await initSupabase();
+            await testDataLoad();
+        });
+    </script>
+</body>
+</html>

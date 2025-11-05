@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>LINKS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid #1a1a1a;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: #aaa;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+
+        .links a {
+            color: #888;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 0.9em;
+            transition: color 0.3s ease;
+        }
+
+        .links a:hover {
+            color: #aaa;
+            text-decoration: underline;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* YouTube 라이브 인디케이터 애니메이션 */
+        @keyframes livePulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 0 5px rgba(255, 0, 0, 0);
+                transform: scale(1.2);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+                transform: scale(1);
+            }
+        }
+        
+        /* 모바일 스타일 (화면 너비 768px 이하) */
+        @media (max-width: 768px) {
+            /* 모바일에서 전체 화면 활용 */
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            
+            .container {
+                border-radius: 0;
+                padding: 0;
+                max-width: 100%;
+                border: none;
+                box-shadow: none;
+            }
+            
+            /* 카드 섹션들 여백 제거 */
+            .cards {
+                padding: 10px 5px;
+                gap: 8px;
+            }
+            
+            .card {
+                margin: 0;
+                padding: 12px;
+            }
+            
+            /* 헤더 카드 모바일 최적화 */
+            .header-card {
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding: 15px !important;
+            }
+            
+            /* 테이블 섹션 패딩 줄이기 */
+            table {
+                margin: 0 5px;
+            }
+            
+            /* 링크 섹션 패딩 줄이기 */
+            div[style*="margin-top: 30px"] {
+                margin-top: 15px !important;
+                padding: 10px 5px !important;
+            }
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 카드 -->
+        <div class="header-card" style="
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            width: 100%;
+            box-sizing: border-box;
+        ">
+            <div style="text-align: center;">
+                <div style="margin-bottom: 15px;">
+                    <span style="
+                        background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #dda0dd);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        font-size: clamp(1.5em, 4vw, 2.5em);
+                        font-weight: 900;
+                        font-family: 'Courier New', monospace;
+                        letter-spacing: 2px;
+                        text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+                        display: inline-block;
+                        animation: glow 3s ease-in-out infinite;
+                    ">EUO.NETLIFY.APP</span>
+                </div>
+                <style>
+                    @keyframes glow {
+                        0%, 100% { filter: brightness(1) contrast(1); }
+                        50% { filter: brightness(1.2) contrast(1.1); }
+                    }
+                </style>
+                
+                
+                <div style="margin-top: 10px;">
+                    <a href="https://www.weather.go.kr/w/weather/warning/status.do" target="_blank" style="
+                        color: #888; 
+                        text-decoration: none; 
+                        font-size: 0.85em;
+                        transition: color 0.3s;
+                    " onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#888'">
+                        🌦️ 날씨누리 특보현황
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 채팅 버튼 섹션 -->
+        <div style="margin-top: 30px; margin-bottom: 30px; text-align: center;">
+            <button onclick="openChatPopup()" style="
+                padding: 12px 24px;
+                background: linear-gradient(135deg, #4facfe 0%, #00e5ff 100%);
+                color: #fff;
+                border: none;
+                border-radius: 30px;
+                font-weight: 600;
+                font-size: 16px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(79, 172, 254, 0.4)'" 
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(79, 172, 254, 0.3)'">
+                💬 실시간 채팅
+            </button>
+        </div>
+        
+        <div class="gpt-section" style="margin-top: 20px; padding-bottom: 20px;">
+            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                🤖 GPT Links
+            </h2>
+            <div id="gpt-links" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <!-- GPT 링크들이 여기에 동적으로 로드됩니다 -->
+            </div>
+        </div>
+        
+        <div class="youtube-section" style="margin-top: 20px; padding-bottom: 20px;">
+            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                📺 YouTube Live
+            </h2>
+            <div id="youtube-links" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <!-- YouTube 링크들이 여기에 동적으로 로드됩니다 -->
+            </div>
+        </div>
+        
+        <div class="favorite-section" style="margin-top: 20px; padding-bottom: 20px;">
+            <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                ⭐ Favorite Sites
+            </h2>
+            <div id="favorite-links" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <!-- Favorite 링크들이 여기에 동적으로 로드됩니다 -->
+            </div>
+        </div>
+        
+        <!-- Fun YouTube 섹션 -->
+        <div class="fun-youtube-section" style="margin-top: 20px; padding-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
+                <h2 style="color: #aaa; margin: 0; font-weight: 400; font-size: 1.5rem;">
+                    🎮 Fun YouTube
+                </h2>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="toggleFunYoutubeView('list')" class="fun-youtube-view-btn" data-view="list" style="
+                        padding: 6px 12px;
+                        background: #fff;
+                        color: #000;
+                        border: 1px solid #444;
+                        cursor: pointer;
+                        font-size: 12px;
+                        transition: all 0.2s ease;
+                        border-radius: 4px;
+                    ">List</button>
+                    <button onclick="toggleFunYoutubeView('grid')" class="fun-youtube-view-btn" data-view="grid" style="
+                        padding: 6px 12px;
+                        background: transparent;
+                        color: #999;
+                        border: 1px solid #444;
+                        cursor: pointer;
+                        font-size: 12px;
+                        transition: all 0.2s ease;
+                        border-radius: 4px;
+                    ">Grid</button>
+                </div>
+            </div>
+            <div id="fun-youtube-links-list" style="display: flex; flex-direction: column; gap: 1px; background: transparent;">
+                <!-- List view -->
+            </div>
+            <div id="fun-youtube-links-grid" style="display: none; grid-template-columns: repeat(3, 1fr); gap: 20px; background: transparent;">
+                <!-- Grid view -->
+            </div>
+        </div>
+        
+        <!-- 커스텀 카테고리 섹션들이 여기에 동적으로 추가됩니다 -->
+        <div id="custom-category-sections"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="links-module.js"></script>
+    <script src="config-env.js"></script>
+    <script src="config-loader.js"></script>
+    <script>
+
+        // Fun YouTube view toggle function
+        function toggleFunYoutubeView(view) {
+            window.funYoutubeViewMode = view;
+            const buttons = document.querySelectorAll('.fun-youtube-view-btn');
+            buttons.forEach(btn => {
+                btn.style.background = btn.getAttribute('data-view') === view ? '#fff' : 'transparent';
+                btn.style.color = btn.getAttribute('data-view') === view ? '#000' : '#999';
+            });
+
+            // Save the view mode preference
+            const funSettings = JSON.parse(localStorage.getItem('funYoutubeSettings') || '{}');
+            funSettings.viewMode = view;
+            localStorage.setItem('funYoutubeSettings', JSON.stringify(funSettings));
+
+            loadLinksFromSupabase(); // Reload to apply new view
+        }
+
+        // Extract video ID from YouTube URL
+        function getVideoIdFromUrl(url) {
+            if (!url) return null;
+            const regex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        // YouTube 비디오 정보 캐시
+        const youtubeVideoCache = {};
+
+        // YouTube 비디오 정보 가져오기 (noembed 서비스 사용)
+        async function getYouTubeVideoInfo(url) {
+            // 캐시 확인
+            if (youtubeVideoCache[url]) {
+                return youtubeVideoCache[url];
+            }
+
+            try {
+                const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+
+                if (data && data.title) {
+                    const videoInfo = {
+                        title: data.title,
+                        author: data.author_name || 'Unknown',
+                        thumbnail: data.thumbnail_url || `https://img.youtube.com/vi/${getVideoIdFromUrl(url)}/maxresdefault.jpg`
+                    };
+
+                    // 캐시에 저장
+                    youtubeVideoCache[url] = videoInfo;
+                    return videoInfo;
+                }
+            } catch (error) {
+                console.error('YouTube 정보 가져오기 실패:', error);
+            }
+
+            // 실패 시 기본값 반환
+            const videoId = getVideoIdFromUrl(url);
+            return {
+                title: '동영상',
+                author: '',
+                thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : ''
+            };
+        }
+
+        // 저장된 카드 스타일 가져오기
+        function getCardStyles(category) {
+            const savedStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
+            const defaultStyles = {
+                gpt: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                },
+                youtube: {
+                    fontSize: 17, fontWeight: '600', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102,
+                    showLiveIndicator: true
+                },
+                favorite: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                }
+            };
+            return { ...defaultStyles[category], ...(savedStyles[category] || {}) };
+        }
+
+        // HTML 이스케이프 함수 (XSS 방지)
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // 채팅 팝업 열기 함수
+        function openChatPopup() {
+            // 팝업 창 설정
+            const width = 400;
+            const height = 600;
+            const left = window.screen.width - width - 50;
+            const top = 100;
+            
+            const features = `
+                width=${width},
+                height=${height},
+                left=${left},
+                top=${top},
+                toolbar=no,
+                menubar=no,
+                scrollbars=no,
+                resizable=yes,
+                status=no
+            `.replace(/\s+/g, '');
+            
+            // 팝업 열기
+            const chatWindow = window.open('chat-popup.html', 'ChatWindow', features);
+            
+            // 포커스 주기
+            if (chatWindow) {
+                chatWindow.focus();
+            }
+        }
+
+        // Supabase에서 링크 데이터 로드
+        async function loadLinksFromSupabase() {
+            console.log('Loading links from Supabase...');
+            
+            // Supabase 라이브러리가 로드될 때까지 대기
+            let attempts = 0;
+            while (!window.supabase && attempts < 20) {
+                console.log(`Waiting for Supabase library... attempt ${attempts + 1}/20`);
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+            }
+            
+            if (!window.supabase) {
+                console.error('Supabase library failed to load after 4 seconds');
+                return;
+            }
+
+            // Supabase 클라이언트 초기화
+            if (!window.supabaseClient) {
+                try {
+                    const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('✓ Supabase client initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize Supabase:', error);
+                    return;
+                }
+            }
+            
+            const supabase = window.supabaseClient;
+
+            try {
+                const { data: links, error } = await window.supabaseClient.from('links')
+                    .select('*')
+                    .order('position', { ascending: true });
+                
+                if (error) {
+                    console.error('Supabase error:', error);
+                    console.error('Error details:', error.message, error.code);
+                    throw error;
+                }
+                
+                console.log('Links loaded:', links);
+                console.log('Total links count:', links ? links.length : 0);
+                
+                // 카테고리별로 링크 분류
+                const gptLinks = links ? links.filter(link => link.category === 'gpt') : [];
+                const youtubeLinks = links ? links.filter(link => link.category === 'youtube') : [];
+                const favoriteLinks = links ? links.filter(link => link.category === 'favorite') : [];
+                const funYoutubeLinks = links ? links.filter(link => link.category === 'fun-youtube') : [];
+                
+                // 커스텀 카테고리 처리
+                const customCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
+                const customCategoryLinks = {};
+                customCategories.forEach(cat => {
+                    customCategoryLinks[cat.id] = links ? links.filter(link => link.category === cat.id) : [];
+                });
+                
+                console.log('GPT links:', gptLinks.length);
+                console.log('YouTube links:', youtubeLinks.length);
+                console.log('Favorite links:', favoriteLinks.length);
+                console.log('Fun YouTube links:', funYoutubeLinks.length);
+                console.log('Custom categories:', customCategories);
+                
+                // GPT 링크 렌더링
+                const gptContainer = document.getElementById('gpt-links');
+                if (gptContainer) {
+                    if (gptLinks.length > 0) {
+                        const gptStyles = getCardStyles('gpt');
+                        gptContainer.innerHTML = gptLinks.map(link => `
+                            <a href="${escapeHtml(link.url)}" target="_blank" style="
+                                background: ${gptStyles.bgColor};
+                                color: ${gptStyles.textColor};
+                                padding: 15px;
+                                border-radius: 10px;
+                                text-align: center;
+                                border: 1px solid ${gptStyles.borderColor};
+                                text-decoration: none;
+                                transition: transform 0.3s ease;
+                                display: block;
+                            ">
+                                <div style="font-size: ${gptStyles.fontSize}px;">${escapeHtml(link.name)}</div>
+                            </a>
+                        `).join('');
+                    } else {
+                        gptContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                    }
+                }
+                
+                // YouTube 링크 렌더링 (original card style)
+                const youtubeContainer = document.getElementById('youtube-links');
+                if (youtubeContainer) {
+                    if (youtubeLinks.length > 0) {
+                        const youtubeStyles = getCardStyles('youtube');
+                        youtubeContainer.innerHTML = youtubeLinks.map(link => `
+                        <a href="${link.url}" target="_blank" style="
+                            background: ${youtubeStyles.bgColor};
+                            color: ${youtubeStyles.textColor};
+                            padding: 15px;
+                            border-radius: 10px;
+                            text-align: center;
+                            border: 1px solid ${youtubeStyles.borderColor};
+                            text-decoration: none;
+                            transition: transform 0.3s ease;
+                            display: block;
+                            position: relative;
+                        ">
+                            <div style="font-size: ${youtubeStyles.fontSize}px; font-weight: bold;">${escapeHtml(link.name)}</div>
+                            <span class="live-indicator" data-channel-url="${escapeHtml(link.url)}" style="
+                                position: absolute;
+                                top: 5px;
+                                right: 5px;
+                                width: 10px;
+                                height: 10px;
+                                border-radius: 50%;
+                                background: #666;
+                                animation: none;
+                            "></span>
+                        </a>
+                        `).join('');
+
+                        // YouTube 라이브 상태 체크
+                        checkYouTubeLiveStatus();
+                    } else {
+                        youtubeContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                    }
+                }
+                
+                // Favorite 링크 렌더링
+                const favoriteContainer = document.getElementById('favorite-links');
+                if (favoriteContainer) {
+                    if (favoriteLinks.length > 0) {
+                        const favoriteStyles = getCardStyles('favorite');
+                        favoriteContainer.innerHTML = favoriteLinks.map(link => `
+                        <a href="${link.url}" target="_blank" style="
+                            background: ${favoriteStyles.bgColor};
+                            color: ${favoriteStyles.textColor};
+                            padding: 15px;
+                            border-radius: 10px;
+                            text-align: center;
+                            border: 1px solid ${favoriteStyles.borderColor};
+                            text-decoration: none;
+                            transition: transform 0.3s ease;
+                            display: block;
+                        ">
+                            <div style="font-size: ${favoriteStyles.fontSize}px;">${escapeHtml(link.name)}</div>
+                        </a>
+                        `).join('');
+                    } else {
+                        favoriteContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                    }
+                }
+                
+                // Fun YouTube 링크 렌더링 (썸네일과 실제 제목 포함)
+                const funYoutubeListContainer = document.getElementById('fun-youtube-links-list');
+                const funYoutubeGridContainer = document.getElementById('fun-youtube-links-grid');
+
+                // Fun YouTube 설정 로드
+                const funYoutubeSettings = JSON.parse(localStorage.getItem('funYoutubeSettings') || '{}');
+                const defaultSettings = {
+                    viewMode: 'list',
+                    gridColumns: 3,
+                    showThumbnails: true,
+                    showAuthor: false,
+                    showViewButton: false,
+                    fontSize: 16,
+                    bgColor: '#1a1a1a',
+                    textColor: '#ffffff',
+                    hoverBgColor: '#2a2a2a',
+                    borderRadius: 8,
+                    hoverScale: true
+                };
+                const funSettings = { ...defaultSettings, ...funYoutubeSettings };
+
+                // 초기 뷰 모드 설정
+                window.funYoutubeViewMode = funSettings.viewMode;
+
+                if (funYoutubeListContainer && funYoutubeGridContainer) {
+                    // 그리드 컬럼 설정
+                    if (funYoutubeGridContainer) {
+                        funYoutubeGridContainer.style.gridTemplateColumns = `repeat(${funSettings.gridColumns}, 1fr)`;
+                    }
+
+                    if (funYoutubeLinks.length > 0) {
+                        // Update view buttons to reflect current mode
+                        const buttons = document.querySelectorAll('.fun-youtube-view-btn');
+                        buttons.forEach(btn => {
+                            btn.style.background = btn.getAttribute('data-view') === window.funYoutubeViewMode ? '#fff' : 'transparent';
+                            btn.style.color = btn.getAttribute('data-view') === window.funYoutubeViewMode ? '#000' : '#999';
+                        });
+
+                        // 각 링크에 대해 YouTube 정보 가져와서 렌더링
+                        const renderFunYoutubeLinks = async () => {
+                            if (window.funYoutubeViewMode === 'grid') {
+                                // 그리드 뷰
+                                funYoutubeListContainer.style.display = 'none';
+                                funYoutubeGridContainer.style.display = 'grid';
+                                funYoutubeGridContainer.innerHTML = '';
+
+                                for (const link of funYoutubeLinks) {
+                                    const videoInfo = await getYouTubeVideoInfo(link.url);
+                                    const gridItem = document.createElement('a');
+                                    gridItem.href = link.url;
+                                    gridItem.target = '_blank';
+                                    gridItem.style.cssText = `
+                                        background: ${funSettings.bgColor};
+                                        color: ${funSettings.textColor};
+                                        border-radius: ${funSettings.borderRadius}px;
+                                        border: 1px solid #333;
+                                        text-decoration: none;
+                                        transition: all 0.3s ease;
+                                        display: block;
+                                        overflow: hidden;
+                                        cursor: pointer;
+                                    `;
+                                    gridItem.innerHTML = `
+                                        ${funSettings.showThumbnails ? `
+                                        <div style="width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; position: relative;">
+                                            <img src="${videoInfo.thumbnail}" style="width: 100%; height: 100%; object-fit: cover;"
+                                                onerror="this.src='https://via.placeholder.com/320x180?text=No+Thumbnail'">
+                                        </div>
+                                        ` : ''}
+                                        <div style="padding: 12px;">
+                                            <div style="font-size: ${funSettings.fontSize}px; font-weight: 600; margin-bottom: 4px;
+                                                    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+                                                    overflow: hidden; line-height: 1.3;">${videoInfo.title}</div>
+                                            ${funSettings.showAuthor ? `<div style="font-size: ${funSettings.fontSize - 2}px; color: #999; margin-top: 4px;">${videoInfo.author}</div>` : ''}
+                                        </div>
+                                    `;
+                                    gridItem.onmouseover = function() {
+                                        this.style.background = funSettings.hoverBgColor;
+                                        if (funSettings.hoverScale) {
+                                            this.style.transform = 'translateY(-2px)';
+                                            this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+                                        }
+                                    };
+                                    gridItem.onmouseout = function() {
+                                        this.style.background = funSettings.bgColor;
+                                        if (funSettings.hoverScale) {
+                                            this.style.transform = 'translateY(0)';
+                                            this.style.boxShadow = 'none';
+                                        }
+                                    };
+                                    funYoutubeGridContainer.appendChild(gridItem);
+                                }
+                            } else {
+                                // 리스트 뷰
+                                funYoutubeListContainer.style.display = 'flex';
+                                funYoutubeGridContainer.style.display = 'none';
+                                funYoutubeListContainer.innerHTML = '';
+
+                                for (const link of funYoutubeLinks) {
+                                    const videoInfo = await getYouTubeVideoInfo(link.url);
+                                    const listItem = document.createElement('a');
+                                    listItem.href = link.url;
+                                    listItem.target = '_blank';
+                                    listItem.style.cssText = `
+                                        background: ${funSettings.bgColor};
+                                        color: ${funSettings.textColor};
+                                        padding: 12px;
+                                        border: 1px solid #333;
+                                        border-radius: ${funSettings.borderRadius}px;
+                                        text-decoration: none;
+                                        transition: all 0.2s ease;
+                                        display: flex;
+                                        gap: 15px;
+                                        align-items: center;
+                                        cursor: pointer;
+                                        margin-bottom: 1px;
+                                    `;
+                                    listItem.innerHTML = `
+                                        ${funSettings.showThumbnails ? `
+                                        <div style="width: 160px; height: 90px; flex-shrink: 0; background: #000; overflow: hidden; border-radius: ${funSettings.borderRadius/2}px;">
+                                            <img src="${videoInfo.thumbnail}" style="width: 100%; height: 100%; object-fit: cover;"
+                                                onerror="this.src='https://via.placeholder.com/160x90?text=No+Thumbnail'">
+                                        </div>
+                                        ` : ''}
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="font-size: ${funSettings.fontSize}px; font-weight: 500; margin-bottom: 4px;
+                                                    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${videoInfo.title}</div>
+                                            ${funSettings.showAuthor ? `<div style="font-size: ${funSettings.fontSize - 2}px; color: #999;">${videoInfo.author}</div>` : ''}
+                                        </div>
+                                    `;
+                                    listItem.onmouseover = function() {
+                                        this.style.background = funSettings.hoverBgColor;
+                                        this.style.borderColor = '#444';
+                                        if (funSettings.hoverScale) {
+                                            this.style.transform = 'scale(1.01)';
+                                        }
+                                    };
+                                    listItem.onmouseout = function() {
+                                        this.style.background = funSettings.bgColor;
+                                        this.style.borderColor = '#333';
+                                        if (funSettings.hoverScale) {
+                                            this.style.transform = 'scale(1)';
+                                        }
+                                    };
+                                    funYoutubeListContainer.appendChild(listItem);
+                                }
+                            }
+                        };
+
+                        // 비동기로 렌더링 실행
+                        renderFunYoutubeLinks();
+                    } else {
+                        funYoutubeListContainer.innerHTML = '<div style="color: #666; text-align: center;">링크가 없습니다. 관리자 페이지에서 추가하세요.</div>';
+                        funYoutubeGridContainer.innerHTML = '';
+                    }
+                }
+                
+                // 커스텀 카테고리 섹션 렌더링
+                const customSectionsContainer = document.getElementById('custom-category-sections');
+                if (customSectionsContainer && customCategories.length > 0) {
+                    customSectionsContainer.innerHTML = '';
+                    
+                    customCategories.forEach(category => {
+                        const categoryLinks = customCategoryLinks[category.id] || [];
+                        
+                        if (categoryLinks.length > 0) {
+                            const section = document.createElement('div');
+                            section.className = 'custom-category-section';
+                            section.style.cssText = 'margin-top: 20px; padding-bottom: 20px;';
+                            
+                            section.innerHTML = `
+                                <h2 style="color: #aaa; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #333;">
+                                    📌 ${category.name}
+                                </h2>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                                    ${categoryLinks.map(link => `
+                                        <a href="${link.url}" target="_blank" style="
+                                            background: #1a1a1a;
+                                            color: white;
+                                            padding: 15px;
+                                            border-radius: 10px;
+                                            text-align: center;
+                                            border: 1px solid #333;
+                                            text-decoration: none;
+                                            transition: transform 0.3s ease;
+                                            display: block;
+                                        ">
+                                            <div style="font-size: 1em;">${link.name}</div>
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            `;
+                            
+                            customSectionsContainer.appendChild(section);
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                console.error('링크 로드 실패:', error);
+                console.error('Error stack:', error.stack);
+                
+                // 에러 발생시 빈 컨테이너에 메시지 표시
+                const gptContainer = document.getElementById('gpt-links');
+                if (gptContainer && gptContainer.innerHTML === '') {
+                    gptContainer.innerHTML = '<div style="color: #666;">링크를 불러오는 중 오류가 발생했습니다. 콘솔을 확인하세요.</div>';
+                }
+            }
+        }
+        
+        // YouTube 라이브 상태 체크 함수
+        async function checkYouTubeLiveStatus() {
+            const indicators = document.querySelectorAll('.live-indicator');
+            
+            indicators.forEach(async (indicator) => {
+                const channelUrl = indicator.getAttribute('data-channel-url');
+                
+                // URL에서 채널 정보 추출
+                try {
+                    // CORS 제한으로 인해 직접 체크가 어려우므로,
+                    // 프록시 서버나 YouTube API를 사용해야 합니다.
+                    // 일단 시뮬레이션으로 구현
+                    
+                    // 실제 구현시 YouTube Data API v3 사용 필요
+                    // 여기서는 URL에 '/live'가 포함되어 있으면 라이브로 가정
+                    const isLive = channelUrl.includes('/live');
+                    
+                    if (isLive) {
+                        // 라이브 중 - 빨간색 원 + 깜빡임 애니메이션
+                        indicator.style.background = '#ff0000';
+                        indicator.style.animation = 'livePulse 1.5s infinite';
+                        indicator.title = '🔴 LIVE';
+                    } else {
+                        // 오프라인 - 회색 원
+                        indicator.style.background = '#666';
+                        indicator.style.animation = 'none';
+                        indicator.title = '⚫ Offline';
+                    }
+                } catch (error) {
+                    console.error('라이브 상태 확인 실패:', error);
+                }
+            });
+        }
+        
+        // 페이지 로드시 링크 데이터 가져오기
+        window.addEventListener('DOMContentLoaded', () => {
+
+            // 모듈화된 링크 로딩 사용
+            async function loadLinksUsingModule() {
+                console.log('LinksModule을 사용하여 링크 로딩 시작...');
+
+                // 디버그 모드 활성화
+                LinksModule.setDebug(true);
+
+                // 모듈 초기화 및 링크 로드
+                const result = await LinksModule.loadAndRender();
+
+                if (result.success) {
+                    console.log(`✅ 모듈 링크 로딩 성공: ${result.total}개 링크`);
+                } else {
+                    console.error(`❌ 모듈 링크 로딩 실패: ${result.error}`);
+
+                    // 실패시 기존 방식으로 폴백
+                    console.log('기존 방식으로 폴백...');
+                    loadLinksFromSupabase();
+                }
+            }
+
+            // 모듈이 로드될 때까지 대기
+            function waitForLinksModule() {
+                if (window.LinksModule) {
+                    console.log('✅ LinksModule 준비됨');
+                    loadLinksUsingModule();
+                } else {
+                    console.log('⏳ LinksModule 대기 중...');
+                    setTimeout(waitForLinksModule, 200);
+                }
+            }
+
+            // 직접 링크 로드 함수 호출 (LinksModule 대신)
+            console.log('🚀 링크 로딩 시작 (직접 호출)');
+            setTimeout(() => {
+                loadLinksFromSupabase();
+            }, 1000);
+            
+            // Supabase 실시간 구독은 클라이언트가 초기화된 후에 설정
+            setTimeout(() => {
+                if (window.supabaseClient) {
+                    // 실시간 업데이트 구독 (선택사항)
+                    const subscription = window.supabaseClient
+                        .channel('links-channel')
+                        .on('postgres_changes', 
+                            { event: '*', schema: 'public', table: 'links' }, 
+                            () => {
+                                loadLinksFromSupabase(); // 변경사항 발생시 자동 새로고침
+                            }
+                        )
+                        .subscribe();
+                    
+                    console.log('✓ Supabase 실시간 구독 설정 완료');
+                } else {
+                    console.log('⚠️ Supabase 실시간 구독 건너뜀 (클라이언트 없음)');
+                }
+            }, 2000);
+        });
+        
+        // 5분마다 YouTube 라이브 상태 재확인
+        setInterval(() => {
+            checkYouTubeLiveStatus();
+        }, 300000);
+
+    </script>
+    
+    <!-- 관리자 설정 버튼 -->
+    <a href="login.html" class="settings-btn" title="관리자 설정">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 1.54l4.24 4.24M20.46 20.46l-4.24-4.24M1.54 20.46l4.24-4.24M22 12h-6m-6 0H1"></path>
+        </svg>
+    </a>
+    
+    <style>
+        .settings-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+        
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+            transform: rotate(90deg);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+        }
+        
+        .settings-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .settings-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .settings-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 30px; border: 1px solid #333; z-index: 9999;">
+        <a href="index.html" style="text-decoration: none; color: #fff; font-weight: bold; border-bottom: 2px solid #f7931a;">Main</a>
+        <a href="index2-test.html" style="text-decoration: none; color: #fff; font-weight: bold;">2</a>
+        <a href="index3-test.html" style="text-decoration: none; color: #fff; font-weight: bold;">3</a>
+        <a href="index4-test.html" style="text-decoration: none; color: #fff; font-weight: bold;">4</a>
+        <a href="index5-test.html" style="text-decoration: none; color: #fff; font-weight: bold;">5</a>
+        <a href="index6-test.html" style="text-decoration: none; color: #fff; font-weight: bold;">6</a>
+    </div>
+</body>
+</html>

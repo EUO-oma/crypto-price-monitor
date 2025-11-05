@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT Links Only</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+            border: 1px solid #1a1a1a;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4facfe;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #aaa;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        .status {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .gpt-section {
+            margin-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        #gpt-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .debug {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 GPT Links Only Test</h1>
+        
+        <div id="status" class="status">초기화 중...</div>
+        
+        <div class="gpt-section">
+            <h2>🤖 GPT Links</h2>
+            <div id="gpt-links">
+                <!-- GPT 링크들이 여기에 표시됩니다 -->
+                <div style="color: #666;">로딩 중...</div>
+            </div>
+        </div>
+        
+        <div id="debug-info" class="debug">디버그 정보가 여기에 표시됩니다...</div>
+    </div>
+
+    <!-- Supabase 관련 스크립트들 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // 디버그 로그
+        let debugLog = [];
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            const logMessage = `[${time}] ${message}`;
+            console.log(logMessage);
+            debugLog.push(logMessage);
+            document.getElementById('debug-info').textContent = debugLog.join('\n');
+        }
+
+        // 상태 업데이트
+        function updateStatus(message, color = '#fff') {
+            document.getElementById('status').innerHTML = `<span style="color: ${color}">${message}</span>`;
+        }
+
+        // HTML 이스케이프 함수
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // 스타일 가져오기 (index.html에서 복사)
+        function getCardStyles(category) {
+            const savedStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
+            const defaultStyles = {
+                gpt: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                }
+            };
+            return { ...defaultStyles[category], ...(savedStyles[category] || {}) };
+        }
+
+        // GPT 링크만 로드하는 함수
+        async function loadGPTLinksOnly() {
+            log('=== GPT Links 로딩 시작 ===');
+            updateStatus('Supabase 초기화 중...', '#60a5fa');
+            
+            // Supabase 라이브러리 대기
+            let attempts = 0;
+            while (!window.supabase && attempts < 20) {
+                log(`Supabase 라이브러리 대기 중... (${attempts + 1}/20)`);
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+            }
+            
+            if (!window.supabase) {
+                log('❌ Supabase 라이브러리 로드 실패');
+                updateStatus('❌ Supabase 라이브러리 로드 실패', '#f87171');
+                return;
+            }
+            
+            log('✅ Supabase 라이브러리 로드됨');
+            
+            try {
+                // Supabase 클라이언트 생성
+                const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                log('✅ Supabase 클라이언트 생성됨');
+                
+                updateStatus('GPT 링크 조회 중...', '#60a5fa');
+                
+                // GPT 링크만 조회
+                const { data: gptLinks, error } = await supabaseClient
+                    .from('links')
+                    .select('*')
+                    .eq('category', 'gpt')
+                    .order('position', { ascending: true });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                log(`✅ ${gptLinks?.length || 0}개의 GPT 링크 조회됨`);
+                
+                // GPT 링크 렌더링
+                const gptContainer = document.getElementById('gpt-links');
+                
+                if (!gptLinks || gptLinks.length === 0) {
+                    gptContainer.innerHTML = '<div style="color: #666; text-align: center;">GPT 링크가 없습니다.</div>';
+                    updateStatus('GPT 링크가 없습니다', '#fbbf24');
+                    return;
+                }
+                
+                // 스타일 가져오기
+                const gptStyles = getCardStyles('gpt');
+                log('GPT 스타일: ' + JSON.stringify(gptStyles));
+                
+                // DOM 요소로 링크 생성
+                gptContainer.innerHTML = ''; // 초기화
+                
+                gptLinks.forEach((link, index) => {
+                    log(`링크 ${index + 1}: ${link.name} - ${link.url}`);
+                    
+                    const linkElement = document.createElement('a');
+                    linkElement.href = link.url || '#';
+                    linkElement.target = '_blank';
+                    linkElement.style.cssText = `
+                        background: ${gptStyles.bgColor || '#1a1a1a'};
+                        color: ${gptStyles.textColor || '#ffffff'};
+                        padding: ${gptStyles.padding || 15}px;
+                        border-radius: ${gptStyles.borderRadius || 10}px;
+                        text-align: center;
+                        border: 1px solid ${gptStyles.borderColor || '#333333'};
+                        text-decoration: none;
+                        transition: transform 0.3s ease;
+                        display: block;
+                    `;
+                    
+                    const textDiv = document.createElement('div');
+                    textDiv.style.fontSize = `${gptStyles.fontSize || 16}px`;
+                    textDiv.textContent = link.name || '이름 없음';
+                    
+                    linkElement.appendChild(textDiv);
+                    
+                    // 호버 이벤트
+                    linkElement.addEventListener('mouseover', function() {
+                        this.style.transform = 'translateY(-3px)';
+                        this.style.borderColor = '#555';
+                        if (gptStyles.hoverBg) {
+                            this.style.background = gptStyles.hoverBg;
+                        }
+                    });
+                    
+                    linkElement.addEventListener('mouseout', function() {
+                        this.style.transform = 'translateY(0)';
+                        this.style.borderColor = gptStyles.borderColor || '#333333';
+                        this.style.background = gptStyles.bgColor || '#1a1a1a';
+                    });
+                    
+                    gptContainer.appendChild(linkElement);
+                });
+                
+                updateStatus(`✅ ${gptLinks.length}개의 GPT 링크 로드 완료`, '#4ade80');
+                log('=== GPT Links 렌더링 완료 ===');
+                
+            } catch (error) {
+                log(`❌ 오류 발생: ${error.message}`);
+                updateStatus(`❌ 오류: ${error.message}`, '#f87171');
+                
+                const gptContainer = document.getElementById('gpt-links');
+                gptContainer.innerHTML = `<div style="color: #f87171;">오류: ${error.message}</div>`;
+            }
+        }
+
+        // 페이지 로드 시 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            log('페이지 로드 완료');
+            
+            // 1초 후 링크 로드 시작
+            setTimeout(() => {
+                loadGPTLinksOnly();
+            }, 1000);
+        });
+
+        // 전역 에러 핸들러
+        window.addEventListener('error', (event) => {
+            log(`❌ JavaScript 오류: ${event.message}`);
+        });
+    </script>
+</body>
+</html>

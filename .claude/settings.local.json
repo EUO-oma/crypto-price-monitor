@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start chrome \"C:\\startcoding\\crypto-prices.html\")",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(move crypto-prices.html crypto-priceindex.html)",
+      "Bash(start chrome:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(./push-to-github.bat)",
+      "Bash(git rm:*)",
+      "Bash(cat:*)",
+      "Bash(gh auth:*)",
+      "Bash(powershell:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(copy:*)",
+      "Bash(del nul)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

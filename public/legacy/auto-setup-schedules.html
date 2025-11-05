@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일정관리 테이블 자동 설정</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #121212;
+            color: #fff;
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #1e1e1e;
+        }
+        .success { border-color: #4caf50; background: rgba(76, 175, 80, 0.1); }
+        .error { border-color: #f44336; background: rgba(244, 67, 54, 0.1); }
+        .info { border-color: #2196f3; background: rgba(33, 150, 243, 0.1); }
+        .warning { border-color: #ff9800; background: rgba(255, 152, 0, 0.1); }
+        
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #1976d2; }
+        button:disabled { 
+            background: #666; 
+            cursor: not-allowed;
+        }
+        
+        pre {
+            background: #0d0d0d;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        .step.complete .step-number { background: #4caf50; }
+        .step.error .step-number { background: #f44336; }
+        
+        #sqlCode {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2196f3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>일정관리 시스템 자동 설정</h1>
+    
+    <div class="section info">
+        <h2>안내</h2>
+        <p>이 페이지는 일정관리 시스템에 필요한 데이터베이스 테이블을 확인하고 설정하는 도구입니다.</p>
+        <p><strong>주의:</strong> 이 작업을 수행하려면 Supabase 프로젝트의 관리자 권한이 필요합니다.</p>
+    </div>
+    
+    <div id="status" class="section">
+        <h2>현재 상태</h2>
+        <div id="statusContent">
+            <p>확인 중...</p>
+        </div>
+    </div>
+    
+    <div id="steps" class="section">
+        <h2>설정 단계</h2>
+        <div class="step" id="step1">
+            <div class="step-number">1</div>
+            <div>Supabase 연결 확인</div>
+        </div>
+        <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <div>schedules 테이블 확인</div>
+        </div>
+        <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <div>RLS 정책 확인</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>작업</h2>
+        <button id="checkBtn" onclick="checkDatabase()">데이터베이스 상태 확인</button>
+        <button id="showSqlBtn" onclick="showSql()" style="display: none;">SQL 코드 보기</button>
+        <button onclick="location.href='/'">메인 페이지로</button>
+        
+        <div id="sqlCode">
+            <h3>실행해야 할 SQL 코드:</h3>
+            <pre id="sqlContent"></pre>
+            <button onclick="copySql()">SQL 복사</button>
+            <a href="https://supabase.com/dashboard/project/ddfnxbkiewolgweivomv/sql/new" target="_blank">
+                <button style="background: #10b981;">Supabase SQL Editor 열기</button>
+            </a>
+        </div>
+    </div>
+    
+    <div id="results" class="section" style="display: none;">
+        <h2>상세 결과</h2>
+        <div id="resultsContent"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        let supabase;
+        
+        const SQL_SCRIPT = `-- UUID 익스텐션 활성화 (UUID 생성을 위해 필요)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 일정 관리 테이블 생성
+CREATE TABLE IF NOT EXISTS schedules (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    event_date DATE NOT NULL,
+    event_time TIME,
+    location VARCHAR(255),
+    category VARCHAR(50) DEFAULT 'general',
+    priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    status VARCHAR(20) DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'ongoing', 'completed', 'cancelled')),
+    reminder_enabled BOOLEAN DEFAULT false,
+    reminder_date TIMESTAMP,
+    color VARCHAR(7) DEFAULT '#2196f3',
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS (Row Level Security) 활성화
+ALTER TABLE schedules ENABLE ROW LEVEL SECURITY;
+
+-- 정책: 누구나 일정을 읽을 수 있음 (공개 캘린더인 경우)
+CREATE POLICY "Schedules are viewable by everyone" ON schedules
+    FOR SELECT USING (true);
+
+-- 정책: 인증된 사용자만 일정을 추가할 수 있음
+CREATE POLICY "Authenticated users can insert schedules" ON schedules
+    FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+-- 정책: 일정 작성자만 수정할 수 있음
+CREATE POLICY "Users can update own schedules" ON schedules
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- 정책: 일정 작성자만 삭제할 수 있음
+CREATE POLICY "Users can delete own schedules" ON schedules
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- 인덱스 생성 (성능 최적화)
+CREATE INDEX idx_schedules_event_date ON schedules(event_date);
+CREATE INDEX idx_schedules_user_id ON schedules(user_id);
+CREATE INDEX idx_schedules_category ON schedules(category);
+CREATE INDEX idx_schedules_status ON schedules(status);
+
+-- 업데이트 시간 자동 갱신 트리거
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_schedules_updated_at BEFORE UPDATE ON schedules
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();`;
+        
+        async function checkDatabase() {
+            const statusDiv = document.getElementById('statusContent');
+            const resultsDiv = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            const checkBtn = document.getElementById('checkBtn');
+            
+            checkBtn.disabled = true;
+            checkBtn.innerHTML = '확인 중...<span class="spinner"></span>';
+            resultsDiv.style.display = 'block';
+            resultsContent.innerHTML = '';
+            
+            // Step 1: Supabase 연결
+            updateStep(1, 'checking');
+            
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                updateStep(1, 'complete');
+                addResult('✅ Supabase 연결 성공', 'success');
+            } catch (error) {
+                updateStep(1, 'error');
+                addResult(`❌ Supabase 연결 실패: ${error.message}`, 'error');
+                checkBtn.disabled = false;
+                checkBtn.innerHTML = '다시 시도';
+                return;
+            }
+            
+            // Step 2: 테이블 확인
+            updateStep(2, 'checking');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('schedules')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    if (error.message.includes('relation "schedules" does not exist')) {
+                        updateStep(2, 'error');
+                        addResult('⚠️ schedules 테이블이 존재하지 않습니다', 'warning');
+                        statusDiv.innerHTML = '<p style="color: #ff9800;">테이블을 생성해야 합니다.</p>';
+                        document.getElementById('showSqlBtn').style.display = 'inline-block';
+                        showSql();
+                    } else {
+                        updateStep(2, 'error');
+                        addResult(`❌ 테이블 확인 오류: ${error.message}`, 'error');
+                    }
+                } else {
+                    updateStep(2, 'complete');
+                    addResult(`✅ schedules 테이블 존재 (${data?.[0]?.count || 0}개 일정)`, 'success');
+                    
+                    // Step 3: RLS 확인
+                    updateStep(3, 'checking');
+                    
+                    // 읽기 권한 테스트
+                    const { error: readError } = await supabase
+                        .from('schedules')
+                        .select('*')
+                        .limit(1);
+                    
+                    if (readError) {
+                        updateStep(3, 'error');
+                        addResult(`❌ RLS 읽기 권한 문제: ${readError.message}`, 'error');
+                    } else {
+                        updateStep(3, 'complete');
+                        addResult('✅ RLS 정책 정상 작동', 'success');
+                        statusDiv.innerHTML = '<p style="color: #4caf50;">✅ 모든 설정이 완료되었습니다!</p>';
+                    }
+                }
+            } catch (error) {
+                updateStep(2, 'error');
+                addResult(`❌ 예상치 못한 오류: ${error.message}`, 'error');
+            }
+            
+            checkBtn.disabled = false;
+            checkBtn.innerHTML = '데이터베이스 상태 확인';
+        }
+        
+        function updateStep(stepNumber, status) {
+            const step = document.getElementById(`step${stepNumber}`);
+            step.className = 'step ' + (status === 'complete' ? 'complete' : status === 'error' ? 'error' : '');
+        }
+        
+        function addResult(message, type) {
+            const div = document.createElement('div');
+            div.className = `section ${type}`;
+            div.style.margin = '10px 0';
+            div.innerHTML = `<p>${message}</p>`;
+            document.getElementById('resultsContent').appendChild(div);
+        }
+        
+        function showSql() {
+            document.getElementById('sqlCode').style.display = 'block';
+            document.getElementById('sqlContent').textContent = SQL_SCRIPT;
+        }
+        
+        function copySql() {
+            navigator.clipboard.writeText(SQL_SCRIPT).then(() => {
+                alert('SQL 코드가 클립보드에 복사되었습니다!');
+            });
+        }
+        
+        // 페이지 로드 시 자동 확인
+        window.addEventListener('load', () => {
+            checkDatabase();
+        });
+    </script>
+</body>
+</html>

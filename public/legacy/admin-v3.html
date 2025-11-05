@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>링크 편집기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #0a0a0a;
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        .config-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+
+        .config-section h3 {
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #222;
+            color: #fff;
+        }
+
+        input {
+            width: 300px;
+        }
+
+        button {
+            cursor: pointer;
+            background: #333;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        .add-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+
+        .links-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .links-table th {
+            background: #1a1a1a;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid #333;
+        }
+
+        .links-table tbody {
+            background: #0a0a0a;
+        }
+
+        .links-table td {
+            padding: 12px;
+            border-bottom: 1px solid #333;
+        }
+
+        .links-table tr:hover {
+            background: #1a1a1a;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #444 !important;
+        }
+
+        .drag-handle {
+            cursor: move;
+            color: #666;
+            padding: 0 10px;
+            font-size: 1.2em;
+        }
+
+        .drag-handle:hover {
+            color: #fff;
+        }
+
+        .position-btn {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            margin: 0 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .position-btn:hover {
+            background: #666;
+        }
+
+        .edit-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background: #1976d2;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        .save-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .save-btn:hover {
+            background: #45a049;
+        }
+
+        .cancel-btn {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+            background: #555;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .success {
+            background: #4caf50;
+        }
+
+        .error {
+            background: #f44336;
+        }
+
+        .info {
+            background: #2196f3;
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        a {
+            color: #4ecdc4;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .edit-input {
+            padding: 5px;
+            margin: 2px;
+            border-radius: 3px;
+            border: 1px solid #444;
+            background: #333;
+            color: #fff;
+            width: 200px;
+        }
+
+        .edit-mode {
+            background: #2a2a2a !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 링크 편집기</h1>
+        
+        <!-- 로그인 사용자 정보 표시 -->
+        <div class="config-section" style="margin-bottom: 20px;">
+            <h3>👤 사용자 정보</h3>
+            <div id="user-info">
+                <div id="user-email" style="color: #4caf50; font-weight: 500;">정보 확인 중...</div>
+                <div id="user-session" style="font-size: 0.9em; color: #888; margin-top: 5px;"></div>
+            </div>
+        </div>
+        
+        <div class="info" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleGuide()">
+                <span>💡 기능 안내 <span id="guide-arrow" style="font-size: 0.8em;">▼</span></span>
+                <span style="font-size: 0.9em; opacity: 0.7;">클릭하여 펼치기/접기</span>
+            </div>
+            <div id="guide-content" style="display: none; margin-top: 15px;">
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>✏️ <strong>수정</strong>: 링크 이름과 URL 직접 수정</li>
+                    <li>🔄 <strong>드래그 앤 드롭</strong>: ≡ 아이콘으로 순서 변경</li>
+                    <li>⬆️⬇️ <strong>버튼 이동</strong>: 위/아래 이동</li>
+                    <li>➕ <strong>추가</strong>: 새 링크 추가</li>
+                    <li>🗑️ <strong>삭제</strong>: 링크 제거</li>
+                    <li>🎨 <strong>스타일 설정</strong>: 각 섹션별 글자 크기, 색상, 효과 등 커스터마이징</li>
+                    <li>🏷️ <strong>카테고리</strong>: 새로운 카테고리 추가</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h3>⚙️ Supabase 연결 상태</h3>
+            <div id="connection-status">확인 중...</div>
+            <div id="connection-help" style="display:none; margin-top: 10px; font-size: 0.9em; color: #ff9800;">
+                💡 연결 문제 해결 방법:
+                <ol style="margin: 5px 0; padding-left: 20px;">
+                    <li>Supabase 대시보드에서 SQL Editor 열기</li>
+                    <li>다음 명령 실행: <code>ALTER TABLE links DISABLE ROW LEVEL SECURITY;</code></li>
+                    <li>이 페이지 새로고침</li>
+                </ol>
+                <a href="/fix-supabase.html" target="_blank" style="color: #4caf50;">→ 자동 진단 도구 열기</a>
+            </div>
+        </div>
+
+        <div class="add-form" style="margin-bottom: 20px;">
+            <h3 style="width: 100%; margin-bottom: 10px;">🏷️ 카테고리 설정</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="new-category-id" placeholder="카테고리 ID (예: voucher)" style="flex: 1;">
+                <input type="text" id="new-category-name" placeholder="표시 이름 (예: Voucher)" style="flex: 1;">
+                <button onclick="addCustomCategory()" style="background: #007bff;">카테고리 추가</button>
+            </div>
+            <div id="custom-categories" style="font-size: 0.9em; color: #888;">
+                기본 카테고리: youtube, favorite, gpt, fun-youtube
+            </div>
+        </div>
+
+        <!-- 디자인 설정 페이지 이동 버튼 -->
+        <div style="background: #1a1a1a; padding: 20px; margin-bottom: 20px; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0; margin-bottom: 5px;">🎨 디자인 설정</h3>
+                    <p style="margin: 0; font-size: 0.9em; color: #888;">링크 카드의 스타일을 세부적으로 설정할 수 있습니다</p>
+                </div>
+                <button onclick="location.href='design-settings.html'"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                               color: white;
+                               border: none;
+                               padding: 12px 24px;
+                               border-radius: 8px;
+                               cursor: pointer;
+                               font-size: 1em;
+                               font-weight: 600;
+                               transition: all 0.3s;
+                               box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.5)'"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
+                    디자인 설정 페이지로 이동 →
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Fun YouTube 표시 설정 토글 버튼 -->
+        <div style="background: #1a1a1a; padding: 15px; margin-bottom: 20px; border-radius: 10px; cursor: pointer;" onclick="toggleFunYoutubeSettings()">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">🎬 Fun YouTube 표시 설정 <span id="fun-youtube-arrow" style="font-size: 0.8em;">▼</span></h3>
+                <span style="font-size: 0.9em; opacity: 0.7;">클릭하여 펼치기/접기</span>
+            </div>
+        </div>
+
+        <!-- Fun YouTube 표시 설정 컨텐츠 -->
+        <div id="fun-youtube-settings-content" class="add-form" style="display: none; margin-bottom: 20px; background: #1a1a1a;">
+            <h3 style="width: 100%; margin-bottom: 15px;">🎬 Fun YouTube 표시 설정</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <!-- 표시 옵션 -->
+                <div style="border: 1px solid #333; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #ff6b6b; margin-bottom: 15px;">📺 표시 옵션</h4>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>기본 보기 모드:</strong>
+                        <select id="fun-youtube-default-view" style="width: 100%; margin-top: 5px; padding: 8px; background: #333; border: 1px solid #444; border-radius: 5px; color: #fff;">
+                            <option value="list">리스트 뷰 (가로형)</option>
+                            <option value="grid">그리드 뷰 (카드형)</option>
+                            <option value="compact">컴팩트 뷰 (텍스트만)</option>
+                        </select>
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>그리드 열 개수:</strong>
+                        <select id="fun-youtube-grid-cols" style="width: 100%; margin-top: 5px; padding: 8px; background: #333; border: 1px solid #444; border-radius: 5px; color: #fff;">
+                            <option value="2">2열</option>
+                            <option value="3" selected>3열</option>
+                            <option value="4">4열</option>
+                        </select>
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>썸네일 표시:</strong>
+                        <input type="checkbox" id="fun-youtube-show-thumbnail" checked style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>채널명 표시:</strong>
+                        <input type="checkbox" id="fun-youtube-show-author" checked style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>뷰 전환 버튼 표시:</strong>
+                        <input type="checkbox" id="fun-youtube-show-toggle" checked style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>자동으로 제목 가져오기:</strong>
+                        <input type="checkbox" id="fun-youtube-auto-fetch" checked style="margin-left: 10px;">
+                    </label>
+                </div>
+
+                <!-- 스타일 설정 -->
+                <div style="border: 1px solid #333; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #ff6b6b; margin-bottom: 15px;">🎨 스타일 설정</h4>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>제목 글자 크기:</strong>
+                        <input type="range" id="fun-youtube-title-size" min="12" max="20" value="15" style="width: 150px; margin-left: 10px;">
+                        <span id="fun-youtube-title-size-display">15px</span>
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>카드 배경색:</strong>
+                        <input type="color" id="fun-youtube-card-bg" value="#1a1a1a" style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>테두리 색상:</strong>
+                        <input type="color" id="fun-youtube-border-color" value="#333333" style="margin-left: 10px;">
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>호버 효과:</strong>
+                        <select id="fun-youtube-hover-effect" style="width: 100%; margin-top: 5px; padding: 8px; background: #333; border: 1px solid #444; border-radius: 5px; color: #fff;">
+                            <option value="lift" selected>들어올리기</option>
+                            <option value="glow">빛나기</option>
+                            <option value="scale">확대</option>
+                            <option value="none">효과 없음</option>
+                        </select>
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <strong>모서리 둥글기:</strong>
+                        <input type="range" id="fun-youtube-border-radius" min="0" max="20" value="10" style="width: 150px; margin-left: 10px;">
+                        <span id="fun-youtube-radius-display">10px</span>
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button onclick="saveFunYoutubeSettings()" style="background: #ff6b6b;">💾 Fun YouTube 설정 저장</button>
+                <button onclick="resetFunYoutubeSettings()" style="background: #666;">🔄 기본값 초기화</button>
+            </div>
+        </div>
+
+        <div class="add-form">
+            <h3 style="width: 100%; margin-bottom: 10px;">➕ 새 링크 추가</h3>
+            <input type="text" id="link-name" placeholder="이름 (예: 사또)">
+            <input type="text" id="link-url" placeholder="URL (예: https://...)">
+            <select id="link-category">
+                <option value="youtube">YouTube</option>
+                <option value="favorite">Favorite</option>
+                <option value="gpt">GPT Tools</option>
+                <option value="fun-youtube">Fun YouTube</option>
+            </select>
+            <input type="number" id="link-position" placeholder="순서 (1, 2, 3...)" value="999">
+            <button onclick="addNewLink()">추가</button>
+        </div>
+
+        <div id="status-message"></div>
+
+        <h2 style="margin-bottom: 20px;">📋 현재 링크 목록</h2>
+        
+        <div id="links-container">
+            <p>로딩 중...</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="index.html" style="margin-right: 20px;">← 메인 페이지로 돌아가기</a>
+            <button onclick="signOut()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                <span id="logout-user-email">로그아웃</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Supabase 라이브러리를 먼저 로드하고 초기화 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <!-- 직접 Supabase 초기화 -->
+    <script>
+        // 즉시 Supabase 초기화
+        (function() {
+            const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+            
+            // Supabase SDK 로드 대기
+            function waitForSupabase() {
+                if (window.supabase && window.supabase.createClient) {
+                    try {
+                        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                        console.log('✅ Supabase client initialized directly');
+                    } catch (e) {
+                        console.error('❌ Failed to create Supabase client:', e);
+                    }
+                } else {
+                    setTimeout(waitForSupabase, 100);
+                }
+            }
+            
+            waitForSupabase();
+        })();
+    </script>
+    
+    <!-- Supabase 초기화 -->
+    <script>
+        // 전역 supabase 클라이언트
+        let supabase = null;
+
+        // 페이지 로드 후 바로 초기화
+        window.addEventListener('DOMContentLoaded', function() {
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            // Supabase 클라이언트 초기화 시도
+            function tryInitialize() {
+                try {
+                    console.log(`[app] Initialization attempt ${retryCount + 1}/${maxRetries}`);
+                    
+                    // supabaseClient 확인
+                    if (window.supabaseClient) {
+                        supabase = window.supabaseClient;
+                        console.log('[app] Supabase client ready');
+                        initializeApp();
+                    } else {
+                        retryCount++;
+                        if (retryCount < maxRetries) {
+                            console.log('[app] Supabase client not ready, retrying in 500ms...');
+                            setTimeout(tryInitialize, 500);
+                        } else {
+                            console.error('[app] Supabase client not found after ' + maxRetries + ' attempts');
+                            document.getElementById('connection-status').innerHTML = 
+                                '<span style="color: #f44336;">❌ Supabase에 연결할 수 없습니다.</span>';
+                            
+                            // 수동으로 초기화 시도 - 하드코딩된 값 사용
+                            if (window.supabase && window.supabase.createClient) {
+                                console.log('[app] Attempting manual initialization with hardcoded values...');
+                                try {
+                                    const url = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                                    const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                                    
+                                    supabase = window.supabase.createClient(url, key);
+                                    window.supabaseClient = supabase;
+                                    console.log('[app] Manual initialization successful with hardcoded values');
+                                    initializeApp();
+                                } catch (e) {
+                                    console.error('[app] Manual initialization failed:', e);
+                                    document.getElementById('connection-status').innerHTML = 
+                                        `<span style="color: #f44336;">❌ 초기화 실패: ${e.message}</span>`;
+                                }
+                            } else {
+                                document.getElementById('connection-status').innerHTML = 
+                                    '<span style="color: #f44336;">❌ Supabase SDK가 로드되지 않았습니다</span>';
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('[app] 초기화 오류:', error);
+                    document.getElementById('connection-status').innerHTML = 
+                        '<span style="color: #f44336;">❌ 초기화 실패: ' + error.message + '</span>';
+                }
+            }
+            
+            // 첫 시도는 즉시 실행
+            tryInitialize();
+        });
+
+        // 링크 관련 함수들 직접 정의
+        async function fetchLinks() {
+            if (!supabase) {
+                console.error('[app] Supabase client not available in fetchLinks');
+                return { youtube: [], favorites: [], gpt: [] };
+            }
+
+            try {
+                // YouTube 채널 가져오기
+                const { data: youtubeLinks, error: ytError } = await supabase.from('links')
+                    .select('*')
+                    .eq('category', 'youtube')
+                    .order('position');
+
+                if (ytError) throw ytError;
+
+                // Favorite 사이트 가져오기
+                const { data: favoriteLinks, error: favError } = await supabase.from('links')
+                    .select('*')
+                    .eq('category', 'favorite')
+                    .order('position');
+
+                if (favError) throw favError;
+
+                // GPT 도구 링크 가져오기
+                const { data: gptLinks, error: gptError } = await supabase.from('links')
+                    .select('*')
+                    .eq('category', 'gpt')
+                    .order('position');
+
+                if (gptError) throw gptError;
+
+                return {
+                    youtube: youtubeLinks || [],
+                    favorites: favoriteLinks || [],
+                    gpt: gptLinks || []
+                };
+            } catch (error) {
+                console.error('Error fetching links:', error);
+                return { youtube: [], favorites: [], gpt: [] };
+            }
+        }
+
+        async function addLink(name, url, category, position = 999) {
+            if (!supabase) {
+                console.error('[app] Supabase client not available');
+                return null;
+            }
+
+            try {
+                // 링크 데이터에 추가자 정보 포함
+                const linkData = { 
+                    name, 
+                    url, 
+                    category, 
+                    position,
+                    created_by: window.currentUser?.email || 'unknown',
+                    created_at: new Date().toISOString()
+                };
+                
+                console.log('📝 링크 추가:', {
+                    name: name,
+                    category: category,
+                    addedBy: linkData.created_by
+                });
+
+                const { data, error } = await supabase.from('links')
+                    .insert([linkData])
+                    .select();
+
+                if (error) throw error;
+                return data;
+            } catch (error) {
+                console.error('Error adding link:', error);
+                return null;
+            }
+        }
+
+        async function deleteLink(id) {
+            if (!supabase) {
+                console.error('[app] Supabase client not available');
+                return false;
+            }
+
+            try {
+                // 삭제 전 링크 정보 가져오기 (로그용)
+                const { data: linkInfo } = await supabase.from('links')
+                    .select('name, category')
+                    .eq('id', id)
+                    .single();
+
+                const { error } = await supabase.from('links')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                
+                console.log('🗑️ 링크 삭제:', {
+                    id: id,
+                    name: linkInfo?.name || 'unknown',
+                    category: linkInfo?.category || 'unknown',
+                    deletedBy: window.currentUser?.email || 'unknown',
+                    deletedAt: new Date().toISOString()
+                });
+                
+                return true;
+            } catch (error) {
+                console.error('Error deleting link:', error);
+                return false;
+            }
+        }
+
+        async function updateLink(id, updates) {
+            if (!supabase) {
+                console.error('[app] Supabase client not available');
+                return null;
+            }
+
+            try {
+                // 수정자 정보 추가
+                const updateData = {
+                    ...updates,
+                    updated_by: window.currentUser?.email || 'unknown',
+                    updated_at: new Date().toISOString()
+                };
+                
+                console.log('✏️ 링크 수정:', {
+                    id: id,
+                    changes: Object.keys(updates),
+                    updatedBy: updateData.updated_by
+                });
+
+                const { data, error } = await supabase.from('links')
+                    .update(updateData)
+                    .eq('id', id)
+                    .select();
+
+                if (error) throw error;
+                return data;
+            } catch (error) {
+                console.error('Error updating link:', error);
+                return null;
+            }
+        }
+
+        function subscribeToLinks(callback) {
+            if (!supabase) {
+                console.error('[app] Supabase client not available for subscription');
+                return null;
+            }
+
+            const subscription = supabase.channel('links_changes')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'links' },
+                    (payload) => {
+                        console.log('Change received!', payload);
+                        callback(payload);
+                    }
+                )
+                .subscribe();
+
+            return subscription;
+        }
+    </script>
+
+    <!-- 헬퍼 함수 로드 -->
+    <script src="auth-helper.js"></script>
+    <script>
+        // 전역 변수들
+        let editingId = null;
+        let customCategories = [];
+        let guideOpen = false;
+        let funYoutubeSettingsOpen = false;
+
+        // 기능 안내 토글
+        function toggleGuide() {
+            const guideContent = document.getElementById('guide-content');
+            const guideArrow = document.getElementById('guide-arrow');
+
+            guideOpen = !guideOpen;
+
+            if (guideOpen) {
+                guideContent.style.display = 'block';
+                guideArrow.textContent = '▲';
+            } else {
+                guideContent.style.display = 'none';
+                guideArrow.textContent = '▼';
+            }
+
+            // 상태 저장
+            localStorage.setItem('guideOpen', guideOpen);
+        }
+
+        // Fun YouTube 설정 토글
+        function toggleFunYoutubeSettings() {
+            const settingsContent = document.getElementById('fun-youtube-settings-content');
+            const settingsArrow = document.getElementById('fun-youtube-arrow');
+
+            funYoutubeSettingsOpen = !funYoutubeSettingsOpen;
+
+            if (funYoutubeSettingsOpen) {
+                settingsContent.style.display = 'block';
+                settingsArrow.textContent = '▲';
+            } else {
+                settingsContent.style.display = 'none';
+                settingsArrow.textContent = '▼';
+            }
+
+            // 상태 저장
+            localStorage.setItem('funYoutubeSettingsOpen', funYoutubeSettingsOpen);
+        }
+
+        // 페이지 로드시 가이드 상태 복원
+        function restoreGuideState() {
+            const savedState = localStorage.getItem('guideOpen');
+            if (savedState === 'true') {
+                guideOpen = false; // toggleGuide가 반대로 토글하므로
+                toggleGuide();
+            }
+        }
+
+        // 페이지 로드시 Fun YouTube 설정 상태 복원
+        function restoreFunYoutubeSettingsState() {
+            const savedState = localStorage.getItem('funYoutubeSettingsOpen');
+            if (savedState === 'true') {
+                funYoutubeSettingsOpen = false; // toggle이 반대로 토글하므로
+                toggleFunYoutubeSettings();
+            }
+            
+            // Fun YouTube 슬라이더 이벤트 리스너 추가
+            const titleSizeSlider = document.getElementById('fun-youtube-title-size');
+            const titleSizeDisplay = document.getElementById('fun-youtube-title-size-display');
+            if (titleSizeSlider && titleSizeDisplay) {
+                titleSizeSlider.addEventListener('input', (e) => {
+                    titleSizeDisplay.textContent = e.target.value + 'px';
+                });
+            }
+            
+            const radiusSlider = document.getElementById('fun-youtube-border-radius');
+            const radiusDisplay = document.getElementById('fun-youtube-radius-display');
+            if (radiusSlider && radiusDisplay) {
+                radiusSlider.addEventListener('input', (e) => {
+                    radiusDisplay.textContent = e.target.value + 'px';
+                });
+            }
+        }
+
+        // localStorage에서 커스텀 카테고리 불러오기
+        function loadCustomCategories() {
+            const saved = localStorage.getItem('customCategories');
+            if (saved) {
+                customCategories = JSON.parse(saved);
+                updateCategoryDropdown();
+                updateCategoryDisplay();
+            }
+        }
+
+        // 카테고리 드롭다운 업데이트
+        function updateCategoryDropdown() {
+            const select = document.getElementById('link-category');
+
+            // select 요소가 없으면 리턴
+            if (!select) {
+                console.warn('link-category select element not found');
+                return;
+            }
+
+            // 커스텀 카테고리 옵션 추가
+            customCategories.forEach(cat => {
+                if (!document.querySelector(`option[value="${cat.id}"]`)) {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // 카테고리 표시 업데이트
+        function updateCategoryDisplay() {
+            const display = document.getElementById('custom-categories');
+            const allCategories = [
+                'youtube', 'favorite', 'gpt', 'fun-youtube',
+                ...customCategories.map(c => c.id)
+            ];
+            display.innerHTML = `
+                <div>기본 카테고리: youtube, favorite, gpt, fun-youtube</div>
+                ${customCategories.length > 0 ? 
+                    `<div>커스텀 카테고리: ${customCategories.map(c => `${c.id} (${c.name})`).join(', ')}</div>` : 
+                    ''}
+            `;
+        }
+
+        // 커스텀 카테고리 추가
+        function addCustomCategory() {
+            const idInput = document.getElementById('new-category-id');
+            const nameInput = document.getElementById('new-category-name');
+            
+            const categoryId = idInput.value.trim().toLowerCase();
+            const categoryName = nameInput.value.trim();
+            
+            if (!categoryId || !categoryName) {
+                alert('카테고리 ID와 이름을 모두 입력해주세요.');
+                return;
+            }
+            
+            // 중복 체크
+            const existing = ['youtube', 'favorite', 'gpt', 'fun-youtube', ...customCategories.map(c => c.id)];
+            if (existing.includes(categoryId)) {
+                alert('이미 존재하는 카테고리 ID입니다.');
+                return;
+            }
+            
+            // 카테고리 추가
+            customCategories.push({ id: categoryId, name: categoryName });
+            localStorage.setItem('customCategories', JSON.stringify(customCategories));
+            
+            // UI 업데이트
+            updateCategoryDropdown();
+            updateCategoryDisplay();
+            
+            // 입력 필드 초기화
+            idInput.value = '';
+            nameInput.value = '';
+            
+            showStatus(`카테고리 '${categoryName}' (${categoryId})가 추가되었습니다.`, 'success');
+        }
+
+        // 스타일 관련 함수들
+        function loadSavedStyles() {
+            const savedStyles = JSON.parse(localStorage.getItem('linkCardStyles') || '{}');
+
+            // 기본값 설정
+            const defaultStyles = {
+                gpt: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                },
+                youtube: {
+                    fontSize: 17, fontWeight: '600', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102,
+                    showLiveIndicator: true
+                },
+                favorite: {
+                    fontSize: 16, fontWeight: '500', bgColor: '#1a1a1a', textColor: '#ffffff',
+                    borderColor: '#333333', borderWidth: 1, borderRadius: 10, padding: 15, gap: 10,
+                    shadow: true, hoverEffect: true, hoverBg: '#2a2a2a', hoverScale: 102
+                }
+            };
+
+            // 저장된 스타일 또는 기본값 적용
+            ['gpt', 'youtube', 'favorite'].forEach(category => {
+                const styles = { ...defaultStyles[category], ...(savedStyles[category] || {}) };
+
+                // 기본 스타일
+                document.getElementById(`${category}-font-size`).value = styles.fontSize;
+                document.getElementById(`${category}-font-size-display`).textContent = `${styles.fontSize}px`;
+                document.getElementById(`${category}-font-weight`).value = styles.fontWeight;
+                document.getElementById(`${category}-bg-color`).value = styles.bgColor;
+                document.getElementById(`${category}-text-color`).value = styles.textColor;
+                document.getElementById(`${category}-border-color`).value = styles.borderColor;
+
+                // 확장 스타일
+                document.getElementById(`${category}-border-width`).value = styles.borderWidth;
+                document.getElementById(`${category}-border-width-display`).textContent = `${styles.borderWidth}px`;
+                document.getElementById(`${category}-border-radius`).value = styles.borderRadius;
+                document.getElementById(`${category}-border-radius-display`).textContent = `${styles.borderRadius}px`;
+                document.getElementById(`${category}-padding`).value = styles.padding;
+                document.getElementById(`${category}-padding-display`).textContent = `${styles.padding}px`;
+                document.getElementById(`${category}-gap`).value = styles.gap;
+                document.getElementById(`${category}-gap-display`).textContent = `${styles.gap}px`;
+
+                // 효과 설정
+                document.getElementById(`${category}-shadow`).checked = styles.shadow;
+                document.getElementById(`${category}-hover-effect`).checked = styles.hoverEffect;
+                document.getElementById(`${category}-hover-bg`).value = styles.hoverBg;
+                document.getElementById(`${category}-hover-scale`).value = styles.hoverScale;
+                document.getElementById(`${category}-hover-scale-display`).textContent = `${styles.hoverScale}%`;
+            });
+
+            // YouTube Live 전용 설정
+            const youtubeStyles = savedStyles.youtube || defaultStyles.youtube;
+            document.getElementById('youtube-show-live-indicator').checked = youtubeStyles.showLiveIndicator;
+        }
+
+        function initStyleControls() {
+            // 각 카테고리별 컨트롤 초기화
+            ['gpt', 'youtube', 'favorite'].forEach(category => {
+                // 폰트 사이즈 슬라이더
+                const fontSlider = document.getElementById(`${category}-font-size`);
+                const fontDisplay = document.getElementById(`${category}-font-size-display`);
+                if (fontSlider) {
+                    fontSlider.addEventListener('input', (e) => {
+                        fontDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
+
+                // 테두리 두께 슬라이더
+                const borderSlider = document.getElementById(`${category}-border-width`);
+                const borderDisplay = document.getElementById(`${category}-border-width-display`);
+                if (borderSlider) {
+                    borderSlider.addEventListener('input', (e) => {
+                        borderDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
+
+                // 모서리 둥글기 슬라이더
+                const radiusSlider = document.getElementById(`${category}-border-radius`);
+                const radiusDisplay = document.getElementById(`${category}-border-radius-display`);
+                if (radiusSlider) {
+                    radiusSlider.addEventListener('input', (e) => {
+                        radiusDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
+
+                // 패딩 슬라이더
+                const paddingSlider = document.getElementById(`${category}-padding`);
+                const paddingDisplay = document.getElementById(`${category}-padding-display`);
+                if (paddingSlider) {
+                    paddingSlider.addEventListener('input', (e) => {
+                        paddingDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
+
+                // 간격 슬라이더
+                const gapSlider = document.getElementById(`${category}-gap`);
+                const gapDisplay = document.getElementById(`${category}-gap-display`);
+                if (gapSlider) {
+                    gapSlider.addEventListener('input', (e) => {
+                        gapDisplay.textContent = `${e.target.value}px`;
+                        previewStyles();
+                    });
+                }
+
+                // 호버 스케일 슬라이더
+                const scaleSlider = document.getElementById(`${category}-hover-scale`);
+                const scaleDisplay = document.getElementById(`${category}-hover-scale-display`);
+                if (scaleSlider) {
+                    scaleSlider.addEventListener('input', (e) => {
+                        scaleDisplay.textContent = `${e.target.value}%`;
+                        previewStyles();
+                    });
+                }
+
+                // 색상 선택기 이벤트
+                ['bg-color', 'text-color', 'border-color', 'hover-bg'].forEach(type => {
+                    const colorInput = document.getElementById(`${category}-${type}`);
+                    if (colorInput) {
+                        colorInput.addEventListener('change', () => previewStyles());
+                    }
+                });
+
+                // 체크박스 이벤트
+                ['shadow', 'hover-effect'].forEach(type => {
+                    const checkbox = document.getElementById(`${category}-${type}`);
+                    if (checkbox) {
+                        checkbox.addEventListener('change', () => previewStyles());
+                    }
+                });
+
+                // 셀렉트 박스 이벤트 (font-weight)
+                const fontWeight = document.getElementById(`${category}-font-weight`);
+                if (fontWeight) {
+                    fontWeight.addEventListener('change', () => previewStyles());
+                }
+            });
+
+            // YouTube Live 전용 - 라이브 인디케이터
+            const liveIndicator = document.getElementById('youtube-show-live-indicator');
+            if (liveIndicator) {
+                liveIndicator.addEventListener('change', () => previewStyles());
+            }
+        }
+
+        function saveStyles() {
+            const styles = {};
+            
+            // 기본값 정의
+            const defaultValues = {
+                fontSize: 16,
+                fontWeight: '500',
+                bgColor: '#1a1a1a',
+                textColor: '#ffffff',
+                borderColor: '#333333',
+                borderWidth: 1,
+                borderRadius: 10,
+                padding: 15,
+                gap: 10,
+                hoverBg: '#2a2a2a',
+                hoverScale: 102
+            };
+
+            ['gpt', 'youtube', 'favorite'].forEach(category => {
+                // 값 가져오기 및 기본값 처리
+                const fontSize = parseInt(document.getElementById(`${category}-font-size`).value);
+                const borderWidth = parseInt(document.getElementById(`${category}-border-width`).value);
+                const borderRadius = parseInt(document.getElementById(`${category}-border-radius`).value);
+                const padding = parseInt(document.getElementById(`${category}-padding`).value);
+                const gap = parseInt(document.getElementById(`${category}-gap`).value);
+                const hoverScale = parseInt(document.getElementById(`${category}-hover-scale`).value);
+                
+                styles[category] = {
+                    fontSize: isNaN(fontSize) ? defaultValues.fontSize : fontSize,
+                    fontWeight: document.getElementById(`${category}-font-weight`).value || defaultValues.fontWeight,
+                    bgColor: document.getElementById(`${category}-bg-color`).value || defaultValues.bgColor,
+                    textColor: document.getElementById(`${category}-text-color`).value || defaultValues.textColor,
+                    borderColor: document.getElementById(`${category}-border-color`).value || defaultValues.borderColor,
+                    borderWidth: isNaN(borderWidth) ? defaultValues.borderWidth : borderWidth,
+                    borderRadius: isNaN(borderRadius) ? defaultValues.borderRadius : borderRadius,
+                    padding: isNaN(padding) ? defaultValues.padding : padding,
+                    gap: isNaN(gap) ? defaultValues.gap : gap,
+                    shadow: document.getElementById(`${category}-shadow`).checked,
+                    hoverEffect: document.getElementById(`${category}-hover-effect`).checked,
+                    hoverBg: document.getElementById(`${category}-hover-bg`).value || defaultValues.hoverBg,
+                    hoverScale: isNaN(hoverScale) ? defaultValues.hoverScale : hoverScale
+                };
+            });
+
+            // YouTube Live 전용 설정
+            styles.youtube.showLiveIndicator = document.getElementById('youtube-show-live-indicator').checked;
+
+            localStorage.setItem('linkCardStyles', JSON.stringify(styles));
+            showStatus('스타일이 저장되었습니다. 메인 페이지를 새로고침하면 적용됩니다.', 'success');
+        }
+
+        function resetStyles() {
+            if (confirm('정말로 모든 스타일을 기본값으로 초기화하시겠습니까?')) {
+                localStorage.removeItem('linkCardStyles');
+                loadSavedStyles();
+                previewStyles();
+                showStatus('스타일이 초기화되었습니다.', 'success');
+            }
+        }
+
+        // Fun YouTube 설정 저장
+        function saveFunYoutubeSettings() {
+            // 기본값 정의
+            const funDefaults = {
+                viewMode: 'list',
+                gridColumns: 3,
+                fontSize: 16,
+                bgColor: '#1a1a1a',
+                textColor: '#ffffff',
+                hoverBgColor: '#2a2a2a',
+                borderRadius: 8
+            };
+            
+            // 값 가져오기 및 검증 - 올바른 ID 사용
+            const gridColumns = parseInt(document.getElementById('fun-youtube-grid-cols').value);
+            const fontSize = parseInt(document.getElementById('fun-youtube-title-size').value);
+            const borderRadius = parseInt(document.getElementById('fun-youtube-border-radius').value);
+            
+            const settings = {
+                viewMode: document.getElementById('fun-youtube-default-view').value || funDefaults.viewMode,
+                gridColumns: isNaN(gridColumns) ? funDefaults.gridColumns : gridColumns,
+                showThumbnails: document.getElementById('fun-youtube-show-thumbnail').checked,
+                showAuthor: document.getElementById('fun-youtube-show-author').checked,
+                showViewButton: document.getElementById('fun-youtube-show-toggle').checked,
+                autoFetch: document.getElementById('fun-youtube-auto-fetch').checked,
+                fontSize: isNaN(fontSize) ? funDefaults.fontSize : fontSize,
+                bgColor: document.getElementById('fun-youtube-card-bg').value || funDefaults.bgColor,
+                borderColor: document.getElementById('fun-youtube-border-color').value || funDefaults.borderColor,
+                hoverEffect: document.getElementById('fun-youtube-hover-effect').value || 'lift',
+                borderRadius: isNaN(borderRadius) ? funDefaults.borderRadius : borderRadius
+            };
+
+            localStorage.setItem('funYoutubeSettings', JSON.stringify(settings));
+            showStatus('Fun YouTube 설정이 저장되었습니다', 'success');
+        }
+
+        // Fun YouTube 설정 초기화
+        function resetFunYoutubeSettings() {
+            const defaultSettings = {
+                viewMode: 'list',
+                gridColumns: 3,
+                showThumbnails: true,
+                showAuthor: false,
+                showViewButton: false,
+                fontSize: 16,
+                bgColor: '#1a1a1a',
+                textColor: '#ffffff',
+                hoverBgColor: '#2a2a2a',
+                borderRadius: 8,
+                hoverScale: true
+            };
+
+            // 폼에 기본값 설정 - 올바른 ID 사용
+            const viewModeEl = document.getElementById('fun-youtube-default-view');
+            const gridColsEl = document.getElementById('fun-youtube-grid-cols');
+            const thumbnailEl = document.getElementById('fun-youtube-show-thumbnail');
+            const authorEl = document.getElementById('fun-youtube-show-author');
+            const toggleEl = document.getElementById('fun-youtube-show-toggle');
+            const autoFetchEl = document.getElementById('fun-youtube-auto-fetch');
+            const fontSizeEl = document.getElementById('fun-youtube-title-size');
+            const cardBgEl = document.getElementById('fun-youtube-card-bg');
+            const borderColorEl = document.getElementById('fun-youtube-border-color');
+            const hoverEffectEl = document.getElementById('fun-youtube-hover-effect');
+            const borderRadiusEl = document.getElementById('fun-youtube-border-radius');
+            
+            if (viewModeEl) viewModeEl.value = defaultSettings.viewMode;
+            if (gridColsEl) gridColsEl.value = defaultSettings.gridColumns;
+            if (thumbnailEl) thumbnailEl.checked = defaultSettings.showThumbnails;
+            if (authorEl) authorEl.checked = defaultSettings.showAuthor;
+            if (toggleEl) toggleEl.checked = defaultSettings.showViewButton;
+            if (autoFetchEl) autoFetchEl.checked = true;
+            if (fontSizeEl) {
+                fontSizeEl.value = defaultSettings.fontSize;
+                const fontSizeDisplay = document.getElementById('fun-youtube-title-size-display');
+                if (fontSizeDisplay) fontSizeDisplay.textContent = defaultSettings.fontSize + 'px';
+            }
+            if (cardBgEl) cardBgEl.value = defaultSettings.bgColor;
+            if (borderColorEl) borderColorEl.value = '#333333';
+            if (hoverEffectEl) hoverEffectEl.value = 'lift';
+            if (borderRadiusEl) {
+                borderRadiusEl.value = defaultSettings.borderRadius;
+                const radiusDisplay = document.getElementById('fun-youtube-radius-display');
+                if (radiusDisplay) radiusDisplay.textContent = defaultSettings.borderRadius + 'px';
+            }
+
+            localStorage.setItem('funYoutubeSettings', JSON.stringify(defaultSettings));
+            showStatus('Fun YouTube 설정이 초기화되었습니다', 'success');
+        }
+
+        // Fun YouTube 설정 로드
+        function loadFunYoutubeSettings() {
+            const defaultSettings = {
+                viewMode: 'list',
+                gridColumns: 3,
+                showThumbnails: true,
+                showAuthor: false,
+                showViewButton: false,
+                fontSize: 16,
+                bgColor: '#1a1a1a',
+                textColor: '#ffffff',
+                hoverBgColor: '#2a2a2a',
+                borderRadius: 8,
+                hoverScale: true
+            };
+
+            const savedSettings = JSON.parse(localStorage.getItem('funYoutubeSettings') || '{}');
+            const settings = { ...defaultSettings, ...savedSettings };
+
+            // 폼에 저장된 값 설정 - 올바른 ID 사용
+            const viewModeEl = document.getElementById('fun-youtube-default-view');
+            const gridColsEl = document.getElementById('fun-youtube-grid-cols');
+            const thumbnailEl = document.getElementById('fun-youtube-show-thumbnail');
+            const authorEl = document.getElementById('fun-youtube-show-author');
+            const toggleEl = document.getElementById('fun-youtube-show-toggle');
+            const autoFetchEl = document.getElementById('fun-youtube-auto-fetch');
+            const fontSizeEl = document.getElementById('fun-youtube-title-size');
+            const cardBgEl = document.getElementById('fun-youtube-card-bg');
+            const borderColorEl = document.getElementById('fun-youtube-border-color');
+            const hoverEffectEl = document.getElementById('fun-youtube-hover-effect');
+            const borderRadiusEl = document.getElementById('fun-youtube-border-radius');
+            
+            // Elements가 존재하는 경우에만 설정
+            if (viewModeEl) viewModeEl.value = settings.viewMode;
+            if (gridColsEl) gridColsEl.value = settings.gridColumns;
+            if (thumbnailEl) thumbnailEl.checked = settings.showThumbnails;
+            if (authorEl) authorEl.checked = settings.showAuthor;
+            if (toggleEl) toggleEl.checked = settings.showViewButton;
+            if (autoFetchEl) autoFetchEl.checked = settings.autoFetch !== false;
+            if (fontSizeEl) {
+                fontSizeEl.value = settings.fontSize;
+                const fontSizeDisplay = document.getElementById('fun-youtube-title-size-display');
+                if (fontSizeDisplay) fontSizeDisplay.textContent = settings.fontSize + 'px';
+            }
+            if (cardBgEl) cardBgEl.value = settings.bgColor;
+            if (borderColorEl) borderColorEl.value = settings.borderColor || '#333333';
+            if (hoverEffectEl) hoverEffectEl.value = settings.hoverEffect || 'lift';
+            if (borderRadiusEl) {
+                borderRadiusEl.value = settings.borderRadius;
+                const radiusDisplay = document.getElementById('fun-youtube-radius-display');
+                if (radiusDisplay) radiusDisplay.textContent = settings.borderRadius + 'px';
+            }
+        }
+
+        function previewStyles() {
+            const previewDiv = document.getElementById('style-preview');
+            previewDiv.style.display = 'block';
+
+            ['gpt', 'youtube', 'favorite'].forEach(category => {
+                const preview = document.getElementById(`${category}-preview`);
+                const fontSize = document.getElementById(`${category}-font-size`).value;
+                const fontWeight = document.getElementById(`${category}-font-weight`).value;
+                const bgColor = document.getElementById(`${category}-bg-color`).value;
+                const textColor = document.getElementById(`${category}-text-color`).value;
+                const borderColor = document.getElementById(`${category}-border-color`).value;
+                const borderWidth = document.getElementById(`${category}-border-width`).value;
+                const borderRadius = document.getElementById(`${category}-border-radius`).value;
+                const padding = document.getElementById(`${category}-padding`).value;
+                const shadow = document.getElementById(`${category}-shadow`).checked;
+                const hoverEffect = document.getElementById(`${category}-hover-effect`).checked;
+                const hoverBg = document.getElementById(`${category}-hover-bg`).value;
+                const hoverScale = document.getElementById(`${category}-hover-scale`).value;
+
+                preview.style.fontSize = `${fontSize}px`;
+                preview.style.fontWeight = fontWeight;
+                preview.style.backgroundColor = bgColor;
+                preview.style.color = textColor;
+                preview.style.border = `${borderWidth}px solid ${borderColor}`;
+                preview.style.borderRadius = `${borderRadius}px`;
+                preview.style.padding = `${padding}px`;
+                preview.style.boxShadow = shadow ? '0 2px 8px rgba(0,0,0,0.2)' : 'none';
+                preview.style.transition = hoverEffect ? 'all 0.3s ease' : 'none';
+                preview.style.cursor = 'pointer';
+
+                // 호버 효과 적용
+                if (hoverEffect) {
+                    preview.onmouseover = function() {
+                        this.style.backgroundColor = hoverBg;
+                        this.style.transform = `scale(${hoverScale / 100})`;
+                        if (shadow) {
+                            this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+                        }
+                    };
+                    preview.onmouseout = function() {
+                        this.style.backgroundColor = bgColor;
+                        this.style.transform = 'scale(1)';
+                        if (shadow) {
+                            this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+                        }
+                    };
+                }
+            });
+        }
+
+        // 로그인 함수
+        async function loginWithGoogle() {
+            try {
+                sessionStorage.setItem('redirectTo', 'admin-v3.html');
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/auth-callback.html'
+                    }
+                });
+                if (error) {
+                    console.error('로그인 오류:', error);
+                    alert('로그인 중 오류가 발생했습니다: ' + error.message);
+                }
+            } catch (error) {
+                console.error('로그인 실패:', error);
+                alert('로그인 실패: ' + error.message);
+            }
+        }
+        
+        // 전역으로 노출
+        window.loginWithGoogle = loginWithGoogle;
+
+        // 사용자 정보 표시 함수
+        function displayUserInfo(session) {
+            const userEmailEl = document.getElementById('user-email');
+            const userSessionEl = document.getElementById('user-session');
+            
+            if (!userEmailEl || !userSessionEl) {
+                console.warn('User info elements not found');
+                return;
+            }
+            
+            if (session && session.user) {
+                const user = session.user;
+                const email = user.email;
+                const provider = user.app_metadata?.provider || '알 수 없음';
+                const loginTime = new Date(session.expires_at * 1000 - (session.expires_in || 3600) * 1000);
+                
+                userEmailEl.innerHTML = `✅ <strong>${email}</strong>`;
+                userSessionEl.innerHTML = `
+                    <div>제공자: ${provider} | 로그인 시간: ${loginTime.toLocaleString('ko-KR')}</div>
+                    <div>세션 만료: ${new Date(session.expires_at * 1000).toLocaleString('ko-KR')}</div>
+                `;
+                
+                // 로그아웃 버튼에 사용자 정보 표시
+                const logoutBtn = document.getElementById('logout-user-email');
+                if (logoutBtn) {
+                    logoutBtn.textContent = `${email} 로그아웃`;
+                }
+                
+                // 전역 변수에 사용자 정보 저장 (다른 함수에서 사용)
+                window.currentUser = {
+                    email: email,
+                    id: user.id,
+                    provider: provider
+                };
+                
+                console.log('👤 사용자 정보:', {
+                    email: email,
+                    provider: provider,
+                    userId: user.id
+                });
+            } else {
+                userEmailEl.innerHTML = '❌ 정보 없음';
+                userSessionEl.innerHTML = '';
+                
+                // 로그아웃 버튼 기본값으로 복원
+                const logoutBtn = document.getElementById('logout-user-email');
+                if (logoutBtn) {
+                    logoutBtn.textContent = '로그아웃';
+                }
+                
+                window.currentUser = null;
+            }
+        }
+
+        // initializeApp은 이미 위의 DOMContentLoaded에서 호출됨
+
+        async function initializeApp() {
+            // 최종 확인
+            if (!supabase) {
+                console.error('[app] Failed to initialize Supabase client');
+                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ Supabase 초기화 실패</span>';
+                return;
+            }
+
+            console.log('[app] Supabase client ready:', supabase);
+
+            // 디버깅: 환경변수 확인
+            console.log('=== App Auth Debug ===');
+            console.log('1. APP_CONFIG:', window.APP_CONFIG || 'Not loaded');
+            console.log('2. ENV_CONFIG:', window.ENV_CONFIG || 'Not loaded');
+            console.log('3. getConfig function:', typeof window.getConfig);
+            console.log('4. ALLOWED_EMAILS:', window.getConfig ? 'configured' : 'getConfig not available');
+            
+            // checkAuth 함수 확인
+            if (typeof checkAuth !== 'function') {
+                console.error('[app] checkAuth function not found');
+                document.getElementById('connection-status').innerHTML = '<span style="color: #f44336;">❌ 함수 없음</span>';
+                return;
+            }
+            
+            const userSession = await checkAuth();
+            console.log('5. User session:', userSession ? 'authenticated' : 'not authenticated');
+            
+            // 로그인 안 되어 있으면 로그인 페이지 표시
+            if (!userSession) {
+                console.log('로그인 필요');
+                // 로그인 UI 표시
+                document.getElementById('connection-status').innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <p style="color: #ff9800; margin-bottom: 20px;">링크 편집 페이지</p>
+                        <button onclick="loginWithGoogle()" style="background: #4285F4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px;">
+                            <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px;" viewBox="0 0 24 24">
+                                <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Google로 로그인
+                        </button>
+                    </div>
+                `;
+                return; // 더 이상 진행하지 않음
+            }
+            
+            // 사용자 정보 표시
+            displayUserInfo(userSession);
+            
+            // 로그인 상태 확인 완료
+
+            restoreGuideState(); // 가이드 상태 복원
+            // restoreDesignSettingsState(); // 디자인 설정 페이지로 이동됨
+            restoreFunYoutubeSettingsState(); // Fun YouTube 설정 상태 복원
+            loadCustomCategories(); // 커스텀 카테고리 로드
+            updateCategoryDropdown(); // 카테고리 드롭다운 업데이트
+            // loadSavedStyles(); // 디자인 설정 페이지로 이동됨
+            // initStyleControls(); // 디자인 설정 페이지로 이동됨
+            loadFunYoutubeSettings(); // Fun YouTube 설정 로드
+
+            await checkConnection();
+            await loadLinks();
+
+            // 실시간 업데이트 활성화
+            enableRealtimeUpdates();
+            
+            // 환영 메시지 표시
+            if (window.currentUser?.email) {
+                setTimeout(() => {
+                    showStatus(`${window.currentUser.email}님 환영합니다!`, 'success');
+                }, 1000);
+            }
+        }
+
+        // Supabase 연결 확인
+        async function checkConnection() {
+            const statusElement = document.getElementById('connection-status');
+
+            if (!statusElement) {
+                console.error('connection-status element not found');
+                return;
+            }
+
+            if (!supabase) {
+                console.error('Supabase client not initialized');
+                statusElement.innerHTML = '<span style="color: #f44336;">❌ Supabase 초기화 실패</span>';
+                
+                // 재시도 - 하드코딩된 값 사용
+                if (window.supabase && window.supabase.createClient) {
+                    try {
+                        const url = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                        const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                        
+                        supabase = window.supabase.createClient(url, key);
+                        window.supabaseClient = supabase;
+                        console.log('Supabase client created in checkConnection with hardcoded values');
+                    } catch (e) {
+                        console.error('Failed to create Supabase client:', e);
+                        statusElement.innerHTML = `<span style="color: #f44336;">❌ 클라이언트 생성 실패: ${e.message}</span>`;
+                        return;
+                    }
+                } else {
+                    statusElement.innerHTML = '<span style="color: #f44336;">❌ Supabase SDK가 로드되지 않았습니다</span>';
+                    return;
+                }
+            }
+
+            try {
+                console.log('Checking Supabase connection...');
+                statusElement.innerHTML = '<span style="color: #ff9800;">🔄 연결 확인 중...</span>';
+                
+                const { data, error } = await supabase.from('links').select('count').limit(1);
+                if (error) throw error;
+                
+                console.log('Supabase connection successful');
+                statusElement.innerHTML = '<span style="color: #4caf50;">✅ 연결됨</span>';
+            } catch (error) {
+                console.error('Supabase connection error:', error);
+                
+                // 에러 메시지 처리
+                let errorMessage = '연결 실패';
+                
+                if (error.message && error.message.includes('Failed to fetch')) {
+                    errorMessage = '네트워크 연결 오류';
+                } else if (error.message && error.message.includes('JWSError')) {
+                    errorMessage = 'API 키 오류';
+                } else if (error.message && error.message.includes('permission')) {
+                    errorMessage = '권한 오류';
+                } else if (error.message) {
+                    // "Config File" 같은 메시지를 더 친화적으로
+                    errorMessage = '데이터베이스 연결 오류';
+                }
+                
+                statusElement.innerHTML = `<span style="color: #f44336;">❌ ${errorMessage}</span>`;
+                
+                // 도움말 표시
+                const helpElement = document.getElementById('connection-help');
+                if (helpElement) {
+                    helpElement.style.display = 'block';
+                }
+                
+                // 디버깅 정보 (개발자 콘솔에만)
+                console.log('Debug info:', {
+                    originalError: error.message,
+                    errorCode: error.code,
+                    errorHint: error.hint,
+                    url: supabase?._supabaseUrl
+                });
+            }
+        }
+
+        // 링크 목록 로드
+        async function loadLinks() {
+            const container = document.getElementById('links-container');
+
+            if (!container) {
+                console.error('links-container element not found');
+                return;
+            }
+            
+            // Supabase 연결이 없으면 로컬 스토리지 사용
+            if (!supabase) {
+                console.warn('Supabase not available, using local storage');
+                loadLinksFromLocalStorage();
+                return;
+            }
+
+            console.log('Loading links...');
+            container.innerHTML = '<p>로딩 중...</p>';
+
+            try {
+                // 모든 링크를 가져오기
+                const { data: allLinks, error } = await supabase.from('links')
+                    .select('*')
+                    .order('category', { ascending: true })
+                    .order('position', { ascending: true });
+
+                if (error) {
+                    console.error('Supabase error:', error);
+                    throw error;
+                }
+
+                console.log('Loaded links:', allLinks);
+
+                // 카테고리별로 그룹화
+                const linksByCategory = {};
+                allLinks.forEach(link => {
+                    if (!linksByCategory[link.category]) {
+                        linksByCategory[link.category] = [];
+                    }
+                    linksByCategory[link.category].push(link);
+                });
+
+                let html = '';
+
+                // 카테고리 순서 정의 (기본 카테고리 먼저)
+                const categoryOrder = ['youtube', 'favorite', 'gpt', 'fun-youtube'];
+                const customCats = Object.keys(linksByCategory).filter(cat => !categoryOrder.includes(cat));
+                const allCategories = [...categoryOrder, ...customCats];
+
+                // 카테고리 이름 매핑
+                const categoryNames = {
+                    'youtube': '🎬 YouTube',
+                    'favorite': '⭐ Favorites',
+                    'gpt': '🤖 GPT Tools',
+                    'fun-youtube': '🎮 Fun YouTube'
+                };
+
+                // 커스텀 카테고리 이름 추가
+                customCategories.forEach(cat => {
+                    categoryNames[cat.id] = `📌 ${cat.name}`;
+                });
+
+                // 모든 카테고리 렌더링
+                allCategories.forEach(category => {
+                    if (linksByCategory[category] && linksByCategory[category].length > 0) {
+                        const displayName = categoryNames[category] || `📁 ${category}`;
+                        html += `<h3 style="margin: 20px 0 10px;">${displayName}</h3>`;
+                        html += createTable(linksByCategory[category], category);
+                    }
+                });
+
+                container.innerHTML = html || '<p>등록된 링크가 없습니다.</p>';
+
+                console.log('Links rendered successfully');
+
+                // 드래그 앤 드롭 초기화
+                initSortable();
+            } catch (error) {
+                console.error('Error loading links:', error);
+                container.innerHTML = `<p style="color: #f44336;">오류: ${error.message}</p>`;
+            }
+        }
+
+        // 테이블 생성
+        function createTable(links, category) {
+            let html = `<table class="links-table" data-category="${category}">`;
+            html += '<thead><tr><th width="30">⇅</th><th width="60">순서</th><th>이름</th><th>URL</th><th width="120">카테고리</th><th width="150">정보</th><th width="250">작업</th></tr></thead>';
+            html += `<tbody id="sortable-${category}">`;
+            
+            links.forEach(link => {
+                html += `
+                    <tr data-id="${link.id}" data-position="${link.position}" data-category="${link.category}" id="row-${link.id}">
+                        <td class="drag-handle">≡</td>
+                        <td>${link.position || '-'}</td>
+                        <td class="name-cell" id="name-${link.id}">${link.name}</td>
+                        <td class="url-cell" id="url-${link.id}">
+                            <a href="${link.url}" target="_blank">${link.url.substring(0, 50)}${link.url.length > 50 ? '...' : ''}</a>
+                        </td>
+                        <td class="category-cell" id="category-${link.id}" style="text-align: center; color: #888; font-size: 0.9em;">${link.category}</td>
+                        <td class="info-cell" style="font-size: 0.8em; color: #666;">
+                            ${link.created_by ? `<div>추가: ${link.created_by.split('@')[0]}</div>` : ''}
+                            ${link.updated_by ? `<div>수정: ${link.updated_by.split('@')[0]}</div>` : ''}
+                            ${link.created_at ? `<div style="font-size: 0.75em; margin-top: 2px;">${new Date(link.created_at).toLocaleDateString('ko-KR')}</div>` : ''}
+                        </td>
+                        <td class="action-cell" id="actions-${link.id}">
+                            <button class="position-btn" onclick="moveUp(${link.id}, ${link.position}, '${category}')">↑</button>
+                            <button class="position-btn" onclick="moveDown(${link.id}, ${link.position}, '${category}')">↓</button>
+                            <button class="edit-btn" onclick="editLink(${link.id}, '${link.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${link.url.replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${link.category}')">수정</button>
+                            <button class="delete-btn" onclick="removeLink(${link.id})">삭제</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            return html;
+        }
+
+        // 카테고리 목록 가져오기
+        function getCategories() {
+            const defaultCategories = [
+                { id: 'youtube', name: 'YouTube' },
+                { id: 'favorite', name: 'Favorite' },
+                { id: 'gpt', name: 'GPT Tools' },
+                { id: 'fun-youtube', name: 'Fun YouTube' }
+            ];
+
+            // 전역 변수 customCategories 사용
+            return [...defaultCategories, ...customCategories];
+        }
+
+        // 링크 수정 모드
+        function editLink(id, name, url, currentCategory) {
+            // 이미 다른 항목을 수정 중이면 취소
+            if (editingId && editingId !== id) {
+                cancelEdit(editingId);
+            }
+
+            editingId = id;
+            const row = document.getElementById(`row-${id}`);
+            row.classList.add('edit-mode');
+
+            // 이름 셀을 입력 필드로 변경
+            document.getElementById(`name-${id}`).innerHTML = 
+                `<input type="text" class="edit-input" id="edit-name-${id}" value="${name}">`;
+
+            // URL 셀을 입력 필드로 변경
+            document.getElementById(`url-${id}`).innerHTML = 
+                `<input type="text" class="edit-input" id="edit-url-${id}" value="${url}" style="width: 90%;">`;
+
+            // 카테고리 셀을 선택 박스로 변경
+            const categories = getCategories();
+            let categoryOptions = '';
+            categories.forEach(cat => {
+                categoryOptions += `<option value="${cat.id}" ${cat.id === currentCategory ? 'selected' : ''}>${cat.name}</option>`;
+            });
+            
+            document.getElementById(`category-${id}`).innerHTML = 
+                `<select class="edit-input" id="edit-category-${id}" style="width: 100px; background: #333; color: #fff; border: 1px solid #444;">
+                    ${categoryOptions}
+                </select>`;
+
+            // 작업 버튼 변경
+            document.getElementById(`actions-${id}`).innerHTML = 
+                `<button class="save-btn" onclick="saveEdit(${id})">저장</button>
+                 <button class="cancel-btn" onclick="cancelEdit(${id})">취소</button>`;
+        }
+
+        // 수정 저장
+        async function saveEdit(id) {
+            const newName = document.getElementById(`edit-name-${id}`).value;
+            const newUrl = document.getElementById(`edit-url-${id}`).value;
+            const newCategory = document.getElementById(`edit-category-${id}`).value;
+
+            if (!newName || !newUrl || !newCategory) {
+                showStatus('이름, URL, 카테고리를 모두 입력하세요', 'error');
+                return;
+            }
+
+            const result = await updateLink(id, { 
+                name: newName, 
+                url: newUrl, 
+                category: newCategory 
+            });
+            
+            if (result) {
+                showStatus('수정되었습니다', 'success');
+                editingId = null;
+                await loadLinks();
+            } else {
+                showStatus('수정 실패', 'error');
+            }
+        }
+
+        // 수정 취소
+        function cancelEdit(id) {
+            editingId = null;
+            loadLinks();
+        }
+
+        // 드래그 앤 드롭 초기화
+        function initSortable() {
+            // 모든 sortable tbody 요소를 찾아서 초기화
+            const allSortables = document.querySelectorAll('[id^="sortable-"]');
+            allSortables.forEach(element => {
+                const category = element.id.replace('sortable-', '');
+                if (element) {
+                    new Sortable(element, {
+                        handle: '.drag-handle',
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        onEnd: async function(evt) {
+                            await updatePositions(category);
+                        }
+                    });
+                }
+            });
+        }
+
+        // 순서 업데이트
+        async function updatePositions(category) {
+            const tbody = document.getElementById(`sortable-${category}`);
+            if (!tbody) return;
+            
+            const rows = tbody.querySelectorAll('tr');
+            const updates = [];
+            
+            rows.forEach((row, index) => {
+                const id = row.dataset.id;
+                const newPosition = index + 1;
+                updates.push(updateLink(id, { position: newPosition }));
+            });
+            
+            await Promise.all(updates);
+            showStatus('순서가 업데이트되었습니다', 'success');
+            await loadLinks();
+        }
+
+        // 위로 이동
+        async function moveUp(id, currentPos, category) {
+            if (currentPos <= 1) return;
+            
+            const { data: links } = await supabase.from('links')
+                .select('*')
+                .eq('category', category)
+                .order('position');
+            
+            const currentIndex = links.findIndex(l => l.id === id);
+            if (currentIndex > 0) {
+                const prevLink = links[currentIndex - 1];
+                
+                await updateLink(id, { position: prevLink.position });
+                await updateLink(prevLink.id, { position: currentPos });
+                
+                await loadLinks();
+            }
+        }
+
+        // 아래로 이동
+        async function moveDown(id, currentPos, category) {
+            const { data: links } = await supabase.from('links')
+                .select('*')
+                .eq('category', category)
+                .order('position');
+            
+            const currentIndex = links.findIndex(l => l.id === id);
+            if (currentIndex < links.length - 1) {
+                const nextLink = links[currentIndex + 1];
+                
+                await updateLink(id, { position: nextLink.position });
+                await updateLink(nextLink.id, { position: currentPos });
+                
+                await loadLinks();
+            }
+        }
+
+        // 새 링크 추가
+        async function addNewLink() {
+            const name = document.getElementById('link-name').value;
+            const url = document.getElementById('link-url').value;
+            const category = document.getElementById('link-category').value;
+            const position = parseInt(document.getElementById('link-position').value) || 999;
+            
+            if (!name || !url) {
+                showStatus('이름과 URL을 입력하세요', 'error');
+                return;
+            }
+            
+            const result = await addLink(name, url, category, position);
+            
+            if (result) {
+                showStatus('링크가 추가되었습니다', 'success');
+                document.getElementById('link-name').value = '';
+                document.getElementById('link-url').value = '';
+                document.getElementById('link-position').value = '999';
+                await loadLinks();
+            } else {
+                showStatus('추가 실패', 'error');
+            }
+        }
+
+        // 링크 삭제
+        async function removeLink(id) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+            
+            const result = await deleteLink(id);
+            
+            if (result) {
+                showStatus('삭제되었습니다', 'success');
+                await loadLinks();
+            } else {
+                showStatus('삭제 실패', 'error');
+            }
+        }
+
+        // 상태 메시지 표시
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status-message');
+            statusElement.className = `status ${type}`;
+            statusElement.textContent = message;
+            
+            setTimeout(() => {
+                statusElement.textContent = '';
+                statusElement.className = '';
+            }, 3000);
+        }
+
+        // 실시간 업데이트는 페이지 로드 후에 활성화
+        function enableRealtimeUpdates() {
+            if (typeof subscribeToLinks === 'function') {
+                subscribeToLinks(async (payload) => {
+                    console.log('데이터 변경 감지:', payload);
+                    if (!editingId) {  // 수정 중이 아닐 때만 자동 새로고침
+                        await loadLinks();
+                    }
+                });
+            } else {
+                console.warn('subscribeToLinks function not available');
+            }
+        }
+        
+        // 로컬 스토리지 백업 함수들
+        function loadLinksFromLocalStorage() {
+            const container = document.getElementById('links-container');
+            const localLinks = localStorage.getItem('admin_links');
+            
+            if (localLinks) {
+                const links = JSON.parse(localLinks);
+                displayLinks(links);
+            } else {
+                container.innerHTML = '<p style="color: #ff9800;">⚠️ 로컬 데이터가 없습니다. Supabase 연결이 필요합니다.</p>';
+            }
+        }
+        
+        function saveLinksToLocalStorage(links) {
+            localStorage.setItem('admin_links', JSON.stringify(links));
+        }
+        
+        // 링크 표시 함수 (공통)
+        function displayLinks(allLinks) {
+            const container = document.getElementById('links-container');
+            const youtubeLinks = allLinks.filter(link => link.category === 'youtube');
+            const favoriteLinks = allLinks.filter(link => link.category === 'favorite');
+            const gptLinks = allLinks.filter(link => link.category === 'gpt');
+            
+            container.innerHTML = '';
+            
+            // YouTube 섹션
+            if (youtubeLinks.length > 0) {
+                container.innerHTML += createLinkSection('youtube', 'YouTube 채널', youtubeLinks);
+            }
+            
+            // Favorites 섹션
+            if (favoriteLinks.length > 0) {
+                container.innerHTML += createLinkSection('favorite', 'Favorite Sites', favoriteLinks);
+            }
+            
+            // GPT Tools 섹션
+            if (gptLinks.length > 0) {
+                container.innerHTML += createLinkSection('gpt', 'GPT Tools', gptLinks);
+            }
+            
+            if (allLinks.length === 0) {
+                container.innerHTML = '<p>등록된 링크가 없습니다.</p>';
+            }
+        }
+        
+        function createLinkSection(category, title, links) {
+            let html = `<div class="link-category"><h3>${title}</h3><div class="links-grid">`;
+            
+            links.forEach(link => {
+                html += `
+                    <div class="link-item" data-id="${link.id}">
+                        <div class="link-header">
+                            <span class="link-name">${link.name}</span>
+                            <div class="link-actions">
+                                <button onclick="editLink('${link.id}')" class="edit-btn">✏️</button>
+                                <button onclick="deleteLink('${link.id}')" class="delete-btn">🗑️</button>
+                            </div>
+                        </div>
+                        <a href="${link.url}" target="_blank" class="link-url">${link.url}</a>
+                    </div>
+                `;
+            });
+            
+            html += '</div></div>';
+            return html;
+        }
+    </script>
+</body>
+</html>

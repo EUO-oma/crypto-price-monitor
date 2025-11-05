@@ -1,0 +1,10 @@
+# URL 리라이팅 설정
+/index.do /index.html 200
+/main.do /index.html 200
+/dashboard.do /index.html 200
+/admin.do /admin-v3.html 200
+/chart.do /dual-chart.html 200
+/tick.do /realtime-tick-chart.html 200
+
+# SPA 라우팅 (모든 경로를 index.html로)
+/* /index.html 200

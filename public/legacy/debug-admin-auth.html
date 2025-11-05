@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 인증 디버그</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #0f0;
+        }
+        button {
+            background: #333;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0f0;
+            color: #000;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 관리자 인증 디버그 도구</h1>
+    
+    <div class="section">
+        <h2>1. 설정 파일 체크</h2>
+        <button onclick="checkConfig()">설정 확인</button>
+        <pre id="config-result"></pre>
+    </div>
+
+    <div class="section">
+        <h2>2. 현재 로그인 상태</h2>
+        <button onclick="checkSession()">세션 확인</button>
+        <pre id="session-result"></pre>
+    </div>
+
+    <div class="section">
+        <h2>3. 관리자 권한 체크</h2>
+        <button onclick="checkAdmin()">권한 확인</button>
+        <pre id="admin-result"></pre>
+    </div>
+
+    <div class="section">
+        <h2>4. 빠른 수정</h2>
+        <button onclick="forceLogin()">강제 로그인 (테스트)</button>
+        <button onclick="clearAll()">모든 캐시 삭제</button>
+        <button onclick="window.location.href='admin-links.html'">로그인 페이지로</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-env.js"></script>
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+
+    <script>
+        function checkConfig() {
+            const result = document.getElementById('config-result');
+            const checks = [];
+            
+            // ENV_CONFIG 확인
+            checks.push('🔍 ENV_CONFIG 확인:');
+            if (window.ENV_CONFIG) {
+                checks.push('✅ ENV_CONFIG 로드됨');
+                checks.push(`- ALLOWED_EMAILS: ${JSON.stringify(window.ENV_CONFIG.ADMIN?.ALLOWED_EMAILS || [])}`);
+            } else {
+                checks.push('❌ ENV_CONFIG 없음');
+            }
+            
+            // APP_CONFIG 확인
+            checks.push('\n🔍 APP_CONFIG 확인:');
+            if (window.APP_CONFIG) {
+                checks.push('✅ APP_CONFIG 로드됨');
+                checks.push(`- ALLOWED_EMAILS: ${JSON.stringify(window.APP_CONFIG.ADMIN?.ALLOWED_EMAILS || [])}`);
+                checks.push(`- Supabase URL: ${window.APP_CONFIG.SUPABASE?.URL ? '설정됨' : '없음'}`);
+            } else {
+                checks.push('❌ APP_CONFIG 없음');
+            }
+            
+            // getConfig 함수 확인
+            checks.push('\n🔍 getConfig 함수 확인:');
+            if (window.getConfig) {
+                checks.push('✅ getConfig 사용 가능');
+                const emails = window.getConfig('ADMIN.ALLOWED_EMAILS');
+                checks.push(`- 허용된 이메일: ${JSON.stringify(emails || [])}`);
+            } else {
+                checks.push('❌ getConfig 없음');
+            }
+            
+            result.textContent = checks.join('\n');
+        }
+
+        async function checkSession() {
+            const result = document.getElementById('session-result');
+            try {
+                const supabase = window.getSupabaseClient();
+                if (!supabase) {
+                    result.textContent = '❌ Supabase 클라이언트 없음';
+                    return;
+                }
+                
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    result.textContent = `❌ 에러: ${error.message}`;
+                    return;
+                }
+                
+                if (session) {
+                    result.textContent = `✅ 로그인됨
+- 이메일: ${session.user.email}
+- ID: ${session.user.id}
+- Provider: ${session.user.app_metadata?.provider || 'unknown'}
+- 만료: ${new Date(session.expires_at * 1000).toLocaleString('ko-KR')}`;
+                } else {
+                    result.textContent = '❌ 로그인되지 않음';
+                }
+            } catch (error) {
+                result.textContent = `❌ 오류: ${error.message}`;
+            }
+        }
+
+        async function checkAdmin() {
+            const result = document.getElementById('admin-result');
+            try {
+                const session = await window.checkAuth();
+                if (!session) {
+                    result.textContent = '❌ 로그인 필요';
+                    return;
+                }
+                
+                const userEmail = session.user.email;
+                const allowedEmails = window.getConfig('ADMIN.ALLOWED_EMAILS') || [];
+                const devMode = window.getConfig('ADMIN.DEV_MODE') || false;
+                
+                const checks = [];
+                checks.push(`🔍 관리자 권한 확인:`);
+                checks.push(`- 현재 이메일: ${userEmail}`);
+                checks.push(`- 허용된 이메일: ${JSON.stringify(allowedEmails)}`);
+                checks.push(`- 개발 모드: ${devMode ? '활성' : '비활성'}`);
+                
+                if (devMode) {
+                    checks.push('✅ 개발 모드 활성 - 모든 사용자 허용');
+                } else if (allowedEmails.includes(userEmail)) {
+                    checks.push('✅ 관리자 권한 있음');
+                } else {
+                    checks.push('❌ 관리자 권한 없음');
+                    checks.push('\n💡 해결 방법:');
+                    checks.push(`1. Netlify 환경변수 ADMIN_EMAILS에 "${userEmail}" 추가`);
+                    checks.push(`2. 또는 config.js의 ALLOWED_EMAILS에 추가`);
+                }
+                
+                result.textContent = checks.join('\n');
+            } catch (error) {
+                result.textContent = `❌ 오류: ${error.message}`;
+            }
+        }
+
+        function forceLogin() {
+            // 개발 모드 임시 활성화
+            if (window.APP_CONFIG) {
+                window.APP_CONFIG.ADMIN.DEV_MODE = true;
+                alert('개발 모드 활성화! 이제 admin-v3.html에 접근 가능합니다.\n(페이지 새로고침 시 초기화됩니다)');
+            } else {
+                alert('APP_CONFIG가 로드되지 않았습니다.');
+            }
+        }
+
+        function clearAll() {
+            // localStorage 클리어
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('모든 캐시를 삭제했습니다. 페이지를 새로고침하세요.');
+            window.location.reload();
+        }
+
+        // 페이지 로드 시 자동 실행
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkConfig();
+                checkSession();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

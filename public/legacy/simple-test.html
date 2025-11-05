@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단한 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #4facfe;
+            text-align: center;
+        }
+        
+        .test {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+        
+        button {
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        
+        .result {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        
+        .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .link {
+            background: #3a3a3a;
+            padding: 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #fff;
+            text-align: center;
+            border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    <h1>🔍 간단한 링크 테스트</h1>
+    
+    <div class="test">
+        <h2>1단계: Supabase 연결 테스트</h2>
+        <button onclick="step1()">연결 테스트</button>
+        <div id="step1-result" class="result"></div>
+    </div>
+    
+    <div class="test">
+        <h2>2단계: 데이터 가져오기</h2>
+        <button onclick="step2()">링크 가져오기</button>
+        <div id="step2-result" class="result"></div>
+    </div>
+    
+    <div class="test">
+        <h2>3단계: 간단한 표시</h2>
+        <button onclick="step3()">링크 표시</button>
+        <div id="step3-result" class="result">
+            <div id="simple-links" class="links"></div>
+        </div>
+    </div>
+    
+    <div class="test">
+        <h2>4단계: localStorage 확인</h2>
+        <button onclick="step4()">스타일 설정 확인</button>
+        <div id="step4-result" class="result"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        let supabaseClient = null;
+        let linksData = [];
+        
+        // 로그 함수
+        function log(step, message, type = 'info') {
+            const result = document.getElementById(`${step}-result`);
+            const time = new Date().toLocaleTimeString();
+            result.innerHTML += `<span class="${type}">[${time}] ${message}</span>\n`;
+        }
+        
+        // 1단계: Supabase 연결
+        async function step1() {
+            const step = 'step1';
+            document.getElementById(`${step}-result`).innerHTML = '';
+            
+            try {
+                log(step, 'Supabase 라이브러리 확인...', 'info');
+                
+                if (!window.supabase) {
+                    log(step, '❌ Supabase 라이브러리가 없습니다', 'error');
+                    return;
+                }
+                
+                log(step, '✅ Supabase 라이브러리 확인됨', 'success');
+                
+                // Wait for config to load
+                const waitForConfig = () => {
+                    return new Promise((resolve) => {
+                        if (window.APP_CONFIG?.SUPABASE?.URL) {
+                            resolve();
+                        } else {
+                            window.addEventListener('configLoaded', resolve, { once: true });
+                            setTimeout(resolve, 2000); // Fallback
+                        }
+                    });
+                };
+                
+                await waitForConfig();
+                
+                // Get configuration from environment
+                const SUPABASE_URL = window.APP_CONFIG?.SUPABASE?.URL || 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const SUPABASE_KEY = window.APP_CONFIG?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                if (!SUPABASE_URL || !SUPABASE_KEY) {
+                    log(step, '❌ Supabase configuration not found', 'error');
+                    return;
+                }
+                
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                log(step, '✅ Supabase 클라이언트 생성 완료', 'success');
+                
+                // 연결 테스트
+                const { error } = await supabaseClient.from('links').select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    log(step, `❌ 연결 실패: ${error.message}`, 'error');
+                } else {
+                    log(step, '✅ 데이터베이스 연결 성공!', 'success');
+                }
+                
+            } catch (error) {
+                log(step, `❌ 오류: ${error.message}`, 'error');
+            }
+        }
+        
+        // 2단계: 데이터 가져오기
+        async function step2() {
+            const step = 'step2';
+            document.getElementById(`${step}-result`).innerHTML = '';
+            
+            if (!supabaseClient) {
+                log(step, '❌ 먼저 1단계를 실행하세요', 'error');
+                return;
+            }
+            
+            try {
+                log(step, '데이터 조회 중...', 'info');
+                
+                const { data, error } = await supabaseClient
+                    .from('links')
+                    .select('*')
+                    .order('category')
+                    .order('position');
+                
+                if (error) {
+                    log(step, `❌ 조회 실패: ${error.message}`, 'error');
+                    return;
+                }
+                
+                linksData = data || [];
+                log(step, `✅ ${linksData.length}개 링크 조회 성공`, 'success');
+                
+                // 카테고리별 개수
+                const categories = {};
+                linksData.forEach(link => {
+                    categories[link.category] = (categories[link.category] || 0) + 1;
+                });
+                
+                for (const [category, count] of Object.entries(categories)) {
+                    log(step, `  - ${category}: ${count}개`, 'info');
+                }
+                
+                // 샘플 데이터 표시
+                if (linksData.length > 0) {
+                    log(step, '\n첫 번째 링크 예시:', 'info');
+                    log(step, JSON.stringify(linksData[0], null, 2), 'info');
+                }
+                
+            } catch (error) {
+                log(step, `❌ 오류: ${error.message}`, 'error');
+            }
+        }
+        
+        // 3단계: 간단한 표시
+        function step3() {
+            const step = 'step3';
+            const container = document.getElementById('simple-links');
+            
+            if (linksData.length === 0) {
+                container.innerHTML = '<span class="error">먼저 2단계를 실행하세요</span>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            log(step, `${linksData.length}개 링크 표시 중...`, 'info');
+            
+            // 카테고리별로 표시
+            const categories = {};
+            linksData.forEach(link => {
+                if (!categories[link.category]) {
+                    categories[link.category] = [];
+                }
+                categories[link.category].push(link);
+            });
+            
+            for (const [category, links] of Object.entries(categories)) {
+                const section = document.createElement('div');
+                section.style.marginBottom = '20px';
+                section.innerHTML = `<h3 style="color: #4facfe;">${category.toUpperCase()}</h3>`;
+                
+                const grid = document.createElement('div');
+                grid.className = 'links';
+                
+                links.forEach(link => {
+                    const a = document.createElement('a');
+                    a.href = link.url;
+                    a.target = '_blank';
+                    a.className = 'link';
+                    a.textContent = link.name;
+                    grid.appendChild(a);
+                });
+                
+                section.appendChild(grid);
+                container.appendChild(section);
+            }
+            
+            log(step, '✅ 표시 완료!', 'success');
+        }
+        
+        // 4단계: localStorage 확인
+        function step4() {
+            const step = 'step4';
+            document.getElementById(`${step}-result`).innerHTML = '';
+            
+            try {
+                // linkCardStyles 확인
+                const styles = localStorage.getItem('linkCardStyles');
+                if (styles) {
+                    const parsed = JSON.parse(styles);
+                    log(step, 'linkCardStyles 발견:', 'info');
+                    log(step, JSON.stringify(parsed, null, 2), 'info');
+                    
+                    // 문제 체크
+                    let hasNaN = false;
+                    for (const [category, style] of Object.entries(parsed)) {
+                        for (const [key, value] of Object.entries(style)) {
+                            if (typeof value === 'number' && isNaN(value)) {
+                                log(step, `❌ ${category}.${key}가 NaN입니다`, 'error');
+                                hasNaN = true;
+                            }
+                        }
+                    }
+                    
+                    if (!hasNaN) {
+                        log(step, '✅ NaN 값이 없습니다', 'success');
+                    }
+                } else {
+                    log(step, 'linkCardStyles가 없습니다 (기본값 사용)', 'info');
+                }
+                
+                // customCategories 확인
+                const custom = localStorage.getItem('customCategories');
+                if (custom) {
+                    log(step, '\ncustomCategories 발견:', 'info');
+                    log(step, custom, 'info');
+                }
+                
+            } catch (error) {
+                log(step, `❌ 오류: ${error.message}`, 'error');
+            }
+        }
+        
+        // 페이지 로드 시 자동 실행
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Supabase 라이브러리 대기
+            let attempts = 0;
+            while (!window.supabase && attempts < 10) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+            }
+            
+            if (window.supabase) {
+                console.log('Supabase 라이브러리 준비됨');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+# -*- coding: utf-8 -*-
+import time
+
+from selenium import webdriver
+from selenium.webdriver import Keys
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+
+
+# 크롬 드라이버 다운받기
+# https://chromedriver.chromium.org/downloads
+
+def 네이버블로그반복하기(search_keyword):
+    chrome_options = Options()
+
+    # 헤드리스 실행하기
+    # chrome_options.add_argument('headless')
+    chrome_options.add_argument('--mute-audio')
+    # chrome_options.add_argument('disable-gpu')
+    chrome_options.add_argument("window-size=150x280")  # 화면크기(전체화면)
+    chrome_options.add_argument("disable-infobars")
+    chrome_options.add_argument("--disable-extensions")
+
+    # 브라우저 실행하기
+    driver = webdriver.Chrome("chromedriver.exe", options=chrome_options)
+    driver.maximize_window()
+
+    # 네이버로 이동하기
+    driver.get('https://naver.com')
+
+    # 검색어 입력하기
+    driver.find_element(By.ID, 'query').send_keys(search_keyword)
+    time.sleep(0.5)
+
+    # 검색 클릭
+    driver.find_element(By.CLASS_NAME, 'btn_submit').click()
+    time.sleep(1)
+
+    # 내 블로그 찾기
+    try:
+        # href 속성 값이 'https://blog.naver.com/an_wooni/' 시작되는 값을 찾음
+        driver.find_element(By.XPATH, "//a[starts-with (@href,'https://blog.naver.com/an_wooni/')]").click()
+        time.sleep(0.5)
+
+    # 블로그를 못찾았을 경우 더보기 클릭하여 상세보기로 이동
+    except:
+        print('     더보기 클릭')
+        # return
+        # 더보기 클릭
+        try:
+            driver.find_element(By.XPATH,
+                                '//*[@id="main_pack"]/section[2]/div/div[2]/panel-list/div/more-button/div/a').click()
+        except:
+            print('     더보기 에러 발생')
+            return
+        # # 스크롤 한번만 내리기
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+
+        # 내 블로그 다시 찾기
+        try:
+            driver.find_element(By.XPATH, "//a[starts-with (@href,'https://blog.naver.com/an_wooni/')]").click()
+        except:
+            print('     더보기를 하였으나 찾을 수 없음')
+            return
+        # time.sleep(0.5)
+
+    print('     상세보기로 이동')
+
+    # 마지막 클릭한 창으로 이동
+    driver.switch_to.window(driver.window_handles[-1])
+    time.sleep(0.5)
+
+    # 블로그 내 아이프레임으로 화면 이동
+    driver.switch_to.frame("mainFrame")
+    time.sleep(0.5)
+
+    # 화면이동하기 위해 아래로 이동
+    elem = driver.find_element(By.TAG_NAME, 'body')
+    time.sleep(0.5)
+    elem.click()
+    elem.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    elem.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    elem.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    elem.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    elem.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    elem.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    elem.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    elem.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    elem.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    print('     화면이동 완료')
+
+
+# ------------------------------프로그램 시작
+search_keyword_list = list(
+    '사전규격공개, 시크리컬, 분담이행방식, 사전규격, 픽셀1, 공동이행방식, 사전규격 공개, 공동이행 분담이행, 실적장세, 사전규격 공개 기간, 엔솔 공모주 청약, 파이썬 용도, 구글포토 무제한, 공동이행방식 분담이행방식, s7 픽셀롬, 구글포토 픽셀, 구매규격 사전공개, from import, 픽셀 구글포토, 분담이행, 기타, 사전규격공개, 사전규격, 경기도 지방공무원, 사전규격 공개, 픽셀1, 사전규격 공개 기간, 구매규격 사전공개, 분담이행방식, selenium, 2022 경기도 지방공무원, 파이썬 용도, 조달청 사전규격, 구글포토 무제한, s7 픽셀, s7 픽셀롬, from import, s7 구글포토, 조달청 사전규격공개, 경기도 공개경쟁, 공개경쟁임용시험, 사전규격공개, 사전규격, 분담이행방식, 파이썬 용도, selenium, python import, 공동이행방식 분담이행방식, 사전규격 공개, from import, 구매규격 사전공개, 사전규격 공개 기간, 조달청 사전규격공개, 공동이행 분담이행, 경기도 공개경쟁임용시험, 구글포토 무제한, 2022년도 제2회(8·9급) 경기도 공개경쟁임용시험, s7 픽셀롬, 메타버스 하드웨어 관련주, 스몰캡, captcha, 사전규격공개, 사전규격, 분담이행방식, flutter, python import, from import, 파이썬 용도, 사전규격 공개, 구매규격 사전공개, 공동이행방식 분담이행방식, 공동이행 분담이행, 스몰캡, 구글 포토 무제한, 사전규격 공개 기간, 조달청 사전규격공개, PC 상용구 설정, selenium, 파이참 단축키, 역실적장세, s7 픽셀롬, 사전규격공개, 사전규격, 스몰캡, 구매규격 사전공개, from import, 파이썬 용도, 사전규격 공개 기간, 조달청 사전규격공개, 파이참 단축키, python import, s7 magisk, 기업 자금조달 방법, 사전규격 공개, 시크리컬, beeftext, captcha, flutter layout, pycharm 같은 단어 위치 찾기, pycharm 단축키, python selenium'.split(
+        ", "))
+
+url = 'https://search.naver.com/search.naver?where=view&sm=tab_jum&query='
+
+for i, search_keyword in enumerate(search_keyword_list):
+    print(f'{i}번째 실행 : {search_keyword} 시작')
+    네이버블로그반복하기(search_keyword)
+    print(f'{i}번째 실행 : {search_keyword} 종료')

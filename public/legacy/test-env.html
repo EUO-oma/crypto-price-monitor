@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>환경 변수 테스트</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 { color: #61dafb; }
+        h2 { color: #ffd700; margin-top: 30px; }
+        .section {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+        .good { color: #4caf50; }
+        .bad { color: #f44336; }
+        .warning { color: #ff9800; }
+        .code {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover { background: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>🔧 환경 변수 및 설정 테스트</h1>
+    
+    <div class="section">
+        <h2>1. 스크립트 로드 상태</h2>
+        <div id="script-status"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. 환경 변수 확인</h2>
+        <div id="env-check"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Supabase 연결 테스트</h2>
+        <button onclick="testSupabase()">Supabase 테스트</button>
+        <div id="supabase-test"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. 전체 설정 덤프</h2>
+        <button onclick="dumpConfig()">설정 보기</button>
+        <div id="config-dump"></div>
+    </div>
+
+    <div class="section">
+        <h2>5. 네트워크 정보</h2>
+        <div id="network-info"></div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 정보 수집
+        window.addEventListener('DOMContentLoaded', () => {
+            checkScripts();
+            checkEnvironment();
+            checkNetwork();
+        });
+
+        function checkScripts() {
+            const statusDiv = document.getElementById('script-status');
+            let html = '';
+
+            // config-env.js 확인
+            html += checkScript('config-env.js', window.ENV_CONFIG);
+            html += checkScript('config-loader.js', window.APP_CONFIG);
+            html += checkScript('config.js (로컬)', window.APP_CONFIG && !window.ENV_CONFIG);
+            html += checkScript('Supabase SDK', window.supabase);
+            html += checkScript('auth-helper.js', window.getSupabaseClient);
+
+            statusDiv.innerHTML = html;
+        }
+
+        function checkScript(name, exists) {
+            return `<div class="${exists ? 'good' : 'bad'}">
+                ${exists ? '✅' : '❌'} ${name}: ${exists ? '로드됨' : '로드 실패'}
+            </div>`;
+        }
+
+        function checkEnvironment() {
+            const envDiv = document.getElementById('env-check');
+            let html = '';
+
+            // ENV_CONFIG 확인
+            if (window.ENV_CONFIG) {
+                html += '<h3>ENV_CONFIG (Netlify 빌드):</h3>';
+                html += '<div class="code">' + JSON.stringify(window.ENV_CONFIG, null, 2) + '</div>';
+            }
+
+            // APP_CONFIG 확인
+            if (window.APP_CONFIG) {
+                html += '<h3>APP_CONFIG (병합된 설정):</h3>';
+                const safeConfig = JSON.parse(JSON.stringify(window.APP_CONFIG));
+                
+                // 민감한 정보 마스킹
+                if (safeConfig.SUPABASE?.ANON_KEY) {
+                    safeConfig.SUPABASE.ANON_KEY = safeConfig.SUPABASE.ANON_KEY.substring(0, 20) + '...';
+                }
+                if (safeConfig.FIREBASE?.apiKey) {
+                    safeConfig.FIREBASE.apiKey = safeConfig.FIREBASE.apiKey.substring(0, 10) + '...';
+                }
+                
+                html += '<div class="code">' + JSON.stringify(safeConfig, null, 2) + '</div>';
+            }
+
+            // 중요 변수 확인
+            html += '<h3>중요 변수 상태:</h3>';
+            const supabaseUrl = window.getConfig?.('SUPABASE.URL') || window.APP_CONFIG?.SUPABASE?.URL;
+            const supabaseKey = window.getConfig?.('SUPABASE.ANON_KEY') || window.APP_CONFIG?.SUPABASE?.ANON_KEY;
+            
+            html += `<div class="${supabaseUrl ? 'good' : 'bad'}">
+                ${supabaseUrl ? '✅' : '❌'} SUPABASE_URL: ${supabaseUrl ? supabaseUrl : '설정되지 않음'}
+            </div>`;
+            html += `<div class="${supabaseKey ? 'good' : 'bad'}">
+                ${supabaseKey ? '✅' : '❌'} SUPABASE_ANON_KEY: ${supabaseKey ? '설정됨' : '설정되지 않음'}
+            </div>`;
+
+            envDiv.innerHTML = html;
+        }
+
+        function checkNetwork() {
+            const networkDiv = document.getElementById('network-info');
+            let html = '<h3>현재 환경:</h3>';
+            
+            html += `<div>URL: ${window.location.href}</div>`;
+            html += `<div>호스트: ${window.location.hostname}</div>`;
+            html += `<div>프로토콜: ${window.location.protocol}</div>`;
+            html += `<div>Netlify 환경: ${window.location.hostname.includes('netlify') ? '예' : '아니오'}</div>`;
+            
+            networkDiv.innerHTML = html;
+        }
+
+        async function testSupabase() {
+            const testDiv = document.getElementById('supabase-test');
+            testDiv.innerHTML = '<div class="warning">테스트 중...</div>';
+            
+            try {
+                // config-env.js 로드 대기
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Supabase 클라이언트 가져오기
+                const supabase = window.getSupabaseClient ? window.getSupabaseClient() : null;
+                
+                if (!supabase) {
+                    throw new Error('Supabase 클라이언트를 생성할 수 없습니다.');
+                }
+                
+                // 간단한 쿼리 테스트
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                testDiv.innerHTML = '<div class="good">✅ Supabase 연결 성공!</div>';
+            } catch (error) {
+                testDiv.innerHTML = `<div class="bad">❌ Supabase 연결 실패: ${error.message}</div>`;
+                console.error('Supabase 테스트 실패:', error);
+            }
+        }
+
+        function dumpConfig() {
+            const dumpDiv = document.getElementById('config-dump');
+            let html = '<h3>전체 window 객체의 관련 속성:</h3>';
+            
+            const relevantProps = [
+                'ENV_CONFIG',
+                'APP_CONFIG',
+                'SUPABASE_URL',
+                'SUPABASE_ANON_KEY',
+                'supabase',
+                'supabaseClient',
+                'getSupabaseClient',
+                'getConfig',
+                'debugLog'
+            ];
+            
+            relevantProps.forEach(prop => {
+                if (window[prop] !== undefined) {
+                    const value = typeof window[prop] === 'function' ? 'function' : 
+                                 typeof window[prop] === 'object' ? JSON.stringify(window[prop], null, 2).substring(0, 100) + '...' :
+                                 String(window[prop]).substring(0, 50);
+                    html += `<div><strong>${prop}:</strong> ${value}</div>`;
+                }
+            });
+            
+            dumpDiv.innerHTML = '<div class="code">' + html + '</div>';
+        }
+    </script>
+    
+    <!-- 스크립트 로드 (config-env.js가 먼저) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-env.js"></script>
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+</body>
+</html>

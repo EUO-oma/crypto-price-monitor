@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>강제 표시 테스트</title>
+    <script>
+        // 페이지 로드 후 메인 페이지의 상태를 강제로 변경
+        window.addEventListener('load', () => {
+            // iframe으로 메인 페이지 로드
+            const iframe = document.createElement('iframe');
+            iframe.src = '/';
+            iframe.style.width = '100%';
+            iframe.style.height = '600px';
+            iframe.style.border = '1px solid #666';
+            document.getElementById('iframeContainer').appendChild(iframe);
+            
+            // iframe 로드 완료 후 조작
+            iframe.onload = () => {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                
+                // 3초 후에 강제로 로딩 숨기고 데이터 표시
+                setTimeout(() => {
+                    const loadingDiv = iframeDoc.getElementById('loadingDiv');
+                    const listView = iframeDoc.getElementById('listView');
+                    const emptyState = iframeDoc.getElementById('emptyState');
+                    
+                    console.log('Force display attempt...');
+                    
+                    if (loadingDiv) {
+                        loadingDiv.style.display = 'none';
+                        console.log('Loading div hidden');
+                    }
+                    
+                    if (iframe.contentWindow.schedules && iframe.contentWindow.schedules.length > 0) {
+                        if (listView) {
+                            listView.style.display = 'grid';
+                            console.log('List view shown');
+                        }
+                        if (emptyState) {
+                            emptyState.style.display = 'none';
+                        }
+                    } else {
+                        if (listView) {
+                            listView.style.display = 'none';
+                        }
+                        if (emptyState) {
+                            emptyState.style.display = 'block';
+                            console.log('Empty state shown');
+                        }
+                    }
+                    
+                    // 수동으로 displaySchedules 호출
+                    if (iframe.contentWindow.displaySchedules) {
+                        iframe.contentWindow.displaySchedules();
+                        console.log('displaySchedules called');
+                    }
+                }, 3000);
+            };
+        });
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #121212;
+            color: #fff;
+            padding: 20px;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>강제 표시 테스트</h1>
+    <p>3초 후에 로딩 스피너를 강제로 숨기고 콘텐츠를 표시합니다.</p>
+    
+    <button onclick="location.href='/'">메인 페이지로</button>
+    
+    <h2>메인 페이지 (iframe)</h2>
+    <div id="iframeContainer"></div>
+    
+    <h2>디버깅 정보</h2>
+    <p>브라우저 콘솔을 확인하세요.</p>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localhost 테스트</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+        }
+        pre {
+            background: #111;
+            padding: 20px;
+            border: 1px solid #0f0;
+            overflow: auto;
+        }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .warning { color: #ff0; }
+    </style>
+</head>
+<body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    <h1>Localhost 환경 확인</h1>
+    <pre id="log"></pre>
+    
+    <script>
+        const log = document.getElementById('log');
+        
+        // 현재 환경 확인
+        log.innerHTML = `현재 URL: ${window.location.href}\n`;
+        log.innerHTML += `프로토콜: ${window.location.protocol}\n`;
+        log.innerHTML += `호스트: ${window.location.host}\n`;
+        log.innerHTML += `포트: ${window.location.port || '기본값'}\n\n`;
+        
+        if (window.location.protocol === 'http:' && window.location.host.includes('localhost')) {
+            log.innerHTML += '<span class="success">✅ 로컬 서버로 실행 중입니다!</span>\n\n';
+            
+            // Supabase 테스트
+            log.innerHTML += 'Supabase 연결 테스트 중...\n';
+            
+            (async () => {
+            
+            // Wait for config and get Supabase settings
+            const waitForConfig = () => {
+                return new Promise((resolve) => {
+                    if (window.APP_CONFIG?.SUPABASE?.URL) {
+                        resolve();
+                    } else {
+                        window.addEventListener('configLoaded', resolve, { once: true });
+                        setTimeout(resolve, 2000); // Fallback
+                    }
+                });
+            };
+            
+            await waitForConfig();
+            
+            const supabaseUrl = window.APP_CONFIG?.SUPABASE?.URL || 'https://intyabzhvtkxgldmvpvr.supabase.co';
+            const supabaseKey = window.APP_CONFIG?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludHlhYnpodnRreGdsZG12cHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkxODQwMTEsImV4cCI6MjA0NDc2MDAxMX0.mUgaLB6kQKvpsJ0L3n4cEBE_3S94BmdqYJoF-0K_vK0';
+            
+            if (!supabaseUrl || !supabaseKey) {
+                log.innerHTML += '<span class="error">❌ Supabase configuration not found</span>\n';
+                return;
+            }
+            
+            fetch(`${supabaseUrl}/rest/v1/`, {
+                headers: {
+                    'apikey': supabaseKey
+                }
+            })
+            .then(res => {
+                log.innerHTML += `<span class="success">응답 상태: ${res.status}</span>\n`;
+                return res.text();
+            })
+            .then(data => {
+                log.innerHTML += '<span class="success">연결 성공!</span>\n';
+            })
+            .catch(err => {
+                log.innerHTML += `<span class="error">에러: ${err.message}</span>\n`;
+                log.innerHTML += '\n<span class="warning">해결 방법:</span>\n';
+                log.innerHTML += '1. 네트워크 설정에서 DNS를 8.8.8.8로 변경\n';
+                log.innerHTML += '2. 다른 와이파이나 모바일 핫스팟 사용\n';
+                log.innerHTML += '3. VPN이 켜져있다면 끄기\n';
+            });
+            })(); // End async IIFE
+            
+        } else {
+            log.innerHTML += '<span class="error">❌ 로컬 서버로 실행되지 않았습니다!</span>\n\n';
+            log.innerHTML += '<span class="warning">다음 단계를 따라주세요:</span>\n';
+            log.innerHTML += '1. 터미널 열기 (Command + Space → "터미널")\n';
+            log.innerHTML += '2. 다음 명령어 실행:\n';
+            log.innerHTML += '   cd "/Users/iuo/Documents/EUOvaultSYNC/1 Project/privacy/crypto-price-monitor"\n';
+            log.innerHTML += '   python3 -m http.server 8000\n';
+            log.innerHTML += '3. 브라우저에서 접속: http://localhost:8000\n';
+            log.innerHTML += '4. test-localhost.html 클릭\n';
+        }
+    </script>
+</body>
+</html>

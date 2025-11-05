@@ -1,0 +1,2426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>World Clock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        .clock-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+        }
+
+        .timezone-label {
+            font-size: 2rem;
+            color: #666;
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .clock-display {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .time {
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: 100;
+            color: #fff;
+            letter-spacing: -5px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .seconds {
+            font-size: clamp(2rem, 8vw, 6rem);
+            color: #666;
+            margin-left: 20px;
+            font-weight: 100;
+        }
+
+        .ampm {
+            font-size: clamp(1.5rem, 5vw, 3rem);
+            color: #888;
+            margin-left: 20px;
+            font-weight: 300;
+        }
+
+        .date {
+            font-size: clamp(1rem, 3vw, 1.8rem);
+            color: #666;
+            margin-top: 30px;
+            letter-spacing: 3px;
+            animation: fadeIn 1.2s ease-in;
+        }
+
+        .market-status {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            font-size: 1.2rem;
+            color: #888;
+            animation: fadeIn 1.5s ease-in;
+        }
+
+        .navigation {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            animation: fadeIn 2s ease-in;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-dot:hover {
+            background: #666;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            color: #666;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            animation: fadeIn 1.5s ease-in;
+        }
+
+        .back-button:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .colon {
+            animation: pulse 2s infinite;
+        }
+
+        /* Custom cursor */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            transition: all 0.1s ease;
+            opacity: 0.5;
+            z-index: 10000;
+        }
+
+        @media (max-width: 768px) {
+            .back-button {
+                top: 20px;
+                left: 20px;
+            }
+
+            .market-status {
+                top: 20px;
+                right: 20px;
+                font-size: 1rem;
+            }
+
+            .navigation {
+                bottom: 20px;
+            }
+
+            body {
+                cursor: auto;
+            }
+
+            .cursor {
+                display: none;
+            }
+        }
+
+        /* Snowfall effect styles */
+        .snowflake {
+            position: fixed;
+            top: -20px;
+            color: #fff;
+            user-select: none;
+            pointer-events: none;
+            animation: snowfall linear;
+            font-size: 1em;
+            z-index: 1;
+        }
+
+        @keyframes snowfall {
+            from {
+                transform: translateY(0) rotate(0deg);
+            }
+            to {
+                transform: translateY(calc(100vh + 20px)) rotate(360deg);
+            }
+        }
+
+        @keyframes sway {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(30px);
+            }
+        }
+
+        .snowflake.sway {
+            animation: snowfall linear, sway ease-in-out infinite;
+        }
+
+        /* Effects control menu */
+        .effects-menu {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .menu-toggle {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 2rem;
+            transition: all 0.3s ease;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .menu-toggle.active {
+            background: rgba(100, 200, 255, 0.3);
+            border-color: rgba(100, 200, 255, 0.5);
+        }
+
+        .effects-panel {
+            position: absolute;
+            bottom: 90px;
+            right: 0;
+            display: grid;
+            grid-template-columns: repeat(5, 55px);
+            gap: 10px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.95);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        .effects-panel.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .effect-toggle {
+            width: 55px;
+            height: 55px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 1.5em;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .effects-panel.show .effect-toggle {
+            opacity: 1;
+            transform: translateY(0);
+            animation: bounceIn 0.5s ease-out forwards;
+        }
+
+        .effects-panel.show .effect-toggle:nth-child(1) { animation-delay: 0.05s; }
+        .effects-panel.show .effect-toggle:nth-child(2) { animation-delay: 0.1s; }
+        .effects-panel.show .effect-toggle:nth-child(3) { animation-delay: 0.15s; }
+        .effects-panel.show .effect-toggle:nth-child(4) { animation-delay: 0.2s; }
+        .effects-panel.show .effect-toggle:nth-child(5) { animation-delay: 0.25s; }
+        .effects-panel.show .effect-toggle:nth-child(6) { animation-delay: 0.3s; }
+        .effects-panel.show .effect-toggle:nth-child(7) { animation-delay: 0.35s; }
+        .effects-panel.show .effect-toggle:nth-child(8) { animation-delay: 0.4s; }
+        .effects-panel.show .effect-toggle:nth-child(9) { animation-delay: 0.45s; }
+        .effects-panel.show .effect-toggle:nth-child(10) { animation-delay: 0.5s; }
+        .effects-panel.show .effect-toggle:nth-child(11) { animation-delay: 0.55s; }
+        .effects-panel.show .effect-toggle:nth-child(12) { animation-delay: 0.6s; }
+        .effects-panel.show .effect-toggle:nth-child(13) { animation-delay: 0.65s; }
+        .effects-panel.show .effect-toggle:nth-child(14) { animation-delay: 0.7s; }
+        .effects-panel.show .effect-toggle:nth-child(15) { animation-delay: 0.75s; }
+        .effects-panel.show .effect-toggle:nth-child(16) { animation-delay: 0.8s; }
+        .effects-panel.show .effect-toggle:nth-child(17) { animation-delay: 0.85s; }
+        .effects-panel.show .effect-toggle:nth-child(18) { animation-delay: 0.9s; }
+        .effects-panel.show .effect-toggle:nth-child(19) { animation-delay: 0.95s; }
+        .effects-panel.show .effect-toggle:nth-child(20) { animation-delay: 1s; }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.5);
+            }
+            60% {
+                transform: translateY(-5px) scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .effect-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.15);
+        }
+
+        /* Active states for all effects */
+        .effect-toggle.active { transform: scale(1.05); }
+
+        .snow-toggle.active {
+            background: rgba(100, 149, 237, 0.3);
+            border-color: rgba(100, 149, 237, 0.5);
+        }
+
+        .rain-toggle.active {
+            background: rgba(70, 130, 180, 0.3);
+            border-color: rgba(70, 130, 180, 0.5);
+        }
+
+        .heavy-rain-toggle.active {
+            background: rgba(30, 60, 120, 0.4);
+            border-color: rgba(30, 60, 120, 0.6);
+        }
+
+        .matrix-toggle.active {
+            background: rgba(0, 255, 0, 0.2);
+            border-color: rgba(0, 255, 0, 0.4);
+        }
+
+        .sakura-toggle.active {
+            background: rgba(255, 182, 193, 0.3);
+            border-color: rgba(255, 182, 193, 0.5);
+        }
+
+        .leaves-toggle.active {
+            background: rgba(255, 140, 0, 0.3);
+            border-color: rgba(255, 140, 0, 0.5);
+        }
+
+        .stars-toggle.active {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+
+        .fireworks-toggle.active {
+            background: rgba(255, 69, 0, 0.3);
+            border-color: rgba(255, 69, 0, 0.5);
+        }
+
+        .bubbles-toggle.active {
+            background: rgba(135, 206, 235, 0.3);
+            border-color: rgba(135, 206, 235, 0.5);
+        }
+
+        .hearts-toggle.active {
+            background: rgba(255, 105, 180, 0.3);
+            border-color: rgba(255, 105, 180, 0.5);
+        }
+
+        .emoji-toggle.active {
+            background: rgba(255, 223, 0, 0.3);
+            border-color: rgba(255, 223, 0, 0.5);
+        }
+
+        .aurora-toggle.active {
+            background: rgba(0, 255, 170, 0.3);
+            border-color: rgba(0, 255, 170, 0.5);
+        }
+
+        .confetti-toggle.active {
+            background: rgba(255, 0, 128, 0.3);
+            border-color: rgba(255, 0, 128, 0.5);
+        }
+
+        .meteor-toggle.active {
+            background: rgba(255, 165, 0, 0.3);
+            border-color: rgba(255, 165, 0, 0.5);
+        }
+
+        .butterfly-toggle.active {
+            background: rgba(147, 112, 219, 0.3);
+            border-color: rgba(147, 112, 219, 0.5);
+        }
+
+        .lightning-toggle.active {
+            background: rgba(138, 43, 226, 0.3);
+            border-color: rgba(138, 43, 226, 0.5);
+        }
+
+        .rainbow-toggle.active {
+            background: linear-gradient(90deg, rgba(255,0,0,0.3), rgba(255,255,0,0.3), rgba(0,255,0,0.3), rgba(0,255,255,0.3), rgba(255,0,255,0.3));
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .firefly-toggle.active {
+            background: rgba(154, 205, 50, 0.3);
+            border-color: rgba(154, 205, 50, 0.5);
+        }
+
+        .diamond-toggle.active {
+            background: rgba(185, 242, 255, 0.3);
+            border-color: rgba(185, 242, 255, 0.5);
+        }
+
+        .music-toggle.active {
+            background: rgba(148, 0, 211, 0.3);
+            border-color: rgba(148, 0, 211, 0.5);
+        }
+
+        /* Rain effect styles */
+        .raindrop {
+            position: fixed;
+            top: -100px;
+            color: rgba(174, 194, 224, 0.5);
+            user-select: none;
+            pointer-events: none;
+            animation: rainfall linear;
+            z-index: 1;
+        }
+
+        @keyframes rainfall {
+            to {
+                transform: translateY(calc(100vh + 100px));
+            }
+        }
+
+        /* Matrix effect styles */
+        .matrix-column {
+            position: fixed;
+            top: -100px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            color: #0F0;
+            text-shadow: 0 0 5px #0F0;
+            user-select: none;
+            pointer-events: none;
+            z-index: 1;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+
+        @keyframes matrix-fall {
+            to {
+                transform: translateY(calc(100vh + 500px));
+            }
+        }
+
+        /* Heavy rain effect */
+        .heavy-raindrop {
+            position: fixed;
+            top: -100px;
+            width: 3px;
+            height: 20px;
+            background: linear-gradient(to bottom, transparent, rgba(174, 194, 224, 0.6));
+            border-radius: 0 0 50% 50%;
+            animation: heavy-rainfall linear;
+            z-index: 1;
+        }
+
+        @keyframes heavy-rainfall {
+            to {
+                transform: translateY(calc(100vh + 100px));
+            }
+        }
+
+        /* Cherry blossom (Sakura) effect */
+        .sakura-petal {
+            position: fixed;
+            top: -50px;
+            color: #FFB6C1;
+            font-size: 1.5em;
+            animation: sakura-fall linear;
+            z-index: 1;
+        }
+
+        @keyframes sakura-fall {
+            0% {
+                transform: translateY(0) rotate(0deg) translateX(0);
+            }
+            25% {
+                transform: translateY(25vh) rotate(90deg) translateX(20px);
+            }
+            50% {
+                transform: translateY(50vh) rotate(180deg) translateX(-20px);
+            }
+            75% {
+                transform: translateY(75vh) rotate(270deg) translateX(20px);
+            }
+            100% {
+                transform: translateY(calc(100vh + 50px)) rotate(360deg) translateX(0);
+            }
+        }
+
+        /* Autumn leaves effect */
+        .autumn-leaf {
+            position: fixed;
+            top: -50px;
+            font-size: 1.8em;
+            animation: leaf-fall linear;
+            z-index: 1;
+        }
+
+        @keyframes leaf-fall {
+            0% {
+                transform: translateY(0) rotate(0deg) translateX(0);
+            }
+            33% {
+                transform: translateY(33vh) rotate(120deg) translateX(100px);
+            }
+            66% {
+                transform: translateY(66vh) rotate(240deg) translateX(-100px);
+            }
+            100% {
+                transform: translateY(calc(100vh + 50px)) rotate(360deg) translateX(0);
+            }
+        }
+
+        /* Shooting stars effect */
+        .shooting-star {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: white;
+            box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.9),
+                        0 0 30px 10px rgba(255, 255, 255, 0.6),
+                        0 0 45px 15px rgba(255, 255, 255, 0.3);
+            animation: shoot linear;
+            z-index: 1;
+            border-radius: 50%;
+        }
+
+        .shooting-star::after {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 2px;
+            background: linear-gradient(to right,
+                rgba(255,255,255,1) 0%,
+                rgba(255,255,255,0.8) 30%,
+                rgba(255,255,255,0.4) 60%,
+                transparent 100%);
+            top: 1px;
+            right: 3px;
+            transform: rotate(-45deg);
+            transform-origin: right center;
+        }
+
+        @keyframes shoot {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-120vw, 120vh);
+            }
+        }
+
+        /* Fireworks effect */
+        .firework {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: explode ease-out;
+            z-index: 1;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(20) translate(var(--x), var(--y));
+                opacity: 0;
+            }
+        }
+
+        /* Bubbles effect */
+        .bubble {
+            position: fixed;
+            bottom: -50px;
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent);
+            animation: bubble-rise linear;
+            z-index: 1;
+        }
+
+        @keyframes bubble-rise {
+            0% {
+                transform: translateY(0) translateX(0) scale(1);
+            }
+            50% {
+                transform: translateY(-50vh) translateX(50px) scale(1.2);
+            }
+            100% {
+                transform: translateY(calc(-100vh - 50px)) translateX(-50px) scale(0.8);
+            }
+        }
+
+        /* Hearts effect */
+        .heart {
+            position: fixed;
+            top: -50px;
+            color: #ff69b4;
+            font-size: 1.5em;
+            animation: heart-float linear;
+            z-index: 1;
+        }
+
+        @keyframes heart-float {
+            0% {
+                transform: translateY(0) scale(1) rotate(0deg);
+            }
+            50% {
+                transform: translateY(50vh) scale(1.2) rotate(180deg);
+            }
+            100% {
+                transform: translateY(calc(100vh + 50px)) scale(1) rotate(360deg);
+            }
+        }
+
+        /* Emoji rain effect */
+        .emoji-drop {
+            position: fixed;
+            top: -50px;
+            font-size: 2em;
+            animation: emoji-fall linear;
+            z-index: 1;
+        }
+
+        @keyframes emoji-fall {
+            to {
+                transform: translateY(calc(100vh + 50px)) rotate(720deg);
+            }
+        }
+
+        /* Aurora effect */
+        .aurora-wave {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Confetti effect */
+        .confetti-piece {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            animation: confetti-fall linear;
+            z-index: 1;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                transform: translateY(calc(100vh + 50px)) rotate(720deg);
+            }
+        }
+
+        /* Meteor shower effect */
+        .meteor {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: linear-gradient(45deg, white, transparent);
+            box-shadow: 0 0 10px 3px orange;
+            animation: meteor-fall linear;
+            z-index: 1;
+        }
+
+        .meteor::after {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 2px;
+            background: linear-gradient(to right, orange, transparent);
+            top: 0;
+            right: 0;
+        }
+
+        @keyframes meteor-fall {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(-150vw, 150vh);
+            }
+        }
+
+        /* Butterfly effect */
+        .butterfly {
+            position: fixed;
+            font-size: 1.5em;
+            animation: butterfly-fly linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes butterfly-fly {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(30px, -20px) scale(1.1);
+            }
+            50% {
+                transform: translate(-20px, -40px) scale(1);
+            }
+            75% {
+                transform: translate(40px, -20px) scale(1.1);
+            }
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        /* Lightning effect */
+        .lightning-bolt {
+            position: fixed;
+            top: 0;
+            width: 2px;
+            height: 100vh;
+            background: linear-gradient(to bottom, transparent, white, transparent);
+            opacity: 0;
+            animation: lightning-flash ease-out;
+            z-index: 1000;
+        }
+
+        @keyframes lightning-flash {
+            0%, 100% {
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Rainbow effect */
+        .rainbow-arc {
+            position: fixed;
+            top: -100px;
+            width: 200%;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                rgba(255,0,0,0.4) 14%,
+                rgba(255,165,0,0.4) 28%,
+                rgba(255,255,0,0.4) 42%,
+                rgba(0,255,0,0.4) 56%,
+                rgba(0,0,255,0.4) 70%,
+                rgba(75,0,130,0.4) 84%,
+                rgba(238,130,238,0.4) 98%,
+                transparent 100%);
+            animation: rainbow-move linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes rainbow-move {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* Firefly effect */
+        .firefly {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: yellow;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px yellow;
+            animation: firefly-float linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes firefly-float {
+            0% {
+                transform: translate(0, 0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(100px, -100px);
+                opacity: 0;
+            }
+        }
+
+        /* Diamond effect */
+        .diamond {
+            position: fixed;
+            font-size: 1.5em;
+            color: #b9f2ff;
+            text-shadow: 0 0 10px rgba(185, 242, 255, 0.8);
+            animation: diamond-sparkle linear;
+            z-index: 1;
+        }
+
+        @keyframes diamond-sparkle {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(calc(100vh + 50px)) rotate(360deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* Music notes effect */
+        .music-note {
+            position: fixed;
+            font-size: 1.8em;
+            animation: music-dance linear;
+            z-index: 1;
+        }
+
+        @keyframes music-dance {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg);
+            }
+            25% {
+                transform: translateY(75vh) translateX(20px) rotate(90deg);
+            }
+            50% {
+                transform: translateY(50vh) translateX(-20px) rotate(180deg);
+            }
+            75% {
+                transform: translateY(25vh) translateX(20px) rotate(270deg);
+            }
+            100% {
+                transform: translateY(-50px) translateX(0) rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .effects-menu {
+                bottom: 15px;
+                right: 15px;
+            }
+
+            .menu-toggle {
+                width: 55px;
+                height: 55px;
+                font-size: 1.5rem;
+            }
+
+            .effects-panel {
+                grid-template-columns: repeat(4, 45px);
+                bottom: 75px;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .effect-toggle {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor"></div>
+
+    <div class="clock-container">
+        <a href="index.html" class="back-button" title="Back to Home">
+            ←
+        </a>
+
+        <!-- Effects Menu -->
+        <div class="effects-menu">
+            <button class="menu-toggle" id="menuToggle" title="Effects Menu">🌦️</button>
+            <div class="effects-panel" id="effectsPanel">
+                <div class="effect-toggle rain-toggle" id="rainToggle" title="Light Rain">🌦️</div>
+                <div class="effect-toggle snow-toggle" id="snowToggle" title="Snow">❄️</div>
+                <div class="effect-toggle heavy-rain-toggle" id="heavyRainToggle" title="Heavy Rain">🌧️</div>
+                <div class="effect-toggle matrix-toggle" id="matrixToggle" title="Matrix">01</div>
+                <div class="effect-toggle sakura-toggle" id="sakuraToggle" title="Cherry Blossoms">🌸</div>
+                <div class="effect-toggle leaves-toggle" id="leavesToggle" title="Autumn Leaves">🍂</div>
+                <div class="effect-toggle stars-toggle" id="starsToggle" title="Shooting Stars">⭐</div>
+                <div class="effect-toggle fireworks-toggle" id="fireworksToggle" title="Fireworks">🎆</div>
+                <div class="effect-toggle bubbles-toggle" id="bubblesToggle" title="Bubbles">🫧</div>
+                <div class="effect-toggle hearts-toggle" id="heartsToggle" title="Hearts">💕</div>
+                <div class="effect-toggle emoji-toggle" id="emojiToggle" title="Emoji Rain">😊</div>
+                <div class="effect-toggle aurora-toggle" id="auroraToggle" title="Aurora">🌌</div>
+                <div class="effect-toggle confetti-toggle" id="confettiToggle" title="Confetti">🎊</div>
+                <div class="effect-toggle meteor-toggle" id="meteorToggle" title="Meteor Shower">☄️</div>
+                <div class="effect-toggle butterfly-toggle" id="butterflyToggle" title="Butterflies">🦋</div>
+                <div class="effect-toggle lightning-toggle" id="lightningToggle" title="Lightning">⚡</div>
+                <div class="effect-toggle rainbow-toggle" id="rainbowToggle" title="Rainbow">🌈</div>
+                <div class="effect-toggle firefly-toggle" id="fireflyToggle" title="Fireflies">✨</div>
+                <div class="effect-toggle diamond-toggle" id="diamondToggle" title="Diamonds">💎</div>
+                <div class="effect-toggle music-toggle" id="musicToggle" title="Music Notes">🎵</div>
+            </div>
+        </div>
+
+        <div class="market-status" id="market-status"></div>
+
+        <div class="timezone-label" id="timezone-label">Seoul</div>
+
+        <div class="clock-display">
+            <div class="time">
+                <span id="hours">00</span><span class="colon">:</span><span id="minutes">00</span>
+            </div>
+            <div class="seconds" id="seconds">00</div>
+            <div class="ampm" id="ampm">AM</div>
+        </div>
+
+        <div class="date" id="date">Loading...</div>
+
+        <div class="navigation">
+            <div class="nav-dot active" data-tz="Asia/Seoul" data-label="Seoul"></div>
+            <div class="nav-dot" data-tz="Europe/London" data-label="London"></div>
+            <div class="nav-dot" data-tz="America/New_York" data-label="New York"></div>
+            <div class="nav-dot" data-tz="Asia/Tokyo" data-label="Tokyo"></div>
+            <div class="nav-dot" data-tz="Asia/Singapore" data-label="Singapore"></div>
+        </div>
+    </div>
+
+    <script>
+        // Menu and panel elements
+        const menuToggle = document.getElementById('menuToggle');
+        const effectsPanel = document.getElementById('effectsPanel');
+        let menuOpen = false;
+
+        let currentTimezone = 'Asia/Seoul';
+        const urlParams = new URLSearchParams(window.location.search);
+        const tzParam = urlParams.get('tz');
+
+        // Menu toggle functionality
+        menuToggle.addEventListener('click', () => {
+            menuOpen = !menuOpen;
+            if (menuOpen) {
+                effectsPanel.classList.add('show');
+                menuToggle.classList.add('active');
+            } else {
+                effectsPanel.classList.remove('show');
+                menuToggle.classList.remove('active');
+            }
+        });
+
+        // Update menu icon function
+        function updateMenuIcon(icon) {
+            menuToggle.textContent = icon;
+        }
+
+        // Set initial timezone from URL parameter
+        if (tzParam) {
+            currentTimezone = tzParam;
+            // Update active navigation dot
+            document.querySelectorAll('.nav-dot').forEach(dot => {
+                if (dot.dataset.tz === tzParam) {
+                    dot.classList.add('active');
+                    document.getElementById('timezone-label').textContent = dot.dataset.label;
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const time = new Date(now.toLocaleString("en-US", {timeZone: currentTimezone}));
+
+            let hours = time.getHours();
+            const minutes = time.getMinutes();
+            const seconds = time.getSeconds();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            hours = hours % 12 || 12;
+
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            document.getElementById('ampm').textContent = ampm;
+
+            // Update date
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+            const day = days[time.getDay()];
+            const date = time.getDate();
+            const month = months[time.getMonth()];
+            const year = time.getFullYear();
+
+            document.getElementById('date').textContent = `${day}, ${month} ${date}, ${year}`;
+
+            // Update market status for New York timezone
+            if (currentTimezone === 'America/New_York') {
+                updateMarketStatus(time);
+            } else {
+                document.getElementById('market-status').textContent = '';
+            }
+        }
+
+        function updateMarketStatus(nyTime) {
+            const hour = nyTime.getHours();
+            const minute = nyTime.getMinutes();
+            const day = nyTime.getDay();
+
+            let status = '';
+
+            // Check if weekend
+            if (day === 0 || day === 6) {
+                status = '🔴 Market Closed (Weekend)';
+            } else if ((hour === 9 && minute >= 30) || (hour > 9 && hour < 16)) {
+                status = '🟢 Market Open';
+            } else if (hour < 9 || (hour === 9 && minute < 30)) {
+                const openTime = new Date(nyTime);
+                openTime.setHours(9, 30, 0);
+                const diff = Math.floor((openTime - nyTime) / 60000);
+                if (diff > 0) {
+                    status = `⏰ Opens in ${Math.floor(diff/60)}h ${diff%60}m`;
+                }
+            } else {
+                status = '🔴 Market Closed';
+            }
+
+            document.getElementById('market-status').textContent = status;
+        }
+
+        // Navigation dots click handler
+        document.querySelectorAll('.nav-dot').forEach(dot => {
+            dot.addEventListener('click', function() {
+                currentTimezone = this.dataset.tz;
+                document.getElementById('timezone-label').textContent = this.dataset.label;
+
+                // Update active state
+                document.querySelectorAll('.nav-dot').forEach(d => d.classList.remove('active'));
+                this.classList.add('active');
+
+                // Update URL without reloading
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('tz', currentTimezone);
+                window.history.pushState({}, '', newUrl);
+
+                updateClock();
+            });
+        });
+
+        // Custom cursor (desktop only)
+        if (window.innerWidth > 768) {
+            const cursor = document.querySelector('.cursor');
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX - 10 + 'px';
+                cursor.style.top = e.clientY - 10 + 'px';
+            });
+
+            document.addEventListener('mousedown', () => {
+                cursor.style.transform = 'scale(0.8)';
+            });
+
+            document.addEventListener('mouseup', () => {
+                cursor.style.transform = 'scale(1)';
+            });
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.location.href = 'index.html';
+            }
+
+            const dots = Array.from(document.querySelectorAll('.nav-dot'));
+            const currentIndex = dots.findIndex(dot => dot.classList.contains('active'));
+
+            if (e.key === 'ArrowRight' && currentIndex < dots.length - 1) {
+                dots[currentIndex + 1].click();
+            } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                dots[currentIndex - 1].click();
+            }
+        });
+
+        // Device detection and performance optimization
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isLowEndDevice = navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4;
+        const performanceMode = isMobile ? 'mobile' : (isLowEndDevice ? 'low' : 'high');
+
+        // Adjust effect settings based on device
+        let maxParticles = performanceMode === 'high' ? 50 : (performanceMode === 'mobile' ? 15 : 25);
+        let effectInterval = performanceMode === 'high' ? 800 : (performanceMode === 'mobile' ? 2000 : 1200);
+
+        // Update clock every second
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Fullscreen toggle on double click
+        document.addEventListener('dblclick', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // Snowfall effect
+        let snowInterval;
+        let snowflakes = [];
+        let snowActive = false;
+
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+
+            // Different snowflake symbols
+            const symbols = ['❄️', '❅', '❆', '✻', '✼', '❄', '⁕', '⁂'];
+            snowflake.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+
+            // Random properties
+            snowflake.style.left = Math.random() * window.innerWidth + 'px';
+            snowflake.style.animationDuration = (Math.random() * 3 + 5) + 's'; // 5-8s
+            snowflake.style.fontSize = (Math.random() * 0.8 + 0.8) + 'em'; // 0.8-1.6em
+            snowflake.style.opacity = Math.random() * 0.6 + 0.4; // 0.4-1.0
+
+            // Add sway animation to some snowflakes
+            if (Math.random() > 0.5) {
+                snowflake.classList.add('sway');
+                snowflake.style.animationDuration = (Math.random() * 3 + 5) + 's, ' + (Math.random() * 2 + 2) + 's';
+            }
+
+            document.body.appendChild(snowflake);
+            snowflakes.push(snowflake);
+
+            // Remove snowflake after animation
+            setTimeout(() => {
+                snowflake.remove();
+                const index = snowflakes.indexOf(snowflake);
+                if (index > -1) {
+                    snowflakes.splice(index, 1);
+                }
+            }, 8000);
+        }
+
+        function startSnow() {
+            if (!snowActive) {
+                snowActive = true;
+                document.getElementById('snowToggle').classList.add('active');
+                // Create initial snowflakes
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createSnowflake(), i * 200);
+                }
+                // Continue creating snowflakes
+                snowInterval = setInterval(createSnowflake, 800);
+            }
+        }
+
+        function stopSnow() {
+            if (snowActive) {
+                snowActive = false;
+                document.getElementById('snowToggle').classList.remove('active');
+                clearInterval(snowInterval);
+                // Remove all existing snowflakes
+                snowflakes.forEach(flake => flake.remove());
+                snowflakes = [];
+            }
+        }
+
+        // Toggle snow effect
+        document.getElementById('snowToggle').addEventListener('click', () => {
+            if (snowActive) {
+                stopSnow();
+            } else {
+                startSnow();
+                updateMenuIcon('❄️');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        // Rain effect
+        let rainInterval;
+        let raindrops = [];
+        let rainActive = false;
+
+        function createRaindrop() {
+            const raindrop = document.createElement('div');
+            raindrop.className = 'raindrop';
+            raindrop.innerHTML = '|';
+
+            raindrop.style.left = Math.random() * window.innerWidth + 'px';
+            raindrop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's'; // 0.5-1s (faster than snow)
+            raindrop.style.fontSize = (Math.random() * 10 + 10) + 'px'; // 10-20px
+            raindrop.style.opacity = Math.random() * 0.3 + 0.1; // 0.1-0.4
+
+            document.body.appendChild(raindrop);
+            raindrops.push(raindrop);
+
+            setTimeout(() => {
+                raindrop.remove();
+                const index = raindrops.indexOf(raindrop);
+                if (index > -1) {
+                    raindrops.splice(index, 1);
+                }
+            }, 1000);
+        }
+
+        function startRain() {
+            if (!rainActive) {
+                stopAllEffects();
+                rainActive = true;
+                document.getElementById('rainToggle').classList.add('active');
+                // Start rain
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => createRaindrop(), i * 100);
+                }
+                rainInterval = setInterval(createRaindrop, 50); // Much faster than snow
+            }
+        }
+
+        function stopRain() {
+            if (rainActive) {
+                rainActive = false;
+                document.getElementById('rainToggle').classList.remove('active');
+                clearInterval(rainInterval);
+                raindrops.forEach(drop => drop.remove());
+                raindrops = [];
+            }
+        }
+
+        // Matrix effect
+        let matrixInterval;
+        let matrixColumns = [];
+        let matrixActive = false;
+
+        function getRandomMatrixChar() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()_+-=[]{}|;:,.<>?ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ';
+            return chars[Math.floor(Math.random() * chars.length)];
+        }
+
+        function createMatrixColumn() {
+            const column = document.createElement('div');
+            column.className = 'matrix-column';
+
+            // Generate random string of characters
+            let text = '';
+            const length = Math.floor(Math.random() * 15 + 10); // 10-25 characters
+            for (let i = 0; i < length; i++) {
+                const char = getRandomMatrixChar();
+                const opacity = 1 - (i / length) * 0.8; // Fade out towards the end
+                text += `<span style="opacity: ${opacity}">${char}</span>`;
+            }
+            column.innerHTML = text;
+
+            column.style.left = Math.floor(Math.random() * (window.innerWidth / 20)) * 20 + 'px'; // Grid alignment
+            column.style.animationName = 'matrix-fall';
+            column.style.animationDuration = (Math.random() * 5 + 5) + 's'; // 5-10s
+            column.style.fontSize = (Math.random() * 6 + 14) + 'px'; // 14-20px
+
+            document.body.appendChild(column);
+            matrixColumns.push(column);
+
+            setTimeout(() => {
+                column.remove();
+                const index = matrixColumns.indexOf(column);
+                if (index > -1) {
+                    matrixColumns.splice(index, 1);
+                }
+            }, 10000);
+        }
+
+        function startMatrix() {
+            if (!matrixActive) {
+                stopAllEffects();
+                matrixActive = true;
+                document.getElementById('matrixToggle').classList.add('active');
+                // Change background for better effect
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #000000, #001100)';
+                // Start Matrix rain
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createMatrixColumn(), i * 200);
+                }
+                matrixInterval = setInterval(createMatrixColumn, 300);
+            }
+        }
+
+        function stopMatrix() {
+            if (matrixActive) {
+                matrixActive = false;
+                document.getElementById('matrixToggle').classList.remove('active');
+                clearInterval(matrixInterval);
+                matrixColumns.forEach(col => col.remove());
+                matrixColumns = [];
+                // Restore original background
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // Update snow function to stop other effects
+        const originalStartSnow = startSnow;
+        startSnow = function() {
+            if (!snowActive) {
+                stopAllEffects();
+                snowActive = true;
+                document.getElementById('snowToggle').classList.add('active');
+                // Create initial snowflakes
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createSnowflake(), i * 200);
+                }
+                // Continue creating snowflakes
+                snowInterval = setInterval(createSnowflake, 800);
+            }
+        };
+
+        // Toggle event listeners
+        document.getElementById('rainToggle').addEventListener('click', () => {
+            if (rainActive) {
+                stopRain();
+            } else {
+                startRain();
+                updateMenuIcon('🌦️');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('matrixToggle').addEventListener('click', () => {
+            if (matrixActive) {
+                stopMatrix();
+            } else {
+                startMatrix();
+                updateMenuIcon('01');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        // Global stop all effects function
+        function stopAllEffects() {
+            stopSnow();
+            stopRain();
+            stopHeavyRain();
+            stopMatrix();
+            stopSakura();
+            stopLeaves();
+            stopStars();
+            stopFireworks();
+            stopBubbles();
+            stopHearts();
+            stopEmoji();
+            stopAurora();
+            stopConfetti();
+            stopMeteor();
+            stopButterfly();
+            stopLightning();
+            stopRainbow();
+            stopFirefly();
+            stopDiamond();
+            stopMusic();
+        }
+
+        // Heavy Rain Effect
+        let heavyRainInterval;
+        let heavyRaindrops = [];
+        let heavyRainActive = false;
+
+        function createHeavyRaindrop() {
+            const drop = document.createElement('div');
+            drop.className = 'heavy-raindrop';
+            drop.style.left = Math.random() * window.innerWidth + 'px';
+            drop.style.animationDuration = (Math.random() * 0.3 + 0.2) + 's';
+            drop.style.height = (Math.random() * 30 + 20) + 'px';
+            document.body.appendChild(drop);
+            heavyRaindrops.push(drop);
+
+            setTimeout(() => {
+                drop.remove();
+                const index = heavyRaindrops.indexOf(drop);
+                if (index > -1) heavyRaindrops.splice(index, 1);
+            }, 500);
+        }
+
+        function startHeavyRain() {
+            if (!heavyRainActive) {
+                stopAllEffects();
+                heavyRainActive = true;
+                document.getElementById('heavyRainToggle').classList.add('active');
+                const initialCount = performanceMode === 'mobile' ? 5 : 20;
+                for (let i = 0; i < initialCount; i++) {
+                    setTimeout(() => createHeavyRaindrop(), i * 50);
+                }
+                const heavyRainIntervalTime = performanceMode === 'mobile' ? 100 : 30;
+                heavyRainInterval = setInterval(createHeavyRaindrop, heavyRainIntervalTime);
+            }
+        }
+
+        function stopHeavyRain() {
+            if (heavyRainActive) {
+                heavyRainActive = false;
+                document.getElementById('heavyRainToggle').classList.remove('active');
+                clearInterval(heavyRainInterval);
+                heavyRaindrops.forEach(drop => drop.remove());
+                heavyRaindrops = [];
+            }
+        }
+
+        // Cherry Blossom (Sakura) Effect
+        let sakuraInterval;
+        let sakuraPetals = [];
+        let sakuraActive = false;
+
+        function createSakuraPetal() {
+            const petal = document.createElement('div');
+            petal.className = 'sakura-petal';
+            petal.innerHTML = '🌸';
+            petal.style.left = Math.random() * window.innerWidth + 'px';
+            petal.style.animationDuration = (Math.random() * 5 + 10) + 's';
+            petal.style.fontSize = (Math.random() * 0.8 + 0.8) + 'em';
+            document.body.appendChild(petal);
+            sakuraPetals.push(petal);
+
+            setTimeout(() => {
+                petal.remove();
+                const index = sakuraPetals.indexOf(petal);
+                if (index > -1) sakuraPetals.splice(index, 1);
+            }, 15000);
+        }
+
+        function startSakura() {
+            if (!sakuraActive) {
+                stopAllEffects();
+                sakuraActive = true;
+                document.getElementById('sakuraToggle').classList.add('active');
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => createSakuraPetal(), i * 300);
+                }
+                sakuraInterval = setInterval(createSakuraPetal, 1500);
+            }
+        }
+
+        function stopSakura() {
+            if (sakuraActive) {
+                sakuraActive = false;
+                document.getElementById('sakuraToggle').classList.remove('active');
+                clearInterval(sakuraInterval);
+                sakuraPetals.forEach(petal => petal.remove());
+                sakuraPetals = [];
+            }
+        }
+
+        // Autumn Leaves Effect
+        let leavesInterval;
+        let leaves = [];
+        let leavesActive = false;
+
+        function createLeaf() {
+            const leaf = document.createElement('div');
+            leaf.className = 'autumn-leaf';
+            const leafTypes = ['🍂', '🍁', '🍃'];
+            const colors = ['#ff6b35', '#ffa500', '#ff8c00', '#cd853f'];
+            leaf.innerHTML = leafTypes[Math.floor(Math.random() * leafTypes.length)];
+            leaf.style.color = colors[Math.floor(Math.random() * colors.length)];
+            leaf.style.left = Math.random() * window.innerWidth + 'px';
+            leaf.style.animationDuration = (Math.random() * 5 + 8) + 's';
+            document.body.appendChild(leaf);
+            leaves.push(leaf);
+
+            setTimeout(() => {
+                leaf.remove();
+                const index = leaves.indexOf(leaf);
+                if (index > -1) leaves.splice(index, 1);
+            }, 13000);
+        }
+
+        function startLeaves() {
+            if (!leavesActive) {
+                stopAllEffects();
+                leavesActive = true;
+                document.getElementById('leavesToggle').classList.add('active');
+                for (let i = 0; i < 6; i++) {
+                    setTimeout(() => createLeaf(), i * 400);
+                }
+                leavesInterval = setInterval(createLeaf, 2000);
+            }
+        }
+
+        function stopLeaves() {
+            if (leavesActive) {
+                leavesActive = false;
+                document.getElementById('leavesToggle').classList.remove('active');
+                clearInterval(leavesInterval);
+                leaves.forEach(leaf => leaf.remove());
+                leaves = [];
+            }
+        }
+
+        // Shooting Stars Effect
+        let starsInterval;
+        let shootingStars = [];
+        let starsActive = false;
+
+        function createShootingStar() {
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            star.style.right = (Math.random() * 200 - 100) + 'px';
+            star.style.top = (Math.random() * window.innerHeight * 0.3) + 'px';
+            star.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            document.body.appendChild(star);
+            shootingStars.push(star);
+
+            setTimeout(() => {
+                star.remove();
+                const index = shootingStars.indexOf(star);
+                if (index > -1) shootingStars.splice(index, 1);
+            }, 5000);
+        }
+
+        function startStars() {
+            if (!starsActive) {
+                stopAllEffects();
+                starsActive = true;
+                document.getElementById('starsToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #000033, #000066)';
+                starsInterval = setInterval(createShootingStar, 2000);
+            }
+        }
+
+        function stopStars() {
+            if (starsActive) {
+                starsActive = false;
+                document.getElementById('starsToggle').classList.remove('active');
+                clearInterval(starsInterval);
+                shootingStars.forEach(star => star.remove());
+                shootingStars = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // Fireworks Effect
+        let fireworksInterval;
+        let fireworks = [];
+        let fireworksActive = false;
+
+        function createFirework() {
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight * 0.5;
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'firework';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.background = color;
+                particle.style.setProperty('--x', (Math.random() - 0.5) * 200 + 'px');
+                particle.style.setProperty('--y', (Math.random() - 0.5) * 200 + 'px');
+                particle.style.animationDuration = '1s';
+                document.body.appendChild(particle);
+                fireworks.push(particle);
+
+                setTimeout(() => {
+                    particle.remove();
+                    const index = fireworks.indexOf(particle);
+                    if (index > -1) fireworks.splice(index, 1);
+                }, 1000);
+            }
+        }
+
+        function startFireworks() {
+            if (!fireworksActive) {
+                stopAllEffects();
+                fireworksActive = true;
+                document.getElementById('fireworksToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #000033, #330033)';
+                fireworksInterval = setInterval(createFirework, 1000);
+            }
+        }
+
+        function stopFireworks() {
+            if (fireworksActive) {
+                fireworksActive = false;
+                document.getElementById('fireworksToggle').classList.remove('active');
+                clearInterval(fireworksInterval);
+                fireworks.forEach(fw => fw.remove());
+                fireworks = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // Bubbles Effect
+        let bubblesInterval;
+        let bubbles = [];
+        let bubblesActive = false;
+
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = Math.random() * 30 + 20;
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.style.left = Math.random() * window.innerWidth + 'px';
+            bubble.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            document.body.appendChild(bubble);
+            bubbles.push(bubble);
+
+            setTimeout(() => {
+                bubble.remove();
+                const index = bubbles.indexOf(bubble);
+                if (index > -1) bubbles.splice(index, 1);
+            }, 10000);
+        }
+
+        function startBubbles() {
+            if (!bubblesActive) {
+                stopAllEffects();
+                bubblesActive = true;
+                document.getElementById('bubblesToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #001a33, #003366)';
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createBubble(), i * 300);
+                }
+                bubblesInterval = setInterval(createBubble, 1000);
+            }
+        }
+
+        function stopBubbles() {
+            if (bubblesActive) {
+                bubblesActive = false;
+                document.getElementById('bubblesToggle').classList.remove('active');
+                clearInterval(bubblesInterval);
+                bubbles.forEach(bubble => bubble.remove());
+                bubbles = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // Hearts Effect
+        let heartsInterval;
+        let hearts = [];
+        let heartsActive = false;
+
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            const heartTypes = ['❤️', '💕', '💖', '💗', '💓'];
+            heart.innerHTML = heartTypes[Math.floor(Math.random() * heartTypes.length)];
+            heart.style.left = Math.random() * window.innerWidth + 'px';
+            heart.style.animationDuration = (Math.random() * 3 + 5) + 's';
+            heart.style.fontSize = (Math.random() * 1 + 1) + 'em';
+            document.body.appendChild(heart);
+            hearts.push(heart);
+
+            setTimeout(() => {
+                heart.remove();
+                const index = hearts.indexOf(heart);
+                if (index > -1) hearts.splice(index, 1);
+            }, 8000);
+        }
+
+        function startHearts() {
+            if (!heartsActive) {
+                stopAllEffects();
+                heartsActive = true;
+                document.getElementById('heartsToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #330011, #660022)';
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createHeart(), i * 200);
+                }
+                heartsInterval = setInterval(createHeart, 800);
+            }
+        }
+
+        function stopHearts() {
+            if (heartsActive) {
+                heartsActive = false;
+                document.getElementById('heartsToggle').classList.remove('active');
+                clearInterval(heartsInterval);
+                hearts.forEach(heart => heart.remove());
+                hearts = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+
+        // Add event listeners for new effects
+        document.getElementById('heavyRainToggle').addEventListener('click', () => {
+            if (heavyRainActive) {
+                stopHeavyRain();
+            } else {
+                startHeavyRain();
+                updateMenuIcon('🌧️');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('sakuraToggle').addEventListener('click', () => {
+            if (sakuraActive) {
+                stopSakura();
+            } else {
+                startSakura();
+                updateMenuIcon('🌸');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('leavesToggle').addEventListener('click', () => {
+            if (leavesActive) {
+                stopLeaves();
+            } else {
+                startLeaves();
+                updateMenuIcon('🍂');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('starsToggle').addEventListener('click', () => {
+            if (starsActive) {
+                stopStars();
+            } else {
+                startStars();
+                updateMenuIcon('⭐');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('fireworksToggle').addEventListener('click', () => {
+            if (fireworksActive) {
+                stopFireworks();
+            } else {
+                startFireworks();
+                updateMenuIcon('🎆');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('bubblesToggle').addEventListener('click', () => {
+            if (bubblesActive) {
+                stopBubbles();
+            } else {
+                startBubbles();
+                updateMenuIcon('🫧');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('heartsToggle').addEventListener('click', () => {
+            if (heartsActive) {
+                stopHearts();
+            } else {
+                startHearts();
+                updateMenuIcon('💕');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        // NEW EFFECTS - 10 MORE!
+
+        // 1. Emoji Rain Effect
+        let emojiInterval;
+        let emojiDrops = [];
+        let emojiActive = false;
+
+        function createEmojiDrop() {
+            const emoji = document.createElement('div');
+            emoji.className = 'emoji-drop';
+            const emojis = ['😊', '😎', '🥳', '😍', '🤩', '😄', '😃', '🎉', '🎈', '🎁', '🍕', '🍔', '🍟', '🍿', '🍩'];
+            emoji.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+            emoji.style.left = Math.random() * window.innerWidth + 'px';
+            emoji.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            document.body.appendChild(emoji);
+            emojiDrops.push(emoji);
+
+            setTimeout(() => {
+                emoji.remove();
+                const index = emojiDrops.indexOf(emoji);
+                if (index > -1) emojiDrops.splice(index, 1);
+            }, 6000);
+        }
+
+        function startEmoji() {
+            if (!emojiActive) {
+                stopAllEffects();
+                emojiActive = true;
+                document.getElementById('emojiToggle').classList.add('active');
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createEmojiDrop(), i * 200);
+                }
+                emojiInterval = setInterval(createEmojiDrop, 500);
+            }
+        }
+
+        function stopEmoji() {
+            if (emojiActive) {
+                emojiActive = false;
+                document.getElementById('emojiToggle').classList.remove('active');
+                clearInterval(emojiInterval);
+                emojiDrops.forEach(drop => drop.remove());
+                emojiDrops = [];
+            }
+        }
+
+        // 2. Aurora Effect
+        let auroraInterval;
+        let auroraWaves = [];
+        let auroraActive = false;
+
+        function createAurora() {
+            const aurora = document.createElement('div');
+            aurora.className = 'aurora-wave';
+            const gradient = `linear-gradient(${Math.random() * 360}deg,
+                rgba(0,255,170,0.3),
+                rgba(50,255,100,0.2),
+                rgba(0,200,255,0.3),
+                transparent)`;
+            aurora.style.background = gradient;
+            aurora.style.height = Math.random() * 300 + 200 + 'px';
+            aurora.style.top = Math.random() * window.innerHeight * 0.5 + 'px';
+            aurora.style.animation = `rainbow-move ${Math.random() * 10 + 10}s linear infinite`;
+            document.body.appendChild(aurora);
+            auroraWaves.push(aurora);
+        }
+
+        function startAurora() {
+            if (!auroraActive) {
+                stopAllEffects();
+                auroraActive = true;
+                document.getElementById('auroraToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #001a33, #003d5c)';
+                for (let i = 0; i < 3; i++) {
+                    createAurora();
+                }
+            }
+        }
+
+        function stopAurora() {
+            if (auroraActive) {
+                auroraActive = false;
+                document.getElementById('auroraToggle').classList.remove('active');
+                auroraWaves.forEach(wave => wave.remove());
+                auroraWaves = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 3. Confetti Effect
+        let confettiInterval;
+        let confettiPieces = [];
+        let confettiActive = false;
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti-piece';
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500'];
+            confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * window.innerWidth + 'px';
+            confetti.style.width = Math.random() * 10 + 5 + 'px';
+            confetti.style.height = Math.random() * 10 + 5 + 'px';
+            confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            document.body.appendChild(confetti);
+            confettiPieces.push(confetti);
+
+            setTimeout(() => {
+                confetti.remove();
+                const index = confettiPieces.indexOf(confetti);
+                if (index > -1) confettiPieces.splice(index, 1);
+            }, 5000);
+        }
+
+        function startConfetti() {
+            if (!confettiActive) {
+                stopAllEffects();
+                confettiActive = true;
+                document.getElementById('confettiToggle').classList.add('active');
+                for (let i = 0; i < 30; i++) {
+                    setTimeout(() => createConfetti(), i * 50);
+                }
+                confettiInterval = setInterval(createConfetti, 100);
+            }
+        }
+
+        function stopConfetti() {
+            if (confettiActive) {
+                confettiActive = false;
+                document.getElementById('confettiToggle').classList.remove('active');
+                clearInterval(confettiInterval);
+                confettiPieces.forEach(piece => piece.remove());
+                confettiPieces = [];
+            }
+        }
+
+        // 4. Meteor Shower Effect
+        let meteorInterval;
+        let meteors = [];
+        let meteorActive = false;
+
+        function createMeteor() {
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor';
+            meteor.style.left = (Math.random() * window.innerWidth * 1.5) + 'px';
+            meteor.style.top = Math.random() * window.innerHeight * 0.3 + 'px';
+            meteor.style.animationDuration = (Math.random() * 1 + 0.5) + 's';
+            document.body.appendChild(meteor);
+            meteors.push(meteor);
+
+            setTimeout(() => {
+                meteor.remove();
+                const index = meteors.indexOf(meteor);
+                if (index > -1) meteors.splice(index, 1);
+            }, 2000);
+        }
+
+        function startMeteor() {
+            if (!meteorActive) {
+                stopAllEffects();
+                meteorActive = true;
+                document.getElementById('meteorToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #000033, #000066)';
+                meteorInterval = setInterval(createMeteor, 500);
+            }
+        }
+
+        function stopMeteor() {
+            if (meteorActive) {
+                meteorActive = false;
+                document.getElementById('meteorToggle').classList.remove('active');
+                clearInterval(meteorInterval);
+                meteors.forEach(m => m.remove());
+                meteors = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 5. Butterfly Effect
+        let butterflyInterval;
+        let butterflies = [];
+        let butterflyActive = false;
+
+        function createButterfly() {
+            const butterfly = document.createElement('div');
+            butterfly.className = 'butterfly';
+            butterfly.innerHTML = '🦋';
+            butterfly.style.left = Math.random() * window.innerWidth + 'px';
+            butterfly.style.top = Math.random() * window.innerHeight + 'px';
+            butterfly.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            document.body.appendChild(butterfly);
+            butterflies.push(butterfly);
+
+            // Move butterfly randomly
+            const moveButterfly = () => {
+                if (!butterflyActive) return;
+                butterfly.style.left = Math.random() * window.innerWidth + 'px';
+                butterfly.style.top = Math.random() * window.innerHeight + 'px';
+                setTimeout(moveButterfly, Math.random() * 3000 + 2000);
+            };
+            setTimeout(moveButterfly, 2000);
+        }
+
+        function startButterfly() {
+            if (!butterflyActive) {
+                stopAllEffects();
+                butterflyActive = true;
+                document.getElementById('butterflyToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #ffeaa7, #dfe6e9)';
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => createButterfly(), i * 500);
+                }
+            }
+        }
+
+        function stopButterfly() {
+            if (butterflyActive) {
+                butterflyActive = false;
+                document.getElementById('butterflyToggle').classList.remove('active');
+                butterflies.forEach(b => b.remove());
+                butterflies = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 6. Lightning Effect
+        let lightningInterval;
+        let lightningActive = false;
+
+        function createLightning() {
+            const bolt = document.createElement('div');
+            bolt.className = 'lightning-bolt';
+            bolt.style.left = Math.random() * window.innerWidth + 'px';
+            bolt.style.animationDuration = '0.5s';
+            document.body.appendChild(bolt);
+
+            // Flash effect
+            document.querySelector('.clock-container').style.filter = 'brightness(2)';
+            setTimeout(() => {
+                document.querySelector('.clock-container').style.filter = 'brightness(1)';
+            }, 100);
+
+            setTimeout(() => {
+                bolt.remove();
+            }, 500);
+        }
+
+        function startLightning() {
+            if (!lightningActive) {
+                stopAllEffects();
+                lightningActive = true;
+                document.getElementById('lightningToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #1e3c72, #2a5298)';
+                lightningInterval = setInterval(createLightning, Math.random() * 3000 + 2000);
+            }
+        }
+
+        function stopLightning() {
+            if (lightningActive) {
+                lightningActive = false;
+                document.getElementById('lightningToggle').classList.remove('active');
+                clearInterval(lightningInterval);
+                document.querySelector('.clock-container').style.filter = 'brightness(1)';
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 7. Rainbow Effect
+        let rainbowInterval;
+        let rainbows = [];
+        let rainbowActive = false;
+
+        function createRainbow() {
+            const rainbow = document.createElement('div');
+            rainbow.className = 'rainbow-arc';
+            rainbow.style.animationDuration = '20s';
+            document.body.appendChild(rainbow);
+            rainbows.push(rainbow);
+
+            setTimeout(() => {
+                rainbow.remove();
+                const index = rainbows.indexOf(rainbow);
+                if (index > -1) rainbows.splice(index, 1);
+            }, 20000);
+        }
+
+        function startRainbow() {
+            if (!rainbowActive) {
+                stopAllEffects();
+                rainbowActive = true;
+                document.getElementById('rainbowToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #87CEEB, #98D8E8)';
+                createRainbow();
+                rainbowInterval = setInterval(createRainbow, 10000);
+            }
+        }
+
+        function stopRainbow() {
+            if (rainbowActive) {
+                rainbowActive = false;
+                document.getElementById('rainbowToggle').classList.remove('active');
+                clearInterval(rainbowInterval);
+                rainbows.forEach(r => r.remove());
+                rainbows = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 8. Firefly Effect
+        let fireflyInterval;
+        let fireflies = [];
+        let fireflyActive = false;
+
+        function createFirefly() {
+            const firefly = document.createElement('div');
+            firefly.className = 'firefly';
+            firefly.style.left = Math.random() * window.innerWidth + 'px';
+            firefly.style.bottom = Math.random() * window.innerHeight + 'px';
+            firefly.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            document.body.appendChild(firefly);
+            fireflies.push(firefly);
+
+            setTimeout(() => {
+                firefly.remove();
+                const index = fireflies.indexOf(firefly);
+                if (index > -1) fireflies.splice(index, 1);
+            }, 10000);
+        }
+
+        function startFirefly() {
+            if (!fireflyActive) {
+                stopAllEffects();
+                fireflyActive = true;
+                document.getElementById('fireflyToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0f0a, #1a2a1a)';
+                for (let i = 0; i < 15; i++) {
+                    setTimeout(() => createFirefly(), i * 300);
+                }
+                fireflyInterval = setInterval(createFirefly, 1000);
+            }
+        }
+
+        function stopFirefly() {
+            if (fireflyActive) {
+                fireflyActive = false;
+                document.getElementById('fireflyToggle').classList.remove('active');
+                clearInterval(fireflyInterval);
+                fireflies.forEach(f => f.remove());
+                fireflies = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 9. Diamond Effect
+        let diamondInterval;
+        let diamonds = [];
+        let diamondActive = false;
+
+        function createDiamond() {
+            const diamond = document.createElement('div');
+            diamond.className = 'diamond';
+            diamond.innerHTML = '💎';
+            diamond.style.left = Math.random() * window.innerWidth + 'px';
+            diamond.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            document.body.appendChild(diamond);
+            diamonds.push(diamond);
+
+            setTimeout(() => {
+                diamond.remove();
+                const index = diamonds.indexOf(diamond);
+                if (index > -1) diamonds.splice(index, 1);
+            }, 10000);
+        }
+
+        function startDiamond() {
+            if (!diamondActive) {
+                stopAllEffects();
+                diamondActive = true;
+                document.getElementById('diamondToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #000428, #004e92)';
+                for (let i = 0; i < 7; i++) {
+                    setTimeout(() => createDiamond(), i * 400);
+                }
+                diamondInterval = setInterval(createDiamond, 1500);
+            }
+        }
+
+        function stopDiamond() {
+            if (diamondActive) {
+                diamondActive = false;
+                document.getElementById('diamondToggle').classList.remove('active');
+                clearInterval(diamondInterval);
+                diamonds.forEach(d => d.remove());
+                diamonds = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // 10. Music Notes Effect
+        let musicInterval;
+        let musicNotes = [];
+        let musicActive = false;
+
+        function createMusicNote() {
+            const note = document.createElement('div');
+            note.className = 'music-note';
+            const notes = ['🎵', '🎶', '🎼', '🎤', '🎸', '🎹', '🎺', '🎷'];
+            note.innerHTML = notes[Math.floor(Math.random() * notes.length)];
+            note.style.left = Math.random() * window.innerWidth + 'px';
+            note.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            note.style.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+            document.body.appendChild(note);
+            musicNotes.push(note);
+
+            setTimeout(() => {
+                note.remove();
+                const index = musicNotes.indexOf(note);
+                if (index > -1) musicNotes.splice(index, 1);
+            }, 10000);
+        }
+
+        function startMusic() {
+            if (!musicActive) {
+                stopAllEffects();
+                musicActive = true;
+                document.getElementById('musicToggle').classList.add('active');
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createMusicNote(), i * 300);
+                }
+                musicInterval = setInterval(createMusicNote, 800);
+            }
+        }
+
+        function stopMusic() {
+            if (musicActive) {
+                musicActive = false;
+                document.getElementById('musicToggle').classList.remove('active');
+                clearInterval(musicInterval);
+                musicNotes.forEach(note => note.remove());
+                musicNotes = [];
+                document.querySelector('.clock-container').style.background = 'linear-gradient(135deg, #0a0a0a, #1a1a1a)';
+            }
+        }
+
+        // Event listeners for new effects
+        document.getElementById('emojiToggle').addEventListener('click', () => {
+            if (emojiActive) stopEmoji();
+            else {
+                startEmoji();
+                updateMenuIcon('😊');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('auroraToggle').addEventListener('click', () => {
+            if (auroraActive) stopAurora();
+            else {
+                startAurora();
+                updateMenuIcon('🌌');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('confettiToggle').addEventListener('click', () => {
+            if (confettiActive) stopConfetti();
+            else {
+                startConfetti();
+                updateMenuIcon('🎊');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('meteorToggle').addEventListener('click', () => {
+            if (meteorActive) stopMeteor();
+            else {
+                startMeteor();
+                updateMenuIcon('☄️');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('butterflyToggle').addEventListener('click', () => {
+            if (butterflyActive) stopButterfly();
+            else {
+                startButterfly();
+                updateMenuIcon('🦋');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('lightningToggle').addEventListener('click', () => {
+            if (lightningActive) stopLightning();
+            else {
+                startLightning();
+                updateMenuIcon('⚡');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('rainbowToggle').addEventListener('click', () => {
+            if (rainbowActive) stopRainbow();
+            else {
+                startRainbow();
+                updateMenuIcon('🌈');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('fireflyToggle').addEventListener('click', () => {
+            if (fireflyActive) stopFirefly();
+            else {
+                startFirefly();
+                updateMenuIcon('✨');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('diamondToggle').addEventListener('click', () => {
+            if (diamondActive) stopDiamond();
+            else {
+                startDiamond();
+                updateMenuIcon('💎');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        document.getElementById('musicToggle').addEventListener('click', () => {
+            if (musicActive) stopMusic();
+            else {
+                startMusic();
+                updateMenuIcon('🎵');
+            }
+            effectsPanel.classList.remove('show');
+            menuToggle.classList.remove('active');
+            menuOpen = false;
+        });
+
+        // Add performance info display for debugging
+        if (window.location.search.includes('debug')) {
+            const perfInfo = document.createElement('div');
+            perfInfo.style.cssText = 'position: fixed; top: 10px; right: 10px; color: #888; font-size: 11px; z-index: 1000; padding: 5px; background: rgba(0,0,0,0.7); border-radius: 5px; font-family: monospace;';
+            perfInfo.innerHTML = `Performance: ${performanceMode}<br>Max particles: ${maxParticles}<br>Interval: ${effectInterval}ms`;
+            document.body.appendChild(perfInfo);
+        }
+
+        // Auto-disable effects on mobile by default
+        if (performanceMode === 'mobile') {
+            // Don't start any effects automatically on mobile
+            console.log('Mobile device detected - effects disabled for performance');
+        } else {
+            // Start default effect after delay
+            setTimeout(() => {
+                startRain();
+                updateMenuIcon('🌧️');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

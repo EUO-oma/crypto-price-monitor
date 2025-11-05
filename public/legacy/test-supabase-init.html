@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Supabase Initialization Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .log { margin: 5px 0; padding: 5px; background: #2a2a2a; }
+    </style>
+</head>
+<body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    <h1>Supabase 초기화 테스트</h1>
+    <div id="logs"></div>
+
+    <!-- Step 1: Load Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        const logs = document.getElementById('logs');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+
+        // Step 2: Check if window.supabase exists
+        log('Step 1: Checking window.supabase...', 'info');
+        if (window.supabase) {
+            log('✓ window.supabase exists', 'success');
+            log('window.supabase type: ' + typeof window.supabase, 'info');
+            log('window.supabase.createClient type: ' + typeof window.supabase.createClient, 'info');
+        } else {
+            log('✗ window.supabase NOT found', 'error');
+        }
+
+        // Step 3: Try to create client
+        log('Step 2: Attempting to create Supabase client...', 'info');
+
+        // Wait for config to load
+        function waitForConfig() {
+            return new Promise((resolve) => {
+                if (window.APP_CONFIG?.SUPABASE?.URL) {
+                    resolve();
+                } else {
+                    window.addEventListener('configLoaded', resolve, { once: true });
+                    // Fallback timeout
+                    setTimeout(resolve, 2000);
+                }
+            });
+        }
+        
+        // Get configuration from environment
+        function getSupabaseConfig() {
+            const url = window.APP_CONFIG?.SUPABASE?.URL;
+            const key = window.APP_CONFIG?.SUPABASE?.ANON_KEY;
+            
+            if (!url || !key) {
+                log('❌ Supabase configuration not found. Please check your environment variables.', 'error');
+                return null;
+            }
+            
+            return { url, key };
+        }
+        
+        const config = getSupabaseConfig();
+        const SUPABASE_URL = config?.url || 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = config?.key || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+
+        let supabaseClient = null;
+
+        try {
+            if (window.supabase && window.supabase.createClient) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                log('✓ Supabase client created successfully', 'success');
+                log('Client type: ' + typeof supabaseClient, 'info');
+            } else {
+                log('✗ Cannot create client - window.supabase.createClient not available', 'error');
+            }
+        } catch (error) {
+            log('✗ Error creating client: ' + error.message, 'error');
+        }
+
+        // Step 4: Test the client
+        if (supabaseClient) {
+            log('Step 3: Testing Supabase connection...', 'info');
+
+            supabaseClient.from('links')
+                .select('count')
+                .limit(1)
+                .then(({ data, error }) => {
+                    if (error) {
+                        log('✗ Connection test failed: ' + error.message, 'error');
+                    } else {
+                        log('✓ Connection test successful!', 'success');
+                        log('Response: ' + JSON.stringify(data), 'info');
+                    }
+                })
+                .catch(err => {
+                    log('✗ Unexpected error: ' + err.message, 'error');
+                });
+        }
+
+        // Step 5: Check after DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', async function() {
+            await waitForConfig();
+            
+            // Update config after load
+            const newConfig = getSupabaseConfig();
+            if (newConfig) {
+                SUPABASE_URL = newConfig.url;
+                SUPABASE_ANON_KEY = newConfig.key;
+                log('Configuration updated from environment', 'info');
+            }
+            log('Step 4: DOMContentLoaded fired', 'info');
+
+            if (!supabaseClient && window.supabase) {
+                log('Retrying client creation after DOMContentLoaded...', 'info');
+                try {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    log('✓ Client created on DOMContentLoaded', 'success');
+                } catch (error) {
+                    log('✗ Failed on DOMContentLoaded: ' + error.message, 'error');
+                }
+            }
+        });
+
+        // Step 6: Check after window.load
+        window.addEventListener('load', async function() {
+            await waitForConfig();
+            log('Step 5: Window load event fired', 'info');
+
+            if (!supabaseClient && window.supabase) {
+                log('Retrying client creation after window.load...', 'info');
+                try {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    log('✓ Client created on window.load', 'success');
+                } catch (error) {
+                    log('✗ Failed on window.load: ' + error.message, 'error');
+                }
+            }
+
+            // Final status
+            setTimeout(() => {
+                log('=== FINAL STATUS ===', 'info');
+                log('window.supabase: ' + (window.supabase ? '✓ Available' : '✗ Not available'), window.supabase ? 'success' : 'error');
+                log('supabaseClient: ' + (supabaseClient ? '✓ Created' : '✗ Not created'), supabaseClient ? 'success' : 'error');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

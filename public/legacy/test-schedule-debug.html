@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일정관리 디버그 테스트</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #121212;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .log {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+        .log.error {
+            border-color: #f44336;
+            color: #ff9999;
+        }
+        .log.info {
+            border-color: #2196f3;
+            color: #90caf9;
+        }
+        .log.success {
+            border-color: #4caf50;
+            color: #81c784;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>일정관리 페이지 디버그</h1>
+    <div id="logs"></div>
+    
+    <h2>페이지 미리보기</h2>
+    <iframe src="https://euo.netlify.app" id="targetFrame"></iframe>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const logsDiv = document.getElementById('logs');
+        let logCount = 0;
+
+        function addLog(message, type = 'info') {
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.textContent = `[${++logCount}] ${new Date().toLocaleTimeString()}: ${message}`;
+            logsDiv.appendChild(logDiv);
+        }
+
+        // Test Supabase connection directly
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+
+        addLog('Starting debug test...', 'info');
+        
+        // Check if Supabase library loaded
+        if (typeof window.supabase === 'undefined') {
+            addLog('Supabase library not loaded!', 'error');
+        } else {
+            addLog('Supabase library loaded successfully', 'success');
+            
+            try {
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                addLog('Supabase client created', 'success');
+                
+                // Test authentication
+                supabase.auth.getUser().then(({ data, error }) => {
+                    if (error) {
+                        addLog(`Auth error: ${error.message}`, 'error');
+                    } else {
+                        addLog(`Auth status: ${data.user ? 'Logged in as ' + data.user.email : 'Not logged in'}`, 'info');
+                    }
+                });
+                
+                // Test schedules table
+                supabase
+                    .from('schedules')
+                    .select('count')
+                    .then(({ data, error }) => {
+                        if (error) {
+                            addLog(`Database error: ${error.message}`, 'error');
+                            if (error.message.includes('relation "schedules" does not exist')) {
+                                addLog('Schedules table does not exist. Need to run SQL setup.', 'error');
+                            }
+                        } else {
+                            addLog(`Database connection successful. Schedule count: ${data[0]?.count || 0}`, 'success');
+                        }
+                    });
+                    
+            } catch (err) {
+                addLog(`Error creating Supabase client: ${err.message}`, 'error');
+            }
+        }
+        
+        // Try to intercept console messages from iframe
+        window.addEventListener('message', function(event) {
+            if (event.origin === 'https://euo.netlify.app') {
+                addLog(`Message from iframe: ${event.data}`, 'info');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일정 데이터 디버깅</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #121212;
+            color: #fff;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #1e1e1e;
+        }
+        .success { border-color: #4caf50; }
+        .error { border-color: #f44336; }
+        .info { border-color: #2196f3; }
+        .warning { border-color: #ff9800; }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        pre {
+            background: #0d0d0d;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #2a2a2a;
+        }
+        .schedule-item {
+            margin: 10px 0;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 5px;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <h1>일정 데이터 디버깅 도구</h1>
+    
+    <div class="section info">
+        <h2>현재 상태</h2>
+        <div id="status">확인 중...</div>
+    </div>
+    
+    <div class="section">
+        <h2>데이터 조회 옵션</h2>
+        <button onclick="fetchAllSchedules()">모든 일정 조회</button>
+        <button onclick="fetchMySchedules()">내 일정만 조회</button>
+        <button onclick="fetchPublicSchedules()">공개 일정 조회</button>
+        <button onclick="fetchWithoutFilters()">필터 없이 조회</button>
+        <button onclick="checkRLS()">RLS 정책 테스트</button>
+        <button onclick="location.reload()">새로고침</button>
+        <button onclick="location.href='/'">메인 페이지로</button>
+    </div>
+    
+    <div id="authInfo" class="section">
+        <h2>인증 정보</h2>
+        <div id="authContent">확인 중...</div>
+    </div>
+    
+    <div id="results" class="section">
+        <h2>조회 결과</h2>
+        <div id="resultsContent">조회 버튼을 클릭하세요...</div>
+    </div>
+    
+    <div id="rawData" class="section" style="display: none;">
+        <h2>원시 데이터</h2>
+        <pre id="rawContent"></pre>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+        
+        let supabase;
+        let currentUser = null;
+        
+        window.addEventListener('load', async () => {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            // 인증 상태 확인
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            const authDiv = document.getElementById('authContent');
+            if (user) {
+                currentUser = user;
+                authDiv.innerHTML = `
+                    <p><strong>로그인 상태:</strong> ✅ 로그인됨</p>
+                    <p><strong>사용자 ID:</strong> ${user.id}</p>
+                    <p><strong>이메일:</strong> ${user.email}</p>
+                    <p><strong>로그인 시간:</strong> ${new Date(user.last_sign_in_at).toLocaleString()}</p>
+                `;
+            } else {
+                authDiv.innerHTML = `
+                    <p><strong>로그인 상태:</strong> ❌ 로그인되지 않음</p>
+                    <p>일부 기능이 제한될 수 있습니다.</p>
+                    <a href="/add-test-schedule.html" style="color: #2196f3;">로그인 페이지로 이동</a>
+                `;
+            }
+            
+            if (error) {
+                authDiv.innerHTML += `<p style="color: #f44336;">인증 오류: ${error.message}</p>`;
+            }
+            
+            // 기본적으로 모든 일정 조회
+            fetchAllSchedules();
+        });
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `section ${type}`;
+            statusDiv.innerHTML = message;
+        }
+        
+        async function fetchAllSchedules() {
+            showStatus('모든 일정을 조회하는 중...', 'info');
+            
+            try {
+                const { data, error, count } = await supabase
+                    .from('schedules')
+                    .select('*', { count: 'exact' })
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    showError('조회 실패', error);
+                } else {
+                    showSchedules(data, '모든 일정', count);
+                }
+            } catch (err) {
+                showError('예외 발생', err);
+            }
+        }
+        
+        async function fetchMySchedules() {
+            if (!currentUser) {
+                showStatus('로그인이 필요합니다.', 'warning');
+                return;
+            }
+            
+            showStatus('내 일정을 조회하는 중...', 'info');
+            
+            try {
+                const { data, error, count } = await supabase
+                    .from('schedules')
+                    .select('*', { count: 'exact' })
+                    .eq('user_id', currentUser.id)
+                    .order('event_date', { ascending: true });
+                
+                if (error) {
+                    showError('조회 실패', error);
+                } else {
+                    showSchedules(data, '내 일정', count);
+                }
+            } catch (err) {
+                showError('예외 발생', err);
+            }
+        }
+        
+        async function fetchPublicSchedules() {
+            showStatus('공개 일정을 조회하는 중...', 'info');
+            
+            try {
+                const { data, error, count } = await supabase
+                    .from('schedules')
+                    .select('*', { count: 'exact' })
+                    .is('user_id', null)
+                    .order('event_date', { ascending: true });
+                
+                if (error) {
+                    showError('조회 실패', error);
+                } else {
+                    showSchedules(data, '공개 일정', count);
+                }
+            } catch (err) {
+                showError('예외 발생', err);
+            }
+        }
+        
+        async function fetchWithoutFilters() {
+            showStatus('필터 없이 직접 조회 중...', 'info');
+            
+            try {
+                // 직접 SQL 실행 (가능한 경우)
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/schedules`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSchedules(data, 'REST API 직접 조회', data.length);
+                } else {
+                    showError('REST API 조회 실패', data);
+                }
+            } catch (err) {
+                showError('예외 발생', err);
+            }
+        }
+        
+        async function checkRLS() {
+            showStatus('RLS 정책 테스트 중...', 'info');
+            
+            const results = [];
+            
+            // 1. SELECT 테스트
+            const { data: selectData, error: selectError } = await supabase
+                .from('schedules')
+                .select('*')
+                .limit(1);
+            
+            results.push({
+                test: 'SELECT (읽기)',
+                success: !selectError,
+                message: selectError ? selectError.message : '성공'
+            });
+            
+            // 2. INSERT 테스트 (로그인된 경우)
+            if (currentUser) {
+                const testData = {
+                    title: 'RLS 테스트 일정',
+                    event_date: new Date().toISOString().split('T')[0],
+                    user_id: currentUser.id
+                };
+                
+                const { error: insertError } = await supabase
+                    .from('schedules')
+                    .insert([testData]);
+                
+                results.push({
+                    test: 'INSERT (추가)',
+                    success: !insertError,
+                    message: insertError ? insertError.message : '성공'
+                });
+                
+                // 성공한 경우 삭제
+                if (!insertError) {
+                    await supabase
+                        .from('schedules')
+                        .delete()
+                        .eq('title', 'RLS 테스트 일정')
+                        .eq('user_id', currentUser.id);
+                }
+            }
+            
+            // 결과 표시
+            let html = '<h3>RLS 정책 테스트 결과</h3><ul>';
+            results.forEach(result => {
+                const icon = result.success ? '✅' : '❌';
+                html += `<li>${icon} ${result.test}: ${result.message}</li>`;
+            });
+            html += '</ul>';
+            
+            document.getElementById('resultsContent').innerHTML = html;
+            showStatus('RLS 테스트 완료', results.every(r => r.success) ? 'success' : 'warning');
+        }
+        
+        function showSchedules(data, title, count) {
+            const resultsDiv = document.getElementById('resultsContent');
+            
+            if (!data || data.length === 0) {
+                resultsDiv.innerHTML = `
+                    <h3>${title}</h3>
+                    <p style="color: #ff9800;">⚠️ 일정이 없습니다.</p>
+                    <p>총 개수: ${count || 0}</p>
+                `;
+                showStatus('조회 완료 - 데이터 없음', 'warning');
+                return;
+            }
+            
+            let html = `
+                <h3>${title} (${data.length}개)</h3>
+                <p>총 개수: ${count || data.length}</p>
+            `;
+            
+            // 일정 목록 표시
+            data.forEach((schedule, index) => {
+                const eventDate = new Date(schedule.event_date).toLocaleDateString('ko-KR');
+                const createdAt = new Date(schedule.created_at).toLocaleString('ko-KR');
+                
+                html += `
+                    <div class="schedule-item">
+                        <h4>${index + 1}. ${schedule.title}</h4>
+                        <p><strong>ID:</strong> ${schedule.id}</p>
+                        <p><strong>날짜:</strong> ${eventDate} ${schedule.event_time || ''}</p>
+                        <p><strong>설명:</strong> ${schedule.description || '없음'}</p>
+                        <p><strong>장소:</strong> ${schedule.location || '없음'}</p>
+                        <p><strong>카테고리:</strong> ${schedule.category}</p>
+                        <p><strong>우선순위:</strong> ${schedule.priority}</p>
+                        <p><strong>상태:</strong> ${schedule.status}</p>
+                        <p><strong>사용자 ID:</strong> ${schedule.user_id || '공개'}</p>
+                        <p><strong>생성일:</strong> ${createdAt}</p>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+            
+            // 원시 데이터도 표시
+            document.getElementById('rawData').style.display = 'block';
+            document.getElementById('rawContent').textContent = JSON.stringify(data, null, 2);
+            
+            showStatus(`조회 성공 - ${data.length}개 일정`, 'success');
+        }
+        
+        function showError(title, error) {
+            const resultsDiv = document.getElementById('resultsContent');
+            resultsDiv.innerHTML = `
+                <h3 style="color: #f44336;">❌ ${title}</h3>
+                <p><strong>에러 메시지:</strong> ${error.message || error}</p>
+                <pre>${JSON.stringify(error, null, 2)}</pre>
+            `;
+            
+            showStatus('오류 발생', 'error');
+        }
+    </script>
+</body>
+</html>

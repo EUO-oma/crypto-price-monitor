@@ -1,0 +1,43 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Documentation
+*.md
+LICENSE
+
+# Development files
+.env
+.env.local
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test files
+test
+tests
+*.test.js
+*.spec.js
+
+# Build files
+dist
+build
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Keep data directory but not its contents
+data/*
+!data/.gitkeep

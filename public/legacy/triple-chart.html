@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC/ETH/SOL Triple Chart Viewer</title>
+    
+    <!-- 파비콘 및 메타 태그 -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#000000">
+    <style>
+        :root {
+            --chart-height: 400px;  /* 기본 차트 높이 */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .footer {
+            background: #0a0a0a;
+            padding: 15px 20px;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .title {
+            font-size: 1.5em;
+            font-weight: bold;
+            background: linear-gradient(90deg, #f7931a 0%, #627eea 50%, #00FFA3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            color: #aaa;
+            border: 1px solid #333;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .charts-container {
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* 레이아웃 1: 세로 3분할 (기본) */
+        .layout-1 .charts-container {
+            flex-direction: column;
+        }
+
+        .layout-1 .chart-wrapper {
+            width: 100%;
+            /* height는 JavaScript에서 동적으로 설정 */
+            overflow: hidden;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* PC에서는 가변 높이 */
+        @media (min-width: 769px) {
+            .layout-1 .chart-wrapper {
+                height: var(--chart-height);
+            }
+        }
+
+        /* 레이아웃 2: 2개 차트 좌우 분할 (PC만) */
+        @media (min-width: 769px) {
+            .layout-2 .charts-container {
+                flex-direction: row;
+                height: var(--chart-height);
+            }
+
+            .layout-2 .chart-wrapper {
+                width: 50%;
+                height: var(--chart-height);
+            }
+
+            .layout-2 .chart-wrapper:nth-child(3) {
+                display: none;  /* 세 번째 차트 숨김 */
+            }
+
+            .layout-2 .chart-wrapper:not(:last-child) {
+                border-right: 1px solid #222;
+                border-bottom: none;
+            }
+        }
+
+        /* 레이아웃 3: 3개 차트 가로 분할 (PC만) */
+        @media (min-width: 769px) {
+            .layout-3 .charts-container {
+                flex-direction: row;
+                height: var(--chart-height);
+            }
+
+            .layout-3 .chart-wrapper {
+                width: 33.33%;
+                height: var(--chart-height);
+            }
+
+            .layout-3 .chart-wrapper:not(:last-child) {
+                border-right: 1px solid #222;
+                border-bottom: none;
+            }
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            /* 기본 높이는 JavaScript에서 설정 */
+            overflow: hidden;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* PC에서는 가변 높이 */
+        @media (min-width: 769px) {
+            .chart-wrapper {
+                height: var(--chart-height);
+            }
+        }
+
+        #btc-chart, #eth-chart, #sol-chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-wrapper:not(:last-child) {
+            border-bottom: 1px solid #222;
+        }
+
+        /* 레이아웃 버튼 및 높이 조절 */
+        .layout-controls {
+            display: none;  /* 모바일에서는 숨김 */
+            gap: 20px;
+            align-items: center;
+            margin-left: auto;
+            margin-right: 20px;
+        }
+
+        .layout-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .height-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        @media (min-width: 769px) {
+            .layout-controls {
+                display: flex;
+            }
+        }
+
+        .layout-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #333;
+            background: #1a1a1a;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+        .layout-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .layout-btn.active {
+            background: #f7931a;
+            color: #000;
+            border-color: #f7931a;
+        }
+
+        .height-input {
+            width: 60px;
+            padding: 5px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 3px;
+        }
+
+        .height-btn {
+            width: 25px;
+            height: 25px;
+            border: 1px solid #333;
+            background: #1a1a1a;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .height-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 1.2em;
+            }
+
+            .charts-container {
+                flex: 1;
+            }
+
+            .chart-wrapper {
+                /* 모바일 높이도 유지 */
+                height: 33.33%;
+            }
+        }
+    </style>
+</head>
+<body class="layout-1">
+    <div class="charts-container">
+        <!-- 비트코인 차트 -->
+        <div class="chart-wrapper">
+            <div id="btc-chart"></div>
+        </div>
+
+        <!-- 이더리움 차트 -->
+        <div class="chart-wrapper">
+            <div id="eth-chart"></div>
+        </div>
+
+        <!-- 솔라나 차트 -->
+        <div class="chart-wrapper">
+            <div id="sol-chart"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="title">BTC / ETH / SOL Triple Chart</div>
+        <div class="legend" style="display: flex; gap: 20px; align-items: center;">
+            <span style="display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #f7931a;"></span>
+                <span style="color: #aaa;">BTC</span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #627eea;"></span>
+                <span style="color: #aaa;">ETH</span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #00FFA3;"></span>
+                <span style="color: #aaa;">SOL</span>
+            </span>
+        </div>
+        <div class="layout-controls">
+            <div class="height-controls">
+                <input type="number" id="heightInput" class="height-input" value="400" min="200" max="800">
+                <span style="color: #666; font-size: 12px;">px</span>
+                <button class="height-btn" onclick="adjustHeight(-10)">-</button>
+                <button class="height-btn" onclick="adjustHeight(10)">+</button>
+            </div>
+            <div class="layout-buttons">
+                <button class="layout-btn active" onclick="changeLayout(1)">1</button>
+                <button class="layout-btn" onclick="changeLayout(2)">2</button>
+                <button class="layout-btn" onclick="changeLayout(3)">3</button>
+            </div>
+        </div>
+        <a href="index.html" class="back-btn">← 돌아가기</a>
+    </div>
+
+    <!-- TradingView Widget -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+        // 로드된 차트 수 추적
+        let chartsLoaded = 0;
+        const totalCharts = 3;
+        
+        // 모든 차트가 로드되었는지 확인
+        function onChartReady() {
+            chartsLoaded++;
+            console.log(`차트 ${chartsLoaded}/${totalCharts} 로드 완료`);
+            
+            if (chartsLoaded === totalCharts) {
+                console.log('✅ 모든 차트 로드 완료!');
+                // 모든 차트가 로드된 후 실행할 작업
+                enablePageInteractions();
+            }
+        }
+        
+        // 페이지 상호작용 활성화
+        function enablePageInteractions() {
+            // 레이아웃 변경 버튼 활성화
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+            });
+            
+            // 높이 조절 컨트롤 활성화
+            const heightInput = document.getElementById('heightInput');
+            const heightButtons = document.querySelectorAll('.height-btn');
+            if (heightInput) {
+                heightInput.disabled = false;
+            }
+            heightButtons.forEach(btn => {
+                btn.disabled = false;
+            });
+            
+            // 리사이즈 이벤트 활성화
+            allowResize = true;
+            console.log('✅ 리사이즈 이벤트 활성화');
+        }
+        
+        // 차트 설정 함수
+        function createChart(containerId, symbol, color) {
+            // 컨테이너의 실제 높이 가져오기
+            const container = document.getElementById(containerId);
+            const containerWrapper = container.parentElement;
+            const actualHeight = containerWrapper ? containerWrapper.offsetHeight : Math.floor(window.innerHeight / 3);
+
+            return new TradingView.widget({
+                    "width": "100%",
+                    "height": actualHeight,  // 픽셀값으로 명시적 지정
+                    "symbol": `BINANCE:${symbol}`,
+                    "interval": "1",  // 1분봉 (실시간 틱 데이터 자동 업데이트)
+                    "timezone": "Asia/Seoul",
+                    "theme": "dark",
+                    "style": "1",  // Candlestick
+                    "locale": "kr",
+                    "toolbar_bg": "#f1f3f6",
+                    "enable_publishing": false,
+                    "withdateranges": true,
+                    "allow_symbol_change": false,
+                    "save_image": false,
+                    "container_id": containerId,
+                    "hide_side_toolbar": true,
+                    "hide_drawing_toolbar": true,
+                    "hide_top_toolbar": false,
+                    "hide_legend": true,
+                    "hide_volume": true,  // 볼륨 제거
+                    "withdateranges": false,
+                    "details": false,
+                    "show_popup_button": false,
+                    "studies": [],  // 보조지표 없음
+                    "overrides": {
+                        "mainSeriesProperties.candleStyle.upColor": color,
+                        "mainSeriesProperties.candleStyle.downColor": "#666",
+                        "mainSeriesProperties.candleStyle.borderUpColor": color,
+                        "mainSeriesProperties.candleStyle.borderDownColor": "#666",
+                        "mainSeriesProperties.candleStyle.wickUpColor": color,
+                        "mainSeriesProperties.candleStyle.wickDownColor": "#666"
+                    }
+                });
+        }
+
+        // 모바일 디바이스 감지
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth < 768;
+        }
+
+        // 페이지 로드 시 차트 생성
+        window.addEventListener('DOMContentLoaded', function() {
+            // 초기에 버튼들 비활성화
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.5';
+            });
+            const heightInput = document.getElementById('heightInput');
+            const heightButtons = document.querySelectorAll('.height-btn');
+            if (heightInput) {
+                heightInput.disabled = true;
+            }
+            heightButtons.forEach(btn => {
+                btn.disabled = true;
+            });
+            
+            // 모바일에서는 차트 로딩 딜레이 증가
+            const loadDelay = isMobileDevice() ? 500 : 200;
+            const chartDelay = isMobileDevice() ? 2000 : 1500;
+            
+            // 현재 레이아웃 확인
+            const currentLayout = document.body.className;
+
+            if (currentLayout === 'layout-1') {
+                // 레이아웃 1은 자동 계산
+                const autoHeight = Math.floor(window.innerHeight / 3);
+                document.getElementById('heightInput').value = autoHeight;
+
+                // 차트 wrapper와 차트 div 모두에 높이 강제 적용
+                document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                    wrapper.style.height = autoHeight + 'px';
+                    wrapper.style.minHeight = autoHeight + 'px';
+                });
+                document.querySelectorAll('#btc-chart, #eth-chart, #sol-chart').forEach(chart => {
+                    chart.style.height = '100%';
+                    chart.style.minHeight = autoHeight + 'px';
+                });
+
+                applyChartHeight(autoHeight);
+            } else {
+                // 레이아웃 2, 3은 저장된 높이값 사용
+                const savedHeight = localStorage.getItem('chartHeight') || '400';
+                document.getElementById('heightInput').value = savedHeight;
+                applyChartHeight(parseInt(savedHeight));
+            }
+
+            // 차트 div에 인라인 스타일로 높이 강제 설정
+            const chartHeight = currentLayout === 'layout-1' ?
+                Math.floor(window.innerHeight / 3) :
+                parseInt(document.getElementById('heightInput').value);
+
+            const chartDivs = ['btc-chart', 'eth-chart', 'sol-chart'];
+            chartDivs.forEach(id => {
+                const div = document.getElementById(id);
+                if (div) {
+                    div.style.height = chartHeight + 'px';
+                    div.style.minHeight = chartHeight + 'px';
+                    div.style.display = 'block';
+                }
+            });
+
+            // 차트 생성 전에 약간의 지연을 주어 DOM이 완전히 업데이트되도록 함
+            setTimeout(() => {
+                // 모든 차트를 동시에 생성
+                createChart('btc-chart', 'BTCUSDT', '#f7931a');
+                createChart('eth-chart', 'ETHUSDT', '#627eea');
+                createChart('sol-chart', 'SOLUSDT', '#00FFA3');
+                
+                // 차트 로드 후 버튼 활성화
+                setTimeout(() => {
+                    enablePageInteractions();
+                }, 2000);
+            }, 1000);  // 1초 대기 후 차트 생성
+        });
+
+        // 레이아웃 변경 함수
+        function changeLayout(layoutNumber) {
+            // 모바일에서는 동작하지 않음
+            if (window.innerWidth < 769) return;
+
+            // body 클래스 변경
+            document.body.className = 'layout-' + layoutNumber;
+
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 차트 리로드 (레이아웃 변경 후 충분한 시간을 둔 뒤 리로드)
+            setTimeout(() => {
+                location.reload();
+            }, 500); // 0.5초 후 리로드
+        }
+
+        // localStorage에 레이아웃 저장
+        function saveLayout(layoutNumber) {
+            localStorage.setItem('chartLayout', layoutNumber);
+        }
+
+        // 페이지 로드 시 저장된 레이아웃 불러오기
+        window.addEventListener('DOMContentLoaded', function() {
+            // PC에서만 레이아웃 복원
+            if (window.innerWidth >= 769) {
+                const savedLayout = localStorage.getItem('chartLayout') || '1';
+                document.body.className = 'layout-' + savedLayout;
+
+                // 버튼 활성화 상태 설정
+                document.querySelectorAll('.layout-btn').forEach((btn, index) => {
+                    btn.classList.remove('active');
+                    if (btn.textContent === savedLayout) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        });
+
+        // 레이아웃 변경 시 저장
+        window.changeLayout = function(layoutNumber) {
+            // 모바일에서는 동작하지 않음
+            if (window.innerWidth < 769) return;
+
+            saveLayout(layoutNumber);
+            document.body.className = 'layout-' + layoutNumber;
+
+            // 버튼 활성화 상태 변경
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === layoutNumber.toString()) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // 레이아웃 1로 변경 시 높이 자동 계산
+            if (layoutNumber === 1) {
+                const autoHeight = Math.floor(window.innerHeight / 3);
+                document.getElementById('heightInput').value = autoHeight;
+                localStorage.setItem('layout1Height', autoHeight);  // 높이 저장
+            }
+
+            // 컨트롤 상태 업데이트
+            updateHeightControlState();
+
+            // 차트 리로드 (즉시)
+            location.reload();
+        };
+
+        // 높이 조절 함수
+        function adjustHeight(change) {
+            if (window.innerWidth < 769) return;
+
+            const currentLayout = document.body.className;
+
+            // 레이아웃 1에서는 높이 조절 비활성화 (자동 계산)
+            if (currentLayout === 'layout-1') {
+                return;
+            }
+
+            const input = document.getElementById('heightInput');
+            let currentHeight = parseInt(input.value) || 400;
+            let newHeight = currentHeight + change;
+
+            // 최소/최대값 제한
+            newHeight = Math.max(200, Math.min(800, newHeight));
+
+            input.value = newHeight;
+            applyChartHeight(newHeight);
+            localStorage.setItem('chartHeight', newHeight);
+        }
+
+        // 차트 높이 적용
+        function applyChartHeight(height) {
+            if (window.innerWidth < 769) return;
+
+            const currentLayout = document.body.className;
+
+            // 레이아웃 1은 윈도우 높이 기반으로 자동 계산
+            if (currentLayout === 'layout-1') {
+                const autoHeight = Math.floor(window.innerHeight / 3);
+                document.documentElement.style.setProperty('--chart-height', autoHeight + 'px');
+                document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                    wrapper.style.height = autoHeight + 'px';
+                });
+                // 입력창에 계산된 값 표시
+                document.getElementById('heightInput').value = autoHeight;
+            } else {
+                // 레이아웃 2, 3은 사용자 설정값 사용
+                document.documentElement.style.setProperty('--chart-height', height + 'px');
+                document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                    wrapper.style.height = height + 'px';
+                });
+
+                if (currentLayout === 'layout-2' || currentLayout === 'layout-3') {
+                    document.querySelector('.charts-container').style.height = height + 'px';
+                }
+            }
+        }
+
+        // 입력창에서 직접 값 입력 시
+        document.addEventListener('DOMContentLoaded', function() {
+            const heightInput = document.getElementById('heightInput');
+            if (heightInput) {
+                heightInput.addEventListener('change', function() {
+                    const currentLayout = document.body.className;
+
+                    // 레이아웃 1에서는 수정 불가
+                    if (currentLayout === 'layout-1') {
+                        const autoHeight = Math.floor(window.innerHeight / 3);
+                        this.value = autoHeight;
+                        return;
+                    }
+
+                    let newHeight = parseInt(this.value) || 400;
+                    newHeight = Math.max(200, Math.min(800, newHeight));
+                    this.value = newHeight;
+                    applyChartHeight(newHeight);
+                    localStorage.setItem('chartHeight', newHeight);
+                });
+
+                // 레이아웃에 따라 입력창 활성화/비활성화
+                updateHeightControlState();
+            }
+        });
+
+        // 높이 컨트롤 상태 업데이트
+        function updateHeightControlState() {
+            const currentLayout = document.body.className;
+            const heightInput = document.getElementById('heightInput');
+            const heightButtons = document.querySelectorAll('.height-btn');
+
+            if (currentLayout === 'layout-1') {
+                // 레이아웃 1: 비활성화 (읽기 전용)
+                heightInput.style.opacity = '0.5';
+                heightInput.style.cursor = 'not-allowed';
+                heightInput.readOnly = true;
+                heightButtons.forEach(btn => {
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                });
+            } else {
+                // 레이아웃 2, 3: 활성화
+                heightInput.style.opacity = '1';
+                heightInput.style.cursor = 'text';
+                heightInput.readOnly = false;
+                heightButtons.forEach(btn => {
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                });
+            }
+        }
+
+        // 화면 크기 변경 시 대응
+        let resizeTimeout;
+        let allowResize = false;
+        
+        window.addEventListener('resize', function() {
+            // 차트가 모두 로드되지 않았으면 리사이즈 무시
+            if (!allowResize) {
+                console.log('⏸️ 차트 로딩 중... 리사이즈 이벤트 무시');
+                return;
+            }
+            
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                console.log('🔄 화면 크기 변경 감지 - 페이지 리로드');
+                location.reload();
+            }, 1000);  // 1초로 증가
+        });
+
+        // 로컬 환경 안내 메시지
+        if (window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1' || 
+            window.location.hostname === '') {
+            
+            console.log('📊 로컬 환경 감지');
+            
+            // TradingView 실시간 업데이트 안내
+            const notice = document.createElement('div');
+            notice.style.cssText = `
+                position: fixed;
+                bottom: 70px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(79, 172, 254, 0.9);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                font-size: 12px;
+                z-index: 10000;
+            `;
+            notice.innerHTML = `
+                <div>💡 TradingView 차트는 실시간으로 자동 업데이트됩니다</div>
+                <div style="font-size: 11px; margin-top: 5px; opacity: 0.9;">
+                    • 1분봉 기준으로 틱 데이터가 반영됩니다
+                    • WebSocket으로 실시간 가격을 받아옵니다
+                </div>
+            `;
+            document.body.appendChild(notice);
+            
+            // 5초 후 안내 메시지 페이드아웃
+            setTimeout(() => {
+                notice.style.transition = 'opacity 1s';
+                notice.style.opacity = '0';
+                setTimeout(() => notice.remove(), 1000);
+            }, 5000);
+        }
+        
+        // TradingView 위젯 실시간 업데이트 정보
+        // TradingView는 자체적으로 WebSocket을 통해 실시간 데이터를 받아옵니다.
+        // interval: "1" 설정은 1분봉을 의미하며, 틱 데이터는 자동으로 업데이트됩니다.
+        // 더 빠른 업데이트를 원하면:
+        // 1. interval을 "1S"로 변경 (1초봉) - 지원되는 경우
+        // 2. 또는 Binance WebSocket API를 직접 연결하여 커스텀 차트 구현
+    </script>
+</body>
+</html>

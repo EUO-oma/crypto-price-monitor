@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'SF Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        /* Hidden interactive area */
+        .secret-area {
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            width: 100px;
+            height: 100px;
+            cursor: default;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .secret-area:hover {
+            opacity: 0.05;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+        
+        /* Main content */
+        .content {
+            text-align: center;
+            user-select: none;
+        }
+        
+        .title {
+            font-size: 72px;
+            font-weight: 100;
+            letter-spacing: 20px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #333;
+            letter-spacing: 2px;
+        }
+        
+        /* Hidden link */
+        .hidden-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            color: #111;
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.3s ease;
+        }
+        
+        .hidden-link:hover {
+            color: #222;
+        }
+        
+        /* Click counter */
+        #counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: #111;
+            font-size: 10px;
+            font-family: monospace;
+        }
+        
+        /* Hidden button that appears after 3 clicks */
+        .secret-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            color: #333;
+            padding: 20px 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s ease;
+        }
+        
+        .secret-button.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .secret-button:hover {
+            background: #1a1a1a;
+            border-color: #333;
+            color: #666;
+        }
+        
+        /* Pattern input area */
+        .pattern-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .pattern-area.active {
+            opacity: 1;
+        }
+        
+        .pattern-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #111;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pattern-dot:hover {
+            background: #222;
+            transform: scale(1.2);
+        }
+        
+        .pattern-dot.clicked {
+            background: #333;
+        }
+        
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .title {
+                font-size: 56px;
+                letter-spacing: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .subtitle {
+                font-size: 12px;
+                letter-spacing: 1px;
+            }
+            
+            .secret-area {
+                bottom: 30px;
+                right: 30px;
+                width: 80px;
+                height: 80px;
+            }
+            
+            .secret-button {
+                padding: 16px 32px;
+                font-size: 14px;
+                border-radius: 6px;
+            }
+            
+            .pattern-area {
+                height: 150px;
+                gap: 15px;
+            }
+            
+            .pattern-dot {
+                width: 30px;
+                height: 30px;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .pattern-dot:active {
+                transform: scale(1.1);
+            }
+            
+            .hidden-link {
+                font-size: 14px;
+                padding: 10px;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            #counter {
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 42px;
+                letter-spacing: 10px;
+                margin-bottom: 15px;
+            }
+            
+            .subtitle {
+                font-size: 11px;
+            }
+            
+            .secret-area {
+                bottom: 20px;
+                right: 20px;
+                width: 60px;
+                height: 60px;
+            }
+            
+            .secret-button {
+                padding: 14px 28px;
+                font-size: 13px;
+            }
+            
+            .pattern-area {
+                height: 120px;
+                gap: 12px;
+            }
+            
+            .pattern-dot {
+                width: 25px;
+                height: 25px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .title {
+                font-size: 36px;
+                letter-spacing: 8px;
+            }
+            
+            .subtitle {
+                font-size: 10px;
+            }
+            
+            .secret-area {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .secret-button {
+                padding: 12px 24px;
+                font-size: 12px;
+            }
+            
+            .pattern-dot {
+                width: 20px;
+                height: 20px;
+            }
+        }
+        
+        /* Touch optimization */
+        @media (hover: none) and (pointer: coarse) {
+            .secret-button:active {
+                transform: scale(0.95);
+            }
+            
+            .pattern-dot:active {
+                background: #222;
+                transform: scale(1.2);
+            }
+            
+            .pattern-dot.clicked:active {
+                background: #333;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1 class="title">BW</h1>
+        <p class="subtitle">///////////////</p>
+    </div>
+    
+    <!-- Secret click area -->
+    <div class="secret-area" onclick="secretClick()"></div>
+    
+    <!-- Hidden link -->
+    <a href="#" class="hidden-link" onclick="showPattern(); return false;">•</a>
+    
+    <!-- Click counter -->
+    <div id="counter">0</div>
+    
+    <!-- Secret button (appears after 3 clicks) -->
+    <button class="secret-button" id="secretBtn" onclick="goToBWMode()">Enter</button>
+    
+    <!-- Pattern area -->
+    <div class="pattern-area" id="patternArea">
+        <div class="pattern-dot" data-value="1" onclick="patternClick(1)"></div>
+        <div class="pattern-dot" data-value="2" onclick="patternClick(2)"></div>
+        <div class="pattern-dot" data-value="3" onclick="patternClick(3)"></div>
+        <div class="pattern-dot" data-value="4" onclick="patternClick(4)"></div>
+        <div class="pattern-dot" data-value="5" onclick="patternClick(5)"></div>
+    </div>
+    
+    <script>
+        let clickCount = 0;
+        let pattern = [];
+        const correctPattern = [1, 3, 5, 2, 4]; // Secret pattern
+        
+        // Secret area click
+        function secretClick() {
+            clickCount++;
+            document.getElementById('counter').textContent = clickCount;
+            
+            if (clickCount >= 3) {
+                document.getElementById('secretBtn').classList.add('show');
+            }
+            
+            // Easter egg: at 10 clicks, go directly
+            if (clickCount >= 10) {
+                window.location.href = 'bw-mode.html';
+            }
+        }
+        
+        // Show pattern area
+        function showPattern() {
+            document.getElementById('patternArea').classList.add('active');
+            pattern = [];
+            document.querySelectorAll('.pattern-dot').forEach(dot => {
+                dot.classList.remove('clicked');
+            });
+        }
+        
+        // Pattern click
+        function patternClick(value) {
+            pattern.push(value);
+            event.target.classList.add('clicked');
+            
+            if (pattern.length === correctPattern.length) {
+                if (pattern.join('') === correctPattern.join('')) {
+                    // Correct pattern!
+                    setTimeout(() => {
+                        window.location.href = 'bw-mode.html';
+                    }, 500);
+                } else {
+                    // Wrong pattern, reset
+                    setTimeout(() => {
+                        pattern = [];
+                        document.querySelectorAll('.pattern-dot').forEach(dot => {
+                            dot.classList.remove('clicked');
+                        });
+                    }, 1000);
+                }
+            }
+        }
+        
+        // Go to BW Mode
+        function goToBWMode() {
+            window.location.href = 'bw-mode.html';
+        }
+        
+        // Keyboard shortcut: Ctrl+B
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'b') {
+                window.location.href = 'bw-mode.html';
+            }
+        });
+        
+        // Another hidden method: triple click on title
+        let titleClicks = 0;
+        document.querySelector('.title').addEventListener('click', () => {
+            titleClicks++;
+            if (titleClicks === 3) {
+                window.location.href = 'bw-mode.html';
+            }
+            setTimeout(() => { titleClicks = 0; }, 1000);
+        });
+    </script>
+</body>
+</html>

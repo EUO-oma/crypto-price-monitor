@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>BW Mode 9 - Grid Layout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Grid container */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 20px;
+            width: min(90vw, 90vh);
+            height: min(90vw, 90vh);
+            max-width: 800px;
+            max-height: 800px;
+        }
+        
+        .grid-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .grid-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.02);
+        }
+        
+        /* Assign specific positions for each crypto */
+        .grid-item.btc {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        
+        .grid-item.eth {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .grid-item.sol {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        
+        /* Empty cells can have decorative elements */
+        .grid-item.empty {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .grid-item.center {
+            grid-column: 2;
+            grid-row: 2;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .coin-label {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            font-weight: 300;
+        }
+        
+        .price {
+            font-size: 24px;
+            font-weight: 300;
+            transition: font-size 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        
+        /* Color box styles */
+        .color-box {
+            display: inline-block;
+            width: 28px;
+            height: 40px;
+            border-radius: 6px;
+            margin: 2px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: help;
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.2),
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+        }
+        
+        .color-box:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 1);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                0 8px 16px rgba(0, 0, 0, 0.4),
+                0 0 20px currentColor,
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Tooltip on hover */
+        .color-box::after {
+            content: attr(data-number);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .color-box:hover::after {
+            opacity: 1;
+        }
+        
+        /* Circle for decimals */
+        .color-circle {
+            display: inline-block;
+            width: 28px;
+            height: 40px;
+            border-radius: 6px;
+            margin: 2px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: help;
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.2),
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+        }
+        
+        .color-circle:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 1);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                0 8px 16px rgba(0, 0, 0, 0.4),
+                0 0 20px currentColor,
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+        }
+        
+        .color-circle::after {
+            content: attr(data-number);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .color-circle:hover::after {
+            opacity: 1;
+        }
+        
+        /* Number to color mapping */
+        .color-0 { background-color: #808080; }
+        .color-1 { background-color: #FFFFFF; }
+        .color-2 { background-color: #FF1744; }
+        .color-3 { background-color: #FF8C00; }
+        .color-4 { background-color: #FFFF00; }
+        .color-5 { background-color: #90EE90; }
+        .color-6 { background-color: #5DADE2; }
+        .color-7 { background-color: #00008B; }
+        .color-8 { background-color: #8B00FF; }
+        .color-9 { background-color: #000000; }
+        
+        .price-decimal {
+            font-size: 0.8em;
+            display: inline-flex;
+            gap: 2px;
+            align-items: center;
+        }
+        
+        .decimal-separator {
+            font-size: 24px;
+            color: #666;
+            margin: 0 4px;
+        }
+        
+        /* Size variations */
+        .size-xs .price { font-size: 14px; }
+        .size-xs .color-box, .size-xs .color-circle { width: 16px; height: 22px; border-radius: 3px; }
+        
+        .size-s .price { font-size: 16px; }
+        .size-s .color-box, .size-s .color-circle { width: 18px; height: 26px; border-radius: 4px; }
+        
+        .size-m .price { font-size: 20px; }
+        .size-m .color-box, .size-m .color-circle { width: 22px; height: 32px; border-radius: 5px; }
+        
+        .size-l .price { font-size: 24px; }
+        .size-l .color-box, .size-l .color-circle { width: 28px; height: 40px; border-radius: 6px; }
+        
+        .size-xl .price { font-size: 28px; }
+        .size-xl .color-box, .size-xl .color-circle { width: 32px; height: 46px; border-radius: 7px; }
+        
+        .size-xxl .price { font-size: 32px; }
+        .size-xxl .color-box, .size-xxl .color-circle { width: 36px; height: 52px; border-radius: 8px; }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Secure mode */
+        .secure-mode .color-box,
+        .secure-mode .color-circle {
+            background: transparent !important;
+            border: 1px solid #444;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+        
+        .secure-mode .color-box::before,
+        .secure-mode .color-circle::before {
+            content: attr(data-number);
+        }
+        
+        .secure-mode .color-box::after,
+        .secure-mode .color-circle::after {
+            display: none;
+        }
+        
+        /* Layout selector */
+        .layout-selector {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        .layout-selector select {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .layout-selector select:hover {
+            border-color: #666;
+        }
+        
+        /* Legend */
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .legend.show {
+            display: flex;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .legend-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Center display */
+        .center-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .time-display {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.5);
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .date-display {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .grid-container {
+                gap: 10px;
+                width: 95vw;
+                height: 95vw;
+            }
+            
+            .grid-item {
+                padding: 10px;
+            }
+            
+            .coin-label {
+                font-size: 12px;
+                margin-bottom: 8px;
+            }
+            
+            .price {
+                font-size: 16px;
+            }
+            
+            .color-box, .color-circle {
+                width: 20px;
+                height: 28px;
+                border-radius: 4px;
+                margin: 1px;
+            }
+            
+            .controls {
+                gap: 6px;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .time-display {
+                font-size: 14px;
+            }
+            
+            .date-display {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body class="size-l">
+    <div class="layout-selector">
+        <select onchange="switchLayout(this.value)">
+            <option value="horizontal">Horizontal</option>
+            <option value="vertical">Vertical</option>
+            <option value="diagonal">Card</option>
+            <option value="diagonal-reverse">Reverse Diagonal</option>
+            <option value="grid" selected>Grid</option>
+        </select>
+    </div>
+    
+    <div class="controls">
+        <button class="control-btn" id="securityToggle" onclick="toggleSecurity()" title="Security mode">
+            <span class="eye-icon">👁</span>
+        </button>
+        <button class="control-btn" onclick="toggleLegend()" title="Legend">?</button>
+        <button class="control-btn" onclick="location.href='bw-mode9-layouts.html'" title="Layouts">⋮</button>
+        <button class="control-btn" onclick="location.href='bw-mode.html'" title="Menu">☰</button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+    </div>
+    
+    <div class="grid-container">
+        <!-- Row 1 -->
+        <div class="grid-item empty"></div>
+        <div class="grid-item btc">
+            <div class="coin-label">BTC</div>
+            <div class="price loading" id="btc-price">Loading...</div>
+        </div>
+        <div class="grid-item empty"></div>
+        
+        <!-- Row 2 -->
+        <div class="grid-item eth">
+            <div class="coin-label">ETH</div>
+            <div class="price loading" id="eth-price">Loading...</div>
+        </div>
+        <div class="grid-item center">
+            <div class="center-display">
+                <div class="time-display" id="time">00:00:00</div>
+                <div class="date-display" id="date">-</div>
+            </div>
+        </div>
+        <div class="grid-item sol">
+            <div class="coin-label">SOL</div>
+            <div class="price loading" id="sol-price">Loading...</div>
+        </div>
+        
+        <!-- Row 3 -->
+        <div class="grid-item empty"></div>
+        <div class="grid-item empty"></div>
+        <div class="grid-item empty"></div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="legend" id="legend">
+        <div class="legend-item">
+            <div class="legend-box color-0"></div>
+            <span>0</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-1"></div>
+            <span>1</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-2"></div>
+            <span>2</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-3"></div>
+            <span>3</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-4"></div>
+            <span>4</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-5"></div>
+            <span>5</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-6"></div>
+            <span>6</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-7"></div>
+            <span>7</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-8"></div>
+            <span>8</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-9"></div>
+            <span>9</span>
+        </div>
+    </div>
+    
+    <script>
+        // Size control
+        const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
+        let currentSizeIndex = 3; // Start with 'l' for grid
+        
+        // Security mode
+        let isSecureMode = false;
+        
+        // Layout switcher
+        function switchLayout(layout) {
+            const layoutMap = {
+                'horizontal': 'bw-mode9.html',
+                'vertical': 'bw-mode9-vertical.html',
+                'diagonal': 'bw-mode9-card.html',
+                'diagonal-reverse': 'bw-mode9-diagonal-reverse.html',
+                'grid': 'bw-mode9-grid.html'
+            };
+            
+            if (layoutMap[layout]) {
+                location.href = layoutMap[layout];
+            }
+        }
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            localStorage.setItem('bwPriceSizeGrid', sizes[currentSizeIndex]);
+        }
+        
+        const savedSize = localStorage.getItem('bwPriceSizeGrid');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-l');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        // Time and date display
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('time').textContent = `${hours}:${minutes}:${seconds}`;
+            
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('date').textContent = `${year}-${month}-${day}`;
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        let btcWs, ethWs, solWs;
+        
+        const previousPrices = {
+            btc: '',
+            eth: '',
+            sol: ''
+        };
+        
+        function formatPriceWithBoxes(price, coinType) {
+            const priceStr = price.toFixed(2);
+            const [integerPart, decimalPart] = priceStr.split('.');
+            
+            let boxesHtml = '';
+            
+            const integerDigits = integerPart.split('');
+            
+            for (let i = 0; i < integerDigits.length; i++) {
+                const digit = parseInt(integerDigits[i]);
+                boxesHtml += `<span class="color-box color-${digit}" data-number="${digit}"></span>`;
+            }
+            
+            if (decimalPart) {
+                boxesHtml += '<span class="decimal-separator">·</span>';
+                boxesHtml += '<span class="price-decimal">';
+                
+                for (let i = 0; i < decimalPart.length; i++) {
+                    const digit = decimalPart[i];
+                    boxesHtml += `<span class="color-circle color-${digit}" data-number="${digit}"></span>`;
+                }
+                boxesHtml += '</span>';
+            }
+            
+            previousPrices[coinType] = priceStr;
+            
+            return boxesHtml;
+        }
+        
+        function toggleSecurity() {
+            isSecureMode = !isSecureMode;
+            const btn = document.getElementById('securityToggle');
+            
+            if (isSecureMode) {
+                document.body.classList.add('secure-mode');
+                btn.querySelector('.eye-icon').textContent = '🔒';
+            } else {
+                document.body.classList.remove('secure-mode');
+                btn.querySelector('.eye-icon').textContent = '👁';
+            }
+        }
+        
+        function toggleLegend() {
+            const legend = document.getElementById('legend');
+            legend.classList.toggle('show');
+        }
+        
+        function connectBinanceWebSocket(symbol, elementId) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+                document.getElementById(elementId).classList.remove('loading');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c);
+                
+                const coinType = symbol.replace('USDT', '').toLowerCase();
+                document.getElementById(elementId).innerHTML = formatPriceWithBoxes(price, coinType);
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Disconnected from ${symbol} stream. Reconnecting...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, elementId);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        function initializeWebSockets() {
+            btcWs = connectBinanceWebSocket('BTCUSDT', 'btc-price');
+            ethWs = connectBinanceWebSocket('ETHUSDT', 'eth-price');
+            solWs = connectBinanceWebSocket('SOLUSDT', 'sol-price');
+        }
+        
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                if (results[0]) {
+                    const btcPrice = parseFloat(results[0].lastPrice);
+                    document.getElementById('btc-price').innerHTML = formatPriceWithBoxes(btcPrice, 'btc');
+                    document.getElementById('btc-price').classList.remove('loading');
+                }
+                if (results[1]) {
+                    const ethPrice = parseFloat(results[1].lastPrice);
+                    document.getElementById('eth-price').innerHTML = formatPriceWithBoxes(ethPrice, 'eth');
+                    document.getElementById('eth-price').classList.remove('loading');
+                }
+                if (results[2]) {
+                    const solPrice = parseFloat(results[2].lastPrice);
+                    document.getElementById('sol-price').innerHTML = formatPriceWithBoxes(solPrice, 'sol');
+                    document.getElementById('sol-price').classList.remove('loading');
+                }
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            initializeWebSockets();
+            fetchPricesAPI();
+            setInterval(fetchPricesAPI, 10000);
+        });
+        
+        window.addEventListener('beforeunload', () => {
+            if (btcWs) btcWs.close();
+            if (ethWs) ethWs.close();
+            if (solWs) solWs.close();
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === '=') {
+                adjustSize('increase');
+            } else if (e.key === '-' || e.key === '_') {
+                adjustSize('decrease');
+            } else if (e.key === '?') {
+                toggleLegend();
+            }
+        });
+    </script>
+</body>
+</html>

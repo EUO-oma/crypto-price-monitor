@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Chat 💬</title>
+    
+    <!-- 파비콘 및 메타 태그 -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#0a0a0a">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            background-color: #0a0a0a;
+        }
+
+        .chat-header {
+            background-color: #1a1a1a;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .chat-header h1 {
+            font-size: 18px;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #0a0a0a;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.sent {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: calc(100% - 44px);
+        }
+
+        .message.sent .message-content {
+            align-items: flex-end;
+        }
+
+        .message-bubble {
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 10px 14px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            max-width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message.sent .message-bubble {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+        }
+
+        .message-time {
+            font-size: 10px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .message-text {
+            flex-grow: 1;
+            word-break: break-word;
+        }
+
+        .coin-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .chat-input-container {
+            border-top: 1px solid #333;
+            background-color: #0a0a0a;
+            padding: 15px;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        #chatInput {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #333;
+            border-radius: 20px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            max-height: 100px;
+            line-height: 1.5;
+            font-family: inherit;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        #chatInput:focus {
+            border-color: #555;
+        }
+
+        #sendButton {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            padding: 0;
+        }
+
+        #sendButton:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        #sendButton:disabled {
+            background: #333;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state.show {
+            display: block;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-header h1 {
+                font-size: 20px;
+            }
+
+            .message-bubble {
+                max-width: 85%;
+            }
+
+            #chatInput {
+                font-size: 14px;
+            }
+
+            #sendButton {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+
+        /* Custom scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>💬 Anonymous Chat</h1>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="empty-state show" id="emptyState">
+                <div class="empty-state-icon">💬</div>
+                <p>Start a conversation by typing a message below</p>
+            </div>
+        </div>
+        
+        
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    id="chatInput" 
+                    placeholder="메시지를 입력하세요..." 
+                    rows="1"
+                    maxlength="1000"
+                ></textarea>
+                <button id="sendButton">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="white"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-env.js"></script>
+    <script src="config-loader.js"></script>
+    <script>
+        // 브라우저 식별 ID
+        function getBrowserId() {
+            let browserId = localStorage.getItem('persistent_browser_id');
+            if (!browserId) {
+                const deviceType = /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'M' : 'D';
+                const timestamp = Date.now().toString(36);
+                const random = Math.random().toString(36).substr(2, 6);
+                browserId = `${deviceType}_${timestamp}_${random}`;
+                localStorage.setItem('persistent_browser_id', browserId);
+            }
+            return browserId;
+        }
+
+        const myBrowserId = getBrowserId();
+
+        // 코인 목록과 아바타 맵핑
+        const coins = [
+            { name: 'BTC', emoji: '₿', color: '#f7931a' },
+            { name: 'ETH', emoji: 'Ξ', color: '#627eea' },
+            { name: 'SOL', emoji: '◎', color: '#00FFA3' },
+            { name: 'BNB', emoji: '🔸', color: '#f3ba2f' },
+            { name: 'ADA', emoji: '₳', color: '#0033ad' },
+            { name: 'XRP', emoji: '✕', color: '#23292f' },
+            { name: 'DOT', emoji: '●', color: '#e6007a' },
+            { name: 'DOGE', emoji: 'Ð', color: '#c2a633' },
+            { name: 'AVAX', emoji: '🔺', color: '#e84142' },
+            { name: 'MATIC', emoji: '⬡', color: '#8247e5' },
+            { name: 'LINK', emoji: '⬢', color: '#2a5ada' },
+            { name: 'UNI', emoji: '🦄', color: '#ff007a' },
+            { name: 'ATOM', emoji: '⚛', color: '#2e3148' },
+            { name: 'LTC', emoji: 'Ł', color: '#bfbbbb' },
+            { name: 'BCH', emoji: '฿', color: '#8dc351' },
+            { name: 'ALGO', emoji: 'Ⱥ', color: '#000000' },
+            { name: 'XLM', emoji: '*', color: '#08b5e5' },
+            { name: 'ICP', emoji: '∞', color: '#3b00b9' },
+            { name: 'FIL', emoji: '⌘', color: '#0090ff' },
+            { name: 'ETC', emoji: 'ξ', color: '#328332' },
+            { name: 'TRON', emoji: '⮉', color: '#ff0013' },
+            { name: 'THETA', emoji: 'Θ', color: '#2ab8e6' },
+            { name: 'AAVE', emoji: '◗', color: '#b6509e' },
+            { name: 'SHIB', emoji: '🐕', color: '#ffa409' },
+            { name: 'FTM', emoji: '👻', color: '#1969ff' },
+            { name: 'EOS', emoji: '◯', color: '#000000' }
+        ];
+
+        let avatarMapping = {};
+        let channel = null;
+        let messageCount = 0;
+        const MAX_MESSAGES = 100;
+
+        // 저장된 아바타 맵핑 로드
+        function loadAvatarMapping() {
+            const saved = localStorage.getItem('avatarMapping');
+            if (saved) {
+                avatarMapping = JSON.parse(saved);
+            }
+        }
+
+        // 아바타 맵핑 저장
+        function saveAvatarMapping() {
+            localStorage.setItem('avatarMapping', JSON.stringify(avatarMapping));
+        }
+
+        // 브라우저 ID에 코인 할당
+        function getAvatarForBrowser(browserId) {
+            if (!avatarMapping[browserId]) {
+                const usedCoins = Object.values(avatarMapping);
+                const availableCoins = coins.filter(coin => !usedCoins.includes(coin.name));
+                
+                if (availableCoins.length === 0) {
+                    // 모든 코인이 사용 중이면 랜덤 선택
+                    avatarMapping[browserId] = coins[Math.floor(Math.random() * coins.length)].name;
+                } else {
+                    avatarMapping[browserId] = availableCoins[Math.floor(Math.random() * availableCoins.length)].name;
+                }
+                saveAvatarMapping();
+            }
+            
+            const coinName = avatarMapping[browserId];
+            return coins.find(coin => coin.name === coinName) || coins[0];
+        }
+
+        // Chat functionality
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        const emptyState = document.getElementById('emptyState');
+
+        // Auto-resize textarea
+        function autoResize() {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = chatInput.scrollHeight + 'px';
+        }
+
+        chatInput.addEventListener('input', autoResize);
+
+        // Send message on Enter (without Shift)
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Send button click
+        sendButton.addEventListener('click', sendMessage);
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            
+            if (!message) return;
+            
+            // Initialize Supabase if needed
+            if (!window.supabaseClient) {
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    console.error('Configuration not loaded');
+                    return;
+                }
+            }
+
+            // Hide empty state
+            emptyState.classList.remove('show');
+            
+            // Clear input
+            chatInput.value = '';
+            autoResize();
+            
+            // Disable input while sending
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+            
+            try {
+                // 메시지 저장
+                const { data, error } = await window.supabaseClient
+                    .from('messages')
+                    .insert([
+                        {
+                            browser_id: myBrowserId,
+                            message: message,
+                            created_at: new Date().toISOString()
+                        }
+                    ])
+                    .select();
+                
+                if (error) throw error;
+            } catch (error) {
+                console.error('메시지 전송 실패:', error);
+            } finally {
+                // Re-enable input
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        function addMessage(message, browserId, timestamp) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${browserId === myBrowserId ? 'sent' : 'received'}`;
+            
+            // 코인 아바타
+            const avatar = getAvatarForBrowser(browserId);
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'coin-avatar';
+            avatarDiv.style.background = avatar.color;
+            avatarDiv.textContent = avatar.emoji;
+            
+            // 메시지 컨텐츠
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            // 메시지 버블
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            
+            const textDiv = document.createElement('div');
+            textDiv.className = 'message-text';
+            textDiv.textContent = message;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            const date = new Date(timestamp);
+            timeDiv.textContent = date.toLocaleTimeString('ko-KR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            bubbleDiv.appendChild(textDiv);
+            bubbleDiv.appendChild(timeDiv);
+            contentDiv.appendChild(bubbleDiv);
+            
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(contentDiv);
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // 메시지 수 관리
+            messageCount++;
+            while (messageCount > MAX_MESSAGES) {
+                const firstMessage = chatMessages.querySelector('.message');
+                if (firstMessage) {
+                    firstMessage.remove();
+                    messageCount--;
+                }
+            }
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 메시지 로드
+        async function loadMessages() {
+            // Initialize Supabase if needed
+            if (!window.supabaseClient) {
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    setTimeout(loadMessages, 100);
+                    return;
+                }
+            }
+            
+            try {
+                // 최근 50개 메시지 로드
+                const { data: messages, error } = await window.supabaseClient
+                    .from('messages')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+                
+                if (error) throw error;
+                
+                // 메시지 역순으로 표시 (오래된 것부터)
+                if (messages && messages.length > 0) {
+                    emptyState.classList.remove('show');
+                    messages.reverse().forEach(msg => {
+                        addMessage(msg.message, msg.browser_id, msg.created_at);
+                    });
+                } else {
+                    emptyState.classList.add('show');
+                }
+            } catch (error) {
+                console.error('메시지 로드 실패:', error);
+                emptyState.classList.add('show');
+            }
+        }
+
+        // 실시간 구독 설정
+        function setupRealtimeSubscription() {
+            // Initialize Supabase if needed
+            if (!window.supabaseClient) {
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    setTimeout(setupRealtimeSubscription, 100);
+                    return;
+                }
+            }
+            
+            channel = window.supabaseClient
+                .channel('messages_channel')
+                .on(
+                    'postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'messages' },
+                    (payload) => {
+                        const newMessage = payload.new;
+                        addMessage(newMessage.message, newMessage.browser_id, newMessage.created_at);
+                        emptyState.classList.remove('show');
+                    }
+                )
+                .subscribe();
+        }
+
+        // 초기화
+        window.addEventListener('load', async () => {
+            loadAvatarMapping();
+            await loadMessages();
+            setupRealtimeSubscription();
+            chatInput.focus();
+        });
+
+        // 페이지 언로드 시 정리
+        window.addEventListener('beforeunload', () => {
+            if (channel) {
+                window.supabaseClient.removeChannel(channel);
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (chatMessages.scrollHeight > chatMessages.clientHeight) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>

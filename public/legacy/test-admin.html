@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Test</title>
+</head>
+<body>
+    <h1>Admin Test - Supabase Connection</h1>
+    <div id="status">Checking...</div>
+    <div id="links">Loading links...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-env.js"></script>
+    <script src="config-loader.js"></script>
+    <script>
+        async function testConnection() {
+            const statusDiv = document.getElementById('status');
+            const linksDiv = document.getElementById('links');
+
+            // Initialize Supabase if needed
+            if (!window.supabaseClient) {
+                if (window.APP_CONFIG && window.APP_CONFIG.SUPABASE) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.APP_CONFIG.SUPABASE.URL,
+                        window.APP_CONFIG.SUPABASE.ANON_KEY
+                    );
+                } else {
+                    statusDiv.innerHTML = 'Error: Configuration not loaded';
+                    console.error('Configuration not loaded');
+                    return;
+                }
+            }
+
+            statusDiv.innerHTML = 'Supabase initialized successfully';
+            console.log('Supabase client:', window.supabaseClient);
+
+            try {
+                // Try to fetch links
+                console.log('Fetching links...');
+                const { data: links, error } = await window.supabaseClient
+                    .from('links')
+                    .select('*')
+                    .limit(5);
+
+                if (error) {
+                    throw error;
+                }
+
+                console.log('Links fetched:', links);
+                linksDiv.innerHTML = '<h2>Links Found: ' + (links ? links.length : 0) + '</h2>';
+
+                if (links && links.length > 0) {
+                    linksDiv.innerHTML += '<ul>';
+                    links.forEach(link => {
+                        linksDiv.innerHTML += `<li>${link.name} - ${link.category}</li>`;
+                    });
+                    linksDiv.innerHTML += '</ul>';
+                } else {
+                    linksDiv.innerHTML += '<p>No links found</p>';
+                }
+
+            } catch (error) {
+                console.error('Error fetching links:', error);
+                linksDiv.innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        // Run test when page loads
+        testConnection();
+    </script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단한 채팅 테스트</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            margin: 0;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input {
+            width: calc(100% - 120px);
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100px;
+            padding: 10px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #messages {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .message {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #007bff;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+            padding: 10px;
+            background: #ffe0e0;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e0ffe0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>간단한 채팅 테스트</h1>
+        
+        <div id="status"></div>
+        
+        <div style="margin: 20px 0;">
+            <input type="text" id="message-input" placeholder="메시지 입력" value="테스트">
+            <button onclick="sendSimpleMessage()">전송</button>
+        </div>
+        
+        <button onclick="loadMessages()">메시지 불러오기</button>
+        <button onclick="testConnection()">연결 테스트</button>
+        
+        <div id="messages"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-loader.js"></script>
+    <script>
+        // 상태 표시
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = type;
+            status.textContent = message;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.textContent = '';
+                }, 3000);
+            }
+        }
+        
+        // 연결 테스트
+        async function testConnection() {
+            showStatus('연결 테스트 중...', 'info');
+            
+            try {
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .select('count');
+                
+                if (error) {
+                    showStatus('연결 실패: ' + error.message, 'error');
+                } else {
+                    showStatus('연결 성공!', 'success');
+                }
+            } catch (e) {
+                showStatus('예외: ' + e.message, 'error');
+            }
+        }
+        
+        // 메시지 전송 (가장 간단한 버전)
+        async function sendSimpleMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message) {
+                showStatus('메시지를 입력하세요', 'error');
+                return;
+            }
+            
+            showStatus('전송 중...', 'info');
+            
+            try {
+                // 가장 간단하게 - message 필드만
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .insert([{ message: message }])
+                    .select();
+                
+                if (error) {
+                    console.error('전체 에러:', error);
+                    showStatus('전송 실패: ' + error.message, 'error');
+                } else {
+                    showStatus('전송 성공!', 'success');
+                    input.value = '';
+                    loadMessages();
+                }
+            } catch (e) {
+                console.error('예외:', e);
+                showStatus('예외 발생: ' + e.message, 'error');
+            }
+        }
+        
+        // 메시지 불러오기
+        async function loadMessages() {
+            showStatus('메시지 불러오는 중...', 'info');
+            
+            try {
+                const { data, error } = await window.supabaseClient.from('messages')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (error) {
+                    showStatus('불러오기 실패: ' + error.message, 'error');
+                } else {
+                    showStatus('불러오기 성공!', 'success');
+                    
+                    const messagesDiv = document.getElementById('messages');
+                    if (data && data.length > 0) {
+                        messagesDiv.innerHTML = data.map(msg => `
+                            <div class="message">
+                                <strong>${new Date(msg.created_at).toLocaleTimeString()}</strong><br>
+                                ${msg.message}
+                            </div>
+                        `).join('');
+                    } else {
+                        messagesDiv.innerHTML = '<div class="message">메시지가 없습니다</div>';
+                    }
+                }
+            } catch (e) {
+                showStatus('예외: ' + e.message, 'error');
+            }
+        }
+        
+        // 페이지 로드시 자동 실행
+        window.addEventListener('DOMContentLoaded', () => {
+            testConnection();
+            loadMessages();
+        });
+        
+        // Enter 키로 전송
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendSimpleMessage();
+            }
+        });
+    </script>
+</body>
+</html>

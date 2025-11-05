@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Links Debug</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config-env.js"></script>
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+</head>
+<body>
+    <h1>Admin Links Debug</h1>
+    <button onclick="checkAll()">Check All</button>
+    <pre id="output"></pre>
+
+    <script>
+        async function checkAll() {
+            const output = document.getElementById('output');
+            const results = [];
+
+            // 1. Config 체크
+            results.push('=== CONFIG CHECK ===');
+            results.push(`APP_CONFIG exists: ${!!window.APP_CONFIG}`);
+            results.push(`ENV_CONFIG exists: ${!!window.ENV_CONFIG}`);
+            
+            if (window.APP_CONFIG) {
+                results.push(`APP_CONFIG.ADMIN.ALLOWED_EMAILS: ${JSON.stringify(window.APP_CONFIG.ADMIN?.ALLOWED_EMAILS)}`);
+                results.push(`APP_CONFIG.ADMIN.DEV_MODE: ${window.APP_CONFIG.ADMIN?.DEV_MODE}`);
+            }
+            
+            if (window.ENV_CONFIG) {
+                results.push(`ENV_CONFIG.ADMIN.ALLOWED_EMAILS: ${JSON.stringify(window.ENV_CONFIG.ADMIN?.ALLOWED_EMAILS)}`);
+                results.push(`ENV_CONFIG.ADMIN.DEV_MODE: ${window.ENV_CONFIG.ADMIN?.DEV_MODE}`);
+            }
+
+            // 2. getConfig 테스트
+            results.push('\n=== getConfig TEST ===');
+            if (window.getConfig) {
+                const emails = window.getConfig('ADMIN.ALLOWED_EMAILS');
+                const devMode = window.getConfig('ADMIN.DEV_MODE');
+                results.push(`getConfig('ADMIN.ALLOWED_EMAILS'): ${JSON.stringify(emails)}`);
+                results.push(`getConfig('ADMIN.DEV_MODE'): ${devMode}`);
+            } else {
+                results.push('getConfig function not found!');
+            }
+
+            // 3. Session 체크
+            results.push('\n=== SESSION CHECK ===');
+            try {
+                const session = await window.checkAuth();
+                if (session) {
+                    results.push(`Logged in as: ${session.user.email}`);
+                    results.push(`Provider: ${session.user.app_metadata?.provider}`);
+                } else {
+                    results.push('Not logged in');
+                }
+            } catch (error) {
+                results.push(`Session error: ${error.message}`);
+            }
+
+            // 4. Admin Access 체크
+            results.push('\n=== ADMIN ACCESS CHECK ===');
+            try {
+                const isAdmin = await window.checkAdminAccess();
+                results.push(`Admin access: ${isAdmin ? 'YES' : 'NO'}`);
+            } catch (error) {
+                results.push(`Admin check error: ${error.message}`);
+            }
+
+            output.textContent = results.join('\n');
+        }
+
+        // 자동 실행
+        window.addEventListener('load', () => {
+            setTimeout(checkAll, 1000);
+        });
+    </script>
+</body>
+</html>

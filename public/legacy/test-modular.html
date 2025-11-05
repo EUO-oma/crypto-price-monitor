@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modular Version Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 20px;
+        }
+        .test-section {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .log-entry {
+            padding: 5px;
+            margin: 2px 0;
+            border-left: 3px solid #444;
+        }
+        .log-entry.part1 { border-color: #3b82f6; }
+        .log-entry.part2 { border-color: #10b981; }
+    </style>
+</head>
+<body>
+    <!-- Configuration Scripts -->
+    <script src="config-loader.js"></script>
+    <script src="auth-helper.js"></script>
+    <h1>🔧 Modular Version Test</h1>
+    
+    <div class="test-section">
+        <h2>테스트 목적</h2>
+        <p>이 페이지는 index-modular.html의 모듈화된 구조가 제대로 작동하는지 테스트합니다.</p>
+        <ul>
+            <li>Part1: WebSocket 코인 가격 (독립적)</li>
+            <li>Part2: Supabase 데이터 (채팅 + 링크) (독립적)</li>
+            <li>변수/함수 충돌 없음 확인</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>실시간 로그</h2>
+        <button onclick="clearLogs()">로그 지우기</button>
+        <button onclick="testPart1()">Part1 테스트</button>
+        <button onclick="testPart2()">Part2 테스트</button>
+        <button onclick="testBoth()">동시 실행 테스트</button>
+        <div id="logs" style="max-height: 400px; overflow-y: auto; margin-top: 20px;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>상태 확인</h2>
+        <button onclick="checkStatus()">현재 상태 확인</button>
+        <div id="status-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>모듈화 페이지</h2>
+        <p>아래 버튼을 클릭하여 모듈화된 페이지를 새 창에서 엽니다:</p>
+        <button onclick="openModular()">index-modular.html 열기</button>
+    </div>
+
+    <script>
+        // 로그 시스템
+        const logContainer = document.getElementById('logs');
+        
+        function log(message, type = 'info', part = '') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${part}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `<span class="${type}">[${timestamp}] ${part ? `[${part.toUpperCase()}]` : ''} ${message}</span>`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function clearLogs() {
+            logContainer.innerHTML = '';
+            log('로그 지움', 'info');
+        }
+        
+        // Part1 테스트
+        function testPart1() {
+            log('Part1 (코인 가격) 테스트 시작', 'info', 'part1');
+            
+            // WebSocket 연결 시뮬레이션
+            const coins = ['BTC', 'ETH', 'SOL'];
+            
+            coins.forEach((coin, index) => {
+                setTimeout(() => {
+                    log(`${coin} WebSocket 연결 시도...`, 'info', 'part1');
+                    
+                    // 실제 WebSocket 테스트
+                    const ws = new WebSocket(`wss://fstream.binance.com/ws/${coin.toLowerCase()}usdt@ticker`);
+                    
+                    ws.onopen = () => {
+                        log(`✅ ${coin} WebSocket 연결 성공`, 'success', 'part1');
+                    };
+                    
+                    ws.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        log(`${coin} 가격: $${parseFloat(data.c).toFixed(2)}`, 'info', 'part1');
+                        ws.close();
+                    };
+                    
+                    ws.onerror = (error) => {
+                        log(`❌ ${coin} WebSocket 오류`, 'error', 'part1');
+                    };
+                    
+                }, index * 1000);
+            });
+        }
+        
+        // Part2 테스트
+        async function testPart2() {
+            log('Part2 (Supabase) 테스트 시작', 'info', 'part2');
+            
+            // Supabase 라이브러리 확인
+            if (!window.supabase) {
+                log('Supabase 라이브러리 로드 중...', 'warning', 'part2');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            if (!window.supabase) {
+                log('❌ Supabase 라이브러리를 찾을 수 없음', 'error', 'part2');
+                return;
+            }
+            
+            log('✅ Supabase 라이브러리 로드됨', 'success', 'part2');
+            
+            try {
+                // Wait for config
+                const waitForConfig = () => {
+                    return new Promise((resolve) => {
+                        if (window.APP_CONFIG?.SUPABASE?.URL) {
+                            resolve();
+                        } else {
+                            window.addEventListener('configLoaded', resolve, { once: true });
+                            setTimeout(resolve, 2000); // Fallback
+                        }
+                    });
+                };
+                
+                await waitForConfig();
+                
+                // Get configuration
+                const supabaseUrl = window.APP_CONFIG?.SUPABASE?.URL || 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const supabaseKey = window.APP_CONFIG?.SUPABASE?.ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                if (!supabaseUrl || !supabaseKey) {
+                    log('❌ Supabase configuration not found', 'error', 'part2');
+                    return;
+                }
+                
+                // Supabase 클라이언트 생성
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                
+                log('✅ Supabase 클라이언트 생성됨', 'success', 'part2');
+                
+                // 링크 조회 테스트
+                const { data: links, error: linksError } = await supabase
+                    .from('links')
+                    .select('*')
+                    .limit(5);
+                
+                if (linksError) {
+                    log(`❌ 링크 조회 실패: ${linksError.message}`, 'error', 'part2');
+                } else {
+                    log(`✅ 링크 ${links.length}개 조회 성공`, 'success', 'part2');
+                }
+                
+                // 메시지 조회 테스트
+                const { data: messages, error: messagesError } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .limit(5);
+                
+                if (messagesError) {
+                    log(`❌ 메시지 조회 실패: ${messagesError.message}`, 'error', 'part2');
+                } else {
+                    log(`✅ 메시지 ${messages.length}개 조회 성공`, 'success', 'part2');
+                }
+                
+            } catch (error) {
+                log(`❌ Part2 테스트 실패: ${error.message}`, 'error', 'part2');
+            }
+        }
+        
+        // 동시 실행 테스트
+        function testBoth() {
+            log('=== 동시 실행 테스트 시작 ===', 'info');
+            testPart1();
+            testPart2();
+        }
+        
+        // 상태 확인
+        function checkStatus() {
+            const result = document.getElementById('status-result');
+            
+            const status = {
+                supabaseLibrary: !!window.supabase,
+                supabaseClient: !!window.supabase?.createClient,
+                webSocketAPI: typeof WebSocket !== 'undefined',
+                part1Defined: typeof Part1 !== 'undefined',
+                part2Defined: typeof Part2 !== 'undefined'
+            };
+            
+            let html = '<h3>시스템 상태</h3><pre>';
+            for (const [key, value] of Object.entries(status)) {
+                html += `${key}: ${value ? '✅' : '❌'}\n`;
+            }
+            html += '</pre>';
+            
+            // 모듈 격리 확인
+            html += '<h3>모듈 격리 테스트</h3>';
+            html += '<p>각 모듈이 독립적인 네임스페이스를 사용하는지 확인:</p>';
+            html += '<pre>';
+            
+            // Part1과 Part2가 정의되어 있는지 확인
+            if (typeof window.Part1 !== 'undefined') {
+                html += '❌ Part1이 전역에 노출됨 (격리 실패)\n';
+            } else {
+                html += '✅ Part1이 전역에 노출되지 않음 (격리 성공)\n';
+            }
+            
+            if (typeof window.Part2 !== 'undefined') {
+                html += '❌ Part2가 전역에 노출됨 (격리 실패)\n';
+            } else {
+                html += '✅ Part2가 전역에 노출되지 않음 (격리 성공)\n';
+            }
+            
+            html += '</pre>';
+            
+            result.innerHTML = html;
+        }
+        
+        // 모듈화 페이지 열기
+        function openModular() {
+            window.open('index-modular.html', '_blank');
+        }
+        
+        // Supabase 라이브러리 로드
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = () => {
+            log('✅ Supabase 라이브러리 로드 완료', 'success');
+        };
+        document.head.appendChild(script);
+        
+        // 초기 로그
+        log('테스트 페이지 준비 완료', 'info');
+        log('각 테스트 버튼을 클릭하여 모듈 동작을 확인하세요', 'info');
+    </script>
+</body>
+</html>

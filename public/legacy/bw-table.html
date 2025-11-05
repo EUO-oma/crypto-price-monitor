@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BW Table</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 300;
+            color: #fff;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            border-radius: 4px;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 auto;
+            background: #0a0a0a;
+            border: 1px solid #222;
+        }
+        
+        th, td {
+            padding: 12px 16px;
+            text-align: right;
+            border: 1px solid #222;
+            white-space: nowrap;
+        }
+        
+        th {
+            background: #1a1a1a;
+            font-weight: 500;
+            color: #888;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        th:first-child, td:first-child {
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #111;
+        }
+        
+        .coin-symbol {
+            color: #fff;
+            font-size: 1.1em;
+        }
+        
+        .price {
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+        }
+        
+        .positive {
+            color: #4caf50;
+        }
+        
+        .negative {
+            color: #f44336;
+        }
+        
+        .low-price {
+            color: #ff9800;
+        }
+        
+        .target-10-down {
+            color: #e91e63;
+        }
+        
+        .target-5-down {
+            color: #ff5722;
+        }
+        
+        .target-5-up {
+            color: #4caf50;
+        }
+        
+        .target-10-up {
+            color: #00bcd4;
+        }
+        
+        .loading {
+            color: #666;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            th, td {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+        }
+        
+        /* Size variations */
+        .size-xs { font-size: 12px; }
+        .size-s { font-size: 14px; }
+        .size-m { font-size: 16px; }
+        .size-l { font-size: 18px; }
+        .size-xl { font-size: 20px; }
+    </style>
+</head>
+<body class="size-m">
+    <div class="header">
+        <h1>Crypto Price Table</h1>
+        <div class="controls">
+            <button class="control-btn" onclick="adjustSize('increase')">+</button>
+            <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Coin</th>
+                    <th>Current Price</th>
+                    <th>24h Low</th>
+                    <th>Difference</th>
+                    <th class="target-10-down">-10%</th>
+                    <th class="target-5-down">-5%</th>
+                    <th class="target-5-up">+5%</th>
+                    <th class="target-10-up">+10%</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="coin-symbol">BTC</td>
+                    <td class="price loading" id="btc-current">------</td>
+                    <td class="price low-price loading" id="btc-low">------</td>
+                    <td class="price loading" id="btc-diff">------</td>
+                    <td class="price target-10-down loading" id="btc-10down">------</td>
+                    <td class="price target-5-down loading" id="btc-5down">------</td>
+                    <td class="price target-5-up loading" id="btc-5up">------</td>
+                    <td class="price target-10-up loading" id="btc-10up">------</td>
+                </tr>
+                <tr>
+                    <td class="coin-symbol">ETH</td>
+                    <td class="price loading" id="eth-current">------</td>
+                    <td class="price low-price loading" id="eth-low">------</td>
+                    <td class="price loading" id="eth-diff">------</td>
+                    <td class="price target-10-down loading" id="eth-10down">------</td>
+                    <td class="price target-5-down loading" id="eth-5down">------</td>
+                    <td class="price target-5-up loading" id="eth-5up">------</td>
+                    <td class="price target-10-up loading" id="eth-10up">------</td>
+                </tr>
+                <tr>
+                    <td class="coin-symbol">SOL</td>
+                    <td class="price loading" id="sol-current">------</td>
+                    <td class="price low-price loading" id="sol-low">------</td>
+                    <td class="price loading" id="sol-diff">------</td>
+                    <td class="price target-10-down loading" id="sol-10down">------</td>
+                    <td class="price target-5-down loading" id="sol-5down">------</td>
+                    <td class="price target-5-up loading" id="sol-5up">------</td>
+                    <td class="price target-10-up loading" id="sol-10up">------</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        // Size control
+        const sizes = ['xs', 's', 'm', 'l', 'xl'];
+        let currentSizeIndex = 2; // Start with 'm'
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            // Remove all size classes
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            
+            // Add current size class
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            // Save preference
+            localStorage.setItem('bwTableSize', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwTableSize');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-m');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        // Format number with commas
+        function formatNumber(num) {
+            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        
+        // Update table row
+        function updateRow(coin, currentPrice, low24h) {
+            const diff = currentPrice - low24h;
+            const diffClass = diff >= 0 ? 'positive' : 'negative';
+            
+            // Calculate percentage levels
+            const low10 = low24h * 0.90;
+            const low5 = low24h * 0.95;
+            const high5 = low24h * 1.05;
+            const high10 = low24h * 1.10;
+            
+            // Update cells
+            document.getElementById(`${coin}-current`).textContent = formatNumber(currentPrice);
+            document.getElementById(`${coin}-current`).classList.remove('loading');
+            
+            document.getElementById(`${coin}-low`).textContent = formatNumber(low24h);
+            document.getElementById(`${coin}-low`).classList.remove('loading');
+            
+            const diffElement = document.getElementById(`${coin}-diff`);
+            diffElement.textContent = formatNumber(diff);
+            diffElement.className = `price ${diffClass}`;
+            
+            document.getElementById(`${coin}-10down`).textContent = formatNumber(low10);
+            document.getElementById(`${coin}-10down`).classList.remove('loading');
+            
+            document.getElementById(`${coin}-5down`).textContent = formatNumber(low5);
+            document.getElementById(`${coin}-5down`).classList.remove('loading');
+            
+            document.getElementById(`${coin}-5up`).textContent = formatNumber(high5);
+            document.getElementById(`${coin}-5up`).classList.remove('loading');
+            
+            document.getElementById(`${coin}-10up`).textContent = formatNumber(high10);
+            document.getElementById(`${coin}-10up`).classList.remove('loading');
+        }
+        
+        // Binance WebSocket connections
+        let btcWs, ethWs, solWs;
+        
+        function connectBinanceWebSocket(symbol, coin) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Connected to ${symbol} stream`);
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const currentPrice = parseFloat(data.c);
+                const low24h = parseFloat(data.l);
+                
+                updateRow(coin, currentPrice, low24h);
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`WebSocket error for ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`WebSocket closed for ${symbol}`);
+                // Reconnect after 5 seconds
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, coin);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Initialize WebSocket connections
+        function initializeWebSockets() {
+            btcWs = connectBinanceWebSocket('BTCUSDT', 'btc');
+            ethWs = connectBinanceWebSocket('ETHUSDT', 'eth');
+            solWs = connectBinanceWebSocket('SOLUSDT', 'sol');
+        }
+        
+        // Fallback: Fetch prices via API
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const coins = ['btc', 'eth', 'sol'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                results.forEach((data, index) => {
+                    if (data && data.lastPrice && data.lowPrice) {
+                        const currentPrice = parseFloat(data.lastPrice);
+                        const low24h = parseFloat(data.lowPrice);
+                        updateRow(coins[index], currentPrice, low24h);
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+        
+        // Initialize
+        initializeWebSockets();
+        
+        // Fallback API call
+        setTimeout(() => {
+            fetchPricesAPI();
+        }, 2000);
+        
+        // Periodic API updates every 30 seconds as backup
+        setInterval(fetchPricesAPI, 30000);
+    </script>
+    
+    <!-- Hidden footer -->
+    <footer style="position: fixed; bottom: 10px; right: 10px; opacity: 0.3; font-size: 12px;">
+        <a href="bw-mode.html" style="color: #444; text-decoration: none;">made by euo</a>
+    </footer>
+</body>
+</html>

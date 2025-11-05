@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BW Режим 9 - Цветные блоки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .control-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .price-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5vh;
+            padding: 10vh 10vw;
+            width: 100vw;
+            height: 100vh;
+            box-sizing: border-box;
+            margin: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        
+        .price-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 1vw;
+            width: 100%;
+            line-height: 1.4;
+            position: relative;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .price {
+            font-size: 60px;
+            font-weight: 300;
+            transition: font-size 0.3s ease;
+            display: flex;
+            align-items: baseline;
+            font-variant-numeric: tabular-nums;
+            gap: 0;
+        }
+        
+        /* Color box styles - 3D card effect */
+        .color-box {
+            display: inline-block;
+            width: 80px;
+            height: 120px;
+            border-radius: 12px;
+            margin: 0 0.5vw;
+            vertical-align: middle;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: help;
+            transform-style: preserve-3d;
+            transform: perspective(1000px) rotateY(0deg);
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+            background-image: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                transparent 50%, 
+                rgba(0, 0, 0, 0.1) 100%);
+        }
+        
+        .color-box:hover {
+            transform: perspective(1000px) rotateY(10deg) translateZ(10px) scale(1.05);
+            border-color: rgba(255, 255, 255, 1);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                0 24px 48px rgba(0, 0, 0, 0.5),
+                0 0 30px currentColor,
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+        }
+        
+        /* Removed glow effect */
+        .color-box,
+        .color-circle {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Tooltip on hover */
+        .color-box::after {
+            content: attr(data-number);
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .color-box:hover::after {
+            opacity: 1;
+        }
+        
+        /* Circle style for decimal points - now same as boxes */
+        .color-circle {
+            display: inline-block;
+            width: 80px;
+            height: 120px;
+            border-radius: 12px;
+            margin: 0 0.5vw;
+            vertical-align: middle;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: help;
+            transform-style: preserve-3d;
+            transform: perspective(1000px) rotateY(0deg);
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+            background-image: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                transparent 50%, 
+                rgba(0, 0, 0, 0.1) 100%);
+        }
+        
+        .color-circle:hover {
+            transform: perspective(1000px) rotateY(10deg) translateZ(10px) scale(1.05);
+            border-color: rgba(255, 255, 255, 1);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                0 24px 48px rgba(0, 0, 0, 0.5),
+                0 0 30px currentColor,
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+        }
+        
+        /* Tooltip for circles */
+        .color-circle::after {
+            content: attr(data-number);
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .color-circle:hover::after {
+            opacity: 1;
+        }
+        
+        /* Number to color mapping */
+        .color-0 { background-color: #808080; } /* Серый - Gray */
+        .color-1 { background-color: #FFFFFF; } /* Белый - White */
+        .color-2 { background-color: #FF1744; } /* Красный - Crimson */
+        
+        .color-3 { background-color: #FF8C00; } /* Оранжевый - Dark Orange */
+        .color-4 { background-color: #FFFF00; } /* Жёлтый - Yellow */
+        .color-5 { background-color: #90EE90; } /* Зелёный - Green */
+        .color-6 { background-color: #5DADE2; } /* Небесный - Sky Blue */
+        .color-7 { background-color: #00008B; } /* Синий - Medium Blue */
+        .color-8 { background-color: #8B00FF; } /* Фиолетовый - Violet */
+        .color-9 { background-color: #000000; } /* Чёрный - Black */
+        
+        .price-decimal {
+            font-size: 0.7em;
+            color: #666;
+            display: flex;
+            gap: 2px;
+        }
+        
+        .price-decimal {
+            margin-left: 5px;
+        }
+        
+        /* Size variations - all boxes same size */
+        .size-xs .price { font-size: 20px; }
+        .size-xs .color-box, .size-xs .color-circle { width: 25px; height: 35px; border-radius: 5px; }
+        
+        .size-s .price { font-size: 28px; }
+        .size-s .color-box, .size-s .color-circle { width: 35px; height: 50px; border-radius: 6px; }
+        
+        .size-m .price { font-size: 36px; }
+        .size-m .color-box, .size-m .color-circle { width: 45px; height: 65px; border-radius: 8px; }
+        
+        .size-l .price { font-size: 48px; }
+        .size-l .color-box, .size-l .color-circle { width: 60px; height: 85px; border-radius: 10px; }
+        
+        .size-xl .price { font-size: 56px; }
+        .size-xl .color-box, .size-xl .color-circle { width: 70px; height: 100px; border-radius: 11px; }
+        
+        .size-xxl .price { font-size: 60px; }
+        .size-xxl .color-box, .size-xxl .color-circle { width: 80px; height: 120px; border-radius: 12px; }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Secure mode - shows original numbers */
+        .secure-mode .color-box,
+        .secure-mode .color-circle {
+            background: transparent !important;
+            border: 1px solid #444;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .secure-mode .color-box::before,
+        .secure-mode .color-circle::before {
+            content: attr(data-number);
+        }
+        
+        .secure-mode .color-box::after,
+        .secure-mode .color-circle::after {
+            display: none;
+        }
+        
+        /* Individual hide buttons */
+        .hide-btn {
+            background: transparent;
+            border: 1px solid #222;
+            color: #444;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            padding: 0;
+            position: relative;
+            margin-top: 8px;
+        }
+        
+        .hide-btn:hover {
+            border-color: #444;
+            color: #666;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .hide-btn.hidden {
+            color: #222;
+        }
+        
+        /* Simple dot icon */
+        .dot-icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+        
+        .price.hidden {
+            opacity: 0;
+        }
+        
+        /* Legend */
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .legend.show {
+            display: flex;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .legend-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .price-container {
+                gap: 30px;
+            }
+            
+            .controls {
+                top: 10px;
+                right: 10px;
+            }
+            
+            .control-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+            
+            .legend {
+                flex-wrap: wrap;
+                max-width: 90%;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="size-xxl">
+    <div class="controls">
+        <button class="control-btn" id="securityToggle" onclick="toggleSecurity()" title="Режим безопасности">
+            <span class="eye-icon">👁</span>
+        </button>
+        <button class="control-btn" onclick="toggleLegend()" title="Легенда">?</button>
+        <button class="control-btn" onclick="location.href='bw-mode1.html'" title="Числовой режим">123</button>
+        <button class="control-btn" onclick="location.href='bw-mode.html'" title="Меню">☰</button>
+        <button class="control-btn" onclick="adjustSize('increase')">+</button>
+        <button class="control-btn" onclick="adjustSize('decrease')">-</button>
+    </div>
+    
+    <div class="price-container">
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('btc')" id="btc-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="btc-price">Загрузка...</div>
+        </div>
+        
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('eth')" id="eth-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="eth-price">Загрузка...</div>
+        </div>
+        
+        <div class="price-item">
+            <button class="hide-btn" onclick="toggleHide('sol')" id="sol-hide">
+                <span class="dot-icon">•</span>
+            </button>
+            <div class="price loading" id="sol-price">Загрузка...</div>
+        </div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="legend" id="legend">
+        <div class="legend-item">
+            <div class="legend-box color-0"></div>
+            <span>0</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-1"></div>
+            <span>1</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-2"></div>
+            <span>2</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-3"></div>
+            <span>3</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-4"></div>
+            <span>4</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-5"></div>
+            <span>5</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-6"></div>
+            <span>6</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-7"></div>
+            <span>7</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-8"></div>
+            <span>8</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box color-9"></div>
+            <span>9</span>
+        </div>
+    </div>
+    
+    <script>
+        // Size control
+        const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
+        let currentSizeIndex = 5; // Start with 'xxl'
+        
+        // Security mode
+        let isSecureMode = false;
+        
+        // Hidden coins tracker
+        const hiddenCoins = {
+            btc: false,
+            eth: false,
+            sol: false
+        };
+        
+        function adjustSize(action) {
+            const body = document.body;
+            
+            if (action === 'increase' && currentSizeIndex < sizes.length - 1) {
+                currentSizeIndex++;
+            } else if (action === 'decrease' && currentSizeIndex > 0) {
+                currentSizeIndex--;
+            }
+            
+            // Remove all size classes
+            sizes.forEach(size => body.classList.remove(`size-${size}`));
+            
+            // Add current size class
+            body.classList.add(`size-${sizes[currentSizeIndex]}`);
+            
+            // Save preference
+            localStorage.setItem('bwPriceSize9', sizes[currentSizeIndex]);
+        }
+        
+        // Restore saved size
+        const savedSize = localStorage.getItem('bwPriceSize9');
+        if (savedSize) {
+            currentSizeIndex = sizes.indexOf(savedSize);
+            if (currentSizeIndex !== -1) {
+                document.body.classList.remove('size-xxl');
+                document.body.classList.add(`size-${savedSize}`);
+            }
+        }
+        
+        // Binance WebSocket connections
+        let btcWs, ethWs, solWs;
+        
+        // Track previous prices for comparison
+        const previousPrices = {
+            btc: '',
+            eth: '',
+            sol: ''
+        };
+        
+        function formatPriceWithBoxes(price, coinType) {
+            // Format price as string with 2 decimals
+            const priceStr = price.toFixed(2);
+            const [integerPart, decimalPart] = priceStr.split('.');
+            
+            // Convert each digit to a color box
+            let boxesHtml = '';
+            
+            // Get previous price string for comparison
+            const prevPriceStr = previousPrices[coinType] || '';
+            const [prevIntegerPart = '', prevDecimalPart = ''] = prevPriceStr.split('.');
+            
+            // Integer part without commas
+            const integerDigits = integerPart.split('');
+            const prevIntegerDigits = prevIntegerPart.split('');
+            
+            for (let i = 0; i < integerDigits.length; i++) {
+                const digit = parseInt(integerDigits[i]);
+                const prevDigit = i < prevIntegerDigits.length ? prevIntegerDigits[i] : '';
+                const hasChanged = digit.toString() !== prevDigit;
+                
+                // Removed glow class assignment
+                boxesHtml += `<span class="color-box color-${digit}" data-number="${digit}"></span>`;
+            }
+            
+            // Decimal part with circles
+            if (decimalPart) {
+                boxesHtml += '<span style="font-size: 50px; color: #666; margin: 0 8px; vertical-align: middle;">·</span>';
+                boxesHtml += '<span class="price-decimal">';
+                const prevDecimalDigits = prevDecimalPart.split('');
+                
+                for (let i = 0; i < decimalPart.length; i++) {
+                    const digit = decimalPart[i];
+                    const prevDigit = i < prevDecimalDigits.length ? prevDecimalDigits[i] : '';
+                    const hasChanged = digit !== prevDigit;
+                    // Removed glow class assignment
+                    
+                    boxesHtml += `<span class="color-circle color-${digit}" data-number="${digit}"></span>`;
+                }
+                boxesHtml += '</span>';
+            }
+            
+            // Store current price for next comparison
+            previousPrices[coinType] = priceStr;
+            
+            // Removed glow effect timeout
+            
+            return boxesHtml;
+        }
+        
+        function toggleSecurity() {
+            isSecureMode = !isSecureMode;
+            const btn = document.getElementById('securityToggle');
+            
+            if (isSecureMode) {
+                document.body.classList.add('secure-mode');
+                btn.querySelector('.eye-icon').textContent = '🔒';
+            } else {
+                document.body.classList.remove('secure-mode');
+                btn.querySelector('.eye-icon').textContent = '👁';
+            }
+        }
+        
+        function toggleLegend() {
+            const legend = document.getElementById('legend');
+            legend.classList.toggle('show');
+        }
+        
+        function connectBinanceWebSocket(symbol, elementId) {
+            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            
+            ws.onopen = function() {
+                console.log(`Подключено к потоку ${symbol}`);
+                document.getElementById(elementId).classList.remove('loading');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c); // Current price
+                
+                // Don't update if coin is hidden
+                const coinType = symbol.replace('USDT', '').toLowerCase();
+                if (!hiddenCoins[coinType]) {
+                    document.getElementById(elementId).innerHTML = formatPriceWithBoxes(price, coinType);
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error(`Ошибка WebSocket для ${symbol}:`, error);
+            };
+            
+            ws.onclose = function() {
+                console.log(`Отключено от потока ${symbol}. Переподключение...`);
+                setTimeout(() => {
+                    connectBinanceWebSocket(symbol, elementId);
+                }, 5000);
+            };
+            
+            return ws;
+        }
+        
+        // Initialize WebSocket connections
+        function initializeWebSockets() {
+            btcWs = connectBinanceWebSocket('BTCUSDT', 'btc-price');
+            ethWs = connectBinanceWebSocket('ETHUSDT', 'eth-price');
+            solWs = connectBinanceWebSocket('SOLUSDT', 'sol-price');
+        }
+        
+        // Fallback: Fetch prices via API
+        async function fetchPricesAPI() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                if (results[0] && !hiddenCoins.btc) {
+                    const btcPrice = parseFloat(results[0].lastPrice);
+                    document.getElementById('btc-price').innerHTML = formatPriceWithBoxes(btcPrice, 'btc');
+                    document.getElementById('btc-price').classList.remove('loading');
+                }
+                if (results[1] && !hiddenCoins.eth) {
+                    const ethPrice = parseFloat(results[1].lastPrice);
+                    document.getElementById('eth-price').innerHTML = formatPriceWithBoxes(ethPrice, 'eth');
+                    document.getElementById('eth-price').classList.remove('loading');
+                }
+                if (results[2] && !hiddenCoins.sol) {
+                    const solPrice = parseFloat(results[2].lastPrice);
+                    document.getElementById('sol-price').innerHTML = formatPriceWithBoxes(solPrice, 'sol');
+                    document.getElementById('sol-price').classList.remove('loading');
+                }
+            } catch (error) {
+                console.error('Ошибка при получении цен:', error);
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            // Try WebSocket first
+            initializeWebSockets();
+            
+            // Also fetch via API as backup
+            fetchPricesAPI();
+            
+            // Update API prices every 10 seconds as fallback
+            setInterval(fetchPricesAPI, 10000);
+        });
+        
+        // Toggle hide for individual coins
+        function toggleHide(coin) {
+            hiddenCoins[coin] = !hiddenCoins[coin];
+            const priceEl = document.getElementById(`${coin}-price`);
+            const btnEl = document.getElementById(`${coin}-hide`);
+            
+            if (hiddenCoins[coin]) {
+                priceEl.classList.add('hidden');
+                btnEl.classList.add('hidden');
+            } else {
+                priceEl.classList.remove('hidden');
+                btnEl.classList.remove('hidden');
+            }
+        }
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (btcWs) btcWs.close();
+            if (ethWs) ethWs.close();
+            if (solWs) solWs.close();
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === '=') {
+                adjustSize('increase');
+            } else if (e.key === '-' || e.key === '_') {
+                adjustSize('decrease');
+            } else if (e.key === '?') {
+                toggleLegend();
+            }
+        });
+    </script>
+</body>
+</html>

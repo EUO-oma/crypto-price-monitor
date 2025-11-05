@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Auth Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover { opacity: 0.8; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Supabase Auth 테스트</h1>
+        
+        <div id="status" class="status info">초기화 중...</div>
+        
+        <div id="auth-section" style="display: none;">
+            <h3>로그인 옵션</h3>
+            <button class="btn-primary" onclick="loginWithGoogle()">Google로 로그인</button>
+            <button class="btn-secondary" onclick="checkSession()">세션 확인</button>
+            <button class="btn-secondary" onclick="checkLocalStorage()">LocalStorage 확인</button>
+        </div>
+        
+        <div id="user-section" style="display: none;">
+            <h3>로그인 정보</h3>
+            <p id="user-info"></p>
+            <button class="btn-danger" onclick="logout()">로그아웃</button>
+            <button class="btn-success" onclick="testDatabase()">데이터베이스 테스트</button>
+        </div>
+        
+        <div id="debug" class="debug-info"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        let supabase = null;
+        let currentUser = null;
+        
+        // 초기화
+        async function init() {
+            const statusEl = document.getElementById('status');
+            const debugEl = document.getElementById('debug');
+            
+            try {
+                // Supabase 설정
+                const SUPABASE_URL = 'https://ddfnxbkiewolgweivomv.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZm54YmtpZXdvbGd3ZWl2b212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MzI3NzYsImV4cCI6MjA2NzIwODc3Nn0.YCS2UH6YWarPX3C2ryFUUQnFA-3er_ZQomf_mccjmD8';
+                
+                debugEl.textContent = `브라우저: ${navigator.userAgent}\n`;
+                debugEl.textContent += `현재 URL: ${window.location.href}\n`;
+                debugEl.textContent += `프로토콜: ${window.location.protocol}\n`;
+                
+                // Supabase 클라이언트 생성
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    auth: {
+                        persistSession: true,
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true,
+                        storage: window.localStorage,
+                        storageKey: 'sb-auth-token'
+                    }
+                });
+                
+                // Auth 상태 변경 감지
+                supabase.auth.onAuthStateChange((event, session) => {
+                    debugEl.textContent += `\nAuth 이벤트: ${event}\n`;
+                    if (session) {
+                        debugEl.textContent += `사용자: ${session.user.email}\n`;
+                    }
+                    updateUI();
+                });
+                
+                // URL 해시 확인
+                if (window.location.hash) {
+                    debugEl.textContent += `\nURL 해시 감지: ${window.location.hash.substring(0, 50)}...\n`;
+                }
+                
+                // 세션 확인
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    throw error;
+                }
+                
+                if (session) {
+                    currentUser = session.user;
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ 로그인됨: ' + session.user.email;
+                } else {
+                    statusEl.className = 'status warning';
+                    statusEl.textContent = '⚠️ 로그인 필요';
+                }
+                
+                updateUI();
+                
+            } catch (error) {
+                console.error('초기화 오류:', error);
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ 오류: ' + error.message;
+                debugEl.textContent += `\n오류 상세: ${error.stack}\n`;
+            }
+        }
+        
+        // UI 업데이트
+        function updateUI() {
+            const authSection = document.getElementById('auth-section');
+            const userSection = document.getElementById('user-section');
+            const userInfo = document.getElementById('user-info');
+            
+            if (currentUser) {
+                authSection.style.display = 'none';
+                userSection.style.display = 'block';
+                userInfo.innerHTML = `
+                    <strong>이메일:</strong> ${currentUser.email}<br>
+                    <strong>ID:</strong> ${currentUser.id}<br>
+                    <strong>Provider:</strong> ${currentUser.app_metadata?.provider || 'email'}
+                `;
+            } else {
+                authSection.style.display = 'block';
+                userSection.style.display = 'none';
+            }
+        }
+        
+        // Google 로그인
+        async function loginWithGoogle() {
+            const statusEl = document.getElementById('status');
+            const debugEl = document.getElementById('debug');
+            
+            try {
+                statusEl.className = 'status info';
+                statusEl.textContent = 'Google 로그인 중...';
+                
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + window.location.pathname
+                    }
+                });
+                
+                if (error) throw error;
+                
+                debugEl.textContent += '\nGoogle OAuth 리다이렉트 시작...\n';
+                
+            } catch (error) {
+                console.error('로그인 오류:', error);
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ 로그인 실패: ' + error.message;
+            }
+        }
+        
+        // 로그아웃
+        async function logout() {
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
+                currentUser = null;
+                location.reload();
+            }
+        }
+        
+        // 세션 확인
+        async function checkSession() {
+            const debugEl = document.getElementById('debug');
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            debugEl.textContent = '=== 세션 정보 ===\n';
+            if (session) {
+                debugEl.textContent += JSON.stringify(session, null, 2);
+            } else {
+                debugEl.textContent += '세션 없음\n';
+            }
+            
+            if (error) {
+                debugEl.textContent += '\n오류: ' + error.message;
+            }
+        }
+        
+        // LocalStorage 확인
+        function checkLocalStorage() {
+            const debugEl = document.getElementById('debug');
+            debugEl.textContent = '=== LocalStorage ===\n';
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.includes('supabase') || key.includes('sb-')) {
+                    const value = localStorage.getItem(key);
+                    debugEl.textContent += `${key}: ${value.substring(0, 100)}...\n\n`;
+                }
+            }
+        }
+        
+        // 데이터베이스 테스트
+        async function testDatabase() {
+            const statusEl = document.getElementById('status');
+            const debugEl = document.getElementById('debug');
+            
+            try {
+                debugEl.textContent = '=== 데이터베이스 테스트 ===\n';
+                
+                const { data, error } = await supabase
+                    .from('links')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                debugEl.textContent += `성공! ${data.length}개 항목 발견\n`;
+                debugEl.textContent += JSON.stringify(data, null, 2);
+                
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ 데이터베이스 연결 성공';
+                
+            } catch (error) {
+                console.error('DB 오류:', error);
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ DB 오류: ' + error.message;
+                debugEl.textContent += '\n오류: ' + JSON.stringify(error, null, 2);
+            }
+        }
+        
+        // 페이지 로드 시 초기화
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

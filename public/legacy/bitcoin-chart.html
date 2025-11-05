@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Chart - Google Charts</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: 300;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .symbol-selector {
+            position: relative;
+        }
+        
+        .symbol-input {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            text-transform: uppercase;
+            width: 150px;
+            transition: all 0.2s;
+        }
+        
+        .symbol-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #222;
+        }
+        
+        .symbol-input::placeholder {
+            color: #666;
+        }
+        
+        .search-btn {
+            background: #667eea;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .search-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 0 0 8px 8px;
+            margin-top: -1px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 100;
+        }
+        
+        .suggestion {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .suggestion:hover {
+            background: #222;
+        }
+        
+        .suggestion-symbol {
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .suggestion-name {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .price-display {
+            text-align: right;
+        }
+        
+        .current-price {
+            font-size: 36px;
+            font-weight: 600;
+            color: #4caf50;
+        }
+        
+        .price-change {
+            font-size: 18px;
+            margin-top: 5px;
+        }
+        
+        .price-up {
+            color: #4caf50;
+        }
+        
+        .price-down {
+            color: #f44336;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        
+        .btn:hover {
+            border-color: #666;
+            color: #fff;
+            background: #222;
+        }
+        
+        .btn.active {
+            border-color: #667eea;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn.pause {
+            background: rgba(244, 67, 54, 0.1);
+            border-color: #f44336;
+            color: #f44336;
+        }
+        
+        .btn.pause:hover {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .separator {
+            width: 1px;
+            height: 30px;
+            background: #333;
+            margin: 0 10px;
+        }
+        
+        .chart-container {
+            background: #111;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #222;
+            margin-bottom: 20px;
+        }
+        
+        #chart_div {
+            width: 100%;
+            height: 500px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        
+        .error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid #f44336;
+            color: #f44336;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .price-display {
+                text-align: center;
+            }
+            
+            .current-price {
+                font-size: 28px;
+            }
+            
+            #chart_div {
+                height: 300px;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1 class="title">Crypto Chart</h1>
+                <div class="symbol-selector">
+                    <input type="text" class="symbol-input" id="symbolInput" placeholder="BTC" value="BTC">
+                    <div class="suggestions" id="suggestions"></div>
+                </div>
+                <button class="search-btn" onclick="searchSymbol()">Search</button>
+            </div>
+            <div class="price-display">
+                <div class="current-price" id="currentPrice">Loading...</div>
+                <div class="price-change" id="priceChange"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <button class="btn active" onclick="changeTimeframe('1m')">1M</button>
+                <button class="btn" onclick="changeTimeframe('5m')">5M</button>
+                <button class="btn" onclick="changeTimeframe('15m')">15M</button>
+                <button class="btn" onclick="changeTimeframe('30m')">30M</button>
+                <button class="btn" onclick="changeTimeframe('1h')">1H</button>
+                <button class="btn" onclick="changeTimeframe('4h')">4H</button>
+                <button class="btn" onclick="changeTimeframe('1d')">1D</button>
+                <button class="btn" onclick="changeTimeframe('1w')">1W</button>
+                <button class="btn" onclick="changeTimeframe('1M')">1M</button>
+                <button class="btn" onclick="changeTimeframe('3M')">3M</button>
+                <button class="btn" onclick="changeTimeframe('6M')">6M</button>
+                <button class="btn" onclick="changeTimeframe('1Y')">1Y</button>
+                <button class="btn" onclick="changeTimeframe('ALL')">ALL</button>
+            </div>
+            <div class="separator"></div>
+            <div class="control-group">
+                <button class="btn" id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+                <button class="btn" onclick="refreshChart()">🔄 Refresh</button>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div id="chart_div"></div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">24h High</div>
+                <div class="stat-value" id="high24">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">24h Low</div>
+                <div class="stat-value" id="low24">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">24h Volume</div>
+                <div class="stat-value" id="volume24">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Market Cap</div>
+                <div class="stat-value" id="marketCap">-</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Google Charts 로드
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(initChart);
+        
+        let chart;
+        let currentTimeframe = '1m';
+        let currentSymbol = 'BTC';
+        let priceData = [];
+        let ws = null;
+        let isPaused = false;
+        let updateInterval;
+        
+        // Popular crypto symbols
+        const popularSymbols = [
+            { symbol: 'BTC', name: 'Bitcoin' },
+            { symbol: 'ETH', name: 'Ethereum' },
+            { symbol: 'SOL', name: 'Solana' },
+            { symbol: 'BNB', name: 'Binance Coin' },
+            { symbol: 'XRP', name: 'Ripple' },
+            { symbol: 'ADA', name: 'Cardano' },
+            { symbol: 'DOGE', name: 'Dogecoin' },
+            { symbol: 'AVAX', name: 'Avalanche' },
+            { symbol: 'DOT', name: 'Polkadot' },
+            { symbol: 'MATIC', name: 'Polygon' },
+            { symbol: 'LINK', name: 'Chainlink' },
+            { symbol: 'UNI', name: 'Uniswap' },
+            { symbol: 'LTC', name: 'Litecoin' },
+            { symbol: 'ATOM', name: 'Cosmos' },
+            { symbol: 'ARB', name: 'Arbitrum' },
+            { symbol: 'OP', name: 'Optimism' }
+        ];
+        
+        function initChart() {
+            const options = {
+                title: '',
+                curveType: 'function',
+                backgroundColor: 'transparent',
+                chartArea: {
+                    backgroundColor: 'transparent',
+                    width: '85%',
+                    height: '80%'
+                },
+                legend: { position: 'none' },
+                hAxis: {
+                    textStyle: { color: '#666' },
+                    gridlines: { color: '#222' },
+                    format: 'HH:mm'
+                },
+                vAxis: {
+                    textStyle: { color: '#666' },
+                    gridlines: { color: '#222' },
+                    format: '$#,###'
+                },
+                colors: ['#667eea'],
+                lineWidth: 3,
+                pointSize: 4,
+                pointsVisible: true,
+                series: {
+                    0: { areaOpacity: 0.05 }
+                },
+                crosshair: { 
+                    trigger: 'both',
+                    color: '#888',
+                    orientation: 'vertical'
+                },
+                tooltip: {
+                    textStyle: { color: '#fff' },
+                    backgroundColor: '#1a1a1a',
+                    borderColor: '#333'
+                }
+            };
+            
+            chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+            fetchHistoricalData();
+            startWebSocket();
+            updateStats();
+        }
+        
+        async function fetchHistoricalData() {
+            try {
+                let interval, limit;
+                switch(currentTimeframe) {
+                    case '1m':
+                        interval = '1m';
+                        limit = 60;
+                        break;
+                    case '5m':
+                        interval = '5m';
+                        limit = 60;
+                        break;
+                    case '15m':
+                        interval = '15m';
+                        limit = 60;
+                        break;
+                    case '30m':
+                        interval = '30m';
+                        limit = 60;
+                        break;
+                    case '1h':
+                        interval = '1h';
+                        limit = 60;
+                        break;
+                    case '4h':
+                        interval = '4h';
+                        limit = 60;
+                        break;
+                    case '1d':
+                        interval = '1d';
+                        limit = 90;
+                        break;
+                    case '1w':
+                        interval = '1w';
+                        limit = 52;
+                        break;
+                    case '1M':
+                        interval = '1M';
+                        limit = 12;
+                        break;
+                    case '3M':
+                        interval = '1M';
+                        limit = 36;
+                        break;
+                    case '6M':
+                        interval = '1d';
+                        limit = 180;
+                        break;
+                    case '1Y':
+                        interval = '1d';
+                        limit = 365;
+                        break;
+                    case 'ALL':
+                        interval = '1w';
+                        limit = 500; // Binance max limit
+                        break;
+                    default:
+                        interval = '1m';
+                        limit = 60;
+                }
+                
+                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentSymbol}USDT&interval=${interval}&limit=${limit}`);
+                const klines = await response.json();
+                
+                const data = new google.visualization.DataTable();
+                data.addColumn('datetime', 'Time');
+                data.addColumn('number', 'Price');
+                data.addColumn({type: 'string', role: 'style'});
+                
+                const rows = klines.map((kline, index) => {
+                    const time = new Date(kline[0]);
+                    const price = parseFloat(kline[4]); // Close price
+                    const open = parseFloat(kline[1]); // Open price
+                    
+                    // Determine color based on price change
+                    let color = '#667eea'; // Default purple
+                    if (price > open) {
+                        color = '#4caf50'; // Green for up
+                    } else if (price < open) {
+                        color = '#f44336'; // Red for down
+                    } else {
+                        color = '#ffa726'; // Orange for flat
+                    }
+                    
+                    return [time, price, `color: ${color}`];
+                });
+                
+                data.addRows(rows);
+                
+                // Update chart options based on timeframe
+                const options = getChartOptions();
+                chart.draw(data, options);
+                
+                // Store data for updates (without style column for real-time updates)
+                priceData = rows.map(row => [row[0], row[1]]);
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showError('Failed to load chart data');
+            }
+        }
+        
+        function getChartOptions() {
+            const baseOptions = {
+                title: '',
+                curveType: 'function',
+                backgroundColor: 'transparent',
+                chartArea: {
+                    backgroundColor: 'transparent',
+                    width: '85%',
+                    height: '80%'
+                },
+                legend: { position: 'none' },
+                hAxis: {
+                    textStyle: { color: '#666' },
+                    gridlines: { color: '#222' }
+                },
+                vAxis: {
+                    textStyle: { color: '#666' },
+                    gridlines: { color: '#222' },
+                    format: '$#,###'
+                },
+                colors: ['#667eea'],
+                lineWidth: 3,
+                pointSize: 4,
+                pointsVisible: true,
+                series: {
+                    0: { areaOpacity: 0.05 }
+                },
+                crosshair: { 
+                    trigger: 'both',
+                    color: '#888',
+                    orientation: 'vertical'
+                },
+                tooltip: {
+                    textStyle: { color: '#fff' },
+                    backgroundColor: '#1a1a1a',
+                    borderColor: '#333'
+                }
+            };
+            
+            // Adjust date format based on timeframe
+            switch(currentTimeframe) {
+                case '1m':
+                case '5m':
+                case '15m':
+                case '30m':
+                case '1h':
+                    baseOptions.hAxis.format = 'HH:mm';
+                    break;
+                case '4h':
+                case '1d':
+                    baseOptions.hAxis.format = 'MMM dd';
+                    break;
+                case '1w':
+                    baseOptions.hAxis.format = 'MMM dd';
+                    break;
+                case '1M':
+                case '3M':
+                    baseOptions.hAxis.format = 'MMM yyyy';
+                    break;
+                case '6M':
+                case '1Y':
+                    baseOptions.hAxis.format = 'MMM yy';
+                    break;
+                case 'ALL':
+                    baseOptions.hAxis.format = 'yyyy';
+                    break;
+            }
+            
+            return baseOptions;
+        }
+        
+        function startWebSocket() {
+            if (ws) ws.close();
+            
+            const symbol = currentSymbol.toLowerCase();
+            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}usdt@ticker`);
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.c);
+                const change = parseFloat(data.P);
+                
+                if (!isPaused) {
+                    updatePrice(price, change);
+                }
+                
+                // Add new data point for minute charts
+                if (!isPaused && ['1m', '5m', '15m', '30m'].includes(currentTimeframe) && priceData.length > 0) {
+                    const now = new Date();
+                    const lastPrice = priceData[priceData.length - 1][1];
+                    priceData.push([now, price]);
+                    
+                    // Keep only last 60 points
+                    if (priceData.length > 60) {
+                        priceData.shift();
+                    }
+                    
+                    // Redraw chart with colors
+                    const dataTable = new google.visualization.DataTable();
+                    dataTable.addColumn('datetime', 'Time');
+                    dataTable.addColumn('number', 'Price');
+                    dataTable.addColumn({type: 'string', role: 'style'});
+                    
+                    const coloredRows = priceData.map((row, index) => {
+                        let color = '#667eea';
+                        if (index > 0) {
+                            const prevPrice = priceData[index - 1][1];
+                            const currentPrice = row[1];
+                            if (currentPrice > prevPrice) {
+                                color = '#4caf50'; // Green
+                            } else if (currentPrice < prevPrice) {
+                                color = '#f44336'; // Red
+                            } else {
+                                color = '#ffa726'; // Orange
+                            }
+                        }
+                        return [row[0], row[1], `color: ${color}`];
+                    });
+                    
+                    dataTable.addRows(coloredRows);
+                    chart.draw(dataTable, getChartOptions());
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+            
+            ws.onclose = function() {
+                setTimeout(startWebSocket, 5000);
+            };
+        }
+        
+        function updatePrice(price, change) {
+            const priceEl = document.getElementById('currentPrice');
+            const changeEl = document.getElementById('priceChange');
+            
+            priceEl.textContent = '$' + price.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            
+            const changePrefix = change >= 0 ? '+' : '';
+            changeEl.textContent = changePrefix + change.toFixed(2) + '%';
+            changeEl.className = change >= 0 ? 'price-change price-up' : 'price-change price-down';
+            priceEl.className = change >= 0 ? 'current-price price-up' : 'current-price price-down';
+        }
+        
+        async function updateStats() {
+            try {
+                const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${currentSymbol}USDT`);
+                const data = await response.json();
+                
+                document.getElementById('high24').textContent = '$' + parseFloat(data.highPrice).toLocaleString();
+                document.getElementById('low24').textContent = '$' + parseFloat(data.lowPrice).toLocaleString();
+                document.getElementById('volume24').textContent = '$' + (parseFloat(data.quoteVolume) / 1000000).toFixed(2) + 'M';
+                
+                // Estimate market cap (simplified)
+                const price = parseFloat(data.lastPrice);
+                const supply = 21000000; // Max supply
+                const marketCap = (price * supply / 1000000000).toFixed(2);
+                document.getElementById('marketCap').textContent = '$' + marketCap + 'B';
+                
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+        
+        function changeTimeframe(timeframe) {
+            currentTimeframe = timeframe;
+            
+            // Update button states
+            document.querySelectorAll('.control-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Fetch new data
+            fetchHistoricalData();
+        }
+        
+        function togglePause() {
+            isPaused = !isPaused;
+            const btn = document.getElementById('pauseBtn');
+            
+            if (isPaused) {
+                btn.innerHTML = '▶️ Resume';
+                btn.classList.add('pause');
+            } else {
+                btn.innerHTML = '⏸ Pause';
+                btn.classList.remove('pause');
+            }
+        }
+        
+        function refreshChart() {
+            fetchHistoricalData();
+            updateStats();
+        }
+        
+        function searchSymbol() {
+            const input = document.getElementById('symbolInput');
+            const symbol = input.value.trim().toUpperCase();
+            
+            if (symbol && symbol !== currentSymbol) {
+                currentSymbol = symbol;
+                
+                // Restart everything with new symbol
+                if (ws) ws.close();
+                fetchHistoricalData();
+                startWebSocket();
+                updateStats();
+                
+                // Clear suggestions
+                document.getElementById('suggestions').style.display = 'none';
+            }
+        }
+        
+        // Symbol input functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const symbolInput = document.getElementById('symbolInput');
+            const suggestions = document.getElementById('suggestions');
+            
+            symbolInput.addEventListener('input', function() {
+                const value = this.value.toUpperCase();
+                
+                if (value.length > 0) {
+                    const filtered = popularSymbols.filter(s => 
+                        s.symbol.startsWith(value) || s.name.toUpperCase().includes(value)
+                    );
+                    
+                    if (filtered.length > 0) {
+                        suggestions.innerHTML = filtered.map(s => `
+                            <div class="suggestion" onclick="selectSymbol('${s.symbol}')">
+                                <span class="suggestion-symbol">${s.symbol}</span>
+                                <span class="suggestion-name">${s.name}</span>
+                            </div>
+                        `).join('');
+                        suggestions.style.display = 'block';
+                    } else {
+                        suggestions.style.display = 'none';
+                    }
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            });
+            
+            // Enter key to search
+            symbolInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchSymbol();
+                }
+            });
+            
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.symbol-selector')) {
+                    suggestions.style.display = 'none';
+                }
+            });
+        });
+        
+        function selectSymbol(symbol) {
+            document.getElementById('symbolInput').value = symbol;
+            document.getElementById('suggestions').style.display = 'none';
+            searchSymbol();
+        }
+        
+        function showError(message) {
+            const chartDiv = document.getElementById('chart_div');
+            chartDiv.innerHTML = `<div class="error">${message}</div>`;
+        }
+        
+        // Update stats every 30 seconds
+        updateInterval = setInterval(function() {
+            if (!isPaused) {
+                updateStats();
+            }
+        }, 30000);
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (ws) ws.close();
+            if (updateInterval) clearInterval(updateInterval);
+        });
+    </script>
+</body>
+</html>

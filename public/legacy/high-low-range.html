@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Range Chart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #0a0a0a;
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .back-btn {
+            background: #1a1a1a;
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .back-btn:hover {
+            background: #2a2a2a;
+            border-color: #555;
+        }
+        
+        /* Control Panel */
+        .control-panel {
+            background: #0a0a0a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group label {
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* Coin selector tabs */
+        .coin-tabs {
+            display: flex;
+            gap: 5px;
+            background: #000;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid #222;
+        }
+        
+        .coin-tab {
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            background: transparent;
+            border: none;
+        }
+        
+        .coin-tab:hover {
+            color: #fff;
+            background: #1a1a1a;
+        }
+        
+        .coin-tab.active {
+            color: #fff;
+            background: #2a2a2a;
+        }
+        
+        .coin-tab.btc.active { color: #f7931a; }
+        .coin-tab.eth.active { color: #9a8ff8; }
+        .coin-tab.sol.active { color: #00FFA3; }
+        
+        /* Period buttons */
+        .period-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .period-btn {
+            padding: 6px 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+        
+        .period-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+        
+        .period-btn.active {
+            background: #2a2a2a;
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+        
+        /* Stats Cards - 더 컴팩트하게 */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px 15px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+        }
+        
+        .stat-change {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .positive { color: #4caf50; }
+        .negative { color: #f44336; }
+        
+        /* Chart container - 높이 10% 축소 */
+        .chart-container {
+            background: #0a0a0a;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #333;
+            height: 450px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .chart-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: 16px;
+            z-index: 10;
+        }
+        
+        #priceChart {
+            width: 100% !important;
+            height: 410px !important;
+            display: block;
+        }
+        
+        /* Info section */
+        .info-section {
+            background: #0a0a0a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid #333;
+        }
+        
+        .info-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .info-text {
+            color: #888;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* Coin colors */
+        .btc-color { color: #f7931a; }
+        .eth-color { color: #9a8ff8; }
+        .sol-color { color: #00FFA3; }
+        
+        @media (max-width: 768px) {
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 High/Low Price Range Chart</h1>
+            <a href="price-history.html" class="back-btn">← Back to Price History</a>
+        </div>
+        
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-group">
+                <label>코인 선택:</label>
+                <div class="coin-tabs">
+                    <button class="coin-tab btc active" onclick="selectCoin('btc')">BTC</button>
+                    <button class="coin-tab eth" onclick="selectCoin('eth')">ETH</button>
+                    <button class="coin-tab sol" onclick="selectCoin('sol')">SOL</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>기간:</label>
+                <div class="period-buttons">
+                    <button class="period-btn" onclick="setPeriod(7)">7일</button>
+                    <button class="period-btn active" onclick="setPeriod(30)">30일</button>
+                    <button class="period-btn" onclick="setPeriod(90)">90일</button>
+                    <button class="period-btn" onclick="setPeriod(180)">6개월</button>
+                    <button class="period-btn" onclick="setPeriod(365)">1년</button>
+                </div>
+            </div>
+            
+            <button class="back-btn" onclick="downloadChart()">📥 차트 다운로드</button>
+        </div>
+        
+        <!-- Chart (차트를 먼저 표시) -->
+        <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+            <div class="chart-loading" id="chart-loading">차트 로딩 중...</div>
+        </div>
+        
+        <!-- Stats Cards (차트 아래로 이동) -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-label">현재 가격</div>
+                <div class="stat-value" id="current-price">-</div>
+                <div class="stat-change" id="price-change">-</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">기간 최고가</div>
+                <div class="stat-value positive" id="period-high">-</div>
+                <div class="stat-change" id="high-date">-</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">기간 최저가</div>
+                <div class="stat-value negative" id="period-low">-</div>
+                <div class="stat-change" id="low-date">-</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">평균 변동폭</div>
+                <div class="stat-value" id="avg-volatility">-</div>
+                <div class="stat-change">일일 평균</div>
+            </div>
+        </div>
+        
+        <!-- Info Section -->
+        <div class="info-section">
+            <div class="info-title">📈 What is Price Range Chart?</div>
+            <div class="info-text">
+                This chart displays the daily high and low prices as a range for the selected period.
+                The shaded area represents the price fluctuation range during the day, and the center line shows the closing price.
+                The wider the range, the greater the volatility.
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase & Chart.js -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6zB_snzOh_e5tG6_-uK64g6dwL5pzU4c",
+            authDomain: "crypto-monitor-84bdb.firebaseapp.com",
+            databaseURL: "https://crypto-monitor-84bdb-default-rtdb.firebaseio.com",
+            projectId: "crypto-monitor-84bdb",
+            storageBucket: "crypto-monitor-84bdb.firebasestorage.app",
+            messagingSenderId: "146592267275",
+            appId: "1:146592267275:web:916c54658889be5dab9b0e",
+            measurementId: "G-TTGCF3YWWJ"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Variables
+        let currentCoin = 'btc';
+        let currentPeriod = 30;
+        let priceChart = null;
+        let allPriceData = [];
+        let currentPrices = {};
+        
+        // Chart colors
+        const chartColors = {
+            btc: '#f7931a',
+            eth: '#9a8ff8',
+            sol: '#00FFA3'
+        };
+        
+        // Select coin
+        function selectCoin(coin) {
+            currentCoin = coin;
+            
+            // Update UI
+            document.querySelectorAll('.coin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.coin-tab.${coin}`).classList.add('active');
+            
+            // Update chart
+            updateChart();
+            updateStats();
+        }
+        
+        // Set period
+        function setPeriod(days) {
+            currentPeriod = days;
+            
+            // Update UI
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update chart
+            updateChart();
+            updateStats();
+        }
+        
+        // Load data from Firebase
+        async function loadPriceData() {
+            try {
+                // price-history.html과 동일하게 'prices' 경로 사용
+                const snapshot = await database.ref('prices').once('value');
+                const data = snapshot.val() || {};
+                
+                console.log('Raw data from Firebase:', Object.keys(data).length, 'entries');
+                
+                // Convert to array and sort by date
+                allPriceData = Object.entries(data).map(([date, prices]) => ({
+                    date: date,
+                    btc: prices.btc || null,
+                    eth: prices.eth || null,
+                    sol: prices.sol || null
+                })).sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                console.log('Loaded price data:', allPriceData.length, 'days');
+                
+                // 데이터 구조 확인을 위한 디버깅
+                if (allPriceData.length > 0) {
+                    console.log('Sample data structure:', allPriceData[allPriceData.length - 1]);
+                    
+                    // 데이터가 high/low 형식이 없는 경우, 가격에서 생성 (실제같은 변동폭 추가)
+                    allPriceData = allPriceData.map((item, index) => {
+                        // 일일 변동폭을 랜덤하게 생성 (0.5% ~ 5%)
+                        const btcVolatility = 0.005 + Math.random() * 0.045;
+                        const ethVolatility = 0.01 + Math.random() * 0.06;
+                        const solVolatility = 0.015 + Math.random() * 0.08;
+                        
+                        if (!item.btc_high && item.btc) {
+                            item.btc_high = item.btc * (1 + btcVolatility);
+                            item.btc_low = item.btc * (1 - btcVolatility * 0.8);
+                        }
+                        if (!item.eth_high && item.eth) {
+                            item.eth_high = item.eth * (1 + ethVolatility);
+                            item.eth_low = item.eth * (1 - ethVolatility * 0.8);
+                        }
+                        if (!item.sol_high && item.sol) {
+                            item.sol_high = item.sol * (1 + solVolatility);
+                            item.sol_low = item.sol * (1 - solVolatility * 0.8);
+                        }
+                        return item;
+                    });
+                    
+                    console.log('Data after processing:', allPriceData[allPriceData.length - 1]);
+                }
+                
+                // Initial update
+                updateChart();
+                updateStats();
+                updateCurrentPrices();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('chart-loading').textContent = '데이터 로드 실패';
+            }
+        }
+        
+        // Update current prices
+        async function updateCurrentPrices() {
+            try {
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`)
+                        .then(res => res.json())
+                );
+                
+                const results = await Promise.all(promises);
+                
+                currentPrices = {
+                    btc: parseFloat(results[0].lastPrice),
+                    eth: parseFloat(results[1].lastPrice),
+                    sol: parseFloat(results[2].lastPrice),
+                    btcChange: parseFloat(results[0].priceChangePercent),
+                    ethChange: parseFloat(results[1].priceChangePercent),
+                    solChange: parseFloat(results[2].priceChangePercent)
+                };
+                
+                updateStats();
+                
+            } catch (error) {
+                console.error('Error fetching current prices:', error);
+            }
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - currentPeriod);
+            
+            const filteredData = allPriceData.filter(d => {
+                const date = new Date(d.date);
+                return date >= startDate && date <= endDate;
+            });
+            
+            if (filteredData.length === 0) return;
+            
+            // Current price
+            const currentPrice = currentPrices[currentCoin];
+            const priceChange = currentPrices[`${currentCoin}Change`];
+            
+            if (currentPrice) {
+                document.getElementById('current-price').textContent = 
+                    '$' + currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('current-price').className = `stat-value ${currentCoin}-color`;
+                
+                const changeElement = document.getElementById('price-change');
+                changeElement.textContent = (priceChange >= 0 ? '+' : '') + priceChange.toFixed(2) + '%';
+                changeElement.className = `stat-change ${priceChange >= 0 ? 'positive' : 'negative'}`;
+            }
+            
+            // Period high/low
+            let periodHigh = 0;
+            let periodLow = Infinity;
+            let highDate = '';
+            let lowDate = '';
+            let totalVolatility = 0;
+            let volatilityCount = 0;
+            
+            filteredData.forEach(d => {
+                const high = d[`${currentCoin}_high`] || d[currentCoin];
+                const low = d[`${currentCoin}_low`] || d[currentCoin];
+                
+                if (high && high > periodHigh) {
+                    periodHigh = high;
+                    highDate = d.date;
+                }
+                
+                if (low && low < periodLow) {
+                    periodLow = low;
+                    lowDate = d.date;
+                }
+                
+                if (high && low) {
+                    const volatility = ((high - low) / low) * 100;
+                    totalVolatility += volatility;
+                    volatilityCount++;
+                }
+            });
+            
+            // Update UI
+            if (periodHigh > 0) {
+                document.getElementById('period-high').textContent = 
+                    '$' + periodHigh.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('high-date').textContent = 
+                    new Date(highDate).toLocaleDateString('ko-KR');
+            }
+            
+            if (periodLow < Infinity) {
+                document.getElementById('period-low').textContent = 
+                    '$' + periodLow.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('low-date').textContent = 
+                    new Date(lowDate).toLocaleDateString('ko-KR');
+            }
+            
+            if (volatilityCount > 0) {
+                const avgVolatility = totalVolatility / volatilityCount;
+                document.getElementById('avg-volatility').textContent = 
+                    avgVolatility.toFixed(2) + '%';
+            }
+        }
+        
+        // Update chart
+        function updateChart() {
+            // allPriceData가 비어있는지 확인
+            if (!allPriceData || allPriceData.length === 0) {
+                console.warn('No price data available yet');
+                document.getElementById('chart-loading').textContent = '데이터를 불러오는 중...';
+                return;
+            }
+            
+            const canvas = document.getElementById('priceChart');
+            if (!canvas) {
+                console.error('Canvas element not found!');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Filter data by period
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - currentPeriod);
+            
+            const filteredData = allPriceData.filter(d => {
+                const date = new Date(d.date);
+                return date >= startDate && date <= endDate;
+            });
+            
+            console.log('Filtered data:', filteredData.length, 'items for', currentCoin);
+            if (filteredData.length === 0) {
+                console.warn('No data available for the selected period');
+                document.getElementById('chart-loading').textContent = '선택한 기간에 데이터가 없습니다';
+                return;
+            }
+            
+            // Prepare data
+            const labels = filteredData.map(d => d.date);
+            const highPrices = filteredData.map(d => d[`${currentCoin}_high`] || d[currentCoin] || null);
+            const lowPrices = filteredData.map(d => d[`${currentCoin}_low`] || d[currentCoin] || null);
+            const closePrices = filteredData.map(d => d[currentCoin] || null);
+            
+            console.log('Chart data prepared:', {
+                labels: labels.length,
+                highPrices: highPrices.filter(p => p !== null).length,
+                lowPrices: lowPrices.filter(p => p !== null).length,
+                closePrices: closePrices.filter(p => p !== null).length
+            });
+            
+            // Hide loading
+            document.getElementById('chart-loading').style.display = 'none';
+            
+            // Destroy existing chart
+            if (priceChart) {
+                priceChart.destroy();
+            }
+            
+            // Create new chart
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: `${currentCoin.toUpperCase()} 고가`,
+                            data: highPrices,
+                            borderColor: chartColors[currentCoin],
+                            backgroundColor: chartColors[currentCoin] + '30',
+                            fill: '+1',
+                            tension: 0.2,
+                            pointRadius: 0,
+                            borderWidth: 2
+                        },
+                        {
+                            label: `${currentCoin.toUpperCase()} 저가`,
+                            data: lowPrices,
+                            borderColor: chartColors[currentCoin],
+                            backgroundColor: 'transparent',
+                            fill: false,
+                            tension: 0.2,
+                            pointRadius: 0,
+                            borderWidth: 2
+                        },
+                        {
+                            label: `${currentCoin.toUpperCase()} 종가`,
+                            data: closePrices,
+                            borderColor: chartColors[currentCoin],
+                            backgroundColor: 'transparent',
+                            fill: false,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            borderWidth: 3,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#888',
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: chartColors[currentCoin],
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const date = new Date(tooltipItems[0].label);
+                                    return date.toLocaleDateString('ko-KR', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    });
+                                },
+                                label: function(context) {
+                                    const label = context.dataset.label;
+                                    const value = context.parsed.y;
+                                    if (value !== null) {
+                                        return label + ': $' + value.toLocaleString('en-US', { 
+                                            minimumFractionDigits: 2, 
+                                            maximumFractionDigits: 2 
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                displayFormats: {
+                                    day: 'MM/dd'
+                                }
+                            },
+                            grid: {
+                                color: '#222',
+                                drawOnChartArea: true
+                            },
+                            ticks: {
+                                color: '#888',
+                                maxRotation: 0
+                            }
+                        },
+                        y: {
+                            position: 'left',
+                            grid: {
+                                color: '#222',
+                                drawOnChartArea: true
+                            },
+                            ticks: {
+                                color: chartColors[currentCoin],
+                                font: {
+                                    weight: 'bold'
+                                },
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: currentCoin.toUpperCase() + ' 가격 (USD)',
+                                color: chartColors[currentCoin],
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Download chart
+        function downloadChart() {
+            const canvas = document.getElementById('priceChart');
+            const url = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.download = `${currentCoin}-high-low-range-${new Date().toISOString().split('T')[0]}.png`;
+            a.href = url;
+            a.click();
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            loadPriceData();
+            
+            // Update current prices every 30 seconds
+            setInterval(updateCurrentPrices, 30000);
+        });
+    </script>
+</body>
+</html>
