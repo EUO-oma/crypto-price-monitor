@@ -8,6 +8,7 @@ import AuthModal from '@/components/AuthModal'
 export default function Navigation() {
   const { user, signOut } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   return (
     <>
@@ -45,6 +46,14 @@ export default function Navigation() {
             </div>
 
             <div className="flex items-center gap-4">
+              {/* 모바일 메뉴 버튼 */}
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="md:hidden p-2 hover:bg-hover-bg rounded"
+              >
+                <i className={`fas ${showMobileMenu ? 'fa-times' : 'fa-bars'} text-xl`}></i>
+              </button>
+              
               {user ? (
                 <>
                   <div className="flex items-center gap-2">
@@ -57,7 +66,7 @@ export default function Navigation() {
                     onClick={signOut}
                     className="text-sm px-4 py-2 rounded hover:bg-hover-bg transition-colors"
                   >
-                    <i className="fas fa-sign-out-alt"></i> 로그아웃
+                    <i className="fas fa-sign-out-alt"></i> <span className="hidden sm:inline">로그아웃</span>
                   </button>
                 </>
               ) : (
@@ -72,6 +81,34 @@ export default function Navigation() {
           </div>
         </div>
       </header>
+
+      {/* 모바일 메뉴 */}
+      {showMobileMenu && (
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setShowMobileMenu(false)}>
+          <div className="fixed left-0 top-16 bottom-0 w-64 bg-card-bg border-r border-border-color p-4">
+            <nav className="flex flex-col gap-4">
+              <Link href="/info-hub" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
+                <i className="fas fa-home mr-2"></i> 정보 허브
+              </Link>
+              <Link href="/crypto" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
+                <i className="fas fa-chart-line mr-2"></i> 암호화폐
+              </Link>
+              <Link href="/youtube" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
+                <i className="fab fa-youtube mr-2"></i> YouTube
+              </Link>
+              <Link href="/world-clock" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
+                <i className="fas fa-clock mr-2"></i> 세계 시계
+              </Link>
+              <Link href="/bookmarks" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
+                <i className="fas fa-bookmark mr-2"></i> 즐겨찾기
+              </Link>
+              <Link href="/chat" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
+                <i className="fas fa-comment mr-2"></i> 채팅
+              </Link>
+            </nav>
+          </div>
+        </div>
+      )}
 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
