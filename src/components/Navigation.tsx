@@ -39,6 +39,9 @@ export default function Navigation() {
                 <Link href="/chat" className="nav-link">
                   <i className="fas fa-comment"></i> 채팅
                 </Link>
+                <Link href="/legacy" className="nav-link">
+                  <i className="fas fa-folder-open"></i> Legacy
+                </Link>
               </nav>
             </div>
 
@@ -98,6 +101,9 @@ export default function Navigation() {
               </Link>
               <Link href="/chat" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
                 <i className="fas fa-comment mr-2"></i> 채팅
+              </Link>
+              <Link href="/legacy" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
+                <i className="fas fa-folder-open mr-2"></i> Legacy
               </Link>
             </nav>
           </div>
