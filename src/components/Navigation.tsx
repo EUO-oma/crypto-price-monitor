@@ -27,9 +27,6 @@ export default function Navigation() {
                 <Link href="/info-hub" className="nav-link">
                   <i className="fas fa-home"></i> 정보 허브
                 </Link>
-                <Link href="/crypto" className="nav-link">
-                  <i className="fas fa-chart-line"></i> 암호화폐
-                </Link>
                 <Link href="/youtube" className="nav-link">
                   <i className="fab fa-youtube"></i> YouTube
                 </Link>
@@ -89,9 +86,6 @@ export default function Navigation() {
             <nav className="flex flex-col gap-4">
               <Link href="/info-hub" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
                 <i className="fas fa-home mr-2"></i> 정보 허브
-              </Link>
-              <Link href="/crypto" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
-                <i className="fas fa-chart-line mr-2"></i> 암호화폐
               </Link>
               <Link href="/youtube" className="nav-link p-2 hover:bg-hover-bg rounded" onClick={() => setShowMobileMenu(false)}>
                 <i className="fab fa-youtube mr-2"></i> YouTube

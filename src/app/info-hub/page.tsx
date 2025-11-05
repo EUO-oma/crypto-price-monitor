@@ -3,12 +3,6 @@ import Link from 'next/link'
 export default function InfoHubPage() {
   const sections = [
     {
-      title: '암호화폐 모니터',
-      icon: 'fas fa-chart-line',
-      href: '/crypto',
-      description: '실시간 암호화폐 가격 모니터링'
-    },
-    {
       title: 'YouTube 플레이리스트',
       icon: 'fab fa-youtube',
       href: '/youtube',
